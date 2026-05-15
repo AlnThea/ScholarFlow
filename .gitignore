@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+backend/.venv/
+backend/venv/
+
+# next build output
+.next/
+out/
+
+# python cache
+__pycache__/
+*.py[cod]
+
+# environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+backend/.env
+backend/.env.local
+
+# logs
+*.log
+
+# editor / ide
+.idea/
+.vscode/
+
+# misc
+dist/
+coverage/

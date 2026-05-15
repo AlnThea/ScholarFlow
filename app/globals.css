@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --surface: 220 30% 98%;
+  --panel: 0 0% 100%;
+  --line: 217 22% 90%;
+  --text: 222 47% 11%;
+  --muted: 215 16% 47%;
+  --accent: 223 47% 42%;
+  --accent-soft: 221 44% 94%;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.08), transparent 28%),
+    radial-gradient(circle at top right, rgba(14, 165, 233, 0.06), transparent 24%),
+    hsl(var(--surface));
+  color: hsl(var(--text));
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: rgba(37, 99, 235, 0.16);
+}
+
+.sf-editor .ProseMirror {
+  min-height: 100%;
+  outline: none;
+  line-height: 1.75;
+  color: hsl(var(--text));
+}
+
+.sf-editor .ProseMirror > * + * {
+  margin-top: 0.9rem;
+}
+
+.sf-editor .ProseMirror h1 {
+  font-size: 2rem;
+  line-height: 1.15;
+  font-weight: 700;
+  margin-top: 1.75rem;
+}
+
+.sf-editor .ProseMirror h2 {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 700;
+  margin-top: 1.5rem;
+}
+
+.sf-editor .ProseMirror h3 {
+  font-size: 1.15rem;
+  font-weight: 650;
+  margin-top: 1.25rem;
+}
+
+.sf-editor .ProseMirror p {
+  margin: 0;
+}
+
+.sf-editor .ProseMirror ul,
+.sf-editor .ProseMirror ol {
+  padding-left: 1.35rem;
+}
+
+.sf-editor .ProseMirror blockquote {
+  border-left: 3px solid hsl(var(--accent));
+  padding-left: 1rem;
+  color: hsl(var(--muted));
+  font-style: italic;
+}
+
+.sf-editor .ProseMirror pre {
+  background: rgb(15 23 42);
+  color: #e2e8f0;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+}
+
+.sf-editor .ProseMirror code {
+  background: rgba(15, 23, 42, 0.06);
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.35rem;
+  font-size: 0.92em;
+}
+
+.sf-editor .ProseMirror hr {
+  border: none;
+  border-top: 1px solid hsl(var(--line));
+  margin: 1.25rem 0;
+}
+
+.sf-editor .ProseMirror img {
+  max-width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid hsl(var(--line));
+}
+
+.sf-editor .ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  overflow: hidden;
+  table-layout: fixed;
+}
+
+.sf-editor .ProseMirror td,
+.sf-editor .ProseMirror th {
+  border: 1px solid hsl(var(--line));
+  padding: 0.65rem 0.75rem;
+  vertical-align: top;
+}
+
+.sf-editor .ProseMirror th {
+  background: rgba(37, 99, 235, 0.04);
+  font-weight: 600;
+}
+
+.sf-editor .ProseMirror cite[data-citation] {
+  font-style: normal;
+  color: hsl(var(--accent));
+  font-weight: 650;
+  white-space: nowrap;
+}
