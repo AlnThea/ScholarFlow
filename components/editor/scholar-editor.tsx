@@ -18,15 +18,18 @@ import Placeholder from '@tiptap/extension-placeholder';
 import TextStyle from '@tiptap/extension-text-style';
 import TextAlign from '@tiptap/extension-text-align';
 import Focus from '@tiptap/extension-focus';
+import type { JSONContent } from '@tiptap/core';
 import { CitationMarker } from '@/lib/editor/citation-extension';
 import { SAMPLE_EDITOR_CONTENT } from '@/lib/editor/sample-content';
 import { improveWriting, type ImproveWritingResponse } from '@/lib/api/ai';
 import { searchCitations, type CitationCandidate } from '@/lib/api/citations';
+import { buildBibliographyEntries } from '@/lib/editor/bibliography';
 import { AiSidebar } from './ai-sidebar';
 import { EditorToolbar } from './editor-toolbar';
 import { EditorSidebar } from './editor-sidebar';
 
 const STORAGE_KEY = 'scholarflow.editor.content.v1';
+const CITATION_LIBRARY_KEY = 'scholarflow.editor.citation-library.v1';
 
 function countWords(text: string) {
   const trimmed = text.trim();
@@ -51,8 +54,10 @@ export function ScholarEditor() {
   const [selectionRange, setSelectionRange] = useState<{ from: number; to: number } | null>(
     null,
   );
+  const [documentJson, setDocumentJson] = useState<JSONContent | null>(null);
   const [improvedResult, setImprovedResult] = useState<ImproveWritingResponse | null>(null);
   const [citationResults, setCitationResults] = useState<CitationCandidate[]>([]);
+  const [citationLibrary, setCitationLibrary] = useState<Record<string, CitationCandidate>>({});
   const [aiError, setAiError] = useState<string | null>(null);
   const [citationError, setCitationError] = useState<string | null>(null);
   const [citationNote, setCitationNote] = useState<string | null>(null);
@@ -62,6 +67,24 @@ export function ScholarEditor() {
   useEffect(() => {
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (!hydrated || typeof window === 'undefined') return;
+    const storedLibrary = window.localStorage.getItem(CITATION_LIBRARY_KEY);
+    if (!storedLibrary) return;
+
+    try {
+      const parsed = JSON.parse(storedLibrary) as Record<string, CitationCandidate>;
+      setCitationLibrary(parsed);
+    } catch {
+      window.localStorage.removeItem(CITATION_LIBRARY_KEY);
+    }
+  }, [hydrated]);
+
+  useEffect(() => {
+    if (!hydrated || typeof window === 'undefined') return;
+    window.localStorage.setItem(CITATION_LIBRARY_KEY, JSON.stringify(citationLibrary));
+  }, [citationLibrary, hydrated]);
 
   const initialContent = useMemo(() => {
     if (!hydrated || typeof window === 'undefined') {
@@ -140,6 +163,7 @@ export function ScholarEditor() {
     },
     onUpdate({ editor }) {
       if (!hydrated) return;
+      setDocumentJson(editor.getJSON());
       window.localStorage.setItem(STORAGE_KEY, editor.getHTML());
       setSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     },
@@ -151,12 +175,17 @@ export function ScholarEditor() {
     if (stored) {
       editor.commands.setContent(stored, false);
     }
+    setDocumentJson(editor.getJSON());
   }, [editor, hydrated]);
 
   const textContent = editor?.getText() ?? '';
   const wordCount = countWords(textContent);
   const characterCount = textContent.length;
   const citationCount = editor?.getHTML().match(/data-citation="true"/g)?.length ?? 0;
+  const bibliographyEntries = useMemo(
+    () => buildBibliographyEntries(documentJson, citationLibrary),
+    [documentJson, citationLibrary],
+  );
 
   const insertCitation = useCallback(() => {
     if (!editor) return;
@@ -173,32 +202,51 @@ export function ScholarEditor() {
 
   const insertBibliography = useCallback(() => {
     if (!editor) return;
+
+    const bibliographyItems = bibliographyEntries;
     editor
       .chain()
       .focus()
-      .insertContent([
-        {
-          type: 'heading',
-          attrs: { level: 2 },
-          content: [{ type: 'text', text: 'Bibliography' }],
-        },
-        {
-          type: 'orderedList',
-          content: [
-            {
-              type: 'listItem',
-              content: [
-                {
-                  type: 'paragraph',
-                  content: [{ type: 'text', text: 'Add verified references here.' }],
-                },
-              ],
-            },
-          ],
-        },
-      ])
+      .insertContent(
+        bibliographyItems.length > 0
+          ? [
+              {
+                type: 'heading',
+                attrs: { level: 2 },
+                content: [{ type: 'text', text: 'Bibliography' }],
+              },
+              {
+                type: 'orderedList',
+                content: bibliographyItems.map((entry) => ({
+                  type: 'listItem',
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [{ type: 'text', text: entry.formatted }],
+                    },
+                  ],
+                })),
+              },
+            ]
+          : [
+              {
+                type: 'heading',
+                attrs: { level: 2 },
+                content: [{ type: 'text', text: 'Bibliography' }],
+              },
+              {
+                type: 'paragraph',
+                content: [
+                  {
+                    type: 'text',
+                    text: 'Insert verified citation candidates first, then generate the bibliography.',
+                  },
+                ],
+              },
+            ],
+      )
       .run();
-  }, [editor]);
+  }, [editor, bibliographyEntries]);
 
   const insertImage = useCallback(
     (url: string) => {
@@ -287,6 +335,17 @@ export function ScholarEditor() {
     (candidate: CitationCandidate) => {
       if (!editor) return;
 
+      setCitationLibrary((current) => {
+        if (current[candidate.reference_id]) {
+          return current;
+        }
+
+        return {
+          ...current,
+          [candidate.reference_id]: candidate,
+        };
+      });
+
       const position = selectionRange?.to ?? editor.state.selection.to;
       editor
         .chain()
@@ -348,25 +407,26 @@ export function ScholarEditor() {
           wordCount={wordCount}
           characterCount={characterCount}
           citationCount={citationCount}
+          bibliographyEntries={bibliographyEntries}
           onInsertCitation={insertCitation}
           onInsertBibliography={insertBibliography}
           onInsertImageSample={insertSampleImage}
         />
 
-          <AiSidebar
-            selectedText={selectedText}
-            improvedText={improvedResult}
-            citationResults={citationResults}
-            isLoading={isImproving}
-            isSearchingCitations={isSearchingCitations}
-            error={aiError}
-            citationError={citationError}
-            citationNote={citationNote}
-            onImproveWriting={runImproveWriting}
-            onFindCitation={runCitationSearch}
-            onApplyImprovedText={applyImprovedText}
-            onInsertCitationCandidate={insertCitationCandidate}
-          />
+        <AiSidebar
+          selectedText={selectedText}
+          improvedText={improvedResult}
+          citationResults={citationResults}
+          isLoading={isImproving}
+          isSearchingCitations={isSearchingCitations}
+          error={aiError}
+          citationError={citationError}
+          citationNote={citationNote}
+          onImproveWriting={runImproveWriting}
+          onFindCitation={runCitationSearch}
+          onApplyImprovedText={applyImprovedText}
+          onInsertCitationCandidate={insertCitationCandidate}
+        />
       </div>
     </div>
   );

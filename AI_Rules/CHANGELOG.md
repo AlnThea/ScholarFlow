@@ -44,3 +44,5 @@
 - Added citation search backend endpoint
 - Added citation candidate preview in the AI sidebar
 - Added citation candidate insertion into the editor
+- Added bibliography sidebar and reference formatting
+- Added persisted citation library

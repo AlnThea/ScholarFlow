@@ -1,11 +1,13 @@
 'use client';
 
 import { BookOpen, FileText, ListChecks, PlusCircle, Quote } from 'lucide-react';
+import type { BibliographyEntry } from '@/lib/editor/bibliography';
 
 type SidebarProps = {
   wordCount: number;
   characterCount: number;
   citationCount: number;
+  bibliographyEntries: BibliographyEntry[];
   onInsertCitation: () => void;
   onInsertBibliography: () => void;
   onInsertImageSample: () => void;
@@ -30,6 +32,7 @@ export function EditorSidebar({
   wordCount,
   characterCount,
   citationCount,
+  bibliographyEntries,
   onInsertCitation,
   onInsertBibliography,
   onInsertImageSample,
@@ -85,8 +88,41 @@ export function EditorSidebar({
           <ul className="space-y-2 text-sm text-muted">
             <li>Draft the argument in the main editor.</li>
             <li>Place citation markers where evidence is needed.</li>
-            <li>Keep the bibliography section synchronized manually for now.</li>
+            <li>Keep the bibliography section synchronized from verified references.</li>
           </ul>
+        </section>
+
+        <section className="rounded-xl border border-line bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold text-text">Bibliography</h2>
+            <span className="text-xs text-muted">{bibliographyEntries.length} entries</span>
+          </div>
+          {bibliographyEntries.length > 0 ? (
+            <ol className="space-y-3">
+              {bibliographyEntries.map((entry, index) => (
+                <li key={entry.referenceId} className="rounded-md border border-line bg-slate-50 p-3">
+                  <div className="mb-1 flex items-center justify-between gap-3">
+                    <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+                      {index + 1}. {entry.label}
+                    </span>
+                  </div>
+                  <p className="text-xs leading-5 text-text">{entry.formatted}</p>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="text-sm leading-6 text-muted">
+              Bibliography appears here after citation candidates are inserted into the editor.
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={onInsertBibliography}
+            className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-md border border-line bg-panel px-3 py-2 text-sm font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
+          >
+            <FileText className="h-4 w-4" />
+            Insert bibliography section
+          </button>
         </section>
       </div>
     </aside>
