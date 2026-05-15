@@ -11,10 +11,9 @@ Build the first usable editor MVP.
 5. Add deployment notes
 
 ## Current Task
-Add bibliography export support and keep the sidebar export actions aligned with verified references.
+Add backend deployment notes and keep the backend run instructions aligned with the deployed API shape.
 
 ## Next Tasks
-- Add backend deployment notes
 - Add citation export support
 
 ## Do Not Work On Yet

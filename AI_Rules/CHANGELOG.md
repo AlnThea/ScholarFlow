@@ -56,3 +56,8 @@
 - Added bibliography export support
 - Added TXT and JSON export actions in the bibliography sidebar
 - Added bibliography text serialization helper
+
+## v0.0.9 - In Progress
+- Added backend deployment notes
+- Added production run guidance for the FastAPI service
+- Added environment and reverse proxy deployment guidance

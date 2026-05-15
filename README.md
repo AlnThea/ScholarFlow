@@ -32,6 +32,7 @@ ScholarFlow is an AI-powered academic research workspace focused on writing, cit
 - `lib/editor/` editor extensions and sample content
 - `backend/` FastAPI backend skeleton
 - `AI_Rules/` project rules, tasks, and changelog
+- `backend/README.md` backend run and deployment notes
 
 ## Development
 
@@ -66,6 +67,7 @@ npm run start
 - Bibliography entries are derived from verified citation candidates.
 - Bibliography can be exported as TXT or JSON from the sidebar.
 - Citation search results are ranked with a backend score.
+- Backend deployment notes live in `backend/README.md`.
 - Other AI actions are still placeholders.
 - Citation output must stay grounded in verified sources.
 - Future modules such as statistics, bibliometric analysis, SEM PLS, and journal publishing are intentionally out of scope for the current MVP.
