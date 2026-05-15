@@ -71,3 +71,4 @@
 - Added citation history support
 - Added persisted citation search history
 - Added repeat citation search actions from history items
+- Refined AI sidebar layout to surface citation history higher in the panel

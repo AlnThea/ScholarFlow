@@ -11,7 +11,7 @@ Build the first usable editor MVP.
 5. Add deployment notes
 
 ## Current Task
-Add citation history support and keep past citation searches persisted in the AI sidebar.
+Refine the AI sidebar layout so citation history stays visible without relying on page scroll.
 
 ## Next Tasks
 - Add AI response history

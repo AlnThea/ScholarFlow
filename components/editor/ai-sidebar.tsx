@@ -92,26 +92,64 @@ export function AiSidebar({
   const hasCitationResults = citationResults.length > 0;
 
   return (
-    <aside className="h-full border-l border-line bg-panel/80 p-4 backdrop-blur">
-      <div className="space-y-4">
-        <section className="rounded-xl border border-line bg-white p-4 shadow-sm">
+    <aside className="sticky top-[73px] flex h-[calc(100vh-73px)] border-l border-line bg-panel/80 backdrop-blur">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
+        <section className="shrink-0 rounded-xl border border-line bg-white p-4 shadow-sm">
           <div className="mb-3 flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-accent" />
             <h2 className="text-sm font-semibold text-text">AI assistant</h2>
           </div>
-          <p className="text-sm leading-6 text-muted">
+          <p className="text-xs leading-5 text-muted">
             AI actions use the current selection and call the backend explicitly.
           </p>
         </section>
 
-        <section className="rounded-xl border border-line bg-white p-4 shadow-sm">
+        <section className="shrink-0 rounded-xl border border-line bg-white p-4 shadow-sm">
           <h3 className="mb-3 text-sm font-semibold text-text">Selected text</h3>
-          <div className="rounded-md border border-dashed border-line bg-slate-50 p-3 text-sm leading-6 text-muted">
+          <div className="max-h-28 overflow-y-auto rounded-md border border-dashed border-line bg-slate-50 p-3 text-sm leading-6 text-muted">
             {hasSelection ? selectedText : 'Select a paragraph or sentence to enable AI actions.'}
           </div>
         </section>
 
-        <section className="space-y-2">
+        <section className="shrink-0 rounded-xl border border-line bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-text">Search history</h3>
+            <span className="text-xs text-muted">{citationHistory.length} saved</span>
+          </div>
+          {citationHistory.length > 0 ? (
+            <div className="max-h-52 space-y-2 overflow-y-auto pr-1">
+              {citationHistory.map((item) => (
+                <button
+                  key={`${item.query}-${item.savedAt}`}
+                  type="button"
+                  onClick={() => onRepeatCitationSearch(item.query)}
+                  className="w-full rounded-md border border-line bg-white p-3 text-left transition hover:border-accent/30 hover:bg-accentSoft/60"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="line-clamp-2 text-xs font-medium leading-5 text-text">
+                        {item.query}
+                      </p>
+                      <p className="mt-1 text-[11px] leading-5 text-muted">
+                        {item.resultCount} result{item.resultCount === 1 ? '' : 's'}
+                        {item.note ? ` · ${item.note}` : ''}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-[10px] uppercase tracking-[0.12em] text-muted">
+                      {item.savedAt}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm leading-6 text-muted">
+              Search history appears here after you run citation lookup.
+            </p>
+          )}
+        </section>
+
+        <section className="shrink-0 space-y-2">
           <ActionButton
             label={isLoading ? 'Improving...' : 'Improve Academic Writing'}
             description="Refine clarity, tone, and academic structure."
@@ -206,7 +244,7 @@ export function AiSidebar({
               {citationNote}
             </div>
           ) : hasCitationResults ? (
-            <div className="space-y-3">
+            <div className="max-h-72 space-y-3 overflow-y-auto pr-1">
               {citationResults.map((candidate) => (
                 <div key={`${candidate.source}:${candidate.reference_id}`} className="rounded-md border border-line bg-slate-50 p-3">
                   <div className="flex items-start justify-between gap-3">
@@ -283,43 +321,6 @@ export function AiSidebar({
             </button>
           </div>
 
-          <div className="mt-4 border-t border-line pt-4">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <h4 className="text-sm font-semibold text-text">Search history</h4>
-              <span className="text-xs text-muted">{citationHistory.length} saved</span>
-            </div>
-            {citationHistory.length > 0 ? (
-              <div className="space-y-2">
-                {citationHistory.map((item) => (
-                  <button
-                    key={`${item.query}-${item.savedAt}`}
-                    type="button"
-                    onClick={() => onRepeatCitationSearch(item.query)}
-                    className="w-full rounded-md border border-line bg-white p-3 text-left transition hover:border-accent/30 hover:bg-accentSoft/60"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="line-clamp-2 text-xs font-medium leading-5 text-text">
-                          {item.query}
-                        </p>
-                        <p className="mt-1 text-[11px] leading-5 text-muted">
-                          {item.resultCount} result{item.resultCount === 1 ? '' : 's'}
-                          {item.note ? ` · ${item.note}` : ''}
-                        </p>
-                      </div>
-                      <span className="shrink-0 text-[10px] uppercase tracking-[0.12em] text-muted">
-                        {item.savedAt}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm leading-6 text-muted">
-                Search history appears here after you run citation lookup.
-              </p>
-            )}
-          </div>
         </section>
 
         <section className="rounded-xl border border-line bg-white p-4 shadow-sm">
