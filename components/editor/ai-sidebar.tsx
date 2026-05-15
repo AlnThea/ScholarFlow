@@ -3,6 +3,7 @@
 import {
   BookOpenText,
   Check,
+  Download,
   Languages,
   Loader2,
   RefreshCw,
@@ -28,6 +29,8 @@ type AiSidebarProps = {
   onFindCitation: () => void;
   onApplyImprovedText: () => void;
   onInsertCitationCandidate: (candidate: CitationCandidate) => void;
+  onExportCitationText: () => void;
+  onExportCitationJson: () => void;
 };
 
 function ActionButton({
@@ -76,6 +79,8 @@ export function AiSidebar({
   onFindCitation,
   onApplyImprovedText,
   onInsertCitationCandidate,
+  onExportCitationText,
+  onExportCitationJson,
 }: AiSidebarProps) {
   const hasSelection = selectedText.trim().length > 0;
   const hasResult = improvedText !== null;
@@ -250,6 +255,27 @@ export function AiSidebar({
           <div className="mt-3 flex items-start gap-2 rounded-md border border-line bg-white p-3 text-xs leading-5 text-muted">
             <Search className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
             <span>Only verified metadata from external sources is shown here.</span>
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={onExportCitationText}
+              disabled={!hasCitationResults}
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Download className="h-3.5 w-3.5" />
+              TXT
+            </button>
+            <button
+              type="button"
+              onClick={onExportCitationJson}
+              disabled={!hasCitationResults}
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Download className="h-3.5 w-3.5" />
+              JSON
+            </button>
           </div>
         </section>
 

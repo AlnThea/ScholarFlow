@@ -11,6 +11,7 @@ ScholarFlow is an AI-powered academic research workspace focused on writing, cit
 - bibliography system with verified references
 - citation ranking score on search results
 - bibliography export to TXT and JSON
+- citation export to TXT and JSON
 - local draft persistence
 - export to HTML and JSON
 - AI sidebar wired to improve-writing backend endpoint
@@ -66,6 +67,7 @@ npm run start
 - Citation search is wired to OpenAlex and Crossref.
 - Bibliography entries are derived from verified citation candidates.
 - Bibliography can be exported as TXT or JSON from the sidebar.
+- Citation search results can be exported as TXT or JSON from the AI panel.
 - Citation search results are ranked with a backend score.
 - Backend deployment notes live in `backend/README.md`.
 - Other AI actions are still placeholders.

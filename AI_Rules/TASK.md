@@ -11,10 +11,10 @@ Build the first usable editor MVP.
 5. Add deployment notes
 
 ## Current Task
-Add backend deployment notes and keep the backend run instructions aligned with the deployed API shape.
+Add citation export support and keep citation results export aligned with verified metadata.
 
 ## Next Tasks
-- Add citation export support
+- Add citation history support
 
 ## Do Not Work On Yet
 - SPSS

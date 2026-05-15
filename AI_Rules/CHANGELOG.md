@@ -61,3 +61,8 @@
 - Added backend deployment notes
 - Added production run guidance for the FastAPI service
 - Added environment and reverse proxy deployment guidance
+
+## v0.1.0 - In Progress
+- Added citation export support
+- Added TXT and JSON export actions in the citation lookup panel
+- Added citation candidate text serialization helper

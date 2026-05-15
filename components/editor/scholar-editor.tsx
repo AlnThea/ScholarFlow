@@ -27,6 +27,9 @@ import {
   buildBibliographyEntries,
   serializeBibliographyText,
 } from '@/lib/editor/bibliography';
+import {
+  serializeCitationCandidatesText,
+} from '@/lib/editor/citation-export';
 import { AiSidebar } from './ai-sidebar';
 import { EditorToolbar } from './editor-toolbar';
 import { EditorSidebar } from './editor-sidebar';
@@ -295,6 +298,22 @@ export function ScholarEditor() {
     );
   }, [bibliographyEntries]);
 
+  const exportCitationText = useCallback(() => {
+    downloadFile(
+      'scholarflow-citations.txt',
+      serializeCitationCandidatesText(citationResults),
+      'text/plain;charset=utf-8',
+    );
+  }, [citationResults]);
+
+  const exportCitationJson = useCallback(() => {
+    downloadFile(
+      'scholarflow-citations.json',
+      JSON.stringify(citationResults, null, 2),
+      'application/json;charset=utf-8',
+    );
+  }, [citationResults]);
+
   const statusLabel = savedAt ? `Saved at ${savedAt}` : 'Draft stored locally';
   const apiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000/api/v1').replace(/\/$/, '');
 
@@ -447,6 +466,8 @@ export function ScholarEditor() {
           onFindCitation={runCitationSearch}
           onApplyImprovedText={applyImprovedText}
           onInsertCitationCandidate={insertCitationCandidate}
+          onExportCitationText={exportCitationText}
+          onExportCitationJson={exportCitationJson}
         />
       </div>
     </div>
