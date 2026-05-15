@@ -98,3 +98,13 @@ export function buildBibliographyEntries(
 
   return entries;
 }
+
+export function serializeBibliographyText(entries: BibliographyEntry[]): string {
+  if (entries.length === 0) {
+    return 'No bibliography entries available.';
+  }
+
+  return entries
+    .map((entry, index) => `${index + 1}. ${entry.formatted}`)
+    .join('\n\n');
+}

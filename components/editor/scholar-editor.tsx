@@ -23,7 +23,10 @@ import { CitationMarker } from '@/lib/editor/citation-extension';
 import { SAMPLE_EDITOR_CONTENT } from '@/lib/editor/sample-content';
 import { improveWriting, type ImproveWritingResponse } from '@/lib/api/ai';
 import { searchCitations, type CitationCandidate } from '@/lib/api/citations';
-import { buildBibliographyEntries } from '@/lib/editor/bibliography';
+import {
+  buildBibliographyEntries,
+  serializeBibliographyText,
+} from '@/lib/editor/bibliography';
 import { AiSidebar } from './ai-sidebar';
 import { EditorToolbar } from './editor-toolbar';
 import { EditorSidebar } from './editor-sidebar';
@@ -276,6 +279,22 @@ export function ScholarEditor() {
     downloadFile('scholarflow-draft.json', JSON.stringify(editor.getJSON(), null, 2), 'application/json;charset=utf-8');
   }, [editor]);
 
+  const exportBibliographyText = useCallback(() => {
+    downloadFile(
+      'scholarflow-bibliography.txt',
+      serializeBibliographyText(bibliographyEntries),
+      'text/plain;charset=utf-8',
+    );
+  }, [bibliographyEntries]);
+
+  const exportBibliographyJson = useCallback(() => {
+    downloadFile(
+      'scholarflow-bibliography.json',
+      JSON.stringify(bibliographyEntries, null, 2),
+      'application/json;charset=utf-8',
+    );
+  }, [bibliographyEntries]);
+
   const statusLabel = savedAt ? `Saved at ${savedAt}` : 'Draft stored locally';
   const apiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000/api/v1').replace(/\/$/, '');
 
@@ -411,6 +430,8 @@ export function ScholarEditor() {
           onInsertCitation={insertCitation}
           onInsertBibliography={insertBibliography}
           onInsertImageSample={insertSampleImage}
+          onExportBibliographyText={exportBibliographyText}
+          onExportBibliographyJson={exportBibliographyJson}
         />
 
         <AiSidebar

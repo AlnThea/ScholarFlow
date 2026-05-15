@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, FileText, ListChecks, PlusCircle, Quote } from 'lucide-react';
+import { BookOpen, Download, FileText, ListChecks, PlusCircle, Quote } from 'lucide-react';
 import type { BibliographyEntry } from '@/lib/editor/bibliography';
 
 type SidebarProps = {
@@ -11,6 +11,8 @@ type SidebarProps = {
   onInsertCitation: () => void;
   onInsertBibliography: () => void;
   onInsertImageSample: () => void;
+  onExportBibliographyText: () => void;
+  onExportBibliographyJson: () => void;
 };
 
 function PanelRow({
@@ -36,6 +38,8 @@ export function EditorSidebar({
   onInsertCitation,
   onInsertBibliography,
   onInsertImageSample,
+  onExportBibliographyText,
+  onExportBibliographyJson,
 }: SidebarProps) {
   return (
     <aside className="h-full border-l border-line bg-panel/80 p-4 backdrop-blur">
@@ -123,6 +127,24 @@ export function EditorSidebar({
             <FileText className="h-4 w-4" />
             Insert bibliography section
           </button>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={onExportBibliographyText}
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
+            >
+              <Download className="h-3.5 w-3.5" />
+              TXT
+            </button>
+            <button
+              type="button"
+              onClick={onExportBibliographyJson}
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
+            >
+              <Download className="h-3.5 w-3.5" />
+              JSON
+            </button>
+          </div>
         </section>
       </div>
     </aside>

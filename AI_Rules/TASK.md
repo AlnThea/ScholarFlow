@@ -11,11 +11,10 @@ Build the first usable editor MVP.
 5. Add deployment notes
 
 ## Current Task
-Polish citation ranking and surface the ranking score in the UI.
+Add bibliography export support and keep the sidebar export actions aligned with verified references.
 
 ## Next Tasks
 - Add backend deployment notes
-- Add bibliography export support
 - Add citation export support
 
 ## Do Not Work On Yet

@@ -51,3 +51,8 @@
 - Added citation ranking score
 - Added ranking-based ordering of citation candidates
 - Added ranking hints to citation cards
+
+## v0.0.8 - In Progress
+- Added bibliography export support
+- Added TXT and JSON export actions in the bibliography sidebar
+- Added bibliography text serialization helper
