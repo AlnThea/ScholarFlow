@@ -77,3 +77,8 @@
 - Refined the editor workspace shell layout
 - Made the header sticky and the main editor area viewport-based
 - Kept the side panels anchored while the editor scrolls internally
+
+## v0.1.3 - In Progress
+- Reworked the workspace into a library sidebar and document canvas layout
+- Moved AI tools into the library rail
+- Added source and collection tabs in the left panel

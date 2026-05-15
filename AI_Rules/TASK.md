@@ -11,7 +11,7 @@ Build the first usable editor MVP.
 5. Add deployment notes
 
 ## Current Task
-Refine the editor workspace template so the shell feels like a single viewport app, not a long page.
+Refine the editor workspace template so the shell matches the library-and-document layout reference.
 
 ## Next Tasks
 - Add AI response history

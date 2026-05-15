@@ -34,7 +34,6 @@ import {
 import {
   serializeCitationCandidatesText,
 } from '@/lib/editor/citation-export';
-import { AiSidebar } from './ai-sidebar';
 import { EditorToolbar } from './editor-toolbar';
 import { EditorSidebar } from './editor-sidebar';
 
@@ -464,13 +463,27 @@ export function ScholarEditor() {
         </div>
       </header>
 
-      <div className="mx-auto grid w-full flex-1 min-h-0 max-w-[1600px] gap-0 lg:grid-cols-[minmax(0,1fr)_320px_320px]">
+      <div className="mx-auto grid w-full flex-1 min-h-0 max-w-[1600px] gap-0 lg:grid-cols-[320px_minmax(0,1fr)]">
         <main className="min-h-0 bg-panel/70">
           <div className="border-b border-line bg-white/70 px-4 py-3 text-sm text-muted lg:px-6">
             Production-ready TipTap workspace with structured drafting tools and citation placeholders.
           </div>
 
           <div className="flex h-[calc(100vh-72px-41px)] min-h-0 flex-col">
+            <div className="shrink-0 border-b border-line bg-white/80 px-4 py-3 lg:px-6">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+                    Document
+                  </p>
+                  <h2 className="truncate text-lg font-semibold text-text">Academic draft</h2>
+                </div>
+                <div className="rounded-full border border-line bg-panel px-3 py-1 text-xs text-muted">
+                  {statusLabel}
+                </div>
+              </div>
+            </div>
+
             <div className="shrink-0 border-b border-line bg-panel/90">
               <EditorToolbar
                 editor={editor}
@@ -492,34 +505,29 @@ export function ScholarEditor() {
         </main>
 
         <EditorSidebar
+          selectedText={selectedText}
+          citationResults={citationResults}
+          citationHistory={citationHistory}
           wordCount={wordCount}
           characterCount={characterCount}
           citationCount={citationCount}
           bibliographyEntries={bibliographyEntries}
+          improvedText={improvedResult}
+          isImproving={isImproving}
+          isSearchingCitations={isSearchingCitations}
+          aiError={aiError}
+          citationError={citationError}
+          citationNote={citationNote}
+          onApplyImprovedText={applyImprovedText}
+          onImproveWriting={runImproveWriting}
+          onFindCitation={runCitationSearch}
+          onRepeatCitationSearch={repeatCitationSearch}
           onInsertCitation={insertCitation}
           onInsertBibliography={insertBibliography}
           onInsertImageSample={insertSampleImage}
           onExportBibliographyText={exportBibliographyText}
           onExportBibliographyJson={exportBibliographyJson}
-        />
-
-        <AiSidebar
-          selectedText={selectedText}
-          improvedText={improvedResult}
-          citationResults={citationResults}
-          isLoading={isImproving}
-          isSearchingCitations={isSearchingCitations}
-          error={aiError}
-          citationError={citationError}
-          citationNote={citationNote}
-          citationHistory={citationHistory}
-          onImproveWriting={runImproveWriting}
-          onFindCitation={runCitationSearch}
-          onRepeatCitationSearch={repeatCitationSearch}
-          onApplyImprovedText={applyImprovedText}
           onInsertCitationCandidate={insertCitationCandidate}
-          onExportCitationText={exportCitationText}
-          onExportCitationJson={exportCitationJson}
         />
       </div>
     </div>
