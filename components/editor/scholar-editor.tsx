@@ -20,6 +20,8 @@ import TextAlign from '@tiptap/extension-text-align';
 import Focus from '@tiptap/extension-focus';
 import { CitationMarker } from '@/lib/editor/citation-extension';
 import { SAMPLE_EDITOR_CONTENT } from '@/lib/editor/sample-content';
+import { improveWriting, type ImproveWritingResponse } from '@/lib/api/ai';
+import { searchCitations, type CitationCandidate } from '@/lib/api/citations';
 import { AiSidebar } from './ai-sidebar';
 import { EditorToolbar } from './editor-toolbar';
 import { EditorSidebar } from './editor-sidebar';
@@ -46,7 +48,16 @@ export function ScholarEditor() {
   const [hydrated, setHydrated] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [selectedText, setSelectedText] = useState('');
-  const [lastAiAction, setLastAiAction] = useState<string | null>(null);
+  const [selectionRange, setSelectionRange] = useState<{ from: number; to: number } | null>(
+    null,
+  );
+  const [improvedResult, setImprovedResult] = useState<ImproveWritingResponse | null>(null);
+  const [citationResults, setCitationResults] = useState<CitationCandidate[]>([]);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [citationError, setCitationError] = useState<string | null>(null);
+  const [citationNote, setCitationNote] = useState<string | null>(null);
+  const [isImproving, setIsImproving] = useState(false);
+  const [isSearchingCitations, setIsSearchingCitations] = useState(false);
 
   useEffect(() => {
     setHydrated(true);
@@ -119,7 +130,13 @@ export function ScholarEditor() {
     },
     onSelectionUpdate({ editor }) {
       const { from, to } = editor.state.selection;
+      setSelectionRange(from === to ? null : { from, to });
       setSelectedText(editor.state.doc.textBetween(from, to, ' ').trim());
+      setImprovedResult(null);
+      setAiError(null);
+      setCitationResults([]);
+      setCitationError(null);
+      setCitationNote(null);
     },
     onUpdate({ editor }) {
       if (!hydrated) return;
@@ -212,7 +229,80 @@ export function ScholarEditor() {
   }, [editor]);
 
   const statusLabel = savedAt ? `Saved at ${savedAt}` : 'Draft stored locally';
-  const aiStatusLabel = lastAiAction ? `Last AI action: ${lastAiAction}` : 'AI actions are placeholders';
+  const apiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000/api/v1').replace(/\/$/, '');
+
+  const runImproveWriting = useCallback(async () => {
+    if (!editor || !selectedText.trim()) return;
+
+    setIsImproving(true);
+    setAiError(null);
+
+    try {
+      const response = await improveWriting(apiBaseUrl, selectedText);
+      setImprovedResult(response);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
+      setAiError(message);
+      setImprovedResult(null);
+    } finally {
+      setIsImproving(false);
+    }
+  }, [apiBaseUrl, editor, selectedText]);
+
+  const applyImprovedText = useCallback(() => {
+    if (!editor || !improvedResult || !selectionRange) return;
+
+    editor
+      .chain()
+      .focus()
+      .insertContentAt(selectionRange, improvedResult.improved_text)
+      .run();
+
+    setSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+  }, [editor, improvedResult, selectionRange]);
+
+  const runCitationSearch = useCallback(async () => {
+    if (!selectedText.trim()) return;
+
+    setIsSearchingCitations(true);
+    setCitationError(null);
+    setCitationNote(null);
+    setAiError(null);
+
+    try {
+      const response = await searchCitations(apiBaseUrl, selectedText, 5);
+      setCitationResults(response.results);
+      setCitationNote(response.note);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to search citations.';
+      setCitationError(message);
+      setCitationResults([]);
+      setCitationNote(null);
+    } finally {
+      setIsSearchingCitations(false);
+    }
+  }, [apiBaseUrl, selectedText]);
+
+  const insertCitationCandidate = useCallback(
+    (candidate: CitationCandidate) => {
+      if (!editor) return;
+
+      const position = selectionRange?.to ?? editor.state.selection.to;
+      editor
+        .chain()
+        .focus()
+        .insertContentAt(position, {
+          type: 'citationMarker',
+          attrs: {
+            label: candidate.citation_label,
+            referenceId: candidate.reference_id,
+          },
+          content: [{ type: 'text', text: `[${candidate.citation_label}]` }],
+        })
+        .run();
+    },
+    [editor, selectionRange],
+  );
 
   return (
     <div className="min-h-screen bg-transparent">
@@ -226,7 +316,7 @@ export function ScholarEditor() {
           </div>
           <div className="hidden items-center gap-3 rounded-full border border-line bg-white px-4 py-2 text-sm text-muted lg:flex">
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-            {statusLabel} · {aiStatusLabel}
+            {statusLabel}
           </div>
         </div>
       </header>
@@ -263,12 +353,20 @@ export function ScholarEditor() {
           onInsertImageSample={insertSampleImage}
         />
 
-        <AiSidebar
-          selectedText={selectedText}
-          onUseSelection={(action) => {
-            setLastAiAction(action);
-          }}
-        />
+          <AiSidebar
+            selectedText={selectedText}
+            improvedText={improvedResult}
+            citationResults={citationResults}
+            isLoading={isImproving}
+            isSearchingCitations={isSearchingCitations}
+            error={aiError}
+            citationError={citationError}
+            citationNote={citationNote}
+            onImproveWriting={runImproveWriting}
+            onFindCitation={runCitationSearch}
+            onApplyImprovedText={applyImprovedText}
+            onInsertCitationCandidate={insertCitationCandidate}
+          />
       </div>
     </div>
   );

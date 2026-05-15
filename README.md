@@ -6,10 +6,11 @@ ScholarFlow is an AI-powered academic research workspace focused on writing, cit
 
 - TipTap academic editor
 - citation markers
+- citation search workflow
 - bibliography section support
 - local draft persistence
 - export to HTML and JSON
-- AI sidebar placeholder for future backend integration
+- AI sidebar wired to improve-writing backend endpoint
 
 ## Stack
 
@@ -57,6 +58,8 @@ npm run start
 
 ## Notes
 
-- AI actions are placeholders for now, wired to backend later.
+- Improve Academic Writing is wired to the backend.
+- Citation search is wired to OpenAlex and Crossref.
+- Other AI actions are still placeholders.
 - Citation output must stay grounded in verified sources.
 - Future modules such as statistics, bibliometric analysis, SEM PLS, and journal publishing are intentionally out of scope for the current MVP.

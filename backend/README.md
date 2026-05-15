@@ -6,6 +6,7 @@ FastAPI backend skeleton for ScholarFlow.
 
 - health check endpoint
 - `improve-writing` endpoint skeleton
+- citation search endpoint
 - CORS configuration for the frontend
 - service-based folder structure
 - Pydantic request and response schemas
@@ -26,3 +27,4 @@ Copy `.env.example` to `.env` and adjust values as needed.
 
 - `GET /api/v1/health`
 - `POST /api/v1/ai/improve-writing`
+- `POST /api/v1/citations/search`

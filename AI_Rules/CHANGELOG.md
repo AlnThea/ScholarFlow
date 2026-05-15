@@ -33,3 +33,14 @@
 - Added FastAPI backend skeleton
 - Added improve-writing endpoint scaffold
 - Added backend service and schema structure
+
+## v0.0.5 - In Progress
+- Connected AI sidebar to improve-writing endpoint
+- Added backend request helper on the frontend
+- Added rewrite result preview and apply action
+- Added selected text replacement workflow
+
+## v0.0.6 - In Progress
+- Added citation search backend endpoint
+- Added citation candidate preview in the AI sidebar
+- Added citation candidate insertion into the editor

@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     app_name: str = Field(default="ScholarFlow API", validation_alias="APP_NAME")
     app_version: str = Field(default="0.1.0", validation_alias="APP_VERSION")
     environment: str = Field(default="development", validation_alias="ENVIRONMENT")
+    openalex_api_key: str | None = Field(default=None, validation_alias="OPENALEX_API_KEY")
+    crossref_mailto: str | None = Field(default=None, validation_alias="CROSSREF_MAILTO")
     allowed_origins: list[str] = Field(
         default_factory=lambda: ["http://localhost:3000"],
         validation_alias="ALLOWED_ORIGINS",

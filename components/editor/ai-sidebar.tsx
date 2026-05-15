@@ -1,10 +1,34 @@
 'use client';
 
-import { BookOpenText, Languages, ScrollText, Sigma, Sparkles, Wand2 } from 'lucide-react';
+import {
+  BookOpenText,
+  Check,
+  ExternalLink,
+  Languages,
+  Loader2,
+  RefreshCw,
+  ScrollText,
+  Sigma,
+  Sparkles,
+  Wand2,
+  Search,
+} from 'lucide-react';
+import type { ImproveWritingResponse } from '@/lib/api/ai';
+import type { CitationCandidate } from '@/lib/api/citations';
 
 type AiSidebarProps = {
   selectedText: string;
-  onUseSelection: (action: string) => void;
+  improvedText: ImproveWritingResponse | null;
+  citationResults: CitationCandidate[];
+  isLoading: boolean;
+  isSearchingCitations: boolean;
+  error: string | null;
+  citationError: string | null;
+  citationNote: string | null;
+  onImproveWriting: () => void;
+  onFindCitation: () => void;
+  onApplyImprovedText: () => void;
+  onInsertCitationCandidate: (candidate: CitationCandidate) => void;
 };
 
 function ActionButton({
@@ -12,17 +36,20 @@ function ActionButton({
   description,
   icon: Icon,
   onClick,
+  disabled,
 }: {
   label: string;
   description: string;
   icon: typeof Sparkles;
   onClick: () => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-md border border-line bg-white p-3 text-left transition hover:border-accent/30 hover:bg-accentSoft/60"
+      disabled={disabled}
+      className="w-full rounded-md border border-line bg-white p-3 text-left transition hover:border-accent/30 hover:bg-accentSoft/60 disabled:cursor-not-allowed disabled:opacity-60"
     >
       <div className="flex items-start gap-3">
         <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-md bg-accentSoft text-accent">
@@ -37,8 +64,23 @@ function ActionButton({
   );
 }
 
-export function AiSidebar({ selectedText, onUseSelection }: AiSidebarProps) {
+export function AiSidebar({
+  selectedText,
+  improvedText,
+  citationResults,
+  isLoading,
+  isSearchingCitations,
+  error,
+  citationError,
+  citationNote,
+  onImproveWriting,
+  onFindCitation,
+  onApplyImprovedText,
+  onInsertCitationCandidate,
+}: AiSidebarProps) {
   const hasSelection = selectedText.trim().length > 0;
+  const hasResult = improvedText !== null;
+  const hasCitationResults = citationResults.length > 0;
 
   return (
     <aside className="h-full border-l border-line bg-panel/80 p-4 backdrop-blur">
@@ -49,7 +91,7 @@ export function AiSidebar({ selectedText, onUseSelection }: AiSidebarProps) {
             <h2 className="text-sm font-semibold text-text">AI assistant</h2>
           </div>
           <p className="text-sm leading-6 text-muted">
-            AI actions will use the current selection when connected to backend services.
+            AI actions use the current selection and call the backend explicitly.
           </p>
         </section>
 
@@ -62,41 +104,150 @@ export function AiSidebar({ selectedText, onUseSelection }: AiSidebarProps) {
 
         <section className="space-y-2">
           <ActionButton
-            label="Improve Academic Writing"
+            label={isLoading ? 'Improving...' : 'Improve Academic Writing'}
             description="Refine clarity, tone, and academic structure."
-            icon={Wand2}
-            onClick={() => onUseSelection('improve-writing')}
+            icon={isLoading ? Loader2 : Wand2}
+            onClick={onImproveWriting}
+            disabled={!hasSelection || isLoading}
           />
           <ActionButton
             label="Paraphrase"
             description="Rewrite the selected text while keeping the meaning."
             icon={Languages}
-            onClick={() => onUseSelection('paraphrase')}
+            onClick={() => {}}
+            disabled
           />
           <ActionButton
             label="Summarize"
             description="Condense the selected text into a shorter academic summary."
             icon={ScrollText}
-            onClick={() => onUseSelection('summarize')}
+            onClick={() => {}}
+            disabled
           />
           <ActionButton
             label="Generate Abstract"
             description="Draft an abstract from the current document context."
             icon={BookOpenText}
-            onClick={() => onUseSelection('generate-abstract')}
+            onClick={() => {}}
+            disabled
           />
           <ActionButton
             label="Find Citation"
             description="Prepare the selected claim for citation lookup."
-            icon={Sigma}
-            onClick={() => onUseSelection('find-citation')}
+            icon={isSearchingCitations ? Loader2 : Sigma}
+            onClick={onFindCitation}
+            disabled={!hasSelection || isSearchingCitations}
           />
+        </section>
+
+        <section className="rounded-xl border border-line bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-text">Result</h3>
+            {hasResult ? (
+              <button
+                type="button"
+                onClick={onApplyImprovedText}
+                className="inline-flex items-center gap-2 rounded-md border border-line bg-panel px-3 py-1.5 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
+              >
+                <Check className="h-3.5 w-3.5" />
+                Apply
+              </button>
+            ) : null}
+          </div>
+          {error ? (
+            <div className="rounded-md border border-rose-200 bg-rose-50 p-3 text-sm leading-6 text-rose-700">
+              {error}
+            </div>
+          ) : hasResult ? (
+            <div className="space-y-3">
+              <div className="rounded-md border border-line bg-slate-50 p-3">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+                  Improved Text
+                </p>
+                <p className="text-sm leading-6 text-text">{improvedText?.improved_text}</p>
+              </div>
+              <div className="flex items-start gap-2 rounded-md border border-line bg-white p-3 text-xs leading-5 text-muted">
+                <RefreshCw className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
+                <span>{improvedText?.disclaimer}</span>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm leading-6 text-muted">
+              Run Improve Academic Writing to preview the backend response here.
+            </p>
+          )}
+        </section>
+
+        <section className="rounded-xl border border-line bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-text">Citation lookup</h3>
+            {isSearchingCitations ? (
+              <span className="inline-flex items-center gap-2 text-xs text-muted">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Searching
+              </span>
+            ) : null}
+          </div>
+          {citationError ? (
+            <div className="rounded-md border border-rose-200 bg-rose-50 p-3 text-sm leading-6 text-rose-700">
+              {citationError}
+            </div>
+          ) : citationNote ? (
+            <div className="rounded-md border border-line bg-slate-50 p-3 text-sm leading-6 text-muted">
+              {citationNote}
+            </div>
+          ) : hasCitationResults ? (
+            <div className="space-y-3">
+              {citationResults.map((candidate) => (
+                <div key={`${candidate.source}:${candidate.reference_id}`} className="rounded-md border border-line bg-slate-50 p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+                        {candidate.source}
+                      </p>
+                      <h4 className="mt-1 text-sm font-semibold leading-6 text-text">
+                        {candidate.title}
+                      </h4>
+                      <p className="mt-1 text-xs leading-5 text-muted">
+                        {candidate.authors.length > 0 ? candidate.authors.join(', ') : 'Author data unavailable'}
+                        {candidate.year ? ` · ${candidate.year}` : ''}
+                      </p>
+                      {candidate.doi ? (
+                        <p className="mt-1 break-all text-xs leading-5 text-muted">
+                          DOI: {candidate.doi}
+                        </p>
+                      ) : null}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onInsertCitationCandidate(candidate)}
+                      className="inline-flex shrink-0 items-center gap-2 rounded-md border border-line bg-white px-3 py-1.5 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      Insert
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm leading-6 text-muted">
+              {hasSelection
+                ? 'Search to see verified citation candidates from OpenAlex and Crossref.'
+                : 'Select a sentence or paragraph before searching for citations.'}
+            </p>
+          )}
+
+          <div className="mt-3 flex items-start gap-2 rounded-md border border-line bg-white p-3 text-xs leading-5 text-muted">
+            <Search className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
+            <span>Only verified metadata from external sources is shown here.</span>
+          </div>
         </section>
 
         <section className="rounded-xl border border-line bg-white p-4 shadow-sm">
           <h3 className="mb-2 text-sm font-semibold text-text">Status</h3>
           <p className="text-sm leading-6 text-muted">
-            Placeholder only. No AI calls are wired yet. This keeps the workflow aligned with the current MVP stage.
+            Improve Academic Writing and citation lookup are wired to the backend. Other AI actions remain placeholders.
           </p>
         </section>
       </div>
