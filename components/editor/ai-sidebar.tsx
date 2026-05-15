@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import type { ImproveWritingResponse } from '@/lib/api/ai';
 import type { CitationCandidate } from '@/lib/api/citations';
+import type { CitationHistoryEntry } from '@/lib/editor/citation-history';
 
 type AiSidebarProps = {
   selectedText: string;
@@ -25,8 +26,10 @@ type AiSidebarProps = {
   error: string | null;
   citationError: string | null;
   citationNote: string | null;
+  citationHistory: CitationHistoryEntry[];
   onImproveWriting: () => void;
   onFindCitation: () => void;
+  onRepeatCitationSearch: (query: string) => void;
   onApplyImprovedText: () => void;
   onInsertCitationCandidate: (candidate: CitationCandidate) => void;
   onExportCitationText: () => void;
@@ -75,8 +78,10 @@ export function AiSidebar({
   error,
   citationError,
   citationNote,
+  citationHistory,
   onImproveWriting,
   onFindCitation,
+  onRepeatCitationSearch,
   onApplyImprovedText,
   onInsertCitationCandidate,
   onExportCitationText,
@@ -276,6 +281,44 @@ export function AiSidebar({
               <Download className="h-3.5 w-3.5" />
               JSON
             </button>
+          </div>
+
+          <div className="mt-4 border-t border-line pt-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h4 className="text-sm font-semibold text-text">Search history</h4>
+              <span className="text-xs text-muted">{citationHistory.length} saved</span>
+            </div>
+            {citationHistory.length > 0 ? (
+              <div className="space-y-2">
+                {citationHistory.map((item) => (
+                  <button
+                    key={`${item.query}-${item.savedAt}`}
+                    type="button"
+                    onClick={() => onRepeatCitationSearch(item.query)}
+                    className="w-full rounded-md border border-line bg-white p-3 text-left transition hover:border-accent/30 hover:bg-accentSoft/60"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="line-clamp-2 text-xs font-medium leading-5 text-text">
+                          {item.query}
+                        </p>
+                        <p className="mt-1 text-[11px] leading-5 text-muted">
+                          {item.resultCount} result{item.resultCount === 1 ? '' : 's'}
+                          {item.note ? ` · ${item.note}` : ''}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-[10px] uppercase tracking-[0.12em] text-muted">
+                        {item.savedAt}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm leading-6 text-muted">
+                Search history appears here after you run citation lookup.
+              </p>
+            )}
           </div>
         </section>
 

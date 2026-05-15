@@ -11,10 +11,10 @@ Build the first usable editor MVP.
 5. Add deployment notes
 
 ## Current Task
-Add citation export support and keep citation results export aligned with verified metadata.
+Add citation history support and keep past citation searches persisted in the AI sidebar.
 
 ## Next Tasks
-- Add citation history support
+- Add AI response history
 
 ## Do Not Work On Yet
 - SPSS

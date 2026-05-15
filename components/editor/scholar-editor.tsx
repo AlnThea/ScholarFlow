@@ -24,6 +24,10 @@ import { SAMPLE_EDITOR_CONTENT } from '@/lib/editor/sample-content';
 import { improveWriting, type ImproveWritingResponse } from '@/lib/api/ai';
 import { searchCitations, type CitationCandidate } from '@/lib/api/citations';
 import {
+  addCitationHistoryEntry,
+  type CitationHistoryEntry,
+} from '@/lib/editor/citation-history';
+import {
   buildBibliographyEntries,
   serializeBibliographyText,
 } from '@/lib/editor/bibliography';
@@ -36,6 +40,7 @@ import { EditorSidebar } from './editor-sidebar';
 
 const STORAGE_KEY = 'scholarflow.editor.content.v1';
 const CITATION_LIBRARY_KEY = 'scholarflow.editor.citation-library.v1';
+const CITATION_HISTORY_KEY = 'scholarflow.editor.citation-history.v1';
 
 function countWords(text: string) {
   const trimmed = text.trim();
@@ -64,6 +69,7 @@ export function ScholarEditor() {
   const [improvedResult, setImprovedResult] = useState<ImproveWritingResponse | null>(null);
   const [citationResults, setCitationResults] = useState<CitationCandidate[]>([]);
   const [citationLibrary, setCitationLibrary] = useState<Record<string, CitationCandidate>>({});
+  const [citationHistory, setCitationHistory] = useState<CitationHistoryEntry[]>([]);
   const [aiError, setAiError] = useState<string | null>(null);
   const [citationError, setCitationError] = useState<string | null>(null);
   const [citationNote, setCitationNote] = useState<string | null>(null);
@@ -89,8 +95,26 @@ export function ScholarEditor() {
 
   useEffect(() => {
     if (!hydrated || typeof window === 'undefined') return;
+    const storedHistory = window.localStorage.getItem(CITATION_HISTORY_KEY);
+    if (!storedHistory) return;
+
+    try {
+      const parsed = JSON.parse(storedHistory) as CitationHistoryEntry[];
+      setCitationHistory(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      window.localStorage.removeItem(CITATION_HISTORY_KEY);
+    }
+  }, [hydrated]);
+
+  useEffect(() => {
+    if (!hydrated || typeof window === 'undefined') return;
     window.localStorage.setItem(CITATION_LIBRARY_KEY, JSON.stringify(citationLibrary));
   }, [citationLibrary, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated || typeof window === 'undefined') return;
+    window.localStorage.setItem(CITATION_HISTORY_KEY, JSON.stringify(citationHistory));
+  }, [citationHistory, hydrated]);
 
   const initialContent = useMemo(() => {
     if (!hydrated || typeof window === 'undefined') {
@@ -347,8 +371,9 @@ export function ScholarEditor() {
     setSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
   }, [editor, improvedResult, selectionRange]);
 
-  const runCitationSearch = useCallback(async () => {
-    if (!selectedText.trim()) return;
+  const runCitationSearchForQuery = useCallback(async (query: string) => {
+    const normalizedQuery = query.trim();
+    if (!normalizedQuery) return;
 
     setIsSearchingCitations(true);
     setCitationError(null);
@@ -356,9 +381,17 @@ export function ScholarEditor() {
     setAiError(null);
 
     try {
-      const response = await searchCitations(apiBaseUrl, selectedText, 5);
+      const response = await searchCitations(apiBaseUrl, normalizedQuery, 5);
       setCitationResults(response.results);
       setCitationNote(response.note);
+      setCitationHistory((current) =>
+        addCitationHistoryEntry(current, {
+          query: normalizedQuery,
+          resultCount: response.results.length,
+          note: response.note,
+          savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }),
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to search citations.';
       setCitationError(message);
@@ -367,7 +400,20 @@ export function ScholarEditor() {
     } finally {
       setIsSearchingCitations(false);
     }
-  }, [apiBaseUrl, selectedText]);
+  }, [apiBaseUrl]);
+
+  const runCitationSearch = useCallback(async () => {
+    if (!selectedText.trim()) return;
+
+    await runCitationSearchForQuery(selectedText);
+  }, [runCitationSearchForQuery, selectedText]);
+
+  const repeatCitationSearch = useCallback(
+    (query: string) => {
+      void runCitationSearchForQuery(query);
+    },
+    [runCitationSearchForQuery],
+  );
 
   const insertCitationCandidate = useCallback(
     (candidate: CitationCandidate) => {
@@ -462,8 +508,10 @@ export function ScholarEditor() {
           error={aiError}
           citationError={citationError}
           citationNote={citationNote}
+          citationHistory={citationHistory}
           onImproveWriting={runImproveWriting}
           onFindCitation={runCitationSearch}
+          onRepeatCitationSearch={repeatCitationSearch}
           onApplyImprovedText={applyImprovedText}
           onInsertCitationCandidate={insertCitationCandidate}
           onExportCitationText={exportCitationText}

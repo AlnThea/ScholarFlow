@@ -66,3 +66,8 @@
 - Added citation export support
 - Added TXT and JSON export actions in the citation lookup panel
 - Added citation candidate text serialization helper
+
+## v0.1.1 - In Progress
+- Added citation history support
+- Added persisted citation search history
+- Added repeat citation search actions from history items
