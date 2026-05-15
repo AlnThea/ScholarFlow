@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable
 from typing import Any
 
@@ -10,6 +11,7 @@ from app.schemas.citation import CitationCandidate, CitationSearchRequest, Citat
 
 OPENALEX_BASE_URL = "https://api.openalex.org"
 CROSSREF_BASE_URL = "https://api.crossref.org"
+TOKEN_RE = re.compile(r"[A-Za-z0-9]+")
 
 
 def _normalize_year(value: Any) -> int | None:
@@ -43,6 +45,53 @@ def _short_label(authors: list[str], year: int | None) -> str:
     if year is None:
         return author_name
     return f"{author_name} {year}"
+
+
+def _query_tokens(query: str) -> set[str]:
+    return {token for token in TOKEN_RE.findall(query.lower()) if len(token) > 2}
+
+
+def _score_candidate(query: str, candidate: CitationCandidate) -> tuple[float, list[str]]:
+    query_tokens = _query_tokens(query)
+    title_tokens = set(TOKEN_RE.findall(candidate.title.lower()))
+    author_tokens = set()
+    for author in candidate.authors:
+        author_tokens.update(TOKEN_RE.findall(author.lower()))
+
+    reasons: list[str] = []
+    score = 0.0
+
+    if candidate.doi:
+        score += 10.0
+        reasons.append("doi")
+
+    title_overlap = query_tokens.intersection(title_tokens)
+    if title_overlap:
+        score += min(60.0, len(title_overlap) * 12.0)
+        reasons.append(f"title:{len(title_overlap)}")
+
+    author_overlap = query_tokens.intersection(author_tokens)
+    if author_overlap:
+        score += min(15.0, len(author_overlap) * 5.0)
+        reasons.append(f"author:{len(author_overlap)}")
+
+    if candidate.year is not None and any(token == str(candidate.year) for token in query_tokens):
+        score += 8.0
+        reasons.append("year")
+
+    if candidate.source == "OpenAlex":
+        score += 4.0
+        reasons.append("openalex")
+    elif candidate.source == "Crossref":
+        score += 3.0
+        reasons.append("crossref")
+
+    if query_tokens:
+        title_length = max(len(TOKEN_RE.findall(candidate.title.lower())), 1)
+        density = len(title_overlap) / title_length
+        score += min(8.0, density * 8.0)
+
+    return score, reasons
 
 
 def _dedupe_key(candidate: CitationCandidate) -> str:
@@ -80,6 +129,8 @@ async def _search_openalex(client: httpx.AsyncClient, query: str, limit: int) ->
                 url=str(item.get("url") or ""),
                 reference_id=reference_id,
                 citation_label=_short_label(authors, year),
+                ranking_score=0.0,
+                ranking_reason=[],
             )
         )
     return results
@@ -120,6 +171,8 @@ async def _search_crossref(client: httpx.AsyncClient, query: str, limit: int) ->
                 url=str(item.get("URL") or ""),
                 reference_id=reference_id,
                 citation_label=_short_label(authors, year),
+                ranking_score=0.0,
+                ranking_reason=[],
             )
         )
     return results
@@ -155,10 +208,26 @@ async def search_citations(payload: CitationSearchRequest) -> CitationSearchResp
         seen.add(key)
         merged.append(candidate)
 
-    merged = merged[: payload.limit]
+    ranked: list[CitationCandidate] = []
+    for candidate in merged:
+        score, reasons = _score_candidate(payload.query, candidate)
+        candidate.ranking_score = round(score, 2)
+        candidate.ranking_reason = reasons
+        ranked.append(candidate)
+
+    ranked.sort(
+        key=lambda candidate: (
+            -candidate.ranking_score,
+            candidate.year is None,
+            -(candidate.year or 0),
+            candidate.source != "OpenAlex",
+        ),
+    )
+
+    ranked = ranked[: payload.limit]
 
     note: str | None
-    if merged:
+    if ranked:
         note = None
     elif errors:
         note = "No citation candidates returned from the available sources."
@@ -167,7 +236,7 @@ async def search_citations(payload: CitationSearchRequest) -> CitationSearchResp
 
     return CitationSearchResponse(
         query=payload.query,
-        results=merged,
+        results=ranked,
         sources=["OpenAlex", "Crossref"],
         note=note,
     )

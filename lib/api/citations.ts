@@ -7,6 +7,8 @@ export type CitationCandidate = {
   url: string | null;
   reference_id: string;
   citation_label: string;
+  ranking_score: number;
+  ranking_reason: string[];
 };
 
 export type CitationSearchResponse = {

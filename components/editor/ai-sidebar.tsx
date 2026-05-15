@@ -3,7 +3,6 @@
 import {
   BookOpenText,
   Check,
-  ExternalLink,
   Languages,
   Loader2,
   RefreshCw,
@@ -202,9 +201,14 @@ export function AiSidebar({
                 <div key={`${candidate.source}:${candidate.reference_id}`} className="rounded-md border border-line bg-slate-50 p-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-                        {candidate.source}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+                          {candidate.source}
+                        </p>
+                        <span className="rounded-full border border-line bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+                          Score {candidate.ranking_score.toFixed(1)}
+                        </span>
+                      </div>
                       <h4 className="mt-1 text-sm font-semibold leading-6 text-text">
                         {candidate.title}
                       </h4>
@@ -215,6 +219,11 @@ export function AiSidebar({
                       {candidate.doi ? (
                         <p className="mt-1 break-all text-xs leading-5 text-muted">
                           DOI: {candidate.doi}
+                        </p>
+                      ) : null}
+                      {candidate.ranking_reason.length > 0 ? (
+                        <p className="mt-1 text-[11px] leading-5 text-muted">
+                          Ranked by {candidate.ranking_reason.join(', ')}
                         </p>
                       ) : null}
                     </div>

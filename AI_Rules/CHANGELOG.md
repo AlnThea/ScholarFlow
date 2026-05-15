@@ -46,3 +46,8 @@
 - Added citation candidate insertion into the editor
 - Added bibliography sidebar and reference formatting
 - Added persisted citation library
+
+## v0.0.7 - In Progress
+- Added citation ranking score
+- Added ranking-based ordering of citation candidates
+- Added ranking hints to citation cards

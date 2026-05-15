@@ -15,6 +15,8 @@ class CitationCandidate(BaseModel):
     url: str | None = None
     reference_id: str
     citation_label: str
+    ranking_score: float = 0.0
+    ranking_reason: list[str] = Field(default_factory=list)
 
 
 class CitationSearchResponse(BaseModel):
