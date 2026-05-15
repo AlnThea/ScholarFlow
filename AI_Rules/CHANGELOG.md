@@ -72,3 +72,8 @@
 - Added persisted citation search history
 - Added repeat citation search actions from history items
 - Refined AI sidebar layout to surface citation history higher in the panel
+
+## v0.1.2 - In Progress
+- Refined the editor workspace shell layout
+- Made the header sticky and the main editor area viewport-based
+- Kept the side panels anchored while the editor scrolls internally

@@ -448,9 +448,9 @@ export function ScholarEditor() {
   );
 
   return (
-    <div className="min-h-screen bg-transparent">
-      <header className="border-b border-line bg-panel/80 backdrop-blur">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-4 py-4 lg:px-6">
+    <div className="flex min-h-screen flex-col">
+      <header className="sticky top-0 z-20 border-b border-line bg-panel/90 backdrop-blur">
+        <div className="mx-auto flex h-[72px] max-w-[1600px] items-center justify-between gap-4 px-4 lg:px-6">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
               ScholarFlow
@@ -464,25 +464,29 @@ export function ScholarEditor() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-[1600px] gap-0 lg:grid-cols-[minmax(0,1fr)_320px_320px]">
-        <main className="min-h-[calc(100vh-73px)] bg-panel/70">
+      <div className="mx-auto grid w-full flex-1 min-h-0 max-w-[1600px] gap-0 lg:grid-cols-[minmax(0,1fr)_320px_320px]">
+        <main className="min-h-0 bg-panel/70">
           <div className="border-b border-line bg-white/70 px-4 py-3 text-sm text-muted lg:px-6">
             Production-ready TipTap workspace with structured drafting tools and citation placeholders.
           </div>
 
-          <EditorToolbar
-            editor={editor}
-            onInsertBibliography={insertBibliography}
-            onExportHtml={exportHtml}
-            onExportJson={exportJson}
-            onSaveDraft={saveDraft}
-            onInsertCitation={insertCitation}
-            onInsertImage={insertImage}
-          />
+          <div className="flex h-[calc(100vh-72px-41px)] min-h-0 flex-col">
+            <div className="shrink-0 border-b border-line bg-panel/90">
+              <EditorToolbar
+                editor={editor}
+                onInsertBibliography={insertBibliography}
+                onExportHtml={exportHtml}
+                onExportJson={exportJson}
+                onSaveDraft={saveDraft}
+                onInsertCitation={insertCitation}
+                onInsertImage={insertImage}
+              />
+            </div>
 
-          <div className="mx-auto max-w-5xl px-4 py-6 lg:px-8">
-            <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-soft">
-              <EditorContent editor={editor} />
+            <div className="flex-1 overflow-y-auto px-4 py-5 lg:px-8">
+              <div className="mx-auto max-w-5xl overflow-hidden rounded-2xl border border-line bg-white shadow-soft">
+                <EditorContent editor={editor} />
+              </div>
             </div>
           </div>
         </main>
