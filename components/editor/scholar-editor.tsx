@@ -1,41 +1,36 @@
+// c:/web/ScholarFlow/components/editor/scholar-editor.tsx
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  EditorContent,
-  useEditor,
-} from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import Link from '@tiptap/extension-link';
-import Image from '@tiptap/extension-image';
-import Table from '@tiptap/extension-table';
-import TableRow from '@tiptap/extension-table-row';
-import TableHeader from '@tiptap/extension-table-header';
-import TableCell from '@tiptap/extension-table-cell';
-import Highlight from '@tiptap/extension-highlight';
-import Placeholder from '@tiptap/extension-placeholder';
-import TextStyle from '@tiptap/extension-text-style';
-import TextAlign from '@tiptap/extension-text-align';
-import Focus from '@tiptap/extension-focus';
-import type { JSONContent } from '@tiptap/core';
-import { CitationMarker } from '@/lib/editor/citation-extension';
-import { SAMPLE_EDITOR_CONTENT } from '@/lib/editor/sample-content';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { improveWriting, type ImproveWritingResponse } from '@/lib/api/ai';
+import { fetchAIModels, updateAIModel, type AIModel } from '@/lib/api/ai-models';
+import EditorJsEditor, { type EditorJsMethods } from './editorjs-editor';
+import { EditorLayout } from './editor-layout';
 import { searchCitations, type CitationCandidate } from '@/lib/api/citations';
+import { fetchCitationLibrary, saveCitationToLibrary } from '@/lib/api/citation-library';
+import { useAuth } from '@/components/auth/auth-provider';
+import {
+  fetchDocuments,
+  fetchDocumentById,
+  createDocument,
+  updateDocument,
+  deleteDocument,
+  type DocumentEntry,
+  type DocumentListItem,
+  type DocumentSettings
+} from '@/lib/api/documents';
 import {
   addCitationHistoryEntry,
   type CitationHistoryEntry,
 } from '@/lib/editor/citation-history';
+import { DocumentSetupModal } from './document-setup-modal';
 import {
-  buildBibliographyEntries,
   serializeBibliographyText,
+  formatBibliographyCandidate,
 } from '@/lib/editor/bibliography';
 import {
   serializeCitationCandidatesText,
 } from '@/lib/editor/citation-export';
-import { EditorToolbar } from './editor-toolbar';
-import { EditorSidebar } from './editor-sidebar';
 
 const STORAGE_KEY = 'scholarflow.editor.content.v1';
 const CITATION_LIBRARY_KEY = 'scholarflow.editor.citation-library.v1';
@@ -57,15 +52,114 @@ function downloadFile(filename: string, content: string, type: string) {
   URL.revokeObjectURL(url);
 }
 
+function findMostRelevantSentence(abstract: string | null | undefined, query: string): string {
+  if (!abstract) return "Abstrak tidak tersedia.";
+  
+  // Pre-process abstract to add spaces after periods if missing (e.g. "konvensional.Sistem" -> "konvensional. Sistem")
+  const cleanedAbstract = abstract.replace(/(?<=[.!?])(?=[A-Za-z])/g, " ");
+  
+  const sentences = cleanedAbstract.split(/(?<=[.!?])\s+/);
+  if (sentences.length <= 1) return cleanedAbstract;
+  const queryWords = new Set(query.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+  if (queryWords.size === 0) return sentences[0];
+  let bestSentence = sentences[0];
+  let maxOverlap = -1;
+  for (const sentence of sentences) {
+    const sentenceWords = new Set(sentence.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+    let overlap = 0;
+    for (const word of sentenceWords) {
+      if (queryWords.has(word)) overlap++;
+    }
+    if (overlap > maxOverlap) {
+      maxOverlap = overlap;
+      bestSentence = sentence;
+    }
+  }
+  return bestSentence;
+}
+
+function HighlightedAbstract({ abstract, query }: { abstract: string | null | undefined; query: string }) {
+  if (!abstract) return <p className="text-slate-400 italic text-xs">Abstrak tidak tersedia.</p>;
+  
+  // Pre-process abstract to add spaces after periods if missing
+  const cleanedAbstract = abstract.replace(/(?<=[.!?])(?=[A-Za-z])/g, " ");
+  
+  const sentences = cleanedAbstract.split(/(?<=[.!?])\s+/);
+  if (sentences.length <= 1) {
+    return <p className="text-slate-600 leading-relaxed text-xs">{cleanedAbstract}</p>;
+  }
+  const queryWords = new Set(query.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+  let bestIndex = 0;
+  let maxOverlap = -1;
+  sentences.forEach((sentence, idx) => {
+    const sentenceWords = new Set(sentence.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+    let overlap = 0;
+    for (const word of sentenceWords) {
+      if (queryWords.has(word)) overlap++;
+    }
+    if (overlap > maxOverlap) {
+      maxOverlap = overlap;
+      bestIndex = idx;
+    }
+  });
+  return (
+    <p className="text-slate-600 leading-relaxed text-xs">
+      {sentences.map((sentence, idx) => {
+        if (idx === bestIndex) {
+          return (
+            <mark key={idx} className="bg-indigo-50 text-indigo-950 font-semibold px-1 rounded border-b border-indigo-200">
+              {sentence}{' '}
+            </mark>
+          );
+        }
+        return <span key={idx}>{sentence} </span>;
+      })}
+    </p>
+  );
+}
+
+function findMostUniqueWord(sentence: string): string {
+  if (!sentence) return "";
+  const words = sentence.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"'\[\]]/g, " ").split(/\s+/);
+  const stopwords = new Set([
+    'dan', 'di', 'yang', 'untuk', 'dengan', 'itu', 'ini', 'dalam', 'pada', 'dari', 'ke', 'sebagai', 'adalah',
+    'oleh', 'atau', 'telah', 'bisa', 'dapat', 'akan', 'juga', 'ada', 'mereka', 'ia', 'kita', 'kami', 'saya',
+    'kamu', 'dia', 'namun', 'tetapi', 'karena', 'sehingga', 'maka', 'jika', 'serta', 'seperti',
+    'tersebut', 'secara', 'sebesar', 'sistem', 'metode', 'aplikasi', 'penelitian', 'peneliti', 'hasil', 'pada',
+    'the', 'and', 'of', 'in', 'to', 'for', 'with', 'on', 'at', 'by', 'an', 'be', 'this', 'that', 'from', 'it', 'is', 'was', 'were', 'are', 'as'
+  ]);
+  let bestWord = "";
+  let maxScore = -1;
+  for (const word of words) {
+    const cleanWord = word.trim();
+    if (!cleanWord || stopwords.has(cleanWord.toLowerCase())) continue;
+    let score = cleanWord.length;
+    if (/[vxzyqp]/i.test(cleanWord)) score += 2;
+    if (/[A-Z]/.test(cleanWord)) score += 1;
+    if (/\d/.test(cleanWord)) score += 1;
+    if (score > maxScore) {
+      maxScore = score;
+      bestWord = cleanWord;
+    }
+  }
+  return bestWord || words[0] || "";
+}
+
 export function ScholarEditor() {
+  const { user } = useAuth();
   const [hydrated, setHydrated] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [selectedText, setSelectedText] = useState('');
-  const [selectionRange, setSelectionRange] = useState<{ from: number; to: number } | null>(
-    null,
-  );
-  const [documentJson, setDocumentJson] = useState<JSONContent | null>(null);
   const [improvedResult, setImprovedResult] = useState<ImproveWritingResponse | null>(null);
+  const [selectedAiModel, setSelectedAiModel] = useState('gemini');
+
+  // Document system state
+  const [documents, setDocuments] = useState<DocumentListItem[]>([]);
+  const [currentDocument, setCurrentDocument] = useState<DocumentEntry | null>(null);
+  const [saveStatus, setSaveStatus] = useState<string>('Tersimpan ke Cloud');
+  const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const loadedDocumentIdRef = useRef<string | null>(null);
   const [citationResults, setCitationResults] = useState<CitationCandidate[]>([]);
   const [citationLibrary, setCitationLibrary] = useState<Record<string, CitationCandidate>>({});
   const [citationHistory, setCitationHistory] = useState<CitationHistoryEntry[]>([]);
@@ -74,23 +168,378 @@ export function ScholarEditor() {
   const [citationNote, setCitationNote] = useState<string | null>(null);
   const [isImproving, setIsImproving] = useState(false);
   const [isSearchingCitations, setIsSearchingCitations] = useState(false);
+  const citationInsertTimeoutRef = useRef<number | null>(null);
+  const [activeModalCitation, setActiveModalCitation] = useState<{ refId: string; label: string; citedSentence: string } | null>(null);
+  const [activePdfUrl, setActivePdfUrl] = useState<string | null>(null);
+  const [activePdfSearchTerm, setActivePdfSearchTerm] = useState<string>('');
+  const [resolvedPdfUrl, setResolvedPdfUrl] = useState<string | null>(null);
+  const [isResolvingPdf, setIsResolvingPdf] = useState(false);
+  const [translatedCitedSentence, setTranslatedCitedSentence] = useState<string>('');
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [aiModels, setAiModels] = useState<AIModel[]>([]);
+
+  useEffect(() => {
+    fetchAIModels().then(data => {
+      setAiModels(data);
+    }).catch(err => {
+      console.error("Failed to load AI models:", err);
+    });
+  }, []);
+
+  const handleUpdateAIModel = useCallback(async (id: string, updates: Partial<AIModel>) => {
+    try {
+      const updated = await updateAIModel(id, updates);
+      setAiModels((prev) => prev.map(m => m.id === id ? updated : m));
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }, []);
+
+  // EditorJS Ref and Stats state
+  const editorJsRef = useRef<EditorJsMethods | null>(null);
+  const [editorJsStats, setEditorJsStats] = useState({
+    wordCount: 0,
+    characterCount: 0,
+    citationCount: 0
+  });
+  const [activeReferenceIds, setActiveReferenceIds] = useState<string[]>([]);
+
+  const triggerDebouncedSave = useCallback((docId: string, titleToSave: string, contentToSave: any) => {
+    if (!user?.id) return;
+    setSaveStatus('Menyimpan...');
+
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    debounceTimeoutRef.current = setTimeout(async () => {
+      try {
+        const res = await updateDocument(docId, user.id, {
+          title: titleToSave,
+          content: contentToSave
+        });
+        if (res.success) {
+          setSaveStatus('Tersimpan ke Cloud');
+          
+          // Refresh list to update title/timestamps
+          const list = await fetchDocuments(user.id);
+          setDocuments(list);
+        } else {
+          setSaveStatus('Error saving');
+        }
+      } catch (err) {
+        console.error('Error saving document:', err);
+        setSaveStatus('Error saving');
+      }
+    }, 1500);
+  }, [user]);
+
+  // Cancel pending save on switch or unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, [currentDocument?.id]);
+
+  // Load documents list from Supabase on start
+  useEffect(() => {
+    if (!hydrated || !user?.id) return;
+
+    const loadDocs = async () => {
+      try {
+        const list = await fetchDocuments(user.id);
+        setDocuments(list);
+        
+        // Do not auto-select or auto-create a document.
+        // Leave currentDocument as null to show the Dashboard first.
+        setCurrentDocument(null);
+      } catch (err) {
+        console.error('Error loading documents:', err);
+      }
+    };
+
+    void loadDocs();
+  }, [hydrated, user]);
+
+  // Dynamic content renderer on switch
+  useEffect(() => {
+    if (!currentDocument || !editorJsRef.current) return;
+    if (currentDocument.id !== loadedDocumentIdRef.current) {
+      loadedDocumentIdRef.current = currentDocument.id;
+      const timer = setTimeout(() => {
+        if (currentDocument.content) {
+          editorJsRef.current?.renderContent(currentDocument.content);
+        } else {
+          editorJsRef.current?.renderContent({
+            time: Date.now(),
+            blocks: [
+              {
+                id: "welcome-block-id",
+                type: "header",
+                data: {
+                  text: currentDocument.title || "Untitled Document",
+                  level: 2
+                }
+              },
+              {
+                id: "intro-block-id",
+                type: "paragraph",
+                data: {
+                  text: "Mulai menulis draf jurnal akademik Anda di sini..."
+                }
+              }
+            ],
+            version: "2.29.0"
+          });
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [currentDocument]);
+
+  const handleSelectDocument = useCallback(async (id: string) => {
+    if (!user?.id) return;
+    try {
+      const detail = await fetchDocumentById(id, user.id);
+      if (detail) {
+        setCurrentDocument(detail);
+      }
+    } catch (err) {
+      console.error('Error selecting document:', err);
+    }
+  }, [user]);
+
+  const handleCreateDocument = useCallback(async (
+    title: string = 'Untitled Document', 
+    settings: Partial<DocumentSettings> = {}
+  ) => {
+    if (!user?.id) return;
+    try {
+      const newDoc = await createDocument(user.id, title, {
+        time: Date.now(),
+        blocks: [
+          {
+            id: "welcome-block-id",
+            type: "header",
+            data: {
+              text: title,
+              level: 2
+            }
+          },
+          {
+            id: "intro-block-id",
+            type: "paragraph",
+            data: {
+              text: "Mulai menulis draf jurnal akademik Anda di sini..."
+            }
+          }
+        ],
+        version: "2.29.0"
+      }, settings);
+      if (newDoc) {
+        setDocuments((prev) => [newDoc, ...prev]);
+        setCurrentDocument(newDoc);
+        setIsSetupModalOpen(false);
+      }
+    } catch (err) {
+      console.error('Error creating document:', err);
+    }
+  }, [user]);
+
+  const handleDeleteDocument = useCallback(async (id: string) => {
+    if (!user?.id) return;
+    try {
+      const res = await deleteDocument(id, user.id);
+      if (res.success) {
+        const updatedList = documents.filter((doc) => doc.id !== id);
+        setDocuments(updatedList);
+
+        if (currentDocument?.id === id) {
+          if (updatedList.length > 0) {
+            const detail = await fetchDocumentById(updatedList[0].id, user.id);
+            if (detail) {
+              setCurrentDocument(detail);
+            }
+          } else {
+            setCurrentDocument(null);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error deleting document:', err);
+    }
+  }, [user, documents, currentDocument]);
+
+  const handleRenameDocument = useCallback((title: string) => {
+    if (!currentDocument || !user?.id) return;
+    
+    const updatedDoc = { ...currentDocument, title };
+    setCurrentDocument(updatedDoc);
+    setDocuments((prev) =>
+      prev.map((doc) => (doc.id === currentDocument.id ? { ...doc, title } : doc))
+    );
+
+    triggerDebouncedSave(currentDocument.id, title, currentDocument.content);
+  }, [currentDocument, user, triggerDebouncedSave]);
+
+  const handleContentChange = useCallback((content: any) => {
+    if (!currentDocument || !user?.id) return;
+
+    const updatedDoc = { ...currentDocument, content };
+    setCurrentDocument(updatedDoc);
+
+    triggerDebouncedSave(currentDocument.id, currentDocument.title, content);
+  }, [currentDocument, user, triggerDebouncedSave]);
 
   useEffect(() => {
     setHydrated(true);
   }, []);
 
+  // Load citation library: Supabase (global) + localStorage fallback
   useEffect(() => {
-    if (!hydrated || typeof window === 'undefined') return;
-    const storedLibrary = window.localStorage.getItem(CITATION_LIBRARY_KEY);
-    if (!storedLibrary) return;
+    if (!hydrated) return;
 
-    try {
-      const parsed = JSON.parse(storedLibrary) as Record<string, CitationCandidate>;
-      setCitationLibrary(parsed);
-    } catch {
-      window.localStorage.removeItem(CITATION_LIBRARY_KEY);
-    }
+    // 1. Try loading from Supabase global library first
+    fetchCitationLibrary().then((supabaseLibrary) => {
+      if (Object.keys(supabaseLibrary).length > 0) {
+        setCitationLibrary(supabaseLibrary);
+        // Sync to localStorage as local cache
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(CITATION_LIBRARY_KEY, JSON.stringify(supabaseLibrary));
+        }
+        return;
+      }
+
+      // 2. Fallback: load from localStorage if Supabase is empty
+      if (typeof window === 'undefined') return;
+      const stored = window.localStorage.getItem(CITATION_LIBRARY_KEY);
+      if (!stored) return;
+      try {
+        const parsed = JSON.parse(stored) as Record<string, CitationCandidate>;
+        setCitationLibrary(parsed);
+      } catch {
+        window.localStorage.removeItem(CITATION_LIBRARY_KEY);
+      }
+    });
   }, [hydrated]);
+
+  // Resolving direct PDF url in background when citation modal is opened
+  useEffect(() => {
+    if (!activeModalCitation) {
+      setResolvedPdfUrl(null);
+      setIsResolvingPdf(false);
+      return;
+    }
+
+    const candidate = citationLibrary[activeModalCitation.refId];
+    if (!candidate) return;
+
+    // Use existing pdf_url immediately if available
+    if (candidate.pdf_url) {
+      setResolvedPdfUrl(candidate.pdf_url);
+    } else {
+      setResolvedPdfUrl(null);
+    }
+
+    const targetUrl = candidate.url || (candidate.doi ? `https://doi.org/${candidate.doi}` : null);
+    if (!targetUrl) return;
+
+    setIsResolvingPdf(true);
+    fetch(`/api/citations/resolve-pdf?url=${encodeURIComponent(targetUrl)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.pdf_url) {
+          setResolvedPdfUrl(data.pdf_url);
+          // Update local library cache so it resolves instantly next time
+          setCitationLibrary((current) => {
+            const existing = current[activeModalCitation.refId];
+            if (existing && !existing.pdf_url) {
+              const updated = {
+                ...current,
+                [activeModalCitation.refId]: { ...existing, pdf_url: data.pdf_url }
+              };
+              // Persist to localStorage
+              if (typeof window !== 'undefined') {
+                window.localStorage.setItem(CITATION_LIBRARY_KEY, JSON.stringify(updated));
+              }
+              return updated;
+            }
+            return current;
+          });
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        setIsResolvingPdf(false);
+      });
+  }, [activeModalCitation, citationLibrary]);
+
+  // Translate cited sentence in background when modal is opened for cross-lingual matching
+  useEffect(() => {
+    if (!activeModalCitation) {
+      setTranslatedCitedSentence('');
+      setIsTranslating(false);
+      return;
+    }
+
+    const candidate = citationLibrary[activeModalCitation.refId];
+    if (!candidate || !candidate.abstract) {
+      setTranslatedCitedSentence(activeModalCitation.citedSentence);
+      return;
+    }
+
+    const citedText = activeModalCitation.citedSentence;
+    const abstractText = candidate.abstract;
+
+    // Heuristic helper to check if text is English
+    const detectIsEnglish = (text: string): boolean => {
+      const englishWords = new Set(['the', 'of', 'and', 'to', 'for', 'is', 'with', 'that', 'this', 'by', 'in', 'on', 'at']);
+      const words = text.toLowerCase().match(/[a-z]+/g) ?? [];
+      let englishCount = 0;
+      for (const word of words) {
+        if (englishWords.has(word)) englishCount++;
+      }
+      return englishCount / Math.max(words.length, 1) > 0.05 || englishCount >= 2;
+    };
+
+    const isAbstractEnglish = detectIsEnglish(abstractText);
+    const isQueryEnglish = detectIsEnglish(citedText);
+
+    if (isAbstractEnglish && !isQueryEnglish) {
+      setIsTranslating(true);
+      fetch(`/api/citations/translate?text=${encodeURIComponent(citedText)}&target=en`)
+        .then((res) => res.json())
+        .then((data) => {
+          setTranslatedCitedSentence(data.translatedText || citedText);
+        })
+        .catch((err) => {
+          console.error('Translation failed:', err);
+          setTranslatedCitedSentence(citedText);
+        })
+        .finally(() => {
+          setIsTranslating(false);
+        });
+    } else if (!isAbstractEnglish && isQueryEnglish) {
+      setIsTranslating(true);
+      fetch(`/api/citations/translate?text=${encodeURIComponent(citedText)}&target=id`)
+        .then((res) => res.json())
+        .then((data) => {
+          setTranslatedCitedSentence(data.translatedText || citedText);
+        })
+        .catch((err) => {
+          console.error('Translation failed:', err);
+          setTranslatedCitedSentence(citedText);
+        })
+        .finally(() => {
+          setIsTranslating(false);
+        });
+    } else {
+      setTranslatedCitedSentence(citedText);
+    }
+  }, [activeModalCitation, citationLibrary]);
 
   useEffect(() => {
     if (!hydrated || typeof window === 'undefined') return;
@@ -115,195 +564,72 @@ export function ScholarEditor() {
     window.localStorage.setItem(CITATION_HISTORY_KEY, JSON.stringify(citationHistory));
   }, [citationHistory, hydrated]);
 
-  const initialContent = useMemo(() => {
-    if (!hydrated || typeof window === 'undefined') {
-      return SAMPLE_EDITOR_CONTENT;
-    }
-
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    return stored ?? SAMPLE_EDITOR_CONTENT;
-  }, [hydrated]);
-
-  const editor = useEditor({
-    immediatelyRender: false,
-    extensions: [
-      StarterKit.configure({
-        heading: {
-          levels: [1, 2, 3],
-        },
-        codeBlock: {
-          HTMLAttributes: {
-            class: 'sf-code-block',
-          },
-        },
-      }),
-      Underline,
-      TextStyle,
-      Highlight.configure({ multicolor: true }),
-      Link.configure({
-        openOnClick: false,
-        autolink: true,
-        HTMLAttributes: {
-          class: 'text-accent underline underline-offset-2',
-        },
-      }),
-      Image.configure({
-        allowBase64: true,
-        HTMLAttributes: {
-          class: 'rounded-xl border border-line',
-        },
-      }),
-      Table.configure({
-        resizable: true,
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
-      Placeholder.configure({
-        placeholder: ({ node }) => {
-          if (node.type.name === 'heading') return 'Write a section heading...';
-          return 'Start drafting your academic text...';
-        },
-      }),
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
-      Focus.configure({
-        className: 'is-focused',
-      }),
-      CitationMarker,
-    ],
-    content: initialContent,
-    editorProps: {
-      attributes: {
-        class:
-          'sf-editor min-h-[32rem] px-6 py-6 focus:outline-none lg:px-10 lg:py-8',
-      },
-    },
-    onSelectionUpdate({ editor }) {
-      const { from, to } = editor.state.selection;
-      setSelectionRange(from === to ? null : { from, to });
-      setSelectedText(editor.state.doc.textBetween(from, to, ' ').trim());
-      setImprovedResult(null);
-      setAiError(null);
-      setCitationResults([]);
-      setCitationError(null);
-      setCitationNote(null);
-    },
-    onUpdate({ editor }) {
-      if (!hydrated) return;
-      setDocumentJson(editor.getJSON());
-      window.localStorage.setItem(STORAGE_KEY, editor.getHTML());
-      setSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-    },
-  });
-
   useEffect(() => {
-    if (!editor || !hydrated) return;
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      editor.commands.setContent(stored, false);
-    }
-    setDocumentJson(editor.getJSON());
-  }, [editor, hydrated]);
+    return () => {
+      if (citationInsertTimeoutRef.current !== null) {
+        window.clearTimeout(citationInsertTimeoutRef.current);
+      }
+    };
+  }, []);
 
-  const textContent = editor?.getText() ?? '';
-  const wordCount = countWords(textContent);
-  const characterCount = textContent.length;
-  const citationCount = editor?.getHTML().match(/data-citation="true"/g)?.length ?? 0;
-  const bibliographyEntries = useMemo(
-    () => buildBibliographyEntries(documentJson, citationLibrary),
-    [documentJson, citationLibrary],
-  );
+  const wordCount = editorJsStats.wordCount;
+  const characterCount = editorJsStats.characterCount;
+  const citationCount = editorJsStats.citationCount;
+
+  const bibliographyEntries = useMemo(() => {
+    const uniqueActiveIds = Array.from(new Set(activeReferenceIds));
+    const style = currentDocument?.settings?.citationStyle || 'apa';
+    const lang = currentDocument?.settings?.citationLocale || 'en-US';
+    
+    return uniqueActiveIds
+      .map((id) => {
+        const candidate = citationLibrary[id];
+        if (!candidate) return null;
+        return {
+          referenceId: id,
+          label: candidate.citation_label,
+          formatted: formatBibliographyCandidate(candidate, style, lang)
+        };
+      })
+      .filter(Boolean) as Array<{ referenceId: string; label: string; formatted: string }>;
+  }, [citationLibrary, activeReferenceIds, currentDocument]);
+
+  // Sync bibliography entries to EditorJS in real-time
+  useEffect(() => {
+    if (!hydrated) return;
+    const entries = bibliographyEntries.map((e) => ({
+      label: e.label,
+      formatted: e.formatted,
+    }));
+    const timer = setTimeout(() => {
+      editorJsRef.current?.upsertBibliography(entries);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [bibliographyEntries, hydrated]);
 
   const insertCitation = useCallback(() => {
-    if (!editor) return;
-    const nextLabel = String(citationCount + 1);
-    editor
-      .chain()
-      .focus()
-      .insertCitationMarker({
-        label: nextLabel,
-        referenceId: `ref-${nextLabel}`,
-      })
-      .run();
-  }, [editor, citationCount]);
+    editorJsRef.current?.insertCitation();
+  }, []);
 
   const insertBibliography = useCallback(() => {
-    if (!editor) return;
-
-    const bibliographyItems = bibliographyEntries;
-    editor
-      .chain()
-      .focus()
-      .insertContent(
-        bibliographyItems.length > 0
-          ? [
-              {
-                type: 'heading',
-                attrs: { level: 2 },
-                content: [{ type: 'text', text: 'Bibliography' }],
-              },
-              {
-                type: 'orderedList',
-                content: bibliographyItems.map((entry) => ({
-                  type: 'listItem',
-                  content: [
-                    {
-                      type: 'paragraph',
-                      content: [{ type: 'text', text: entry.formatted }],
-                    },
-                  ],
-                })),
-              },
-            ]
-          : [
-              {
-                type: 'heading',
-                attrs: { level: 2 },
-                content: [{ type: 'text', text: 'Bibliography' }],
-              },
-              {
-                type: 'paragraph',
-                content: [
-                  {
-                    type: 'text',
-                    text: 'Insert verified citation candidates first, then generate the bibliography.',
-                  },
-                ],
-              },
-            ],
-      )
-      .run();
-  }, [editor, bibliographyEntries]);
+    const text = bibliographyEntries.length > 0
+      ? "Bibliography:\n" + bibliographyEntries.map((entry, i) => `${i + 1}. ${entry.formatted}`).join('\n')
+      : "Bibliography:\nInsert verified citation candidates first, then generate the bibliography.";
+    editorJsRef.current?.insertBibliographyText(text);
+  }, [bibliographyEntries]);
 
   const insertImage = useCallback(
     (url: string) => {
-      if (!editor || !url) return;
-      editor.chain().focus().setImage({ src: url, alt: 'Inserted image' }).run();
+      if (url) editorJsRef.current?.insertImage(url);
     },
-    [editor],
+    [],
   );
 
   const insertSampleImage = useCallback(() => {
     insertImage('https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1200&q=80');
   }, [insertImage]);
 
-  const saveDraft = useCallback(() => {
-    if (!editor) return;
-    window.localStorage.setItem(STORAGE_KEY, editor.getHTML());
-    setSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-  }, [editor]);
 
-  const exportHtml = useCallback(() => {
-    if (!editor) return;
-    downloadFile('scholarflow-draft.html', editor.getHTML(), 'text/html;charset=utf-8');
-  }, [editor]);
-
-  const exportJson = useCallback(() => {
-    if (!editor) return;
-    downloadFile('scholarflow-draft.json', JSON.stringify(editor.getJSON(), null, 2), 'application/json;charset=utf-8');
-  }, [editor]);
 
   const exportBibliographyText = useCallback(() => {
     downloadFile(
@@ -337,17 +663,16 @@ export function ScholarEditor() {
     );
   }, [citationResults]);
 
-  const statusLabel = savedAt ? `Saved at ${savedAt}` : 'Draft stored locally';
-  const apiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000/api/v1').replace(/\/$/, '');
+  const statusLabel = saveStatus;
 
   const runImproveWriting = useCallback(async () => {
-    if (!editor || !selectedText.trim()) return;
+    if (!selectedText.trim()) return;
 
     setIsImproving(true);
     setAiError(null);
 
     try {
-      const response = await improveWriting(apiBaseUrl, selectedText);
+      const response = await improveWriting(selectedText, 'academic', selectedAiModel);
       setImprovedResult(response);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
@@ -356,19 +681,29 @@ export function ScholarEditor() {
     } finally {
       setIsImproving(false);
     }
-  }, [apiBaseUrl, editor, selectedText]);
+  }, [selectedText, selectedAiModel]);
+  const handleParafrasePlagiat = useCallback(async (sentence: string) => {
+    setSelectedText(sentence);
+    setIsImproving(true);
+    setAiError(null);
+
+    try {
+      const response = await improveWriting(sentence, 'academic', selectedAiModel);
+      setImprovedResult(response);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
+      setAiError(message);
+      setImprovedResult(null);
+    } finally {
+      setIsImproving(false);
+    }
+  }, [selectedAiModel]);
 
   const applyImprovedText = useCallback(() => {
-    if (!editor || !improvedResult || !selectionRange) return;
-
-    editor
-      .chain()
-      .focus()
-      .insertContentAt(selectionRange, improvedResult.improved_text)
-      .run();
-
+    if (!improvedResult) return;
+    editorJsRef.current?.insertText(improvedResult.improved_text);
     setSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-  }, [editor, improvedResult, selectionRange]);
+  }, [improvedResult]);
 
   const runCitationSearchForQuery = useCallback(async (query: string) => {
     const normalizedQuery = query.trim();
@@ -380,13 +715,54 @@ export function ScholarEditor() {
     setAiError(null);
 
     try {
-      const response = await searchCitations(apiBaseUrl, normalizedQuery, 5);
-      setCitationResults(response.results);
+      const response = await searchCitations(normalizedQuery, 15);
+      
+      // Apply active document setup filters to search results
+      let filtered = response.results;
+      if (currentDocument?.settings) {
+        const settings = currentDocument.settings;
+
+        // 1. Filter by Publish Year
+        if (settings.publishYear === '5_years') {
+          const currentYear = new Date().getFullYear();
+          filtered = filtered.filter(
+            (c) => c.year !== null && c.year >= currentYear - 5
+          );
+        } else if (settings.publishYear === 'custom') {
+          const start = settings.publishYearStart ?? 0;
+          const end = settings.publishYearEnd ?? new Date().getFullYear();
+          filtered = filtered.filter(
+            (c) => c.year !== null && c.year >= start && c.year <= end
+          );
+        }
+
+        // 2. Filter by Impact Factor (approximated by citation count ranking)
+        if (settings.impactFactor === '0.25+') {
+          filtered = filtered.filter((c) => c.cited_by_count >= 2);
+        } else if (settings.impactFactor === '3+') {
+          filtered = filtered.filter((c) => c.cited_by_count >= 20);
+        } else if (settings.impactFactor === '10+') {
+          filtered = filtered.filter((c) => c.cited_by_count >= 100);
+        }
+
+        // 3. Filter by Limit Collection
+        if (settings.limitCollection === 'journals') {
+          filtered = filtered.filter(
+            (c) => c.journal !== null && c.journal.trim() !== ''
+          );
+        } else if (settings.limitCollection === 'proceedings') {
+          filtered = filtered.filter(
+            (c) => c.journal === null || !c.journal.toLowerCase().includes('journal')
+          );
+        }
+      }
+
+      setCitationResults(filtered);
       setCitationNote(response.note);
       setCitationHistory((current) =>
         addCitationHistoryEntry(current, {
           query: normalizedQuery,
-          resultCount: response.results.length,
+          resultCount: filtered.length,
           note: response.note,
           savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         }),
@@ -399,7 +775,7 @@ export function ScholarEditor() {
     } finally {
       setIsSearchingCitations(false);
     }
-  }, [apiBaseUrl]);
+  }, [currentDocument]);
 
   const runCitationSearch = useCallback(async () => {
     if (!selectedText.trim()) return;
@@ -416,120 +792,249 @@ export function ScholarEditor() {
 
   const insertCitationCandidate = useCallback(
     (candidate: CitationCandidate) => {
-      if (!editor) return;
+      // 1. Selalu sisipkan label sitasi secara inline dengan referenceId
+      editorJsRef.current?.insertCitation(candidate.citation_label, candidate.reference_id);
 
+      // 2. Perbarui state library
       setCitationLibrary((current) => {
-        if (current[candidate.reference_id]) {
-          return current;
-        }
-
-        return {
-          ...current,
-          [candidate.reference_id]: candidate,
-        };
+        if (current[candidate.reference_id]) return current;
+        return { ...current, [candidate.reference_id]: candidate };
       });
 
-      const position = selectionRange?.to ?? editor.state.selection.to;
-      editor
-        .chain()
-        .focus()
-        .insertContentAt(position, {
-          type: 'citationMarker',
-          attrs: {
-            label: candidate.citation_label,
-            referenceId: candidate.reference_id,
-          },
-          content: [{ type: 'text', text: `[${candidate.citation_label}]` }],
-        })
-        .run();
+      // 4. Simpan ke Supabase global library (fire & forget)
+      if (user?.id) {
+        saveCitationToLibrary(candidate, user.id).catch(() => {});
+      }
     },
-    [editor, selectionRange],
+    [user],
   );
 
+
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-20 border-b border-line bg-panel/90 backdrop-blur">
-        <div className="mx-auto flex h-[72px] max-w-[1600px] items-center justify-between gap-4 px-4 lg:px-6">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
-              ScholarFlow
-            </p>
-            <h1 className="text-2xl font-semibold text-text">Academic editor</h1>
-          </div>
-          <div className="hidden items-center gap-3 rounded-full border border-line bg-white px-4 py-2 text-sm text-muted lg:flex">
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-            {statusLabel}
-          </div>
-        </div>
-      </header>
+    <>
+      <EditorLayout
+        selectedText={selectedText}
+        citationResults={citationResults}
+        citationHistory={citationHistory}
+        wordCount={wordCount}
+        characterCount={characterCount}
+        citationCount={citationCount}
+        bibliographyEntries={bibliographyEntries}
+        improvedText={improvedResult}
+        isImproving={isImproving}
+        isSearchingCitations={isSearchingCitations}
+        aiError={aiError}
+        citationError={citationError}
+        citationNote={citationNote}
+        onApplyImprovedText={applyImprovedText}
+        onImproveWriting={runImproveWriting}
+        onFindCitation={runCitationSearch}
+        onRepeatCitationSearch={repeatCitationSearch}
+        onInsertCitation={insertCitation}
+        onInsertBibliography={insertBibliography}
+        onInsertImageSample={insertSampleImage}
+        onExportBibliographyText={exportBibliographyText}
+        onExportBibliographyJson={exportBibliographyJson}
+        onInsertCitationCandidate={insertCitationCandidate}
+        statusLabel={statusLabel}
+        onSelectionChange={setSelectedText}
+        documents={documents}
+        currentDocument={currentDocument}
+        onSelectDocument={handleSelectDocument}
+        onCreateDocument={() => setIsSetupModalOpen(true)}
+        onDeleteDocument={handleDeleteDocument}
+        onRenameDocument={handleRenameDocument}
+        onContentChange={handleContentChange}
+        onStatsChange={(stats: any) => {
+          setEditorJsStats(stats);
+          if (stats.activeReferenceIds) {
+            setActiveReferenceIds((prev) => {
+              const isSame =
+                prev.length === stats.activeReferenceIds.length &&
+                prev.every((id, idx) => id === stats.activeReferenceIds[idx]);
+              return isSame ? prev : stats.activeReferenceIds;
+            });
+          }
+        }}
+        editorJsRef={editorJsRef}
+        onCiteClick={(refId, label, citedSentence) => {
+          setActiveModalCitation({ refId, label, citedSentence });
+        }}
+        activePdfUrl={activePdfUrl}
+        activePdfSearchTerm={activePdfSearchTerm}
+        onClosePdf={() => {
+          setActivePdfUrl(null);
+          setActivePdfSearchTerm('');
+        }}
+        selectedAiModel={selectedAiModel}
+        setSelectedAiModel={setSelectedAiModel}
+        aiModels={aiModels}
+        onUpdateAIModel={handleUpdateAIModel}
+        onParafrasePlagiat={handleParafrasePlagiat}
+      />
 
-      <div className="mx-auto grid w-full flex-1 min-h-0 max-w-[1600px] gap-0 lg:grid-cols-[320px_minmax(0,1fr)]">
-        <main className="min-h-0 bg-panel/70">
-          <div className="border-b border-line bg-white/70 px-4 py-3 text-sm text-muted lg:px-6">
-            Production-ready TipTap workspace with structured drafting tools and citation placeholders.
-          </div>
+      {/* Citation Details Modal */}
+      {activeModalCitation && (() => {
+        const candidate = citationLibrary[activeModalCitation.refId];
+        const citedSentence = activeModalCitation.citedSentence;
+        return (
+          <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)] max-w-xl w-full max-h-[85vh] overflow-hidden flex flex-col transform transition-all scale-100">
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
+                  <h3 className="text-sm font-bold text-slate-800">Detail Sitasi Jurnal</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveModalCitation(null)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition"
+                  aria-label="Tutup"
+                >
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
 
-          <div className="flex h-[calc(100vh-72px-41px)] min-h-0 flex-col">
-            <div className="shrink-0 border-b border-line bg-white/80 px-4 py-3 lg:px-6">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-                    Document
-                  </p>
-                  <h2 className="truncate text-lg font-semibold text-text">Academic draft</h2>
-                </div>
-                <div className="rounded-full border border-line bg-panel px-3 py-1 text-xs text-muted">
-                  {statusLabel}
-                </div>
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-5">
+                {candidate ? (
+                  <>
+                    {/* Title */}
+                    <div className="flex flex-col gap-1">
+                      <h4 className="text-base font-bold text-slate-800 leading-snug">
+                        {candidate.title}
+                      </h4>
+                      <p className="text-xs font-semibold text-slate-505 mt-1">
+                        {candidate.authors.join(', ')}
+                      </p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        {candidate.journal ? `${candidate.journal} · ` : ''}{candidate.year || 'N/A'} · Source: {candidate.source}
+                      </p>
+                    </div>
+
+                    {/* Cited claim in the editor */}
+                    {citedSentence && (
+                      <div className="bg-slate-50 border-l-4 border-indigo-500 p-4 rounded-r-xl text-slate-650">
+                        <span className="block text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-1.5 flex items-center gap-1">
+                          <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2H4c-1.25 0-2 .75-2 2v4c0 1.25.75 2 2 2h4c0 2.5-1.75 4.5-4 5v2m14 3c3 0 7-1 7-8V5c0-1.25-.75-2-2-2h-4c-1.25 0-2 .75-2 2v4c0 1.25.75 2 2 2h4c0 2.5-1.75 4.5-4 5v2"></path>
+                          </svg>
+                          Klaim/Pernyataan Anda:
+                        </span>
+                        <p className="italic font-medium text-xs text-slate-600">"{citedSentence}"</p>
+                      </div>
+                    )}                    {/* Matched text in Journal */}
+                    <div className="flex flex-col gap-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kutipan Terkait dari Jurnal (Matching Snippet):</span>
+                      <div className="p-4 rounded-xl bg-indigo-50/50 border border-indigo-100/80 text-xs leading-relaxed text-indigo-950 font-medium italic min-h-[4rem] flex items-center justify-center">
+                        {isTranslating ? (
+                          <span className="text-[11px] text-slate-400 font-medium animate-pulse flex items-center gap-1.5 justify-center py-2 w-full">
+                            <svg className="animate-spin h-3.5 w-3.5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Menerjemahkan & mencocokkan kutipan lintas bahasa...
+                          </span>
+                        ) : (
+                          `"${findMostRelevantSentence(candidate.abstract, translatedCitedSentence || citedSentence || '')}"`
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Full Abstract with Highlight */}
+                    {candidate.abstract && (
+                      <div className="flex flex-col gap-2">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Abstrak Lengkap Jurnal:</span>
+                        <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/30">
+                          <HighlightedAbstract abstract={candidate.abstract} query={translatedCitedSentence || citedSentence || ''} />
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="py-8 text-center text-slate-400 text-xs">
+                    Informasi detail sitasi tidak ditemukan di pustaka lokal.
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveModalCitation(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
+                >
+                  Tutup
+                </button>
+                {isResolvingPdf && !resolvedPdfUrl && (
+                  <span className="text-[10px] text-slate-400 font-medium animate-pulse mr-2 flex items-center gap-1.5">
+                    <svg className="animate-spin h-3.5 w-3.5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Mencari PDF...
+                  </span>
+                )}
+                {resolvedPdfUrl && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const relevantSentence = findMostRelevantSentence(candidate?.abstract, translatedCitedSentence || citedSentence || '');
+                      const rawSearchTerm = relevantSentence || citedSentence || '';
+                      
+                      // Clean brackets and quotes, and limit to first 25 words to avoid PDF line wrap issues
+                      let cleanSentence = rawSearchTerm
+                        .replace(/[\[\]"']/g, "")
+                        .replace(/\s+/g, " ")
+                        .trim();
+                      
+                      const words = cleanSentence.split(" ");
+                      if (words.length > 25) {
+                        cleanSentence = words.slice(0, 25).join(" ");
+                      }
+                      
+                      setActivePdfUrl(resolvedPdfUrl);
+                      setActivePdfSearchTerm(cleanSentence);
+                      setActiveModalCitation(null);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-semibold shadow-sm transition animate-fade-in"
+                  >
+                    Buka PDF di Sidebar
+                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="9" y1="3" x2="9" y2="21"></line>
+                    </svg>
+                  </button>
+                )}
+                {candidate?.url && (
+                  <button
+                    type="button"
+                    onClick={() => window.open(candidate.url!, '_blank', 'noopener,noreferrer')}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-xs font-semibold shadow-sm transition"
+                  >
+                    Buka Web Jurnal
+                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                      <polyline points="15 3 21 3 21 9"></polyline>
+                      <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                  </button>
+                )}
               </div>
             </div>
-
-            <div className="shrink-0 border-b border-line bg-panel/90">
-              <EditorToolbar
-                editor={editor}
-                onInsertBibliography={insertBibliography}
-                onExportHtml={exportHtml}
-                onExportJson={exportJson}
-                onSaveDraft={saveDraft}
-                onInsertCitation={insertCitation}
-                onInsertImage={insertImage}
-              />
-            </div>
-
-            <div className="flex-1 overflow-y-auto px-4 py-5 lg:px-8">
-              <div className="mx-auto max-w-5xl overflow-hidden rounded-2xl border border-line bg-white shadow-soft">
-                <EditorContent editor={editor} />
-              </div>
-            </div>
           </div>
-        </main>
-
-        <EditorSidebar
-          selectedText={selectedText}
-          citationResults={citationResults}
-          citationHistory={citationHistory}
-          wordCount={wordCount}
-          characterCount={characterCount}
-          citationCount={citationCount}
-          bibliographyEntries={bibliographyEntries}
-          improvedText={improvedResult}
-          isImproving={isImproving}
-          isSearchingCitations={isSearchingCitations}
-          aiError={aiError}
-          citationError={citationError}
-          citationNote={citationNote}
-          onApplyImprovedText={applyImprovedText}
-          onImproveWriting={runImproveWriting}
-          onFindCitation={runCitationSearch}
-          onRepeatCitationSearch={repeatCitationSearch}
-          onInsertCitation={insertCitation}
-          onInsertBibliography={insertBibliography}
-          onInsertImageSample={insertSampleImage}
-          onExportBibliographyText={exportBibliographyText}
-          onExportBibliographyJson={exportBibliographyJson}
-          onInsertCitationCandidate={insertCitationCandidate}
-        />
-      </div>
-    </div>
+        );
+      })()}
+      <DocumentSetupModal
+        isOpen={isSetupModalOpen}
+        onClose={() => setIsSetupModalOpen(false)}
+        onSubmit={handleCreateDocument}
+      />
+    </>
   );
 }

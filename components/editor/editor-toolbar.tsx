@@ -1,25 +1,28 @@
+// c:/web/ScholarFlow/components/editor/editor-toolbar.tsx
+// NOTE: EditorToolbar (TipTap-based) is NOT used in the current EditorJS-based layout.
+// The EditorJS toolbar is implemented inline inside editor-layout.tsx.
+// This file is kept for reference only. TipTap (@tiptap/react) has been uninstalled.
+
+/*
 'use client';
 
 import {
-  ArrowLeft,
-  ArrowRight,
-  Bold,
-  Eraser,
-  Download,
-  Highlighter,
-  Image as ImageIcon,
-  Italic,
-  List,
-  ListOrdered,
-  PlusSquare,
-  Save,
-  Quote,
-  Code2,
-  Table2,
-  Type,
-  Underline,
-  Zap,
-} from 'lucide-react';
+  IconArrowLeft,
+  IconArrowRight,
+  IconBold,
+  IconEraser,
+  IconDownload,
+  IconHighlight,
+  IconPhoto,
+  IconItalic,
+  IconList,
+  IconListNumbers,
+  IconSquarePlus,
+  IconQuote,
+  IconCode,
+  IconTable,
+  IconUnderline,
+} from '@tabler/icons-react';
 import type { Editor } from '@tiptap/react';
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/ui';
@@ -28,9 +31,6 @@ type ToolbarProps = {
   editor: Editor | null;
   onInsertBibliography: () => void;
   onExportHtml: () => void;
-  onExportJson: () => void;
-  onSaveDraft: () => void;
-  onInsertCitation: () => void;
   onInsertImage: (url: string) => void;
 };
 
@@ -44,7 +44,7 @@ function ToolButton({
   active?: boolean;
   disabled?: boolean;
   label: string;
-  icon: typeof ArrowLeft;
+  icon: typeof IconArrowLeft;
   onClick: () => void;
 }) {
   return (
@@ -72,9 +72,6 @@ export function EditorToolbar({
   editor,
   onInsertBibliography,
   onExportHtml,
-  onExportJson,
-  onSaveDraft,
-  onInsertCitation,
   onInsertImage,
 }: ToolbarProps) {
   const [imageUrl, setImageUrl] = useState('');
@@ -112,17 +109,17 @@ export function EditorToolbar({
   };
 
   return (
-    <div className="space-y-3 border-b border-line bg-panel/90 px-4 py-3 backdrop-blur">
+    <div className="space-y-3 bg-panel/90 px-3 py-3 backdrop-blur sm:px-4">
       <div className="flex flex-wrap items-center gap-2">
         <ToolButton
           label="Undo"
-          icon={ArrowLeft}
+          icon={IconArrowLeft}
           disabled={!canUndo}
           onClick={() => editor?.chain().focus().undo().run()}
         />
         <ToolButton
           label="Redo"
-          icon={ArrowRight}
+          icon={IconArrowRight}
           disabled={!canRedo}
           onClick={() => editor?.chain().focus().redo().run()}
         />
@@ -131,7 +128,7 @@ export function EditorToolbar({
           aria-label="Text style"
           value={headingValue}
           onChange={(event) => applyHeading(event.target.value)}
-          className="h-10 rounded-md border border-line bg-panel px-3 text-sm text-text outline-none transition focus:border-accent/40"
+          className="h-10 min-w-[9rem] rounded-md border border-line bg-panel px-3 text-sm text-text outline-none transition focus:border-accent/40"
         >
           <option value="paragraph">Paragraph</option>
           <option value="h1">Heading 1</option>
@@ -142,25 +139,25 @@ export function EditorToolbar({
         <div className="mx-1 h-9 w-px bg-line" />
         <ToolButton
           label="Bold"
-          icon={Bold}
+          icon={IconBold}
           active={editor?.isActive('bold')}
           onClick={() => editor?.chain().focus().toggleBold().run()}
         />
         <ToolButton
           label="Italic"
-          icon={Italic}
+          icon={IconItalic}
           active={editor?.isActive('italic')}
           onClick={() => editor?.chain().focus().toggleItalic().run()}
         />
         <ToolButton
           label="Underline"
-          icon={Underline}
+          icon={IconUnderline}
           active={editor?.isActive('underline')}
           onClick={() => editor?.chain().focus().toggleUnderline().run()}
         />
         <ToolButton
           label="Highlight"
-          icon={Highlighter}
+          icon={IconHighlight}
           active={editor?.isActive('highlight')}
           onClick={() => editor?.chain().focus().toggleHighlight().run()}
         />
@@ -168,53 +165,48 @@ export function EditorToolbar({
         <div className="mx-1 h-9 w-px bg-line" />
         <ToolButton
           label="Bullet list"
-          icon={List}
+          icon={IconList}
           active={editor?.isActive('bulletList')}
           onClick={() => editor?.chain().focus().toggleBulletList().run()}
         />
         <ToolButton
           label="Numbered list"
-          icon={ListOrdered}
+          icon={IconListNumbers}
           active={editor?.isActive('orderedList')}
           onClick={() => editor?.chain().focus().toggleOrderedList().run()}
         />
         <ToolButton
           label="Blockquote"
-          icon={Quote}
+          icon={IconQuote}
           active={editor?.isActive('blockquote')}
           onClick={() => editor?.chain().focus().toggleBlockquote().run()}
         />
         <ToolButton
           label="Code block"
-          icon={Type}
+          icon={IconCode}
           active={editor?.isActive('codeBlock')}
           onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
         />
         <ToolButton
           label="Insert table"
-          icon={Table2}
+          icon={IconTable}
           onClick={addTable}
         />
         <ToolButton
-          label="Insert citation marker"
-          icon={Zap}
-          onClick={onInsertCitation}
-        />
-        <ToolButton
           label="Insert bibliography section"
-          icon={PlusSquare}
+          icon={IconSquarePlus}
           onClick={onInsertBibliography}
         />
 
         <div className="mx-1 h-9 w-px bg-line" />
         <ToolButton
           label="Insert image from URL"
-          icon={ImageIcon}
+          icon={IconPhoto}
           onClick={addImage}
         />
         <ToolButton
           label="Clear formatting"
-          icon={Eraser}
+          icon={IconEraser}
           onClick={() => editor?.chain().focus().unsetAllMarks().clearNodes().run()}
         />
       </div>
@@ -228,44 +220,31 @@ export function EditorToolbar({
           value={imageUrl}
           onChange={(event) => setImageUrl(event.target.value)}
           placeholder="Image URL"
-          className="h-10 min-w-[16rem] flex-1 rounded-md border border-line bg-panel px-3 text-sm outline-none transition placeholder:text-muted focus:border-accent/40"
+          className="h-10 min-w-0 flex-1 basis-56 rounded-md border border-line bg-panel px-3 text-sm outline-none transition placeholder:text-muted focus:border-accent/40"
         />
         <button
           type="button"
           onClick={addImage}
           className="inline-flex h-10 items-center gap-2 rounded-md border border-line bg-panel px-3 text-sm font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
         >
-          <ImageIcon className="h-4 w-4" />
+          <IconPhoto className="h-4 w-4" />
           Insert Image
         </button>
 
-        <div className="ml-auto flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={onSaveDraft}
-            className="inline-flex h-10 items-center gap-2 rounded-md bg-accent px-3 text-sm font-medium text-white transition hover:opacity-95"
-          >
-            <Save className="h-4 w-4" />
-            Save Draft
-          </button>
+        <div className="flex w-full flex-wrap items-center gap-2 lg:ml-auto lg:w-auto">
+
           <button
             type="button"
             onClick={onExportHtml}
             className="inline-flex h-10 items-center gap-2 rounded-md border border-line bg-panel px-3 text-sm font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
           >
-            <Download className="h-4 w-4" />
+            <IconDownload className="h-4 w-4" />
             Export HTML
           </button>
-          <button
-            type="button"
-            onClick={onExportJson}
-            className="inline-flex h-10 items-center gap-2 rounded-md border border-line bg-panel px-3 text-sm font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
-          >
-            <Code2 className="h-4 w-4" />
-            Export JSON
-          </button>
+
         </div>
       </div>
     </div>
   );
 }
+*/

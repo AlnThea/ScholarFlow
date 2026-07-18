@@ -1,13 +1,8 @@
-import { mergeAttributes, Node } from '@tiptap/core';
+// NOTE: This TipTap CitationMarker extension is no longer used.
+// The EditorJS-based editor handles citation insertion directly via DOM in editorjs-editor.tsx.
+// Kept for reference only. Code is commented out since @tiptap/core has been uninstalled.
 
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    citationMarker: {
-      insertCitationMarker: (attrs: { label: string; referenceId?: string }) => ReturnType;
-    };
-  }
-}
-
+/*
 export const CitationMarker = Node.create({
   name: 'citationMarker',
   inline: true,
@@ -62,3 +57,5 @@ export const CitationMarker = Node.create({
     };
   },
 });
+*/
+

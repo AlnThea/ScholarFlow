@@ -1,18 +1,18 @@
 'use client';
 
 import {
-  BookOpenText,
-  Check,
-  Download,
-  Languages,
-  Loader2,
-  RefreshCw,
-  ScrollText,
-  Sigma,
-  Sparkles,
-  Wand2,
-  Search,
-} from 'lucide-react';
+  IconBook,
+  IconCheck,
+  IconDownload,
+  IconLanguage,
+  IconLoader2,
+  IconRefresh,
+  IconFileText,
+  IconSum,
+  IconSparkles,
+  IconWand,
+  IconSearch,
+} from '@tabler/icons-react';
 import type { ImproveWritingResponse } from '@/lib/api/ai';
 import type { CitationCandidate } from '@/lib/api/citations';
 import type { CitationHistoryEntry } from '@/lib/editor/citation-history';
@@ -45,7 +45,7 @@ function ActionButton({
 }: {
   label: string;
   description: string;
-  icon: typeof Sparkles;
+  icon: typeof IconSparkles;
   onClick: () => void;
   disabled?: boolean;
 }) {
@@ -96,7 +96,7 @@ export function AiSidebar({
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
         <section className="shrink-0 rounded-xl border border-line bg-white p-4 shadow-sm">
           <div className="mb-3 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-accent" />
+            <IconSparkles className="h-4 w-4 text-accent" />
             <h2 className="text-sm font-semibold text-text">AI assistant</h2>
           </div>
           <p className="text-xs leading-5 text-muted">
@@ -153,35 +153,35 @@ export function AiSidebar({
           <ActionButton
             label={isLoading ? 'Improving...' : 'Improve Academic Writing'}
             description="Refine clarity, tone, and academic structure."
-            icon={isLoading ? Loader2 : Wand2}
+            icon={isLoading ? IconLoader2 : IconWand}
             onClick={onImproveWriting}
             disabled={!hasSelection || isLoading}
           />
           <ActionButton
             label="Paraphrase"
             description="Rewrite the selected text while keeping the meaning."
-            icon={Languages}
+            icon={IconLanguage}
             onClick={() => {}}
             disabled
           />
           <ActionButton
             label="Summarize"
             description="Condense the selected text into a shorter academic summary."
-            icon={ScrollText}
+            icon={IconFileText}
             onClick={() => {}}
             disabled
           />
           <ActionButton
             label="Generate Abstract"
             description="Draft an abstract from the current document context."
-            icon={BookOpenText}
+            icon={IconBook}
             onClick={() => {}}
             disabled
           />
           <ActionButton
             label="Find Citation"
             description="Prepare the selected claim for citation lookup."
-            icon={isSearchingCitations ? Loader2 : Sigma}
+            icon={isSearchingCitations ? IconLoader2 : IconSum}
             onClick={onFindCitation}
             disabled={!hasSelection || isSearchingCitations}
           />
@@ -196,7 +196,7 @@ export function AiSidebar({
                 onClick={onApplyImprovedText}
                 className="inline-flex items-center gap-2 rounded-md border border-line bg-panel px-3 py-1.5 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
               >
-                <Check className="h-3.5 w-3.5" />
+                <IconCheck className="h-3.5 w-3.5" />
                 Apply
               </button>
             ) : null}
@@ -214,7 +214,7 @@ export function AiSidebar({
                 <p className="text-sm leading-6 text-text">{improvedText?.improved_text}</p>
               </div>
               <div className="flex items-start gap-2 rounded-md border border-line bg-white p-3 text-xs leading-5 text-muted">
-                <RefreshCw className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
+                <IconRefresh className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
                 <span>{improvedText?.disclaimer}</span>
               </div>
             </div>
@@ -230,7 +230,7 @@ export function AiSidebar({
             <h3 className="text-sm font-semibold text-text">Citation lookup</h3>
             {isSearchingCitations ? (
               <span className="inline-flex items-center gap-2 text-xs text-muted">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
                 Searching
               </span>
             ) : null}
@@ -280,7 +280,7 @@ export function AiSidebar({
                       onClick={() => onInsertCitationCandidate(candidate)}
                       className="inline-flex shrink-0 items-center gap-2 rounded-md border border-line bg-white px-3 py-1.5 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
                     >
-                      <Check className="h-3.5 w-3.5" />
+                      <IconCheck className="h-3.5 w-3.5" />
                       Insert
                     </button>
                   </div>
@@ -296,7 +296,7 @@ export function AiSidebar({
           )}
 
           <div className="mt-3 flex items-start gap-2 rounded-md border border-line bg-white p-3 text-xs leading-5 text-muted">
-            <Search className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
+            <IconSearch className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
             <span>Only verified metadata from external sources is shown here.</span>
           </div>
 
@@ -307,7 +307,7 @@ export function AiSidebar({
               disabled={!hasCitationResults}
               className="inline-flex items-center justify-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <Download className="h-3.5 w-3.5" />
+              <IconDownload className="h-3.5 w-3.5" />
               TXT
             </button>
             <button
@@ -316,7 +316,7 @@ export function AiSidebar({
               disabled={!hasCitationResults}
               className="inline-flex items-center justify-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <Download className="h-3.5 w-3.5" />
+              <IconDownload className="h-3.5 w-3.5" />
               JSON
             </button>
           </div>

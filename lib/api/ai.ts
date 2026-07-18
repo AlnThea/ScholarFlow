@@ -1,3 +1,6 @@
+// lib/api/ai.ts
+// AI writing improvement helper — memanggil /api/improve-writing (Next.js route)
+
 export type ImproveWritingResponse = {
   original_text: string;
   improved_text: string;
@@ -6,16 +9,14 @@ export type ImproveWritingResponse = {
 };
 
 export async function improveWriting(
-  apiBaseUrl: string,
   text: string,
   tone = 'academic',
+  model = 'gemini'
 ): Promise<ImproveWritingResponse> {
-  const response = await fetch(`${apiBaseUrl}/ai/improve-writing`, {
+  const response = await fetch('/api/v1/ai/improve', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ text, tone }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, tone, model }),
   });
 
   if (!response.ok) {

@@ -1,3 +1,7 @@
+// lib/api/citations.ts
+// Citation search helper — memanggil /api/citations/search (Next.js route)
+// yang akan cek Supabase cache terlebih dahulu sebelum hit OpenAlex/Crossref
+
 export type CitationCandidate = {
   source: string;
   title: string;
@@ -9,25 +13,27 @@ export type CitationCandidate = {
   citation_label: string;
   ranking_score: number;
   ranking_reason: string[];
+  abstract: string | null;
+  journal: string | null;
+  cited_by_count: number;
+  pdf_url: string | null;
 };
 
 export type CitationSearchResponse = {
   query: string;
   results: CitationCandidate[];
   sources: string[];
+  cached: boolean;
   note: string | null;
 };
 
 export async function searchCitations(
-  apiBaseUrl: string,
   query: string,
   limit = 5,
 ): Promise<CitationSearchResponse> {
-  const response = await fetch(`${apiBaseUrl}/citations/search`, {
+  const response = await fetch('/api/citations/search', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, limit }),
   });
 

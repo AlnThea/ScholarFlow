@@ -1,4 +1,5 @@
-import type { JSONContent } from '@tiptap/core';
+import { Cite } from '@citation-js/core';
+import '@citation-js/plugin-csl';
 import type { CitationCandidate } from '@/lib/api/citations';
 
 export type BibliographyEntry = {
@@ -7,54 +8,6 @@ export type BibliographyEntry = {
   formatted: string;
 };
 
-type CitationNode = {
-  type?: string;
-  attrs?: {
-    referenceId?: string | null;
-    label?: string | null;
-  };
-  content?: CitationNode[];
-};
-
-function walkCitationNodes(node: CitationNode | CitationNode[] | null | undefined, out: CitationNode[] = []): CitationNode[] {
-  if (!node) return out;
-  if (Array.isArray(node)) {
-    for (const child of node) {
-      walkCitationNodes(child, out);
-    }
-    return out;
-  }
-
-  if (node.type === 'citationMarker') {
-    out.push(node);
-  }
-
-  if (node.content) {
-    walkCitationNodes(node.content, out);
-  }
-
-  return out;
-}
-
-export function collectCitationReferenceIds(doc: JSONContent | null | undefined): string[] {
-  if (!doc) return [];
-
-  const markers = walkCitationNodes(doc);
-  const seen = new Set<string>();
-  const ids: string[] = [];
-
-  for (const marker of markers) {
-    const referenceId = marker.attrs?.referenceId?.trim();
-    if (!referenceId || seen.has(referenceId)) {
-      continue;
-    }
-    seen.add(referenceId);
-    ids.push(referenceId);
-  }
-
-  return ids;
-}
-
 function formatAuthors(authors: string[]): string {
   if (authors.length === 0) return 'Unknown author';
   if (authors.length === 1) return authors[0];
@@ -62,41 +15,71 @@ function formatAuthors(authors: string[]): string {
   return `${authors[0]} et al.`;
 }
 
-export function formatBibliographyCandidate(candidate: CitationCandidate): string {
-  const authors = formatAuthors(candidate.authors);
-  const year = candidate.year ? `(${candidate.year})` : '(n.d.)';
-  const title = candidate.title;
-  const source = candidate.source;
-  const parts = [authors, year, title, source];
+export function formatBibliographyCandidate(
+  candidate: CitationCandidate,
+  style = 'apa',
+  lang = 'en-US'
+): string {
+  try {
+    const csl: any = {
+      id: candidate.reference_id,
+      type: 'article-journal',
+      title: candidate.title,
+      'container-title': candidate.source,
+      DOI: candidate.doi || undefined,
+      URL: candidate.url || undefined,
+    };
 
-  if (candidate.doi) {
-    parts.push(`DOI: ${candidate.doi}`);
-  } else if (candidate.url) {
-    parts.push(candidate.url);
-  }
+    if (candidate.year) {
+      csl.issued = { 'date-parts': [[candidate.year]] };
+    }
 
-  return parts.filter(Boolean).join('. ');
-}
+    if (candidate.authors && candidate.authors.length > 0) {
+      csl.author = candidate.authors.map((author) => {
+        if (author.includes(',')) {
+          const parts = author.split(',');
+          return {
+            family: parts[0].trim(),
+            given: parts.slice(1).join(',').trim(),
+          };
+        } else {
+          const parts = author.trim().split(/\s+/);
+          if (parts.length === 1) {
+            return { literal: author };
+          } else {
+            const family = parts[parts.length - 1];
+            const given = parts.slice(0, parts.length - 1).join(' ');
+            return { family, given };
+          }
+        }
+      });
+    }
 
-export function buildBibliographyEntries(
-  doc: JSONContent | null | undefined,
-  citationLibrary: Record<string, CitationCandidate>,
-): BibliographyEntry[] {
-  const referenceIds = collectCitationReferenceIds(doc);
-  const entries: BibliographyEntry[] = [];
-
-  for (const referenceId of referenceIds) {
-    const candidate = citationLibrary[referenceId];
-    if (!candidate) continue;
-
-    entries.push({
-      referenceId,
-      label: candidate.citation_label,
-      formatted: formatBibliographyCandidate(candidate),
+    const cite = new Cite([csl]);
+    const formatted = cite.format('bibliography', {
+      format: 'text',
+      template: style,
+      lang: lang,
     });
-  }
 
-  return entries;
+    return formatted.trim();
+  } catch (error) {
+    console.error('Error formatting citation with citation.js, falling back to manual format:', error);
+    // Fallback to original manual formatting logic
+    const authors = formatAuthors(candidate.authors);
+    const year = candidate.year ? `(${candidate.year})` : '(n.d.)';
+    const title = candidate.title;
+    const source = candidate.source;
+    const parts = [authors, year, title, source];
+
+    if (candidate.doi) {
+      parts.push(`DOI: ${candidate.doi}`);
+    } else if (candidate.url) {
+      parts.push(candidate.url);
+    }
+
+    return parts.filter(Boolean).join('. ');
+  }
 }
 
 export function serializeBibliographyText(entries: BibliographyEntry[]): string {
@@ -105,6 +88,6 @@ export function serializeBibliographyText(entries: BibliographyEntry[]): string 
   }
 
   return entries
-    .map((entry, index) => `${index + 1}. ${entry.formatted}`)
+    .map((entry) => `[${entry.label}] ${entry.formatted}`)
     .join('\n\n');
 }

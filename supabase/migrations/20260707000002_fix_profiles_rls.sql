@@ -1,0 +1,39 @@
+-- ============================================================
+-- ScholarFlow — Migration: Fix Profiles RLS Circular Policy
+-- Created: 2026-07-07
+-- Description:
+--   Menghapus policy "Admin can read all profiles" yang menyebabkan
+--   infinite recursion (circular RLS) sehingga semua query ke tabel
+--   profiles gagal secara diam-diam.
+--
+-- MASALAH:
+--   Policy berikut membuat query profiles di dalam policy profiles sendiri:
+--
+--     create policy "Admin can read all profiles"
+--       on public.profiles for select
+--       using (exists (
+--         select 1 from public.profiles p   ← CIRCULAR!
+--         where p.id = auth.uid() and p.role = 'admin'
+--       ));
+--
+--   Ketika PostgreSQL evaluasi policy ini, dia butuh baca tabel profiles,
+--   tapi untuk baca profiles butuh evaluasi policy lagi → infinite loop.
+--   Akibatnya: fetchProfile() selalu return null, role selalu default 'user'.
+--
+-- SOLUSI:
+--   Drop policy circular tersebut. Policy yang tersisa sudah cukup:
+--   - "Users can read own profile" → auth.uid() = id (aman, tidak circular)
+--   - "Users can update own profile" → auth.uid() = id (aman, tidak circular)
+--
+--   Untuk kebutuhan admin membaca semua profiles, gunakan service role key
+--   di server-side (Next.js API routes) yang bypass RLS secara aman.
+--
+-- Run this in: Supabase Dashboard → SQL Editor → New Query → Run
+-- ============================================================
+
+-- Hapus policy yang menyebabkan circular RLS
+drop policy if exists "Admin can read all profiles" on public.profiles;
+
+-- Verifikasi policy yang tersisa (seharusnya hanya 2)
+-- Uncomment baris berikut untuk cek:
+-- select policyname, cmd, qual from pg_policies where tablename = 'profiles';

@@ -1,0 +1,155 @@
+// components/editor/share-document-modal.tsx
+'use client';
+
+import React, { useState } from 'react';
+import { IconX, IconCopy, IconCheck, IconShare, IconLock, IconWorld } from '@tabler/icons-react';
+
+interface ShareDocumentModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  documentId?: string;
+  documentTitle?: string;
+}
+
+export function ShareDocumentModal({
+  isOpen,
+  onClose,
+  documentId,
+  documentTitle
+}: ShareDocumentModalProps) {
+  const [isLinkActive, setIsLinkActive] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [permission, setPermission] = useState<'view' | 'edit'>('view');
+
+  if (!isOpen) return null;
+
+  const shareUrl = `https://scholarflow.app/shared/doc-${documentId || 'untitled'}`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 transition-all animate-fade-in font-sans">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl flex flex-col w-full max-w-md overflow-hidden">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 bg-slate-50/50">
+          <div className="flex items-center gap-2">
+            <IconShare className="h-4.5 w-4.5 text-indigo-600" />
+            <h3 className="text-xs font-bold text-slate-800">Bagikan Draf Jurnal</h3>
+          </div>
+          <button 
+            onClick={onClose}
+            className="p-1 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition"
+          >
+            <IconX className="h-4.5 w-4.5" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-5 flex flex-col gap-4">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[11px] font-semibold text-slate-500">Judul Dokumen</span>
+            <span className="text-xs font-bold text-slate-800 line-clamp-1">{documentTitle || 'Untitled Document'}</span>
+          </div>
+
+          <div className="h-px bg-slate-100" />
+
+          {/* Active toggle */}
+          <div className="flex items-center justify-between p-3 border border-slate-100 rounded-xl bg-slate-50/50">
+            <div className="flex items-center gap-2.5">
+              {isLinkActive ? (
+                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                  <IconWorld className="h-4 w-4" />
+                </div>
+              ) : (
+                <div className="p-2 bg-slate-100 text-slate-500 rounded-lg">
+                  <IconLock className="h-4 w-4" />
+                </div>
+              )}
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs font-bold text-slate-700">Tautan Berbagi Publik</span>
+                <span className="text-[9px] text-slate-400">Siapa pun yang memiliki tautan ini dapat mengakses.</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsLinkActive(!isLinkActive)}
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition cursor-pointer ${
+                isLinkActive ? 'bg-indigo-600' : 'bg-slate-300'
+              }`}
+            >
+              <span
+                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition ${
+                  isLinkActive ? 'translate-x-4.5' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+
+          {isLinkActive && (
+            /* Link sharing content */
+            <div className="flex flex-col gap-3 animate-fade-in">
+              {/* Permission select */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Akses Izin Tautan</label>
+                <select
+                  value={permission}
+                  onChange={(e) => setPermission(e.target.value as any)}
+                  className="border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 bg-white outline-none focus:border-indigo-500 transition"
+                >
+                  <option value="view">Dapat membaca saja (Read-only)</option>
+                  <option value="edit">Dapat mengedit draf (Co-Editor)</option>
+                </select>
+              </div>
+
+              {/* URL copy bar */}
+              <div className="flex gap-2">
+                <div className="flex-1 border border-slate-200 rounded-xl bg-slate-50 px-3 py-2 flex items-center overflow-hidden">
+                  <input
+                    type="text"
+                    readOnly
+                    value={shareUrl}
+                    className="w-full text-xs text-slate-500 outline-none bg-transparent select-all"
+                  />
+                </div>
+                <button
+                  onClick={handleCopy}
+                  className="px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  {copied ? (
+                    <>
+                      <IconCheck className="h-4 w-4" />
+                      <span>Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <IconCopy className="h-4 w-4" />
+                      <span>Salin</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!isLinkActive && (
+            <div className="py-4 flex flex-col items-center justify-center text-center gap-2">
+              <IconLock className="h-8 w-8 text-slate-300" />
+              <span className="text-xs text-slate-500 font-semibold">Tautan Dinonaktifkan</span>
+              <span className="text-[10px] text-slate-400 max-w-[250px] leading-normal">
+                Hanya Anda yang dapat melihat dan menulis di draf dokumen ini di dalam akun Anda.
+              </span>
+            </div>
+          )}
+
+        </div>
+
+      </div>
+    </div>
+  );
+}
