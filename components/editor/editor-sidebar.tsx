@@ -19,6 +19,7 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconLanguage,
+  IconX,
 } from '@tabler/icons-react';
 import { type ImproveWritingResponse, synthesizeLiteratureReview } from '@/lib/api/ai';
 import type { CitationCandidate } from '@/lib/api/citations';
@@ -71,6 +72,9 @@ type SidebarProps = {
   folderAssignments: Record<string, string>;
   onCreateFolder: (name: string) => void;
   onAssignFolder: (referenceId: string, folderName: string) => void;
+  isExpanded?: boolean;
+  onToggleExpanded?: () => void;
+  onClose?: () => void;
 };
 
 function PanelRow({
@@ -173,12 +177,17 @@ export function EditorSidebar({
   folders,
   folderAssignments,
   onCreateFolder,
-  onAssignFolder
+  onAssignFolder,
+  isExpanded: propIsExpanded,
+  onToggleExpanded,
+  onClose
 }: SidebarProps) {
   const [workspaceTab, setWorkspaceTab] = useState<'library' | 'writing' | 'document'>('library');
   const [tab, setTab] = useState<'sources' | 'collections'>('sources');
   const [query, setQuery] = useState('');
-  const [isExpanded, setIsExpanded] = useState(true);
+  
+  const [localIsExpanded, setLocalIsExpanded] = useState(true);
+  const isExpanded = propIsExpanded !== undefined ? propIsExpanded : localIsExpanded;
   const hasImprovedText = improvedText !== null;
 
   const { profile } = useAuth();
@@ -235,16 +244,22 @@ export function EditorSidebar({
 
 
   useEffect(() => {
-    const saved = localStorage.getItem('sidebar-expanded');
-    if (saved !== null) setIsExpanded(saved === 'true');
-  }, []);
+    if (propIsExpanded === undefined) {
+      const saved = localStorage.getItem('sidebar-expanded');
+      if (saved !== null) setLocalIsExpanded(saved === 'true');
+    }
+  }, [propIsExpanded]);
 
   const toggleExpanded = () => {
-    setIsExpanded((prev) => {
-      const next = !prev;
-      localStorage.setItem('sidebar-expanded', String(next));
-      return next;
-    });
+    if (onToggleExpanded) {
+      onToggleExpanded();
+    } else {
+      setLocalIsExpanded((prev) => {
+        const next = !prev;
+        localStorage.setItem('sidebar-expanded', String(next));
+        return next;
+      });
+    }
   };
 
   const filteredSources = useMemo(() => {
@@ -294,17 +309,31 @@ export function EditorSidebar({
   };
 
   return (
-    <aside className={`flex min-h-[640px] flex-col border-t border-line bg-white/95 shadow-[-1px_0_0_rgba(15,23,42,0.03)] backdrop-blur lg:sticky lg:top-[72px] lg:h-[calc(100vh-72px)] lg:min-h-0 lg:border-t-0 ${isExpanded ? 'w-[320px]' : 'w-16'}`}>
+    <aside className={`fixed right-0 top-0 h-screen z-[100] flex flex-col border-l border-slate-200/80 bg-white/98 shadow-[-8px_0_32px_rgba(15,23,42,0.08)] backdrop-blur transition-all duration-300 ${isExpanded ? 'w-[360px]' : 'w-16'}`}>
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className={`border-b border-line px-4 py-4 flex items-center ${isExpanded ? 'justify-between' : 'justify-center'}`}>
-          <button
-            type="button"
-            onClick={toggleExpanded}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line bg-panel text-text hover:bg-accentSoft/70"
-            aria-label={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
-          >
-            {isExpanded ? <IconChevronLeft className="h-4 w-4" /> : <IconChevronRight className="h-4 w-4" />}
-          </button>
+        <div className={`border-b border-slate-100 px-4 py-4 flex items-center ${isExpanded ? 'justify-between' : 'justify-center'}`}>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={toggleExpanded}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line bg-panel text-text hover:bg-accentSoft/70"
+              aria-label={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+            >
+              {isExpanded ? <IconChevronRight className="h-4 w-4" /> : <IconChevronLeft className="h-4 w-4" />}
+            </button>
+            
+            {isExpanded && onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line bg-panel text-slate-500 hover:text-slate-800 hover:bg-accentSoft/70"
+                aria-label="Close sidebar"
+                title="Tutup Asisten Riset"
+              >
+                <IconX className="h-4 w-4" />
+              </button>
+            )}
+          </div>
           
           {isExpanded && (
             <button

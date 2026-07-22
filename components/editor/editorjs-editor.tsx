@@ -63,6 +63,35 @@ class MathBlockTool {
     container.appendChild(input);
     container.appendChild(preview);
 
+    // Dynamic show/hide of textarea based on focus/readOnly state
+    if (this.readOnly) {
+      input.style.display = 'none';
+      preview.style.cursor = 'default';
+    } else {
+      // Start with input hidden if we already have a formula
+      if (this.data.formula) {
+        input.style.display = 'none';
+      } else {
+        input.style.display = 'block';
+      }
+      preview.style.cursor = 'pointer';
+
+      // Switch to edit mode on click
+      container.addEventListener('click', (e) => {
+        if (e.target !== input) {
+          input.style.display = 'block';
+          input.focus();
+        }
+      });
+
+      // Hide input on blur if not empty
+      input.addEventListener('blur', () => {
+        if (this.data.formula.trim()) {
+          input.style.display = 'none';
+        }
+      });
+    }
+
     // Initial render
     setTimeout(renderMath, 0);
 
@@ -75,6 +104,39 @@ class MathBlockTool {
       formula: this.data.formula || ''
     };
   }
+}
+
+// Hidden background sanitizer tools to whitelist inline math and citation attributes in Editor.js Paragraph block
+class InlineMathSanitizerTool {
+  static get isInline() { return true; }
+  static get sanitize() {
+    return {
+      span: {
+        class: true,
+        'data-formula': true,
+        contenteditable: true,
+      }
+    };
+  }
+  render() { return document.createElement('button'); }
+  surround() {}
+  checkState() { return false; }
+}
+
+class CitationSanitizerTool {
+  static get isInline() { return true; }
+  static get sanitize() {
+    return {
+      cite: {
+        class: true,
+        'data-citation': true,
+        'data-ref-id': true,
+      }
+    };
+  }
+  render() { return document.createElement('button'); }
+  surround() {}
+  checkState() { return false; }
 }
 
 // Storage keys
@@ -94,6 +156,7 @@ export interface EditorJsMethods {
   insertMathBlock: () => void;
   insertInlineEquation: () => void;
   insertText: (text: string) => void;
+  setFontSize: (size: string) => void;
   insertBibliographyText: (text: string) => void;
   upsertBibliography: (entries: Array<{ label: string; formatted: string }>) => void;
   renderContent: (data: any) => void;
@@ -144,6 +207,62 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
     } catch (e) {
       console.warn('Error restoring alignments:', e);
     }
+  };
+
+  // Re-render all inline math spans on load or update
+  const renderAllInlineMath = () => {
+    const container = document.getElementById(holderId);
+    if (!container) return;
+    const mathSpans = container.querySelectorAll('.sf-inline-math');
+    mathSpans.forEach((span) => {
+      const formula = span.getAttribute('data-formula');
+      if (formula) {
+        span.setAttribute('contenteditable', 'false');
+        try {
+          import('katex').then((kateMod) => {
+            const katex = kateMod.default;
+            katex.render(formula, span as HTMLElement, { displayMode: false, throwOnError: false });
+          });
+        } catch (e) {
+          console.error('KaTeX inline render error:', e);
+        }
+      }
+    });
+  };
+
+  // Helper to clean HTML string (strip KaTeX rendered inner HTML inside math spans)
+  const cleanHtmlContent = (html: string) => {
+    if (typeof document === 'undefined') return html;
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    const mathSpans = tempDiv.querySelectorAll('.sf-inline-math');
+    mathSpans.forEach((span) => {
+      span.innerHTML = '';
+    });
+    return tempDiv.innerHTML;
+  };
+
+  // Helper to clean saved EditorJS JSON content before writing to database
+  const cleanSavedContent = (content: any) => {
+    if (!content || !content.blocks) return content;
+    
+    // Deep clone content to avoid mutating the live state
+    const cloned = JSON.parse(JSON.stringify(content));
+    
+    cloned.blocks.forEach((block: any) => {
+      if (block.data && typeof block.data.text === 'string') {
+        block.data.text = cleanHtmlContent(block.data.text);
+      }
+    });
+    
+    return cloned;
+  };
+
+  // Helper to save cleaned content (without KaTeX rendered inner HTML inside math spans)
+  const saveCleanContent = async () => {
+    if (!editorRef.current) return null;
+    const content = await editorRef.current.save();
+    return cleanSavedContent(content);
   };
 
   // Calculate live word, character, and citation counts directly from the editor DOM
@@ -409,14 +528,90 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
       const selection = window.getSelection();
       if (!selection || selection.rangeCount === 0) return;
       const range = selection.getRangeAt(0);
+      const selectedText = range.toString().trim() || 'E = mc^2';
+
+      const formula = prompt('Enter LaTeX formula (e.g. \\frac{a}{b}):', selectedText);
+      if (formula === null) return; // cancelled
+
       const span = document.createElement('span');
-      span.className = 'font-mono text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded text-xs select-all';
-      span.textContent = '\\( E = mc^2 \\)';
+      span.className = 'sf-inline-math inline-block align-middle my-0.5 mx-1 px-1 bg-indigo-50/50 hover:bg-indigo-100/50 rounded border border-indigo-100 hover:border-indigo-200 transition cursor-pointer';
+      span.setAttribute('data-formula', formula);
+      span.setAttribute('contenteditable', 'false');
+
+      try {
+        import('katex').then((kateMod) => {
+          const katex = kateMod.default;
+          katex.render(formula, span, { displayMode: false, throwOnError: false });
+        });
+      } catch (err) {
+        span.textContent = `\\( ${formula} \\)`;
+      }
+
+      range.deleteContents();
       range.insertNode(span);
       calculateLiveStats();
     },
     insertText: (text: string) => {
       document.execCommand('insertText', false, text);
+      calculateLiveStats();
+    },
+    setFontSize: (size: string) => {
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+      const range = selection.getRangeAt(0);
+      if (range.collapsed) return;
+
+      // Find if the common ancestor is already a span with font size
+      let container: HTMLElement | null = range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+        ? (range.commonAncestorContainer as HTMLElement)
+        : range.commonAncestorContainer.parentElement;
+
+      // If selection is exactly matching/inside a span that already has a font-size
+      if (container && container.tagName === 'SPAN' && container.style.fontSize && container.innerText === range.toString()) {
+        if (!size) {
+          // Reset/Clear font size
+          container.style.fontSize = '';
+          if (container.style.length === 0 && !container.className) {
+            const parent = container.parentNode;
+            if (parent) {
+              while (container.firstChild) {
+                parent.insertBefore(container.firstChild, container);
+              }
+              parent.removeChild(container);
+            }
+          }
+        } else {
+          container.style.fontSize = size;
+        }
+        calculateLiveStats();
+        return;
+      }
+
+      // Fallback: extract contents and wrap in new span
+      const documentFragment = range.extractContents();
+      
+      // Clean up child spans with font size to prevent endless nesting
+      const childSpans = documentFragment.querySelectorAll('span');
+      childSpans.forEach(span => {
+        if (span.style.fontSize) {
+          if (!size) {
+            span.style.fontSize = '';
+          } else {
+            span.style.fontSize = size;
+          }
+        }
+      });
+
+      if (!size) {
+        // Resetting / clearing size: insert cleaned fragment directly
+        range.insertNode(documentFragment);
+      } else {
+        const wrapperSpan = document.createElement('span');
+        wrapperSpan.style.fontSize = size;
+        wrapperSpan.appendChild(documentFragment);
+        range.insertNode(wrapperSpan);
+      }
+      
       calculateLiveStats();
     },
     insertBibliographyText: (text: string) => {
@@ -477,6 +672,10 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           isRenderingRef.current = true;
           editorRef.current.render(data)
             .then(() => {
+              if (undoRef.current && typeof undoRef.current.initialize === 'function') {
+                undoRef.current.initialize(data);
+              }
+              renderAllInlineMath();
               setTimeout(() => {
                 isRenderingRef.current = false;
               }, 150);
@@ -536,7 +735,9 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
               image: ImageTool,
               table: Table,
               code: CodeTool,
-              math: MathBlockTool as any
+              math: MathBlockTool as any,
+              inlineMathSanitizer: InlineMathSanitizerTool as any,
+              citationSanitizer: CitationSanitizerTool as any,
             },
             onReady: () => {
               if (!isMounted) return;
@@ -552,6 +753,10 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
                   isRenderingRef.current = true;
                   editor.render(contentToRender)
                     .then(() => {
+                      if (undoRef.current && typeof undoRef.current.initialize === 'function') {
+                        undoRef.current.initialize(contentToRender);
+                      }
+                      renderAllInlineMath();
                       setTimeout(() => {
                         isRenderingRef.current = false;
                       }, 150);
@@ -570,6 +775,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
               // Apply saved block alignments on load and compute stats
               setTimeout(() => {
                 restoreBlockAlignments();
+                renderAllInlineMath();
                 calculateLiveStats();
               }, 150);
             },
@@ -583,8 +789,10 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
 
               if (onContentChange && editorRef.current) {
                 try {
-                  const content = await editorRef.current.save();
-                  onContentChange(content);
+                  const content = await saveCleanContent();
+                  if (content) {
+                    onContentChange(content);
+                  }
                 } catch (e) {
                   console.error('EditorJS onChange save error:', e);
                 }
@@ -616,6 +824,32 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         id={holderId} 
         onClick={(e) => {
           const target = e.target as HTMLElement;
+          
+          // Handle inline math editing on click
+          const mathSpan = target.closest('.sf-inline-math') as HTMLElement | null;
+          if (mathSpan) {
+            const currentFormula = mathSpan.getAttribute('data-formula') || '';
+            const newFormula = prompt('Edit LaTeX formula:', currentFormula);
+            if (newFormula !== null) {
+              if (newFormula.trim() === '') {
+                mathSpan.remove();
+              } else {
+                mathSpan.setAttribute('data-formula', newFormula);
+                import('katex').then((kateMod) => {
+                  const katex = kateMod.default;
+                  katex.render(newFormula, mathSpan, { displayMode: false, throwOnError: false });
+                });
+              }
+              calculateLiveStats();
+              if (onContentChange && editorRef.current) {
+                saveCleanContent().then(content => {
+                  if (content) onContentChange(content);
+                }).catch(console.error);
+              }
+            }
+            return;
+          }
+
           const cite = target.closest('cite[data-citation]');
           if (cite) {
             const refId = cite.getAttribute('data-ref-id');

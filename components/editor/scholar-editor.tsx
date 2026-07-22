@@ -220,6 +220,49 @@ export function ScholarEditor() {
   const router = useRouter();
   const params = useParams();
 
+  const triggerDebouncedSave = useCallback((docId: string, titleToSave: string, contentToSave: any, settingsToSave?: any) => {
+    if (!user?.id) return;
+    setSaveStatus('Menyimpan...');
+
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    debounceTimeoutRef.current = setTimeout(async () => {
+      const updates: any = {
+        title: titleToSave,
+        content: contentToSave
+      };
+      if (settingsToSave) {
+        updates.settings = settingsToSave;
+      }
+      try {
+        const res = await updateDocument(docId, user.id, updates);
+        if (res.success) {
+          setSaveStatus('Tersimpan ke Cloud');
+          localStorage.removeItem(`scholarflow.offline_backup.${docId}`);
+          
+          // Refresh list to update title/timestamps
+          const list = await fetchDocuments(user.id);
+          setDocuments(list);
+        } else {
+          localStorage.setItem(
+            `scholarflow.offline_backup.${docId}`,
+            JSON.stringify({ ...updates, id: docId, user_id: user.id })
+          );
+          setSaveStatus('Disimpan Lokal (Offline)');
+        }
+      } catch (err) {
+        console.error('Error saving document:', err);
+        localStorage.setItem(
+          `scholarflow.offline_backup.${docId}`,
+          JSON.stringify({ ...updates, id: docId, user_id: user.id })
+        );
+        setSaveStatus('Disimpan Lokal (Offline)');
+      }
+    }, 1500);
+  }, [user]);
+
   useEffect(() => {
     const docId = params?.id as string | undefined;
     
@@ -227,10 +270,55 @@ export function ScholarEditor() {
       if (currentDocument?.id !== docId) {
         fetchDocumentById(docId, user?.id || '').then(detail => {
           if (detail) {
+            // Check for newer offline backup in localStorage
+            const offlineKey = `scholarflow.offline_backup.${docId}`;
+            const offlineRaw = localStorage.getItem(offlineKey);
+            if (offlineRaw) {
+              try {
+                const offlineData = JSON.parse(offlineRaw);
+                const merged = {
+                  ...detail,
+                  title: offlineData.title || detail.title,
+                  content: offlineData.content || detail.content,
+                  settings: offlineData.settings || detail.settings,
+                };
+                setCurrentDocument(merged);
+                setSaveStatus('Menggunakan Cadangan Offline');
+                
+                // Try to sync to cloud if currently online
+                if (typeof navigator !== 'undefined' && navigator.onLine) {
+                  triggerDebouncedSave(docId, merged.title, merged.content, merged.settings);
+                }
+                return;
+              } catch (e) {
+                console.error('Failed to parse offline backup:', e);
+              }
+            }
             setCurrentDocument(detail);
           }
         }).catch(err => {
           console.warn('Failed to sync document from URL path:', err);
+          // If offline and fetchDocumentById fails, fallback to offline backup if available
+          const offlineKey = `scholarflow.offline_backup.${docId}`;
+          const offlineRaw = localStorage.getItem(offlineKey);
+          if (offlineRaw) {
+            try {
+              const offlineData = JSON.parse(offlineRaw);
+              const fallbackDoc: DocumentEntry = {
+                id: docId,
+                user_id: user?.id || '',
+                title: offlineData.title || 'Untitled (Offline)',
+                content: offlineData.content || { blocks: [] },
+                settings: offlineData.settings || {},
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              };
+              setCurrentDocument(fallbackDoc);
+              setSaveStatus('Gagal Sinkronisasi (Offline)');
+            } catch (e) {
+              console.error('Failed to parse offline backup on failure fallback:', e);
+            }
+          }
         });
       }
     } else {
@@ -238,7 +326,7 @@ export function ScholarEditor() {
         setCurrentDocument(null);
       }
     }
-  }, [user?.id, params?.id, currentDocument?.id]);
+  }, [user?.id, params?.id, currentDocument?.id, triggerDebouncedSave]);
 
   const handleUpdateAIModel = useCallback(async (id: string, updates: Partial<AIModel>) => {
     try {
@@ -279,40 +367,6 @@ export function ScholarEditor() {
   });
   const [activeReferenceIds, setActiveReferenceIds] = useState<string[]>([]);
 
-  const triggerDebouncedSave = useCallback((docId: string, titleToSave: string, contentToSave: any, settingsToSave?: any) => {
-    if (!user?.id) return;
-    setSaveStatus('Menyimpan...');
-
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-
-    debounceTimeoutRef.current = setTimeout(async () => {
-      try {
-        const updates: any = {
-          title: titleToSave,
-          content: contentToSave
-        };
-        if (settingsToSave) {
-          updates.settings = settingsToSave;
-        }
-        const res = await updateDocument(docId, user.id, updates);
-        if (res.success) {
-          setSaveStatus('Tersimpan ke Cloud');
-          
-          // Refresh list to update title/timestamps
-          const list = await fetchDocuments(user.id);
-          setDocuments(list);
-        } else {
-          setSaveStatus('Error saving');
-        }
-      } catch (err) {
-        console.error('Error saving document:', err);
-        setSaveStatus('Error saving');
-      }
-    }, 1500);
-  }, [user]);
-
   // Cancel pending save on switch or unmount
   useEffect(() => {
     return () => {
@@ -321,6 +375,88 @@ export function ScholarEditor() {
       }
     };
   }, [currentDocument?.id]);
+
+  // Prevent closing the tab when save status is "Menyimpan..."
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (saveStatus === 'Menyimpan...') {
+        e.preventDefault();
+        e.returnValue = ''; // Standard trigger for modern browsers
+        return '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [saveStatus]);
+
+  // Synchronize offline backups when internet comes back online
+  useEffect(() => {
+    const handleOnline = async () => {
+      if (!user?.id) return;
+      
+      console.log('App is online. Checking for offline backups to sync...');
+      setSaveStatus('Menyinkronkan...');
+      
+      let syncCount = 0;
+      let hasError = false;
+      const keysToSync: string[] = [];
+      
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('scholarflow.offline_backup.')) {
+          keysToSync.push(key);
+        }
+      }
+      
+      for (const key of keysToSync) {
+        const docId = key.replace('scholarflow.offline_backup.', '');
+        try {
+          const rawData = localStorage.getItem(key);
+          if (rawData) {
+            const data = JSON.parse(rawData);
+            const updates = {
+              title: data.title,
+              content: data.content,
+              ...(data.settings ? { settings: data.settings } : {})
+            };
+            const res = await updateDocument(docId, user.id, updates);
+            if (res.success) {
+              localStorage.removeItem(key);
+              syncCount++;
+            } else {
+              hasError = true;
+            }
+          }
+        } catch (e) {
+          console.error('Failed to sync offline backup for key:', key, e);
+          hasError = true;
+        }
+      }
+      
+      if (syncCount > 0) {
+        try {
+          const list = await fetchDocuments(user.id);
+          setDocuments(list);
+        } catch (err) {
+          console.error('Failed to refresh document list after sync:', err);
+        }
+      }
+      
+      if (hasError) {
+        setSaveStatus('Gagal Sinkronisasi');
+      } else {
+        setSaveStatus('Tersimpan ke Cloud');
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [user]);
 
   // Load documents list from Supabase on start
   useEffect(() => {

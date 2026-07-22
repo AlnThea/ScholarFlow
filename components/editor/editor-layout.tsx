@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { EditorJsEditor, type EditorJsMethods } from './editorjs-editor';
 import { EditorSidebar } from './editor-sidebar';
+import 'katex/dist/katex.min.css';
 import { 
   IconArrowBackUp, 
   IconArrowForwardUp, 
@@ -48,7 +49,8 @@ import {
   IconFolderOpen,
   IconChevronDown,
   IconSun,
-  IconMoon
+  IconMoon,
+  IconX
 } from '@tabler/icons-react';
 import { MinimalSidebar } from './minimal-sidebar';
 import type { ImproveWritingResponse } from '@/lib/api/ai';
@@ -181,6 +183,31 @@ function findMostRelevantSentence(abstract: string | null | undefined, query: st
   }
   return bestSentence;
 }
+
+const KatexPreview = ({ formula }: { formula: string }) => {
+  const containerRef = useRef<HTMLSpanElement | null>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    try {
+      import('katex').then((kateMod) => {
+        const katex = kateMod.default;
+        if (containerRef.current) {
+          katex.render(formula, containerRef.current, {
+            displayMode: false,
+            throwOnError: false
+          });
+        }
+      });
+    } catch (e) {
+      if (containerRef.current) {
+        containerRef.current.textContent = formula;
+      }
+    }
+  }, [formula]);
+
+  return <span ref={containerRef} className="text-slate-800 text-[11px] font-serif inline-block" />;
+};
 
 export function EditorLayout({ 
   statusLabel, 
@@ -657,6 +684,26 @@ export function EditorLayout({
     superscript: false,
     subscript: false,
   });
+  const [currentFontSize, setCurrentFontSize] = useState<string>('');
+  
+  const [isRightSidebarExpanded, setIsRightSidebarExpanded] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const rightSaved = localStorage.getItem('right-sidebar-expanded');
+      if (rightSaved !== null) {
+        setIsRightSidebarExpanded(rightSaved === 'true');
+      }
+    }
+  }, []);
+
+  const handleToggleRightSidebarExpanded = () => {
+    setIsRightSidebarExpanded(prev => {
+      const next = !prev;
+      localStorage.setItem('right-sidebar-expanded', String(next));
+      return next;
+    });
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem('sidebar-expanded');
@@ -677,6 +724,29 @@ export function EditorLayout({
 
       // 2. Display custom bubble menu if text selection is active inside EditorJS
       const selection = window.getSelection();
+      
+      // Sync active font size state
+      if (selection && selection.anchorNode) {
+        const parentEl = selection.anchorNode.nodeType === Node.ELEMENT_NODE
+          ? (selection.anchorNode as HTMLElement)
+          : selection.anchorNode.parentElement;
+        if (parentEl) {
+          let currentEl: HTMLElement | null = parentEl;
+          let foundSize = '';
+          const editorContainer = document.getElementById('editorjs-holder');
+          while (currentEl && editorContainer && editorContainer.contains(currentEl)) {
+            if (currentEl.style.fontSize) {
+              foundSize = currentEl.style.fontSize;
+              break;
+            }
+            currentEl = currentEl.parentElement;
+          }
+          setCurrentFontSize(foundSize);
+        }
+      } else {
+        setCurrentFontSize('');
+      }
+
       if (!selection || selection.isCollapsed || !selection.toString().trim()) {
         if (bubbleModeRef.current === 'citation') return;
         setShowBubbleMenu(false);
@@ -1611,6 +1681,26 @@ export function EditorLayout({
             <option value="h6">Heading 6</option>
           </select>
 
+          {/* Font Size Selection */}
+          <select
+            aria-label="Font size"
+            value={currentFontSize}
+            onChange={(e) => {
+              editorJsRef.current?.setFontSize(e.target.value);
+              setCurrentFontSize(e.target.value);
+            }}
+            className="h-8 rounded border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 cursor-pointer"
+          >
+            <option value="">Font Size (Default)</option>
+            <option value="12px">12px</option>
+            <option value="14px">14px</option>
+            <option value="16px">16px</option>
+            <option value="18px">18px</option>
+            <option value="20px">20px</option>
+            <option value="24px">24px</option>
+            <option value="32px">32px</option>
+          </select>
+
           <div className="h-5 w-px bg-slate-200 mx-1" />
 
           {/* Inline Formats */}
@@ -1805,52 +1895,95 @@ export function EditorLayout({
 
         {/* LaTeX Math Helper Panel */}
         {isMathHelperOpen && (
-          <div className="flex flex-col border-b border-slate-100 bg-slate-50/50 px-6 py-3 gap-2 animate-slide-in-top relative">
+          <div 
+            className={`fixed ${showRightSidebar ? (isRightSidebarExpanded ? 'right-[380px]' : 'right-20') : 'right-4'} top-40 w-80 bg-white/95 border border-slate-200/80 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] z-40 p-4 flex flex-col gap-3 max-h-[60vh] overflow-y-auto animate-fade-in`}
+          >
             {/* Math Helper Toast notification inside the helper panel */}
             {mathToast && (
-              <div className="absolute top-2 right-6 bg-slate-800 text-white text-[10px] font-bold px-2.5 py-1 rounded shadow-md animate-fade-in flex items-center gap-1 z-20">
+              <div className="absolute top-2 right-4 bg-slate-800 text-white text-[10px] font-bold px-2.5 py-1 rounded shadow-md animate-fade-in flex items-center gap-1 z-20">
                 <IconCheck className="h-3 w-3 text-emerald-400" />
                 <span>{mathToast}</span>
               </div>
             )}
 
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pintasan Rumus LaTeX (Klik untuk Menyalin)</span>
-              <span className="text-[9px] text-slate-400 italic">Tempel (Ctrl+V) ke dalam blok rumus matematika atau inline editor Anda.</span>
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <div className="flex flex-col">
+                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">LaTeX Math Helper</span>
+                <span className="text-[9px] text-slate-400 italic">Pintasan Rumus Cepat</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMathHelperOpen(false)}
+                className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                title="Tutup Panel"
+              >
+                <IconX className="h-4.5 w-4.5" />
+              </button>
             </div>
             
-            <div className="flex flex-wrap gap-2.5">
+            <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500">
+              <div className="col-span-2 text-[9px] bg-slate-50/50 p-2 rounded border border-slate-100 leading-normal mb-1">
+                📌 <strong className="text-slate-600">Info:</strong> Jika kotak input rumus aktif, mengklik rumus akan langsung menyisipkannya. Jika tidak, rumus disalin ke clipboard.
+              </div>
               {[
-                { label: 'Pecahan', code: '\\frac{a}{b}' },
-                { label: 'Akar', code: '\\sqrt{x}' },
-                { label: 'Akar N', code: '\\sqrt[n]{x}' },
-                { label: 'Integral', code: '\\int_{a}^{b} x dx' },
-                { label: 'Sigma (Sum)', code: '\\sum_{i=1}^{n} i' },
-                { label: 'Produk', code: '\\prod_{i=1}^{n}' },
-                { label: 'Matriks 2x2', code: '\\begin{matrix} a & b \\\\ c & d \\end{matrix}' },
-                { label: 'Limit', code: '\\lim_{x \\to \\infty}' },
-                { label: 'Alpha', code: '\\alpha' },
-                { label: 'Beta', code: '\\beta' },
-                { label: 'Gamma', code: '\\gamma' },
-                { label: 'Theta', code: '\\theta' },
-                { label: 'Pi', code: '\\pi' },
-                { label: 'Lambda', code: '\\lambda' },
-                { label: 'Infinity', code: '\\infty' },
-                { label: 'Kurung Kunci', code: '\\left( x \\right)' }
+                { label: 'Pecahan', code: '\\frac{a}{b}', isLong: false },
+                { label: 'Akar', code: '\\sqrt{x}', isLong: false },
+                { label: 'Akar N', code: '\\sqrt[n]{x}', isLong: false },
+                { label: 'Alpha', code: '\\alpha', isLong: false },
+                { label: 'Beta', code: '\\beta', isLong: false },
+                { label: 'Gamma', code: '\\gamma', isLong: false },
+                { label: 'Theta', code: '\\theta', isLong: false },
+                { label: 'Pi', code: '\\pi', isLong: false },
+                { label: 'Lambda', code: '\\lambda', isLong: false },
+                { label: 'Infinity', code: '\\infty', isLong: false },
+                { label: 'Integral', code: '\\int_{a}^{b} x dx', isLong: true },
+                { label: 'Sigma (Sum)', code: '\\sum_{i=1}^{n} i', isLong: true },
+                { label: 'Produk', code: '\\prod_{i=1}^{n}', isLong: true },
+                { label: 'Matriks 2x2', code: '\\begin{matrix} a & b \\\\ c & d \\end{matrix}', isLong: true },
+                { label: 'Limit', code: '\\lim_{x \\to \\infty}', isLong: true },
+                { label: 'Kurung Kunci', code: '\\left( x \\right)', isLong: true }
               ].map((item) => (
                 <button
                   key={item.code}
                   type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(item.code);
-                    setMathToast(`Tersalin: ${item.code}`);
-                    setTimeout(() => setMathToast(null), 2000);
+                  onMouseDown={(e) => e.preventDefault()} // Prevents losing editor focus
+                  onClick={async () => {
+                    const activeEl = document.activeElement as HTMLElement | null;
+                    const isMathTextarea = activeEl && 
+                      activeEl.tagName === 'TEXTAREA' && 
+                      (activeEl as HTMLTextAreaElement).placeholder?.includes('LaTeX formula');
+
+                    if (isMathTextarea) {
+                      const txtEl = activeEl as HTMLTextAreaElement;
+                      const start = txtEl.selectionStart;
+                      const end = txtEl.selectionEnd;
+                      const textVal = txtEl.value;
+                      txtEl.value = textVal.substring(0, start) + item.code + textVal.substring(end);
+                      txtEl.selectionStart = txtEl.selectionEnd = start + item.code.length;
+                      txtEl.dispatchEvent(new InputEvent('input', { bubbles: true }));
+                      
+                      setMathToast('Disisipkan!');
+                      setTimeout(() => setMathToast(null), 2000);
+                    } else {
+                      try {
+                        await navigator.clipboard.writeText(item.code);
+                        setMathToast('Disalin!');
+                        setTimeout(() => setMathToast(null), 2000);
+                      } catch (err) {
+                        console.error('Failed to copy text:', err);
+                      }
+                    }
                   }}
-                  className="px-2 py-1 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded text-xs font-semibold text-slate-700 hover:text-indigo-700 transition cursor-pointer flex flex-col items-center gap-0.5 min-w-[70px] shadow-sm"
+                  className={`p-2.5 rounded border border-slate-200/80 hover:border-indigo-300 bg-white hover:bg-indigo-50/40 text-left transition cursor-pointer flex items-center justify-between gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:shadow-sm ${item.isLong ? 'col-span-2' : 'col-span-1'}`}
                   title={item.code}
                 >
-                  <span className="font-mono text-[9px] text-slate-400">{item.label}</span>
-                  <span className="font-serif font-bold text-slate-800 text-[10px]">{item.code}</span>
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="font-semibold text-slate-750 text-[10px]">{item.label}</span>
+                    <span className="font-mono text-[8.5px] text-slate-400 truncate w-full mt-0.5">{item.code}</span>
+                  </div>
+                  <div className="flex-shrink-0 bg-slate-50 border border-slate-100/70 rounded px-1.5 py-1 min-h-[26px] flex items-center justify-center min-w-[36px]">
+                    <KatexPreview formula={item.code} />
+                  </div>
                 </button>
               ))}
             </div>
@@ -2194,6 +2327,11 @@ export function EditorLayout({
             />
           </main>
 
+          {/* Spacer layout to prevent overlapping the canvas on large screens */}
+          {showRightSidebar && (
+            <div className={`hidden lg:block flex-shrink-0 transition-all duration-300 ${isRightSidebarExpanded ? 'w-[360px]' : 'w-16'}`} />
+          )}
+
           {/* Right Panel — Citation Results, Plagiarism Checker, & AI */}
           {showRightSidebar && (
             <EditorSidebar
@@ -2239,6 +2377,9 @@ export function EditorLayout({
               folderAssignments={folderAssignments}
               onCreateFolder={onCreateFolder}
               onAssignFolder={onAssignFolder}
+              isExpanded={isRightSidebarExpanded}
+              onToggleExpanded={handleToggleRightSidebarExpanded}
+              onClose={() => setShowRightSidebar(false)}
             />
           )}
 

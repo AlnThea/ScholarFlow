@@ -82,3 +82,15 @@
 - Reworked the workspace into a library sidebar and document canvas layout
 - Moved AI tools into the library rail
 - Added source and collection tabs in the left panel
+
+## v0.1.4
+- Refined Math Block Tool behavior to toggle LaTeX input visibility on focus/blur
+- Fixed editor auto-save infinite loop bug caused by DOM mutations by sanitizing saved content strictly in-memory
+- Added custom inline tags (`span` for math, `cite` for citation) to EditorJS whitelist sanitizer to prevent parsing loss
+- Connected Font Size picker state to cursor position to dynamically sync checkmarks on selection
+- Redesigned Right Sidebar (Research Assistant) into a fixed full-height modal slide-over panel with close button and automatic desktop spacer
+- Redesigned LaTeX Math Helper into a floating side widget with dynamic screen positioning (adjusts to right sidebar state)
+- Added responsive grid layout for LaTeX Math Helper (2 columns for short formulas, 1 column for long formulas)
+- Implemented smart-click action on LaTeX Math Helper (inserts directly if a formula input textarea is focused, otherwise copies to clipboard with toast notification)
+- Added real-time KaTeX visual previews next to formula labels in the Math Helper widget
+
