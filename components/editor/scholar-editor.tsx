@@ -24,6 +24,10 @@ import {
   addCitationHistoryEntry,
   type CitationHistoryEntry,
 } from '@/lib/editor/citation-history';
+import {
+  addAiHistoryEntry,
+  type AiHistoryEntry,
+} from '@/lib/editor/ai-history';
 import { DocumentSetupModal } from './document-setup-modal';
 import {
   serializeBibliographyText,
@@ -36,6 +40,7 @@ import {
 const STORAGE_KEY = 'scholarflow.editor.content.v1';
 const CITATION_LIBRARY_KEY = 'scholarflow.editor.citation-library.v1';
 const CITATION_HISTORY_KEY = 'scholarflow.editor.citation-history.v1';
+const AI_HISTORY_KEY = 'scholarflow.editor.ai-history.v1';
 
 function extractTextFromContent(content: any): string {
   if (!content || !content.blocks || !Array.isArray(content.blocks)) return '';
@@ -177,6 +182,8 @@ export function ScholarEditor() {
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [selectedText, setSelectedText] = useState('');
   const [improvedResult, setImprovedResult] = useState<ImproveWritingResponse | null>(null);
+  const [contentBeforeApply, setContentBeforeApply] = useState<any>(null);
+  const [isApplied, setIsApplied] = useState(false);
   const [selectedAiModel, setSelectedAiModel] = useState('gemini');
   const [selectedAiTone, setSelectedAiTone] = useState('academic');
 
@@ -190,6 +197,7 @@ export function ScholarEditor() {
   const [citationResults, setCitationResults] = useState<CitationCandidate[]>([]);
   const [citationLibrary, setCitationLibrary] = useState<Record<string, CitationCandidate>>({});
   const [citationHistory, setCitationHistory] = useState<CitationHistoryEntry[]>([]);
+  const [aiHistory, setAiHistory] = useState<AiHistoryEntry[]>([]);
   const [aiError, setAiError] = useState<string | null>(null);
   const [citationError, setCitationError] = useState<string | null>(null);
   const [citationNote, setCitationNote] = useState<string | null>(null);
@@ -653,11 +661,20 @@ export function ScholarEditor() {
   const handleContentChange = useCallback((content: any) => {
     if (!currentDocument || !user?.id) return;
 
+    // Check if user has reverted the content to the state before application
+    if (isApplied && contentBeforeApply) {
+      const cleanNew = content?.blocks || [];
+      const cleanBefore = contentBeforeApply?.blocks || [];
+      if (JSON.stringify(cleanNew) === JSON.stringify(cleanBefore)) {
+        setIsApplied(false);
+      }
+    }
+
     const updatedDoc = { ...currentDocument, content };
     setCurrentDocument(updatedDoc);
 
     triggerDebouncedSave(currentDocument.id, currentDocument.title, content);
-  }, [currentDocument, user, triggerDebouncedSave]);
+  }, [currentDocument, user, triggerDebouncedSave, isApplied, contentBeforeApply]);
 
   const folders = useMemo(() => {
     return currentDocument?.settings?.folders || ['Pendahuluan', 'Tinjauan Pustaka', 'Metodologi', 'Hasil & Diskusi'];
@@ -871,6 +888,24 @@ export function ScholarEditor() {
     if (!hydrated || typeof window === 'undefined') return;
     window.localStorage.setItem(CITATION_HISTORY_KEY, JSON.stringify(citationHistory));
   }, [citationHistory, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated || typeof window === 'undefined') return;
+    const storedAiHistory = window.localStorage.getItem(AI_HISTORY_KEY);
+    if (!storedAiHistory) return;
+
+    try {
+      const parsed = JSON.parse(storedAiHistory) as AiHistoryEntry[];
+      setAiHistory(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      window.localStorage.removeItem(AI_HISTORY_KEY);
+    }
+  }, [hydrated]);
+
+  useEffect(() => {
+    if (!hydrated || typeof window === 'undefined') return;
+    window.localStorage.setItem(AI_HISTORY_KEY, JSON.stringify(aiHistory));
+  }, [aiHistory, hydrated]);
 
   useEffect(() => {
     return () => {
@@ -1092,6 +1127,18 @@ export function ScholarEditor() {
     try {
       const response = await improveWriting(selectedText, selectedAiTone, selectedAiModel);
       setImprovedResult(response);
+      setContentBeforeApply(currentDocument?.content);
+      setIsApplied(false);
+      setAiHistory((current) =>
+        addAiHistoryEntry(current, {
+          id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
+          originalText: selectedText,
+          improvedText: response.improved_text,
+          tone: selectedAiTone,
+          model: selectedAiModel,
+          savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        })
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
       setAiError(message);
@@ -1099,7 +1146,8 @@ export function ScholarEditor() {
     } finally {
       setIsImproving(false);
     }
-  }, [selectedText, selectedAiModel, selectedAiTone]);
+  }, [selectedText, selectedAiModel, selectedAiTone, setAiHistory, currentDocument]);
+
   const runParaphrase = useCallback(async () => {
     if (!selectedText.trim()) return;
 
@@ -1109,6 +1157,18 @@ export function ScholarEditor() {
     try {
       const response = await improveWriting(selectedText, 'paraphrase', selectedAiModel);
       setImprovedResult(response);
+      setContentBeforeApply(currentDocument?.content);
+      setIsApplied(false);
+      setAiHistory((current) =>
+        addAiHistoryEntry(current, {
+          id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
+          originalText: selectedText,
+          improvedText: response.improved_text,
+          tone: 'paraphrase',
+          model: selectedAiModel,
+          savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        })
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
       setAiError(message);
@@ -1116,7 +1176,7 @@ export function ScholarEditor() {
     } finally {
       setIsImproving(false);
     }
-  }, [selectedText, selectedAiModel]);
+  }, [selectedText, selectedAiModel, setAiHistory, currentDocument]);
 
   const runSummarize = useCallback(async () => {
     if (!selectedText.trim()) return;
@@ -1127,6 +1187,18 @@ export function ScholarEditor() {
     try {
       const response = await improveWriting(selectedText, 'summarize', selectedAiModel);
       setImprovedResult(response);
+      setContentBeforeApply(currentDocument?.content);
+      setIsApplied(false);
+      setAiHistory((current) =>
+        addAiHistoryEntry(current, {
+          id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
+          originalText: selectedText,
+          improvedText: response.improved_text,
+          tone: 'summarize',
+          model: selectedAiModel,
+          savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        })
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
       setAiError(message);
@@ -1134,7 +1206,7 @@ export function ScholarEditor() {
     } finally {
       setIsImproving(false);
     }
-  }, [selectedText, selectedAiModel]);
+  }, [selectedText, selectedAiModel, setAiHistory, currentDocument]);
 
   const runGenerateAbstract = useCallback(async () => {
     setIsImproving(true);
@@ -1152,6 +1224,18 @@ export function ScholarEditor() {
         tone: 'academic',
         disclaimer: response.disclaimer || 'Abstract generated based on document context.'
       });
+      setContentBeforeApply(currentDocument?.content);
+      setIsApplied(false);
+      setAiHistory((current) =>
+        addAiHistoryEntry(current, {
+          id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
+          originalText: 'Document Context',
+          improvedText: response.abstract_text,
+          tone: 'abstract',
+          model: selectedAiModel,
+          savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        })
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
       setAiError(message);
@@ -1159,7 +1243,7 @@ export function ScholarEditor() {
     } finally {
       setIsImproving(false);
     }
-  }, [currentDocument, selectedAiModel]);
+  }, [currentDocument, selectedAiModel, setAiHistory]);
 
   const handleParafrasePlagiat = useCallback(async (sentence: string) => {
     setSelectedText(sentence);
@@ -1169,6 +1253,18 @@ export function ScholarEditor() {
     try {
       const response = await improveWriting(sentence, selectedAiTone, selectedAiModel);
       setImprovedResult(response);
+      setContentBeforeApply(currentDocument?.content);
+      setIsApplied(false);
+      setAiHistory((current) =>
+        addAiHistoryEntry(current, {
+          id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
+          originalText: sentence,
+          improvedText: response.improved_text,
+          tone: selectedAiTone,
+          model: selectedAiModel,
+          savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        })
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
       setAiError(message);
@@ -1176,13 +1272,15 @@ export function ScholarEditor() {
     } finally {
       setIsImproving(false);
     }
-  }, [selectedAiModel, selectedAiTone]);
+  }, [selectedAiModel, selectedAiTone, setAiHistory, currentDocument]);
 
   const applyImprovedText = useCallback(() => {
     if (!improvedResult) return;
+    setContentBeforeApply(currentDocument?.content);
     editorJsRef.current?.insertText(improvedResult.improved_text);
+    setIsApplied(true);
     setSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-  }, [improvedResult]);
+  }, [improvedResult, currentDocument]);
 
   const runCitationSearchForQuery = useCallback(async (query: string) => {
     const normalizedQuery = query.trim();
@@ -1268,6 +1366,14 @@ export function ScholarEditor() {
     },
     [runCitationSearchForQuery],
   );
+
+  const deleteAiHistoryEntry = useCallback((id: string) => {
+    setAiHistory((current) => current.filter((item) => item.id !== id));
+  }, []);
+
+  const clearAiHistory = useCallback(() => {
+    setAiHistory([]);
+  }, []);
 
   const insertCitationCandidate = useCallback(
     (candidate: CitationCandidate) => {
@@ -1384,6 +1490,10 @@ export function ScholarEditor() {
         folderAssignments={folderAssignments}
         onCreateFolder={handleCreateFolder}
         onAssignFolder={handleAssignFolder}
+        aiHistory={aiHistory}
+        onDeleteAiHistoryEntry={deleteAiHistoryEntry}
+        onClearAiHistory={clearAiHistory}
+        isApplied={isApplied}
       />
 
       {/* Citation Details Modal */}

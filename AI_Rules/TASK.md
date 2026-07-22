@@ -6,7 +6,7 @@ Build the first usable editor MVP.
 ## Current Priority
 1. Prepare citation lookup UI
 2. Extend backend API structure
-3. Add AI response history
+3. [Completed] Add AI response history
 4. Add bibliography export support
 5. Add deployment notes
 
@@ -14,7 +14,8 @@ Build the first usable editor MVP.
 Refine the editor workspace template so the shell matches the library-and-document layout reference.
 
 ## Next Tasks
-- Add AI response history
+- Add bibliography export support
+- Add deployment notes
 
 ## Do Not Work On Yet
 - SPSS

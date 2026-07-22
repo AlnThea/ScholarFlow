@@ -94,3 +94,20 @@
 - Implemented smart-click action on LaTeX Math Helper (inserts directly if a formula input textarea is focused, otherwise copies to clipboard with toast notification)
 - Added real-time KaTeX visual previews next to formula labels in the Math Helper widget
 
+## v0.1.5
+- Added helper module `lib/editor/ai-history.ts` to manage state changes and duplicate filtering for AI response history
+- Implemented `aiHistory` local state in `scholar-editor.tsx` with automated `localStorage` persistence under the key `scholarflow.editor.ai-history.v1`
+- Integrated automatic history logging in AI callbacks for Writing Assistant actions (Improve Writing, Paraphrase, Summarize, Abstract) and Plagiarism checker paraphrase triggers
+- Passed AI History state, delete callback, and clear callbacks to `EditorLayout` and down to `EditorSidebar`
+- Implemented large modal popup for AI Response History (Riwayat Perbaikan AI) triggered via a "Riwayat" button on the top-right of the Writing Tools sidebar section
+  - Displays color-coded tone badges, original text vs improved text side-by-side, date, and delete, copy, and apply actions
+- Redesigned the text selection bubble menu (right-click trigger) into a premium vertical list of actions:
+  - Structured into two header-separated sections: **Pengaturan AI** and **Aksi Asisten**
+  - Integrated horizontal select options with labels **Model** and **Gaya** inside the configuration header
+  - Rendered actions vertically as items with descriptive subtitles and colored icons: **Poles dengan AI** (Meningkatkan gaya bahasa & akademis), **Parafrase Kalimat** (Tulis ulang kalimat terpilih), and **Cari Kutipan / Sitasi** (Temukan sitasi jurnal ilmiah)
+  - Configured action items to trigger processes and automatically open the right sidebar (Research Assistant) upon click
+  - Removed the inline AI result preview block from the bubble menu
+- Added smart state comparison to the AI Improve Result **Apply** button:
+  - Disables the button once clicked
+  - Automatically reactivates the button if the user performs an undo (Ctrl+Z) in the canvas reverting it back to the original content state
+

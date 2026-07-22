@@ -40,6 +40,7 @@ import {
   IconFilePlus,
   IconBook,
   IconLoader,
+  IconLanguage,
   IconDeviceFloppy,
   IconShare,
   IconFileWord,
@@ -56,6 +57,7 @@ import { MinimalSidebar } from './minimal-sidebar';
 import type { ImproveWritingResponse } from '@/lib/api/ai';
 import type { CitationCandidate } from '@/lib/api/citations';
 import type { CitationHistoryEntry } from '@/lib/editor/citation-history';
+import type { AiHistoryEntry } from '@/lib/editor/ai-history';
 import type { BibliographyEntry } from '@/lib/editor/bibliography';
 import type { DocumentListItem, DocumentEntry } from '@/lib/api/documents';
 import { PricingModal } from './pricing-modal';
@@ -160,6 +162,12 @@ type EditorLayoutProps = {
   folderAssignments: Record<string, string>;
   onCreateFolder: (name: string) => void;
   onAssignFolder: (referenceId: string, folderName: string) => void;
+
+  // AI response history props
+  aiHistory: AiHistoryEntry[];
+  onDeleteAiHistoryEntry: (id: string) => void;
+  onClearAiHistory: () => void;
+  isApplied: boolean;
 };
 
 function findMostRelevantSentence(abstract: string | null | undefined, query: string): string {
@@ -273,7 +281,11 @@ export function EditorLayout({
   folders,
   folderAssignments,
   onCreateFolder,
-  onAssignFolder
+  onAssignFolder,
+  aiHistory,
+  onDeleteAiHistoryEntry,
+  onClearAiHistory,
+  isApplied
 }: EditorLayoutProps) {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [showRightSidebar, setShowRightSidebar] = useState(false);
@@ -1996,15 +2008,15 @@ export function EditorLayout({
             className="fixed z-50 bg-white border border-slate-200/80 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.1)] flex flex-col transition-all duration-150 backdrop-blur-sm overflow-hidden"
             style={{
               top: `${bubbleMenuRect.bottom + 10}px`,
-              left: `${Math.max(10, bubbleMenuRect.left + bubbleMenuRect.width / 2 - (bubbleMode === 'citation' ? 240 : 140))}px`,
-              width: bubbleMode === 'citation' ? '480px' : '280px',
+              left: `${Math.max(10, bubbleMenuRect.left + bubbleMenuRect.width / 2 - (bubbleMode === 'citation' ? 240 : 155))}px`,
+              width: bubbleMode === 'citation' ? '480px' : '310px',
             }}
           >
             {/* ── FORMAT MODE ── */}
             {bubbleMode === 'format' && (
-              <div className="p-2 flex flex-col gap-1.5">
+              <div className="flex flex-col">
                 {/* Inline format buttons */}
-                <div className="flex items-center gap-0.5 justify-between px-1">
+                <div className="p-2 flex items-center gap-0.5 justify-between px-3 bg-slate-50/20 border-b border-slate-100">
                   <button className={getBtnClass(activeFormats.bold)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('bold')} title="Bold"><IconBold className="h-3.5 w-3.5" /></button>
                   <button className={getBtnClass(activeFormats.italic)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('italic')} title="Italic"><IconItalic className="h-3.5 w-3.5" /></button>
                   <button className={getBtnClass(activeFormats.underline)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('underline')} title="Underline"><IconUnderline className="h-3.5 w-3.5" /></button>
@@ -2013,27 +2025,21 @@ export function EditorLayout({
                   <button className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition" onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('link')} title="Link"><IconLink className="h-3.5 w-3.5" /></button>
                   <button className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition" onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('highlight')} title="Highlight"><IconHighlight className="h-3.5 w-3.5" /></button>
                 </div>
-                <div className="h-px bg-slate-100 w-full" />
-                {/* Action buttons */}
-                <div className="flex flex-col gap-0.5">
-                  <button
-                    className="w-full flex items-center gap-2 px-2 py-1.5 text-left rounded-md text-indigo-700 bg-indigo-50/50 hover:bg-indigo-100 transition text-xs font-semibold"
-                    onMouseDown={e => e.preventDefault()}
-                    onClick={() => {
-                      setBubbleMode('citation');
-                      onFindCitation(); // trigger search with selected text
-                    }}
-                  >
-                    <IconSearch className="h-3.5 w-3.5 text-indigo-500" />
-                    @ Find Citation
-                  </button>
-                  
-                  <div className="flex gap-1 mt-0.5">
-                    {/* Model Dropdown */}
+                
+                {/* AI Configuration Section Header */}
+                <div className="flex items-center justify-between px-3 py-1.5 border-b border-slate-100/50 text-[9px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/40">
+                  <span>Pengaturan AI</span>
+                </div>
+
+                {/* AI Dropdowns */}
+                <div className="flex gap-2.5 px-3 py-2 border-b border-slate-100/60 bg-slate-50/10">
+                  {/* Model Select */}
+                  <div className="flex flex-col gap-1 flex-1 min-w-0">
+                    <span className="text-[8px] font-bold text-slate-400 uppercase">Model</span>
                     <select
                       value={selectedAiModel}
                       onChange={(e) => setSelectedAiModel(e.target.value)}
-                      className="border border-slate-200 rounded-md px-1 py-1 text-[9px] text-slate-600 bg-white outline-none focus:border-indigo-500 transition shrink-0 max-w-[85px] cursor-pointer"
+                      className="w-full border border-slate-200 rounded px-1.5 py-1 text-[10px] text-slate-700 bg-white outline-none focus:border-indigo-500 transition cursor-pointer font-semibold"
                       title="Pilih Model AI"
                     >
                       {aiModels && aiModels.length > 0 ? (
@@ -2051,76 +2057,112 @@ export function EditorLayout({
                         </>
                       )}
                     </select>
+                  </div>
 
-                    {/* Tone Dropdown */}
+                  {/* Tone Select */}
+                  <div className="flex flex-col gap-1 flex-1 min-w-0">
+                    <span className="text-[8px] font-bold text-slate-400 uppercase">Gaya</span>
                     <select
                       value={selectedAiTone}
                       onChange={(e) => setSelectedAiTone(e.target.value)}
-                      className="border border-slate-200 rounded-md px-1 py-1 text-[9px] text-slate-600 bg-white outline-none focus:border-indigo-500 transition shrink-0 max-w-[80px] cursor-pointer"
-                      title="Gaya Poles"
+                      className="w-full border border-slate-200 rounded px-1.5 py-1 text-[10px] text-slate-700 bg-white outline-none focus:border-indigo-500 transition cursor-pointer font-semibold"
+                      title="Gaya Poles AI"
                     >
                       <option value="academic">Akademis</option>
                       <option value="simplify">Sederhana</option>
                       <option value="shorten">Ringkas</option>
                       <option value="expand">Elaborasi</option>
                     </select>
-
-                    <button
-                      className="flex-1 flex items-center justify-center gap-1 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-sm transition text-[9px] cursor-pointer disabled:bg-indigo-400"
-                      onMouseDown={e => e.preventDefault()}
-                      disabled={isImproving}
-                      onClick={() => {
-                        const modelObj = aiModels.find(m => m.id === selectedAiModel);
-                        const isPremium = modelObj ? modelObj.is_premium : (selectedAiModel === 'claude');
-                        if (isPremium && activePlanId === 'free') {
-                          alert(`🔒 Model "${modelObj?.name || 'Premium'}" khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda.`);
-                        } else {
-                          onImproveWriting();
-                        }
-                      }}
-                    >
-                      {isImproving ? (
-                        <>
-                          <IconLoader className="h-2.5 w-2.5 animate-spin" />
-                          <span>Poles...</span>
-                        </>
-                      ) : (
-                        <>
-                          <IconSparkles className="h-3 w-3" />
-                          <span>Poles dengan AI</span>
-                        </>
-                      )}
-                    </button>
                   </div>
                 </div>
 
-                {/* AI Result display directly inside bubble menu if loaded */}
-                {improvedText && !isImproving && (
-                  <div className="flex flex-col gap-1.5 p-2 bg-indigo-50/50 border border-indigo-100 rounded-lg mt-1 text-[10px] animate-fade-in">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-indigo-700 uppercase tracking-wider text-[8px]">Hasil Poles AI:</span>
-                      {selectedAiModel !== 'gemini' && (
-                        <span className="text-[8px] bg-indigo-100 text-indigo-800 font-bold px-1 rounded">OpenRouter</span>
+                {/* Actions Section Header */}
+                <div className="flex items-center justify-between px-3 py-1.5 border-b border-slate-100/50 text-[9px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/40">
+                  <span>Aksi Asisten</span>
+                </div>
+
+                {/* Actions List */}
+                <div className="flex flex-col">
+                  {/* Poles AI Button */}
+                  <button
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-slate-700 hover:bg-slate-50 transition font-semibold cursor-pointer border-b border-slate-100/40 disabled:opacity-50 disabled:bg-slate-50/50"
+                    onMouseDown={e => e.preventDefault()}
+                    disabled={isImproving}
+                    onClick={() => {
+                      const modelObj = aiModels.find(m => m.id === selectedAiModel);
+                      const isPremium = modelObj ? modelObj.is_premium : (selectedAiModel === 'claude');
+                      if (isPremium && activePlanId === 'free') {
+                        alert(`🔒 Model "${modelObj?.name || 'Premium'}" khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda.`);
+                      } else {
+                        onImproveWriting();
+                        setShowRightSidebar(true);
+                      }
+                    }}
+                  >
+                    <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 shrink-0">
+                      {isImproving ? (
+                        <IconLoader className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <IconSparkles className="h-4 w-4" />
                       )}
                     </div>
-                    <p className="text-slate-700 leading-normal italic font-medium">
-                      "{improvedText.improved_text}"
-                    </p>
-                    <button
-                      onClick={() => {
-                        onApplyImprovedText();
-                        // Hide bubble menu after apply by clearing selection
-                        onSelectionChange?.('');
-                      }}
-                      className="mt-1 w-full py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-md shadow-sm transition cursor-pointer text-center text-[9px]"
-                    >
-                      Terapkan Perubahan Kalimat
-                    </button>
-                  </div>
-                )}
+                    <div className="flex flex-col text-left">
+                      <span className="text-xs text-slate-800">Poles dengan AI</span>
+                      <span className="text-[9px] text-slate-400 font-normal">Meningkatkan gaya bahasa & akademis</span>
+                    </div>
+                  </button>
+
+                  {/* Parafrase Button */}
+                  <button
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-slate-700 hover:bg-slate-50 transition font-semibold cursor-pointer border-b border-slate-100/40 disabled:opacity-50 disabled:bg-slate-50/50"
+                    onMouseDown={e => e.preventDefault()}
+                    disabled={isImproving}
+                    onClick={() => {
+                      const modelObj = aiModels.find(m => m.id === selectedAiModel);
+                      const isPremium = modelObj ? modelObj.is_premium : (selectedAiModel === 'claude');
+                      if (isPremium && activePlanId === 'free') {
+                        alert(`🔒 Model "${modelObj?.name || 'Premium'}" khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda.`);
+                      } else {
+                        onParaphrase();
+                        setShowRightSidebar(true);
+                      }
+                    }}
+                  >
+                    <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 shrink-0">
+                      {isImproving ? (
+                        <IconLoader className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <IconLanguage className="h-4 w-4" />
+                      )}
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="text-xs text-slate-800">Parafrase Kalimat</span>
+                      <span className="text-[9px] text-slate-400 font-normal">Tulis ulang kalimat terpilih (AI)</span>
+                    </div>
+                  </button>
+
+                  {/* Sitasi Button */}
+                  <button
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-slate-700 hover:bg-slate-50 transition font-semibold cursor-pointer"
+                    onMouseDown={e => e.preventDefault()}
+                    onClick={() => {
+                      setBubbleMode('citation');
+                      onFindCitation();
+                      setShowRightSidebar(true);
+                    }}
+                  >
+                    <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 shrink-0">
+                      <IconSearch className="h-4 w-4" />
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="text-xs text-slate-800">Cari Kutipan / Sitasi</span>
+                      <span className="text-[9px] text-slate-400 font-normal">Temukan sitasi jurnal ilmiah</span>
+                    </div>
+                  </button>
+                </div>
 
                 {aiError && (
-                  <div className="p-2 bg-rose-50 border border-rose-100 rounded-lg text-rose-700 text-[10px] mt-1 leading-normal">
+                  <div className="m-2 p-2 bg-rose-50 border border-rose-100 rounded-lg text-rose-700 text-[10px] leading-normal shrink-0">
                     {aiError}
                   </div>
                 )}
@@ -2377,6 +2419,10 @@ export function EditorLayout({
               folderAssignments={folderAssignments}
               onCreateFolder={onCreateFolder}
               onAssignFolder={onAssignFolder}
+              aiHistory={aiHistory}
+              onDeleteAiHistoryEntry={onDeleteAiHistoryEntry}
+              onClearAiHistory={onClearAiHistory}
+              isApplied={isApplied}
               isExpanded={isRightSidebarExpanded}
               onToggleExpanded={handleToggleRightSidebarExpanded}
               onClose={() => setShowRightSidebar(false)}

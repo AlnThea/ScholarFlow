@@ -20,11 +20,16 @@ import {
   IconChevronRight,
   IconLanguage,
   IconX,
+  IconClock,
+  IconTrash,
+  IconCopy,
+  IconHistory,
 } from '@tabler/icons-react';
 import { type ImproveWritingResponse, synthesizeLiteratureReview } from '@/lib/api/ai';
 import type { CitationCandidate } from '@/lib/api/citations';
 import type { BibliographyEntry } from '@/lib/editor/bibliography';
 import type { CitationHistoryEntry } from '@/lib/editor/citation-history';
+import type { AiHistoryEntry } from '@/lib/editor/ai-history';
 import { useAuth } from '@/components/auth/auth-provider';
 
 type SidebarProps = {
@@ -75,6 +80,12 @@ type SidebarProps = {
   isExpanded?: boolean;
   onToggleExpanded?: () => void;
   onClose?: () => void;
+
+  // AI response history props
+  aiHistory: AiHistoryEntry[];
+  onDeleteAiHistoryEntry: (id: string) => void;
+  onClearAiHistory: () => void;
+  isApplied: boolean;
 };
 
 function PanelRow({
@@ -180,11 +191,16 @@ export function EditorSidebar({
   onAssignFolder,
   isExpanded: propIsExpanded,
   onToggleExpanded,
-  onClose
+  onClose,
+  aiHistory,
+  onDeleteAiHistoryEntry,
+  onClearAiHistory,
+  isApplied
 }: SidebarProps) {
   const [workspaceTab, setWorkspaceTab] = useState<'library' | 'writing' | 'document'>('library');
   const [tab, setTab] = useState<'sources' | 'collections'>('sources');
   const [query, setQuery] = useState('');
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   
   const [localIsExpanded, setLocalIsExpanded] = useState(true);
   const isExpanded = propIsExpanded !== undefined ? propIsExpanded : localIsExpanded;
@@ -309,7 +325,8 @@ export function EditorSidebar({
   };
 
   return (
-    <aside className={`fixed right-0 top-0 h-screen z-[100] flex flex-col border-l border-slate-200/80 bg-white/98 shadow-[-8px_0_32px_rgba(15,23,42,0.08)] backdrop-blur transition-all duration-300 ${isExpanded ? 'w-[360px]' : 'w-16'}`}>
+    <>
+      <aside className={`fixed right-0 top-0 h-screen z-[100] flex flex-col border-l border-slate-200/80 bg-white/98 shadow-[-8px_0_32px_rgba(15,23,42,0.08)] backdrop-blur transition-all duration-300 ${isExpanded ? 'w-[360px]' : 'w-16'}`}>
       <div className="flex min-h-0 flex-1 flex-col">
         <div className={`border-b border-slate-100 px-4 py-4 flex items-center ${isExpanded ? 'justify-between' : 'justify-center'}`}>
           <div className="flex items-center gap-1.5">
@@ -648,9 +665,19 @@ export function EditorSidebar({
           ) : workspaceTab === 'writing' ? (
             <div className="space-y-3">
               <section className="rounded-lg border border-line bg-white p-3 shadow-sm">
-                <div className="mb-3 flex items-center gap-2">
-                  <IconSparkles className="h-4 w-4 text-accent" />
-                  <h3 className="text-sm font-semibold text-text">Writing tools</h3>
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <IconSparkles className="h-4 w-4 text-accent" />
+                    <h3 className="text-sm font-semibold text-text">Writing tools</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsHistoryModalOpen(true)}
+                    className="text-xs font-bold text-indigo-650 hover:text-indigo-800 transition flex items-center gap-1 cursor-pointer"
+                  >
+                    <IconHistory className="h-3.5 w-3.5" />
+                    <span>Riwayat</span>
+                  </button>
                 </div>
                 <div className="mb-3 max-h-28 overflow-y-auto rounded-md border border-dashed border-line bg-slate-50 p-3 text-xs leading-5 text-muted">
                   {selectedText.trim()
@@ -726,10 +753,11 @@ export function EditorSidebar({
                     <button
                       type="button"
                       onClick={onApplyImprovedText}
-                      className="inline-flex items-center gap-2 rounded-md border border-line bg-panel px-3 py-1.5 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
+                      disabled={isApplied}
+                      className="inline-flex items-center gap-2 rounded-md border border-line bg-panel px-3 py-1.5 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <IconCheck className="h-3.5 w-3.5" />
-                      Apply
+                      {isApplied ? 'Applied' : 'Apply'}
                     </button>
                   ) : null}
                 </div>
@@ -750,11 +778,7 @@ export function EditorSidebar({
                       <span>{improvedText?.disclaimer}</span>
                     </div>
                   </div>
-                ) : (
-                  <p className="text-sm leading-6 text-muted">
-                    Run Improve Academic Writing to preview the backend response here.
-                  </p>
-                )}
+                ) : null}
               </section>
             </div>
           ) : (
@@ -991,5 +1015,166 @@ export function EditorSidebar({
         </div>
       </div>
     </aside>
-  );
+
+    {/* AI History Modal popup */}
+    {isHistoryModalOpen && (
+      <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in text-slate-800">
+        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-2xl w-full max-w-2xl flex flex-col gap-5 animate-scale-in max-h-[85vh]">
+          {/* Modal Header */}
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                <IconHistory className="h-5 w-5" />
+              </div>
+              <div className="flex flex-col">
+                <h3 className="text-base font-extrabold text-slate-800">Riwayat Perbaikan AI</h3>
+                <span className="text-xs text-slate-400">Total {aiHistory.length} perubahan dicatat</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {aiHistory.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm("Apakah Anda yakin ingin menghapus seluruh riwayat perbaikan AI?")) {
+                      onClearAiHistory();
+                    }
+                  }}
+                  className="text-xs font-bold text-rose-600 hover:text-rose-800 transition cursor-pointer"
+                >
+                  Bersihkan Semua
+                </button>
+              )}
+              <button
+                onClick={() => setIsHistoryModalOpen(false)}
+                className="p-1 rounded-md text-slate-400 hover:bg-slate-105 hover:text-slate-650 transition cursor-pointer"
+              >
+                <IconX className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Modal Body: Cards list */}
+          <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-4">
+            {aiHistory.length > 0 ? (
+              aiHistory.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 shadow-sm hover:shadow-md transition duration-205 border-l-4 border-l-indigo-505 flex flex-col gap-3"
+                >
+                  {/* Header: Tone, Model, Time, and Delete button */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-md ${
+                        item.tone === 'simplify' 
+                          ? 'bg-amber-50 text-amber-700 border border-amber-100' 
+                          : item.tone === 'shorten'
+                            ? 'bg-rose-50 text-rose-700 border border-rose-100'
+                            : item.tone === 'expand'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                              : item.tone === 'paraphrase'
+                                ? 'bg-sky-50 text-sky-700 border border-sky-100'
+                                : item.tone === 'summarize'
+                                  ? 'bg-purple-50 text-purple-700 border border-purple-100'
+                                  : item.tone === 'abstract'
+                                    ? 'bg-orange-50 text-orange-700 border border-orange-100'
+                                    : 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                      }`}>
+                        {item.tone === 'simplify' 
+                          ? 'Sederhana' 
+                          : item.tone === 'shorten'
+                            ? 'Ringkas'
+                            : item.tone === 'expand'
+                              ? 'Elaborasi'
+                              : item.tone === 'paraphrase'
+                                ? 'Parafrase'
+                                : item.tone === 'summarize'
+                                  ? 'Ringkasan'
+                                  : item.tone === 'abstract'
+                                    ? 'Abstrak'
+                                    : 'Akademis'}
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white text-slate-505 border border-slate-200/60 font-mono">
+                        {item.model.replace(" (Direct)", "").replace(" (Free OR)", "").replace(" (Pro OR)", "")}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-slate-400 font-medium font-mono">{item.savedAt}</span>
+                      <button
+                        type="button"
+                        onClick={() => onDeleteAiHistoryEntry(item.id)}
+                        className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                        title="Hapus entri"
+                      >
+                        <IconTrash className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Preview Area: Original vs AI Result */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div className="flex flex-col gap-1.5 bg-white p-3 rounded-xl border border-slate-100/60 text-left">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Draf Asli:</span>
+                      <p className="text-slate-500 italic leading-relaxed">"{item.originalText}"</p>
+                    </div>
+                    <div className="flex flex-col gap-1.5 bg-indigo-50/10 p-3 rounded-xl border border-indigo-100/40 text-left">
+                      <span className="text-[9px] font-bold text-indigo-500 uppercase tracking-wider">Hasil Poles AI:</span>
+                      <p className="text-slate-700 font-semibold leading-relaxed">"{item.improvedText}"</p>
+                    </div>
+                  </div>
+
+                  {/* Actions bar */}
+                  <div className="flex items-center justify-end gap-2 border-t border-slate-100/60 pt-3">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(item.improvedText);
+                          alert("Disalin ke clipboard!");
+                        } catch (err) {
+                          console.error('Failed to copy text:', err);
+                        }
+                      }}
+                      className="px-4 py-2 border border-slate-200 hover:bg-slate-50 hover:text-slate-800 text-slate-655 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <IconCopy className="h-4 w-4" />
+                      Salin
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onInsertSynthesizedText(item.improvedText);
+                        setIsHistoryModalOpen(false);
+                      }}
+                      className="px-4.5 py-2.5 bg-indigo-650 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <IconCheck className="h-4 w-4" />
+                      Terapkan ke Canvas
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-16 text-center flex flex-col items-center justify-center gap-2">
+                <IconHistory className="h-12 w-12 text-slate-300" />
+                <span className="text-sm font-semibold text-slate-500">Belum ada riwayat perbaikan AI</span>
+                <span className="text-xs text-slate-400 text-center">Gunakan asisten AI untuk memoles tulisan Anda dan catatannya akan muncul di sini.</span>
+              </div>
+            )}
+          </div>
+
+          {/* Modal Footer */}
+          <div className="flex items-center justify-end border-t border-slate-100 pt-3 shrink-0">
+            <button
+              onClick={() => setIsHistoryModalOpen(false)}
+              className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </>
+);
 }
