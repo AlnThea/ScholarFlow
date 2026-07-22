@@ -29,6 +29,7 @@ The routing is handled by Next.js App Router.
   - [app/api/citations/view-pdf/route.ts](file:///c:/web/ScholarFlow/app/api/citations/view-pdf/route.ts) - Proxy streaming endpoint to bypass attachment headers and serve PDF with CORS.
   - [app/api/citations/translate/route.ts](file:///c:/web/ScholarFlow/app/api/citations/translate/route.ts) - Proxy translation API communicating with Google Translate.
   - [app/api/v1/ai/improve/route.ts](file:///c:/web/ScholarFlow/app/api/v1/ai/improve/route.ts) - Versioned endpoint for rewriting text with customized academic prompts and fallback modes.
+  - [app/api/v1/ai/abstract/route.ts](file:///c:/web/ScholarFlow/app/api/v1/ai/abstract/route.ts) - Endpoint for generating structured academic abstracts based on document context.
   - [app/api/library/upload/route.ts](file:///c:/web/ScholarFlow/app/api/library/upload/route.ts) - Serverless-friendly Next.js API route that reads PDF files in memory, extracts metadata using `pdf-parse`, and inserts to Supabase.
 - **`app/page.tsx`** - Main dashboard route [app/page.tsx](file:///c:/web/ScholarFlow/app/page.tsx). Renders the editor if authenticated; redirects to `/login` if not.
 - **`app/globals.css`** - Global styles and custom CSS rules [app/globals.css](file:///c:/web/ScholarFlow/app/globals.css).

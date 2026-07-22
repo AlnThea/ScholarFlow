@@ -14,6 +14,13 @@ export type DocumentSettings = {
   citationStyle: string;
   citationLocale: string;
   showPageNumber: boolean;
+  folders?: string[];
+  folder_assignments?: Record<string, string>;
+  projectId?: string;
+  projectName?: string;
+  projectType?: 'skripsi' | 'jurnal' | 'makalah' | 'independent';
+  projectPart?: string;
+  templateId?: 'empty' | 'ieee' | 'skripsi' | 'apa' | 'report';
 };
 
 export type DocumentEntry = {
@@ -29,6 +36,7 @@ export type DocumentEntry = {
 export type DocumentListItem = {
   id: string;
   title: string;
+  settings: DocumentSettings;
   created_at: string;
   updated_at: string;
 };
@@ -39,7 +47,7 @@ export type DocumentListItem = {
 export async function fetchDocuments(userId: string): Promise<DocumentListItem[]> {
   const { data, error } = await supabase
     .from('documents')
-    .select('id, title, created_at, updated_at')
+    .select('id, title, settings, created_at, updated_at')
     .eq('user_id', userId)
     .order('updated_at', { ascending: false });
 

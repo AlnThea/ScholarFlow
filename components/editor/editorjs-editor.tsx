@@ -100,6 +100,7 @@ export interface EditorJsMethods {
 }
 
 interface EditorJsEditorProps {
+  initialContent?: any;
   onBlockTypeChange?: (type: string) => void;
   onAlignmentChange?: (align: string) => void;
   onStatsChange?: (stats: { wordCount: number; characterCount: number; citationCount: number }) => void;
@@ -108,6 +109,7 @@ interface EditorJsEditorProps {
 }
 
 export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>(({ 
+  initialContent,
   onBlockTypeChange, 
   onAlignmentChange,
   onStatsChange,
@@ -116,6 +118,8 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
 }, ref) => {
   const editorRef = useRef<EditorJS | null>(null);
   const undoRef = useRef<any>(null);
+  const pendingContentRef = useRef<any>(null);
+  const isRenderingRef = useRef<boolean>(false);
   const holderId = 'editorjs-holder';
   const [isReady, setIsReady] = useState(false);
   const activeBlockIndexRef = useRef<number>(0);
@@ -470,10 +474,23 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
     renderContent: (data: any) => {
       if (editorRef.current) {
         try {
-          editorRef.current.render(data);
+          isRenderingRef.current = true;
+          editorRef.current.render(data)
+            .then(() => {
+              setTimeout(() => {
+                isRenderingRef.current = false;
+              }, 150);
+            })
+            .catch((e) => {
+              console.error('EditorJS renderContent promise error:', e);
+              isRenderingRef.current = false;
+            });
         } catch (e) {
           console.error('EditorJS renderContent error:', e);
+          isRenderingRef.current = false;
         }
+      } else {
+        pendingContentRef.current = data;
       }
     },
   }));
@@ -528,13 +545,25 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
               // Initialize Undo/Redo manager
               undoRef.current = new Undo({ editor });
 
-              const stored = window.localStorage.getItem(STORAGE_KEY);
-              if (stored) {
+              // Render initial content if provided, otherwise render pending content
+              const contentToRender = initialContent || pendingContentRef.current;
+              if (contentToRender) {
                 try {
-                  const data = JSON.parse(stored);
-                  editor.render(data);
+                  isRenderingRef.current = true;
+                  editor.render(contentToRender)
+                    .then(() => {
+                      setTimeout(() => {
+                        isRenderingRef.current = false;
+                      }, 150);
+                    })
+                    .catch((e) => {
+                      console.error('Error rendering database content promise:', e);
+                      isRenderingRef.current = false;
+                    });
+                  pendingContentRef.current = null;
                 } catch (e) {
-                  console.warn('Stored data is not valid JSON – starting with empty editor');
+                  console.error('Error rendering database content:', e);
+                  isRenderingRef.current = false;
                 }
               }
 
@@ -547,6 +576,11 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
             onChange: async () => {
               syncActiveBlockType();
               calculateLiveStats();
+              
+              if (isRenderingRef.current) {
+                return;
+              }
+
               if (onContentChange && editorRef.current) {
                 try {
                   const content = await editorRef.current.save();
@@ -564,7 +598,13 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
     return () => {
       isMounted = false;
       if (editorRef.current) {
-        editorRef.current.destroy();
+        try {
+          if (typeof editorRef.current.destroy === 'function') {
+            editorRef.current.destroy();
+          }
+        } catch (e) {
+          console.warn('Failed to destroy EditorJS instance:', e);
+        }
         editorRef.current = null;
       }
     };

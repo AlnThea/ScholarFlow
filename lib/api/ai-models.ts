@@ -23,7 +23,7 @@ export async function fetchAIModels(): Promise<AIModel[]> {
     if (error) throw error;
     return (data as AIModel[]) || [];
   } catch (error) {
-    console.error('Error fetching AI models:', error);
+    console.warn('Error fetching AI models (using local fallback):', error);
     // Fallback data jika tabel belum dimigrasi di cloud
     return [
       { id: 'gemini', name: 'Gemini Flash (Direct)', model_id: 'gemini-1.5-flash', is_enabled: true, is_premium: false, updated_at: new Date().toISOString() },
@@ -54,4 +54,43 @@ export async function updateAIModel(
   }
 
   return data as AIModel;
+}
+
+/**
+ * Menambah model AI baru ke Supabase (Khusus Admin)
+ */
+export async function createAIModel(
+  model: Omit<AIModel, 'updated_at'>
+): Promise<AIModel> {
+  const { data, error } = await supabase
+    .from('ai_models')
+    .insert({ ...model, updated_at: new Date().toISOString() })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating AI model:', error);
+    throw error;
+  }
+
+  return data as AIModel;
+}
+
+/**
+ * Menghapus model AI dari Supabase (Khusus Admin)
+ */
+export async function deleteAIModel(
+  id: string
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('ai_models')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error(`Error deleting AI model ${id}:`, error);
+    throw error;
+  }
+
+  return true;
 }

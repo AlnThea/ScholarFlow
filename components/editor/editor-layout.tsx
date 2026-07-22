@@ -1,7 +1,8 @@
 // c:/web/ScholarFlow/components/editor/editor-layout.tsx
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { EditorJsEditor, type EditorJsMethods } from './editorjs-editor';
 import { EditorSidebar } from './editor-sidebar';
 import { 
@@ -41,7 +42,13 @@ import {
   IconDeviceFloppy,
   IconShare,
   IconFileWord,
-  IconLayoutSidebarRightCollapse
+  IconLayoutSidebarRightCollapse,
+  IconCalculator,
+  IconFolder,
+  IconFolderOpen,
+  IconChevronDown,
+  IconSun,
+  IconMoon
 } from '@tabler/icons-react';
 import { MinimalSidebar } from './minimal-sidebar';
 import type { ImproveWritingResponse } from '@/lib/api/ai';
@@ -53,9 +60,34 @@ import { PricingModal } from './pricing-modal';
 import { ShareDocumentModal } from './share-document-modal';
 import { exportToWordFile } from '@/lib/editor/citation-export-word';
 import { useAuth } from '@/components/auth/auth-provider';
-import { fetchPricingPlans, updatePricingPlan, type PricingPlan } from '@/lib/api/pricing';
+import { fetchPricingPlans, updatePricingPlan, createPricingPlan, deletePricingPlan, type PricingPlan } from '@/lib/api/pricing';
 import { fetchPaymentGateways, updatePaymentGatewayStatus, type PaymentGateway } from '@/lib/api/payment-gateways';
-import { type AIModel } from '@/lib/api/ai-models';
+import { type AIModel, createAIModel, deleteAIModel } from '@/lib/api/ai-models';
+
+type SwitchProps = {
+  checked: boolean;
+  onChange: () => void;
+  disabled?: boolean;
+};
+
+const Switch = ({ checked, onChange, disabled }: SwitchProps) => {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onChange}
+      className={`relative inline-flex h-5.5 w-10 items-center rounded-full transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+        checked ? 'bg-indigo-650' : 'bg-slate-200'
+      }`}
+    >
+      <span
+        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-all duration-200 ${
+          checked ? 'translate-x-5' : 'translate-x-1.5'
+        }`}
+      />
+    </button>
+  );
+};
 
 type EditorLayoutProps = {
   selectedText: string;
@@ -73,6 +105,9 @@ type EditorLayoutProps = {
   citationNote: string | null;
   onApplyImprovedText: () => void;
   onImproveWriting: () => void;
+  onParaphrase: () => void;
+  onSummarize: () => void;
+  onGenerateAbstract: () => void;
   onFindCitation: () => void;
   onRepeatCitationSearch: (query: string) => void;
   onInsertCitation: () => void;
@@ -80,6 +115,8 @@ type EditorLayoutProps = {
   onInsertImageSample: () => void;
   onExportBibliographyText: () => void;
   onExportBibliographyJson: () => void;
+  onExportBibliographyBibtex: () => void;
+  onExportBibliographyRis: () => void;
   onInsertCitationCandidate: (candidate: CitationCandidate) => void;
   statusLabel: string;
   onSelectionChange?: (text: string) => void;
@@ -100,9 +137,27 @@ type EditorLayoutProps = {
   onContentChange?: (content: any) => void;
   selectedAiModel: string;
   setSelectedAiModel: (model: string) => void;
+  selectedAiTone: string;
+  setSelectedAiTone: (tone: string) => void;
   aiModels: AIModel[];
   onUpdateAIModel: (id: string, updates: Partial<AIModel>) => Promise<void>;
+  onCreateAIModel: (model: Omit<AIModel, 'updated_at'>) => Promise<void>;
+  onDeleteAIModel: (id: string) => Promise<void>;
   onParafrasePlagiat?: (sentence: string) => void;
+  isSynthesizing: boolean;
+  synthesizedText: string | null;
+  synthesizeError: string | null;
+  synthesizeDisclaimer: string | null;
+  onSynthesizeReview: () => void;
+  onInsertSynthesizedText: (text: string) => void;
+  
+  // Final features props
+  citationStyle: string;
+  onChangeCitationStyle: (style: string) => void;
+  folders: string[];
+  folderAssignments: Record<string, string>;
+  onCreateFolder: (name: string) => void;
+  onAssignFolder: (referenceId: string, folderName: string) => void;
 };
 
 function findMostRelevantSentence(abstract: string | null | undefined, query: string): string {
@@ -147,11 +202,16 @@ export function EditorLayout({
   onInsertImageSample,
   onExportBibliographyText,
   onExportBibliographyJson,
+  onExportBibliographyBibtex,
+  onExportBibliographyRis,
   onInsertCitationCandidate,
   onRepeatCitationSearch,
   onInsertCitation,
   onFindCitation,
   onImproveWriting,
+  onParaphrase,
+  onSummarize,
+  onGenerateAbstract,
   onSelectionChange,
   onStatsChange,
   editorJsRef,
@@ -168,9 +228,25 @@ export function EditorLayout({
   onContentChange,
   selectedAiModel,
   setSelectedAiModel,
+  selectedAiTone,
+  setSelectedAiTone,
   aiModels,
   onUpdateAIModel,
-  onParafrasePlagiat
+  onCreateAIModel,
+  onDeleteAIModel,
+  onParafrasePlagiat,
+  isSynthesizing,
+  synthesizedText,
+  synthesizeError,
+  synthesizeDisclaimer,
+  onSynthesizeReview,
+  onInsertSynthesizedText,
+  citationStyle,
+  onChangeCitationStyle,
+  folders,
+  folderAssignments,
+  onCreateFolder,
+  onAssignFolder
 }: EditorLayoutProps) {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [showRightSidebar, setShowRightSidebar] = useState(false);
@@ -179,11 +255,90 @@ export function EditorLayout({
   const [currentAlignment, setCurrentAlignment] = useState('left');
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isMathHelperOpen, setIsMathHelperOpen] = useState(false);
+  const [mathToast, setMathToast] = useState<string | null>(null);
+  const [dashboardExpandedProjects, setDashboardExpandedProjects] = useState<Record<string, boolean>>({});
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const localTheme = window.localStorage.getItem('sf-theme');
+    if (localTheme === 'dark') {
+      setIsDarkMode(true);
+      document.documentElement.classList.add('dark');
+    } else {
+      setIsDarkMode(false);
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    if (isDarkMode) {
+      document.documentElement.classList.remove('dark');
+      window.localStorage.setItem('sf-theme', 'light');
+      setIsDarkMode(false);
+    } else {
+      document.documentElement.classList.add('dark');
+      window.localStorage.setItem('sf-theme', 'dark');
+      setIsDarkMode(true);
+    }
+  };
+
+  const groupedDocs = React.useMemo(() => {
+    const projects: Record<string, { id: string; name: string; type: string; docs: DocumentListItem[] }> = {};
+    const independent: DocumentListItem[] = [];
+    
+    documents.forEach((doc) => {
+      const settings = doc.settings;
+      if (settings?.projectId && settings?.projectName) {
+        const pId = settings.projectId;
+        if (!projects[pId]) {
+          projects[pId] = {
+            id: pId,
+            name: settings.projectName,
+            type: settings.projectType || 'independent',
+            docs: []
+          };
+        }
+        projects[pId].docs.push(doc);
+      } else {
+        independent.push(doc);
+      }
+    });
+    
+    return {
+      projects: Object.values(projects),
+      independent
+    };
+  }, [documents]);
 
   const { profile, user } = useAuth();
   const role = profile?.role ?? 'user';
   const activePlanId = profile?.subscription_plan || 'free';
-  const [activeDashboardTab, setActiveDashboardTab] = useState<'user' | 'admin' | 'billing'>('user');
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const activeDashboardTab = useMemo(() => {
+    if (pathname === '/billing') return 'billing';
+    if (pathname === '/admin/pricing') return 'admin-pricing';
+    if (pathname === '/admin/models') return 'admin-models';
+    if (pathname === '/admin/gateways') return 'admin-gateways';
+    return 'user';
+  }, [pathname]);
+
+  const handleSetDashboardTab = (tab: 'user' | 'admin' | 'billing' | 'admin-pricing' | 'admin-models' | 'admin-gateways') => {
+    if (tab === 'billing') {
+      router.push('/billing');
+    } else if (tab === 'admin' || tab === 'admin-pricing') {
+      router.push('/admin/pricing');
+    } else if (tab === 'admin-models') {
+      router.push('/admin/models');
+    } else if (tab === 'admin-gateways') {
+      router.push('/admin/gateways');
+    } else {
+      router.push('/dashboard');
+    }
+  };
   const [adminPlans, setAdminPlans] = useState<PricingPlan[]>([]);
   const [loadingAdminPlans, setLoadingAdminPlans] = useState(false);
   const [savingPlanId, setSavingPlanId] = useState<string | null>(null);
@@ -221,22 +376,87 @@ export function EditorLayout({
     }
   }, [aiModels]);
 
-  const handleSaveModel = async (id: string) => {
-    const state = editModelStates[id];
-    if (!state) return;
-    setSavingModelId(id);
+  const [isModelModalOpen, setIsModelModalOpen] = useState(false);
+  const [selectedModelForModal, setSelectedModelForModal] = useState<AIModel | null>(null);
+  const [modalModelState, setModalModelState] = useState<Omit<AIModel, 'updated_at'>>({
+    id: '',
+    name: '',
+    model_id: '',
+    is_enabled: true,
+    is_premium: false
+  });
+
+  const handleOpenEditModelModal = (model: AIModel) => {
+    setSelectedModelForModal(model);
+    setModalModelState({
+      id: model.id,
+      name: model.name,
+      model_id: model.model_id,
+      is_enabled: model.is_enabled,
+      is_premium: model.is_premium
+    });
+    setIsModelModalOpen(true);
+  };
+
+  const handleOpenCreateModelModal = () => {
+    setSelectedModelForModal(null);
+    setModalModelState({
+      id: '',
+      name: '',
+      model_id: '',
+      is_enabled: true,
+      is_premium: false
+    });
+    setIsModelModalOpen(true);
+  };
+
+  const handleSaveModalModel = async () => {
+    if (!modalModelState.id.trim() || !modalModelState.name.trim() || !modalModelState.model_id.trim()) {
+      alert('ID Gateway, Nama Model, dan ID Model API harus diisi.');
+      return;
+    }
+    setSavingModelId(modalModelState.id);
     try {
-      await onUpdateAIModel(id, state);
-      alert(`Model AI "${state.name}" berhasil diperbarui!`);
-    } catch (e: any) {
-      alert(`Gagal memperbarui model: ${e.message || e}`);
+      if (selectedModelForModal) {
+        // Edit mode
+        await onUpdateAIModel(selectedModelForModal.id, {
+          name: modalModelState.name,
+          model_id: modalModelState.model_id,
+          is_enabled: modalModelState.is_enabled,
+          is_premium: modalModelState.is_premium
+        });
+        alert('Model AI berhasil diperbarui!');
+        setIsModelModalOpen(false);
+      } else {
+        // Create mode
+        await onCreateAIModel(modalModelState);
+        alert('Model AI baru berhasil ditambahkan!');
+        setIsModelModalOpen(false);
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(`Gagal menyimpan model AI: ${err.message || err}`);
+    } finally {
+      setSavingModelId(null);
+    }
+  };
+
+  const handleDeleteModel = async (modelId: string) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus model AI "${modelId}"?`)) return;
+    setSavingModelId(modelId);
+    try {
+      await onDeleteAIModel(modelId);
+      alert('Model AI berhasil dihapus!');
+    } catch (err: any) {
+      console.error(err);
+      alert(`Gagal menghapus model AI: ${err.message || err}`);
     } finally {
       setSavingModelId(null);
     }
   };
 
   useEffect(() => {
-    if (activeDashboardTab === 'admin') {
+    if (activeDashboardTab === 'admin-pricing' || activeDashboardTab === 'admin-gateways') {
       setLoadingAdminPlans(true);
       Promise.all([fetchPricingPlans(), fetchPaymentGateways()])
         .then(([plansData, gatewaysData]) => {
@@ -301,6 +521,117 @@ export function EditorLayout({
     } catch (err) {
       console.error(err);
       alert('Terjadi kesalahan saat menyimpan perubahan.');
+    } finally {
+      setSavingPlanId(null);
+    }
+  };
+
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [selectedPlanForModal, setSelectedPlanForModal] = useState<PricingPlan | null>(null);
+  const [modalPlanState, setModalPlanState] = useState<Omit<PricingPlan, 'updated_at'>>({
+    id: '',
+    name: '',
+    price: 0,
+    price_period: '/bulan',
+    description: '',
+    features: [],
+    is_popular: false,
+    promo_text: ''
+  });
+
+  const handleOpenEditModal = (plan: PricingPlan) => {
+    setSelectedPlanForModal(plan);
+    setModalPlanState({
+      id: plan.id,
+      name: plan.name,
+      price: plan.price,
+      price_period: plan.price_period,
+      description: plan.description || '',
+      features: plan.features || [],
+      is_popular: plan.is_popular || false,
+      promo_text: plan.promo_text || ''
+    });
+    setIsPlanModalOpen(true);
+  };
+
+  const handleOpenCreateModal = () => {
+    setSelectedPlanForModal(null);
+    setModalPlanState({
+      id: '',
+      name: '',
+      price: 0,
+      price_period: '/bulan',
+      description: '',
+      features: [],
+      is_popular: false,
+      promo_text: ''
+    });
+    setIsPlanModalOpen(true);
+  };
+
+  const handleSaveModalPlan = async () => {
+    if (!modalPlanState.id.trim() || !modalPlanState.name.trim()) {
+      alert('ID Paket dan Nama Paket harus diisi.');
+      return;
+    }
+    setSavingPlanId(modalPlanState.id);
+    try {
+      if (selectedPlanForModal) {
+        // Edit mode
+        const res = await updatePricingPlan(selectedPlanForModal.id, {
+          name: modalPlanState.name,
+          price: Number(modalPlanState.price),
+          price_period: modalPlanState.price_period,
+          promo_text: modalPlanState.promo_text || null,
+          description: modalPlanState.description || null,
+          features: modalPlanState.features,
+          is_popular: modalPlanState.is_popular
+        });
+        if (res.success) {
+          alert('Paket berhasil diperbarui!');
+          setIsPlanModalOpen(false);
+          // reload plans
+          const plansData = await fetchPricingPlans();
+          setAdminPlans(plansData);
+        } else {
+          alert(`Gagal memperbarui paket: ${res.error}`);
+        }
+      } else {
+        // Create mode
+        const res = await createPricingPlan(modalPlanState);
+        if (res.success) {
+          alert('Paket baru berhasil ditambahkan!');
+          setIsPlanModalOpen(false);
+          // reload plans
+          const plansData = await fetchPricingPlans();
+          setAdminPlans(plansData);
+        } else {
+          alert(`Gagal menambahkan paket baru: ${res.error}`);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Terjadi kesalahan saat menyimpan data.');
+    } finally {
+      setSavingPlanId(null);
+    }
+  };
+
+  const handleDeletePlan = async (planId: string) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus paket "${planId}"?`)) return;
+    setSavingPlanId(planId);
+    try {
+      const res = await deletePricingPlan(planId);
+      if (res.success) {
+        alert('Paket berhasil dihapus!');
+        const plansData = await fetchPricingPlans();
+        setAdminPlans(plansData);
+      } else {
+        alert(`Gagal menghapus paket: ${res.error}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Terjadi kesalahan saat menghapus paket.');
     } finally {
       setSavingPlanId(null);
     }
@@ -396,6 +727,8 @@ export function EditorLayout({
     }`;
   };
 
+  const isAnyModalOpen = isPlanModalOpen || isModelModalOpen;
+
   return (
     <div className="flex min-h-screen bg-slate-50/50">
       {/* Hide native EditorJS inline toolbar to avoid overlaps */}
@@ -414,12 +747,15 @@ export function EditorLayout({
         onSelectDocument={onSelectDocument}
         onCreateDocument={onCreateDocument}
         onDeleteDocument={onDeleteDocument}
+        onSelectAdminTab={handleSetDashboardTab}
+        activeDashboardTab={activeDashboardTab}
+        className={isAnyModalOpen ? 'select-none pointer-events-none' : ''}
       />
 
       {/* If no document is selected, render the Dashboard View */}
       {!currentDocument ? (
-        <div className="flex-1 flex flex-col h-screen overflow-y-auto bg-slate-50/50 p-6 md:p-10 font-sans">
-          <header className="flex items-center justify-between pb-5 border-b border-slate-200/60 mb-8">
+        <div className={`flex-1 flex flex-col h-screen overflow-hidden bg-slate-50/50 font-sans ${isAnyModalOpen ? 'select-none pointer-events-none' : ''}`}>
+          <header className="flex items-center justify-between border-b border-slate-200/60 bg-white/95 px-6 py-3 sticky top-0 z-10 backdrop-blur">
             <div className="flex items-center gap-3">
               {!isSidebarExpanded && (
                 <button
@@ -437,44 +773,36 @@ export function EditorLayout({
               </span>
             </div>
 
-            {/* Multi-role Dashboard selector */}
-            <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-              <button
-                onClick={() => setActiveDashboardTab('user')}
-                className={`px-3 py-1 text-[10px] font-bold rounded-md transition cursor-pointer ${
-                  activeDashboardTab === 'user'
-                    ? 'bg-white text-indigo-700 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setIsPricingOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition shadow-sm cursor-pointer"
               >
-                Dashboard User
+                <IconCreditCard className="h-4 w-4 text-slate-400" />
+                Pricing
               </button>
-              
-              {role === 'admin' && (
-                <button
-                  onClick={() => setActiveDashboardTab('admin')}
-                  className={`px-3 py-1 text-[10px] font-bold rounded-md transition cursor-pointer ${
-                    activeDashboardTab === 'admin'
-                      ? 'bg-white text-indigo-700 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  Panel Admin Pricing
-                </button>
-              )}
 
-              <button
-                onClick={() => setActiveDashboardTab('billing')}
-                className={`px-3 py-1 text-[10px] font-bold rounded-md transition cursor-pointer ${
-                  activeDashboardTab === 'billing'
-                    ? 'bg-white text-indigo-700 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
+              <button 
+                onClick={toggleDarkMode}
+                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition shadow-sm cursor-pointer"
+                title="Toggle Mode Gelap/Terang"
               >
-                Akun & Billing
+                {isDarkMode ? (
+                  <>
+                    <IconSun className="h-4 w-4 text-amber-500" />
+                    <span>Terang</span>
+                  </>
+                ) : (
+                  <>
+                    <IconMoon className="h-4 w-4 text-indigo-500" />
+                    <span>Gelap</span>
+                  </>
+                )}
               </button>
             </div>
           </header>
+
+          <div className="flex-1 overflow-y-auto p-6 md:p-10">
 
           {activeDashboardTab === 'user' ? (
             <div className="max-w-4xl mx-auto w-full flex flex-col gap-8 animate-fade-in">
@@ -528,21 +856,81 @@ export function EditorLayout({
                 
                 <div className="flex flex-col gap-1.5">
                   {documents.length > 0 ? (
-                    documents.map((doc) => (
-                      <button
-                        key={doc.id}
-                        onClick={() => onSelectDocument?.(doc.id)}
-                        className="w-full flex items-center justify-between p-3 border border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/10 rounded-xl text-left transition cursor-pointer"
-                      >
-                        <div className="flex items-center gap-3">
-                          <IconFile className="h-4.5 w-4.5 text-slate-400" />
-                          <span className="text-xs font-semibold text-slate-700">{doc.title}</span>
+                    <div className="flex flex-col gap-3">
+                      {/* 1. Project Folders */}
+                      {groupedDocs.projects.map((proj) => {
+                        const isExpandedProject = !!dashboardExpandedProjects[proj.id];
+                        
+                        return (
+                          <div key={proj.id} className="flex flex-col gap-1 border border-slate-100 bg-slate-50/10 rounded-2xl p-3 shadow-sm">
+                            {/* Project Header Row */}
+                            <button
+                              type="button"
+                              onClick={() => setDashboardExpandedProjects(prev => ({ ...prev, [proj.id]: !isExpandedProject }))}
+                              className="w-full flex items-center justify-between p-2 rounded-xl text-left transition hover:bg-slate-100/50 cursor-pointer"
+                            >
+                              <div className="flex items-center gap-3 truncate">
+                                {isExpandedProject ? (
+                                  <IconFolderOpen className="h-5 w-5 text-indigo-500 shrink-0" />
+                                ) : (
+                                  <IconFolder className="h-5 w-5 text-slate-400 shrink-0" />
+                                )}
+                                <span className="text-sm font-bold text-slate-800 truncate">{proj.name}</span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 capitalize shrink-0">
+                                  {proj.type}
+                                </span>
+                              </div>
+                              <IconChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${isExpandedProject ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {/* Project Sub Documents */}
+                            {isExpandedProject && (
+                              <div className="flex flex-col gap-1.5 pl-4 border-l-2 border-slate-100 ml-4.5 mt-1 animate-slide-in-top">
+                                {proj.docs.map((doc) => (
+                                  <button
+                                    key={doc.id}
+                                    onClick={() => onSelectDocument?.(doc.id)}
+                                    className="w-full flex items-center justify-between p-3 border border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/10 rounded-xl text-left transition cursor-pointer"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <IconFile className="h-4.5 w-4.5 text-slate-400" />
+                                      <span className="text-xs font-semibold text-slate-700">
+                                        📄 {doc.settings?.projectPart || doc.title}
+                                      </span>
+                                    </div>
+                                    <span className="text-[10px] text-slate-400">
+                                      Diperbarui: {new Date(doc.updated_at).toLocaleDateString()}
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {/* 2. Independent / Single Documents */}
+                      {groupedDocs.independent.length > 0 && (
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider px-3 py-1">Dokumen Mandiri</span>
+                          {groupedDocs.independent.map((doc) => (
+                            <button
+                              key={doc.id}
+                              onClick={() => onSelectDocument?.(doc.id)}
+                              className="w-full flex items-center justify-between p-3 border border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/10 rounded-xl text-left transition cursor-pointer"
+                            >
+                              <div className="flex items-center gap-3">
+                                <IconFile className="h-4.5 w-4.5 text-slate-400" />
+                                <span className="text-xs font-semibold text-slate-700">{doc.title}</span>
+                              </div>
+                              <span className="text-[10px] text-slate-400">
+                                Diperbarui: {new Date(doc.updated_at).toLocaleDateString()}
+                              </span>
+                            </button>
+                          ))}
                         </div>
-                        <span className="text-[10px] text-slate-400">
-                          Diperbarui: {new Date(doc.updated_at).toLocaleDateString()}
-                        </span>
-                      </button>
-                    ))
+                      )}
+                    </div>
                   ) : (
                     <div className="text-center py-8 flex flex-col items-center justify-center gap-2">
                       <IconFile className="h-10 w-10 text-slate-300" />
@@ -558,272 +946,339 @@ export function EditorLayout({
                 </div>
               </div>
             </div>
-          ) : activeDashboardTab === 'admin' ? (
+          ) : activeDashboardTab === 'admin-pricing' ? (
             /* Admin Pricing Dashboard View */
-            <div className="max-w-4xl mx-auto w-full flex flex-col gap-8 animate-fade-in">
-              <div className="bg-gradient-to-r from-violet-600 to-indigo-700 rounded-3xl p-6 md:p-8 text-white shadow-lg relative overflow-hidden">
+            <div className="w-full flex flex-col gap-8 animate-fade-in px-4 md:px-8 py-2">
+              <div className="bg-gradient-to-r from-violet-600 via-indigo-700 to-indigo-800 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="relative z-10 flex flex-col gap-2 max-w-lg">
-                  <h1 className="text-xl md:text-2xl font-bold leading-tight flex items-center gap-2">
-                    Dasbor Pengelola Harga Langganan
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-white/20 text-white px-2.5 py-1 rounded-full self-start backdrop-blur-sm">
+                    Pricing Control Panel
+                  </span>
+                  <h1 className="text-xl md:text-2xl font-extrabold leading-tight flex items-center gap-2">
+                    Kelola Paket Harga & Layanan
                   </h1>
-                  <p className="text-xs md:text-sm text-indigo-100/90 leading-normal">
-                    Ganti harga paket, tambahkan teks promo dadakan, deskripsi, atau ubah fitur-fitur paket secara dinamis. Perubahan akan langsung tersimpan ke Supabase database.
+                  <p className="text-xs md:text-sm text-indigo-100/90 leading-normal font-medium">
+                    Atur harga paket langganan secara dinamis, berikan teks promosi musiman, ubah daftar fitur unggulan, dan kelola CRUD data paket.
                   </p>
                 </div>
-                <div className="absolute right-0 bottom-0 opacity-10 translate-x-12 translate-y-12 h-64 w-64 rounded-full border-[20px] border-white" />
+                <button
+                  onClick={handleOpenCreateModal}
+                  className="relative z-10 flex items-center gap-2 px-5 py-3 bg-white text-indigo-700 hover:bg-indigo-50 text-xs font-black rounded-xl shadow-lg transition-all duration-200 cursor-pointer self-start md:self-auto"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  Tambah Paket Baru
+                </button>
+                <div className="absolute right-0 bottom-0 opacity-15 translate-x-12 translate-y-12 h-64 w-64 rounded-full border-[20px] border-white" />
               </div>
 
               {loadingAdminPlans ? (
-                <div className="py-20 flex flex-col items-center justify-center gap-3">
+                <div className="py-20 flex flex-col items-center justify-center gap-3 bg-white border border-slate-200/80 rounded-3xl shadow-sm">
                   <IconLoader className="h-8 w-8 text-indigo-600 animate-spin" />
                   <span className="text-xs text-slate-400 font-semibold">Memuat data paket pricing...</span>
                 </div>
               ) : (
-                <>
-                  <div className="flex flex-col gap-6">
-                  {adminPlans.map((plan) => {
-                    const state = editStates[plan.id];
-                    if (!state) return null;
+                <div className="bg-white border border-slate-200/85 rounded-3xl overflow-hidden shadow-sm">
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-left">
+                      <thead>
+                        <tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                          <th className="px-6 py-4.5 font-bold w-[120px]">ID Paket</th>
+                          <th className="px-6 py-4.5 font-bold min-w-[180px]">Nama Paket</th>
+                          <th className="px-6 py-4.5 font-bold min-w-[160px]">Harga (Rp)</th>
+                          <th className="px-6 py-4.5 font-bold min-w-[120px]">Periode</th>
+                          <th className="px-6 py-4.5 font-bold min-w-[165px]">Promo Tagline</th>
+                          <th className="px-6 py-4.5 font-bold text-center w-[160px]">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100/80 text-xs">
+                        {adminPlans.map((plan) => {
+                          return (
+                            <tr key={plan.id} className="hover:bg-slate-50/30 transition-all duration-150">
+                              {/* ID Paket */}
+                              <td className="px-6 py-5.5 align-middle">
+                                <span className="text-[10px] font-black uppercase px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 border border-slate-200/60">
+                                  {plan.id}
+                                </span>
+                              </td>
 
-                    return (
-                      <div key={plan.id} className="bg-white border border-slate-200 rounded-2xl p-5 md:p-6 shadow-sm flex flex-col gap-5">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                          <span className="text-sm font-bold text-slate-800">{plan.name} ({plan.id})</span>
-                          <button
-                            onClick={() => handleSavePlan(plan.id)}
-                            disabled={savingPlanId === plan.id}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs font-semibold rounded-lg shadow-sm transition cursor-pointer"
-                          >
-                            {savingPlanId === plan.id ? (
-                              <IconLoader className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <IconDeviceFloppy className="h-3.5 w-3.5" />
-                            )}
-                            Simpan Perubahan
-                          </button>
-                        </div>
+                              {/* Nama Paket */}
+                              <td className="px-6 py-5.5 align-middle">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-extrabold text-slate-800 text-sm">{plan.name}</span>
+                                  {plan.is_popular && (
+                                    <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-600">
+                                      Terpopuler
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          {/* Price input */}
-                          <div className="flex flex-col gap-1.5">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Harga (Rp)</label>
-                            <input
-                              type="number"
-                              disabled={plan.id === 'institution'}
-                              value={state.price}
-                              onChange={(e) => setEditStates((prev) => ({
-                                ...prev,
-                                [plan.id]: { ...prev[plan.id], price: parseInt(e.target.value) || 0 }
-                              }))}
-                              className="border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-500 transition bg-slate-50/30 disabled:bg-slate-100/50"
-                            />
-                          </div>
+                              {/* Harga */}
+                              <td className="px-6 py-5.5 align-middle font-bold text-slate-800 text-sm">
+                                {plan.price === 0 ? (
+                                  <span className="text-emerald-600 font-extrabold uppercase text-xs">Gratis</span>
+                                ) : (
+                                  `Rp ${plan.price.toLocaleString('id-ID')}`
+                                )}
+                              </td>
 
-                          {/* Period input */}
-                          <div className="flex flex-col gap-1.5">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Periode Harga</label>
-                            <input
-                              type="text"
-                              value={state.price_period}
-                              onChange={(e) => setEditStates((prev) => ({
-                                ...prev,
-                                [plan.id]: { ...prev[plan.id], price_period: e.target.value }
-                              }))}
-                              className="border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-500 transition bg-slate-50/30"
-                            />
-                          </div>
+                              {/* Periode */}
+                              <td className="px-6 py-5.5 align-middle text-slate-500 font-bold">
+                                {plan.price_period}
+                              </td>
 
-                          {/* Promo Text input */}
-                          <div className="flex flex-col gap-1.5">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Promo Text (Kosongkan jika tidak ada)</label>
-                            <input
-                              type="text"
-                              placeholder="Contoh: MERDEKA 50%!"
-                              value={state.promo_text}
-                              onChange={(e) => setEditStates((prev) => ({
-                                ...prev,
-                                [plan.id]: { ...prev[plan.id], promo_text: e.target.value }
-                              }))}
-                              className="border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-500 transition bg-slate-50/30"
-                            />
-                          </div>
-                        </div>
+                              {/* Promo Tagline */}
+                              <td className="px-6 py-5.5 align-middle">
+                                {plan.promo_text ? (
+                                  <span className="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold border border-emerald-100 text-[10px]">
+                                    {plan.promo_text}
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-400 italic text-[10px]">Tidak ada</span>
+                                )}
+                              </td>
 
-                        {/* Description textarea */}
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Deskripsi Paket</label>
-                          <textarea
-                            rows={2}
-                            value={state.description}
-                            onChange={(e) => setEditStates((prev) => ({
-                              ...prev,
-                              [plan.id]: { ...prev[plan.id], description: e.target.value }
-                            }))}
-                            className="border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-500 transition bg-slate-50/30 resize-none"
-                          />
-                        </div>
+                              {/* Aksi */}
+                              <td className="px-6 py-5.5 align-middle text-center">
+                                <div className="flex items-center justify-center gap-2">
+                                  <button
+                                    onClick={() => handleOpenEditModal(plan)}
+                                    className="flex items-center justify-center p-2.5 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-700 rounded-xl transition cursor-pointer"
+                                    title="Edit detail & fitur paket"
+                                  >
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                                    </svg>
+                                  </button>
 
-                        {/* Features textarea */}
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Fitur Paket (Pisahkan tiap baris)</label>
-                          <textarea
-                            rows={4}
-                            value={state.features}
-                            onChange={(e) => setEditStates((prev) => ({
-                              ...prev,
-                              [plan.id]: { ...prev[plan.id], features: e.target.value }
-                            }))}
-                            className="border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-500 transition bg-slate-50/30 font-sans"
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Payment Gateways Config */}
-                <div className="bg-white border border-slate-200 rounded-2xl p-5 md:p-6 shadow-sm flex flex-col gap-4 mt-6">
-                  <span className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-3">Konfigurasi Payment Gateway</span>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {gatewaysList.map((g) => (
-                      <div key={g.id} className="flex items-center justify-between p-4 border border-slate-100 rounded-xl bg-slate-50/50">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-xs font-bold text-slate-700">{g.name}</span>
-                          <span className="text-[10px] text-slate-400">Jalur pembayaran via {g.id === 'stripe' ? 'kartu internasional' : 'e-wallet & bank lokal'}.</span>
-                        </div>
-                        
-                        <button
-                          type="button"
-                          onClick={() => handleToggleGateway(g.id, !g.is_enabled)}
-                          disabled={togglingGatewayId === g.id}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition cursor-pointer ${
-                            g.is_enabled ? 'bg-indigo-600' : 'bg-slate-300'
-                          }`}
-                        >
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                              g.is_enabled ? 'translate-x-6' : 'translate-x-1'
-                            }`}
-                          />
-                        </button>
-                      </div>
-                    ))}
+                                  <button
+                                    onClick={() => handleDeletePlan(plan.id)}
+                                    className="flex items-center justify-center p-2.5 bg-rose-50 border border-rose-100 hover:bg-rose-100 text-rose-650 rounded-xl transition cursor-pointer"
+                                    title="Hapus paket langganan"
+                                  >
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
-
-                {/* AI Models Config */}
-                <div className="bg-white border border-slate-200 rounded-2xl p-5 md:p-6 shadow-sm flex flex-col gap-4 mt-6">
-                  <div className="border-b border-slate-100 pb-3 flex flex-col md:flex-row md:items-center justify-between gap-2">
-                    <span className="text-sm font-bold text-slate-800">Manajemen Model AI (Google Gemini & OpenRouter)</span>
-                    <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100">AI GATEWAY CONFIG</span>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 gap-6">
-                    {aiModels.map((model) => {
-                      const state = editModelStates[model.id];
-                      if (!state) return null;
-
-                      return (
-                        <div key={model.id} className="border border-slate-100 rounded-xl p-4 md:p-5 bg-slate-50/50 flex flex-col gap-4">
-                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-3">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">{model.id} settings</span>
-                            </div>
-                            
-                            <button
-                              onClick={() => handleSaveModel(model.id)}
-                              disabled={savingModelId === model.id}
-                              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-[10px] font-bold rounded-lg shadow-sm transition cursor-pointer self-start md:self-auto"
-                            >
-                              {savingModelId === model.id ? (
-                                <IconLoader className="h-3 w-3 animate-spin" />
-                              ) : (
-                                <IconDeviceFloppy className="h-3 w-3" />
-                              )}
-                              Simpan Model
-                            </button>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Model Display Name */}
-                            <div className="flex flex-col gap-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nama Tampilan Model</label>
-                              <input
-                                type="text"
-                                value={state.name}
-                                onChange={(e) => setEditModelStates((prev) => ({
-                                  ...prev,
-                                  [model.id]: { ...prev[model.id], name: e.target.value }
-                                }))}
-                                className="border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 outline-none focus:border-indigo-500 transition bg-white"
-                              />
-                            </div>
-
-                            {/* API Model ID */}
-                            <div className="flex flex-col gap-1.5">
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">ID Model API Asli</label>
-                              <input
-                                type="text"
-                                value={state.model_id}
-                                onChange={(e) => setEditModelStates((prev) => ({
-                                  ...prev,
-                                  [model.id]: { ...prev[model.id], model_id: e.target.value }
-                                }))}
-                                className="border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 outline-none focus:border-indigo-500 transition bg-white font-mono"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-6">
-                            {/* Toggle is_enabled */}
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => setEditModelStates((prev) => ({
-                                  ...prev,
-                                  [model.id]: { ...prev[model.id], is_enabled: !prev[model.id].is_enabled }
-                                }))}
-                                className={`relative inline-flex h-5 w-9 items-center rounded-full transition cursor-pointer ${
-                                  state.is_enabled ? 'bg-indigo-600' : 'bg-slate-300'
-                                }`}
-                              >
-                                <span
-                                  className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition ${
-                                    state.is_enabled ? 'translate-x-4.5' : 'translate-x-1'
-                                  }`}
-                                />
-                              </button>
-                              <span className="text-[10px] font-bold text-slate-600 uppercase">Aktifkan Model</span>
-                            </div>
-
-                            {/* Toggle is_premium */}
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => setEditModelStates((prev) => ({
-                                  ...prev,
-                                  [model.id]: { ...prev[model.id], is_premium: !prev[model.id].is_premium }
-                                }))}
-                                className={`relative inline-flex h-5 w-9 items-center rounded-full transition cursor-pointer ${
-                                  state.is_premium ? 'bg-indigo-600' : 'bg-slate-300'
-                                }`}
-                              >
-                                <span
-                                  className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition ${
-                                    state.is_premium ? 'translate-x-4.5' : 'translate-x-1'
-                                  }`}
-                                />
-                              </button>
-                              <span className="text-[10px] font-bold text-slate-600 uppercase">Khusus Akun Pro</span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-                </>
               )}
+            </div>
+          ) : activeDashboardTab === 'admin-models' ? (
+            /* Admin AI Models Dashboard View */
+            <div className="w-full flex flex-col gap-8 animate-fade-in px-4 md:px-8 py-2">
+              <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="relative z-10 flex flex-col gap-2 max-w-lg">
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-white/20 text-white px-2.5 py-1 rounded-full self-start backdrop-blur-sm">
+                    AI Gateway Admin Panel
+                  </span>
+                  <h1 className="text-xl md:text-2xl font-extrabold leading-tight flex items-center gap-2">
+                    Kelola Model AI & LLM Gateway
+                  </h1>
+                  <p className="text-xs md:text-sm text-indigo-100/90 leading-normal font-medium">
+                    Atur model kecerdasan buatan, ubah ID model API (Google Gemini / OpenRouter), dan batasi hak akses model khusus untuk pengguna premium (Pro Writer).
+                  </p>
+                </div>
+                <button
+                  onClick={handleOpenCreateModelModal}
+                  className="relative z-10 flex items-center gap-2 px-5 py-3 bg-white text-indigo-700 hover:bg-indigo-50 text-xs font-black rounded-xl shadow-lg transition-all duration-200 cursor-pointer self-start md:self-auto"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  Tambah Model Baru
+                </button>
+                <div className="absolute right-0 bottom-0 opacity-15 translate-x-12 translate-y-12 h-64 w-64 rounded-full border-[20px] border-white" />
+              </div>
+
+              <div className="bg-white border border-slate-200/85 rounded-3xl overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-left">
+                    <thead>
+                      <tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                        <th className="px-6 py-4.5 font-bold min-w-[120px]">Status</th>
+                        <th className="px-6 py-4.5 font-bold min-w-[120px]">Gateway Key</th>
+                        <th className="px-6 py-4.5 font-bold min-w-[200px]">Nama Tampilan Model</th>
+                        <th className="px-6 py-4.5 font-bold min-w-[240px]">ID Model API Asli</th>
+                        <th className="px-6 py-4.5 font-bold min-w-[160px]">Hak Akses</th>
+                        <th className="px-6 py-4.5 font-bold text-center w-[160px]">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100/80 text-xs">
+                      {aiModels.map((model) => {
+                        return (
+                          <tr key={model.id} className="hover:bg-slate-50/30 transition-all duration-150">
+                            {/* Status */}
+                            <td className="px-6 py-5.5 align-middle">
+                              <div className="flex items-center gap-2">
+                                <span className={`w-2 h-2 rounded-full ${model.is_enabled ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
+                                <span className={`text-[10px] font-bold uppercase ${model.is_enabled ? 'text-emerald-600' : 'text-slate-400'}`}>
+                                  {model.is_enabled ? 'Aktif' : 'Off'}
+                                </span>
+                              </div>
+                            </td>
+
+                            {/* Gateway Key */}
+                            <td className="px-6 py-5.5 align-middle font-black text-slate-700 uppercase tracking-wide">
+                              {model.id}
+                            </td>
+
+                            {/* Nama Tampilan Model */}
+                            <td className="px-6 py-5.5 align-middle font-bold text-slate-800 text-sm">
+                              {model.name}
+                            </td>
+
+                            {/* ID Model API Asli */}
+                            <td className="px-6 py-5.5 align-middle font-mono text-slate-600 text-xs">
+                              {model.model_id}
+                            </td>
+
+                            {/* Hak Akses */}
+                            <td className="px-6 py-5.5 align-middle">
+                              <span className={`text-[9px] font-black uppercase ${
+                                model.is_premium 
+                                  ? 'text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100' 
+                                  : 'text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/40'
+                              }`}>
+                                {model.is_premium ? 'Pro Writer' : 'Free Tier'}
+                              </span>
+                            </td>
+
+                            {/* Aksi */}
+                            <td className="px-6 py-5.5 align-middle text-center">
+                              <div className="flex items-center justify-center gap-2">
+                                <button
+                                  onClick={() => handleOpenEditModelModal(model)}
+                                  className="flex items-center justify-center p-2.5 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-700 rounded-xl transition cursor-pointer"
+                                  title="Edit detail & API ID model"
+                                >
+                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                                  </svg>
+                                </button>
+
+                                <button
+                                  onClick={() => handleDeleteModel(model.id)}
+                                  className="flex items-center justify-center p-2.5 bg-rose-50 border border-rose-100 hover:bg-rose-100 text-rose-650 rounded-xl transition cursor-pointer"
+                                  title="Hapus model AI"
+                                >
+                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          ) : activeDashboardTab === 'admin-gateways' ? (
+            /* Admin Payment Gateways Dashboard View */
+            <div className="w-full flex flex-col gap-8 animate-fade-in px-4 md:px-8 py-2">
+              <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden">
+                <div className="relative z-10 flex flex-col gap-2 max-w-lg">
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-white/20 text-white px-2.5 py-1 rounded-full self-start backdrop-blur-sm">
+                    Payment Gateway Config
+                  </span>
+                  <h1 className="text-xl md:text-2xl font-extrabold leading-tight flex items-center gap-2">
+                    Kelola Saluran Pembayaran
+                  </h1>
+                  <p className="text-xs md:text-sm text-indigo-100/90 leading-normal font-medium">
+                    Konfigurasikan metode pembayaran Stripe dan Midtrans, atur API Merchant Key, dan aktifkan integrasi transaksi tagihan langganan otomatis.
+                  </p>
+                </div>
+                <div className="absolute right-0 bottom-0 opacity-15 translate-x-12 translate-y-12 h-64 w-64 rounded-full border-[20px] border-white" />
+              </div>
+
+              <div className="bg-white border border-slate-200/85 rounded-3xl overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-left">
+                    <thead>
+                      <tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                        <th className="px-6 py-4.5 font-bold min-w-[140px]">Status</th>
+                        <th className="px-6 py-4.5 font-bold min-w-[160px]">Platform Gateway</th>
+                        <th className="px-6 py-4.5 font-bold min-w-[260px]">Client Key / Publishable Key</th>
+                        <th className="px-6 py-4.5 font-bold min-w-[260px]">Server Key / Secret Key</th>
+                        <th className="px-6 py-4.5 font-bold text-center w-[100px]">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100/80 text-xs">
+                      {gatewaysList.map((g) => (
+                        <tr key={g.id} className="hover:bg-slate-50/30 transition-all duration-150">
+                          {/* Status */}
+                          <td className="px-6 py-5.5 align-middle">
+                            <div className="flex items-center gap-3">
+                              <Switch
+                                checked={g.is_enabled}
+                                onChange={() => handleToggleGateway(g.id, !g.is_enabled)}
+                                disabled={togglingGatewayId === g.id}
+                              />
+                              <div className="flex items-center gap-1.5">
+                                <span className={`w-2 h-2 rounded-full ${g.is_enabled ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
+                                <span className="text-[10px] text-slate-500 font-bold uppercase">{g.is_enabled ? 'Aktif' : 'Off'}</span>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Platform Gateway */}
+                          <td className="px-6 py-5.5 align-middle">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="font-extrabold text-slate-800 text-sm">{g.name}</span>
+                              <span className="text-[9px] text-slate-450 font-bold uppercase tracking-wider">
+                                {g.id === 'stripe' ? 'Internasional' : 'Lokal / Bank'}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Client/Publishable Key */}
+                          <td className="px-6 py-5.5 align-middle">
+                            <input
+                              type="text"
+                              value={g.id === 'stripe' ? 'pk_test_51NxM2aGS9r89123891789' : 'SB-Mid-client-8aHs12Hsa'}
+                              disabled
+                              className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-500 outline-none transition bg-slate-100/50 font-mono select-all"
+                            />
+                          </td>
+
+                          {/* Server/Secret Key */}
+                          <td className="px-6 py-5.5 align-middle">
+                            <input
+                              type="password"
+                              value="••••••••••••••••••••••••••••••••••••"
+                              disabled
+                              className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-500 outline-none transition bg-slate-100/50 font-mono"
+                            />
+                          </td>
+
+                          {/* Aksi */}
+                          <td className="px-6 py-5.5 align-middle text-center">
+                            <button
+                              disabled
+                              className="inline-flex items-center justify-center p-3 bg-slate-100 border border-slate-200 text-slate-400 rounded-xl transition-all duration-200 cursor-not-allowed"
+                              title="API credentials terkunci secara default"
+                            >
+                              <IconDeviceFloppy className="h-4 w-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           ) : (
             /* Billing & Account View */
@@ -1012,6 +1467,7 @@ export function EditorLayout({
               </div>
             </div>
           )}
+          </div>
         </div>
       ) : (
         /* Main content area */
@@ -1079,6 +1535,24 @@ export function EditorLayout({
             >
               <IconCreditCard className="h-4 w-4 text-slate-400" />
               Pricing
+            </button>
+
+            <button 
+              onClick={toggleDarkMode}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition shadow-sm cursor-pointer"
+              title="Toggle Mode Gelap/Terang"
+            >
+              {isDarkMode ? (
+                <>
+                  <IconSun className="h-4 w-4 text-amber-500" />
+                  <span>Terang</span>
+                </>
+              ) : (
+                <>
+                  <IconMoon className="h-4 w-4 text-indigo-500" />
+                  <span>Gelap</span>
+                </>
+              )}
             </button>
 
             <button 
@@ -1311,11 +1785,77 @@ export function EditorLayout({
           >
             <IconMath className="h-4 w-4 text-indigo-600" />
           </button>
+          <button 
+            className={`p-1.5 rounded transition ${
+              isMathHelperOpen 
+                ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100' 
+                : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'
+            }`}
+            title="Bantuan Rumus LaTeX (Math Helper)"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => setIsMathHelperOpen(prev => !prev)}
+          >
+            <IconCalculator className="h-4 w-4 text-indigo-500" />
+          </button>
 
           <div className="ml-auto text-xs font-medium text-slate-400 bg-slate-100/50 px-2 py-1 rounded">
             {statusLabel}
           </div>
         </div>
+
+        {/* LaTeX Math Helper Panel */}
+        {isMathHelperOpen && (
+          <div className="flex flex-col border-b border-slate-100 bg-slate-50/50 px-6 py-3 gap-2 animate-slide-in-top relative">
+            {/* Math Helper Toast notification inside the helper panel */}
+            {mathToast && (
+              <div className="absolute top-2 right-6 bg-slate-800 text-white text-[10px] font-bold px-2.5 py-1 rounded shadow-md animate-fade-in flex items-center gap-1 z-20">
+                <IconCheck className="h-3 w-3 text-emerald-400" />
+                <span>{mathToast}</span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pintasan Rumus LaTeX (Klik untuk Menyalin)</span>
+              <span className="text-[9px] text-slate-400 italic">Tempel (Ctrl+V) ke dalam blok rumus matematika atau inline editor Anda.</span>
+            </div>
+            
+            <div className="flex flex-wrap gap-2.5">
+              {[
+                { label: 'Pecahan', code: '\\frac{a}{b}' },
+                { label: 'Akar', code: '\\sqrt{x}' },
+                { label: 'Akar N', code: '\\sqrt[n]{x}' },
+                { label: 'Integral', code: '\\int_{a}^{b} x dx' },
+                { label: 'Sigma (Sum)', code: '\\sum_{i=1}^{n} i' },
+                { label: 'Produk', code: '\\prod_{i=1}^{n}' },
+                { label: 'Matriks 2x2', code: '\\begin{matrix} a & b \\\\ c & d \\end{matrix}' },
+                { label: 'Limit', code: '\\lim_{x \\to \\infty}' },
+                { label: 'Alpha', code: '\\alpha' },
+                { label: 'Beta', code: '\\beta' },
+                { label: 'Gamma', code: '\\gamma' },
+                { label: 'Theta', code: '\\theta' },
+                { label: 'Pi', code: '\\pi' },
+                { label: 'Lambda', code: '\\lambda' },
+                { label: 'Infinity', code: '\\infty' },
+                { label: 'Kurung Kunci', code: '\\left( x \\right)' }
+              ].map((item) => (
+                <button
+                  key={item.code}
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(item.code);
+                    setMathToast(`Tersalin: ${item.code}`);
+                    setTimeout(() => setMathToast(null), 2000);
+                  }}
+                  className="px-2 py-1 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded text-xs font-semibold text-slate-700 hover:text-indigo-700 transition cursor-pointer flex flex-col items-center gap-0.5 min-w-[70px] shadow-sm"
+                  title={item.code}
+                >
+                  <span className="font-mono text-[9px] text-slate-400">{item.label}</span>
+                  <span className="font-serif font-bold text-slate-800 text-[10px]">{item.code}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Custom Rich Text Selection Bubble Menu */}
         {showBubbleMenu && bubbleMenuRect && (
@@ -1355,30 +1895,45 @@ export function EditorLayout({
                     @ Find Citation
                   </button>
                   
-                  <div className="flex gap-1.5 mt-0.5">
+                  <div className="flex gap-1 mt-0.5">
+                    {/* Model Dropdown */}
                     <select
                       value={selectedAiModel}
                       onChange={(e) => setSelectedAiModel(e.target.value)}
-                      className="border border-slate-200 rounded-lg px-2 py-1 text-[10px] text-slate-600 bg-white outline-none focus:border-indigo-500 transition shrink-0 max-w-[125px] cursor-pointer"
+                      className="border border-slate-200 rounded-md px-1 py-1 text-[9px] text-slate-600 bg-white outline-none focus:border-indigo-500 transition shrink-0 max-w-[85px] cursor-pointer"
+                      title="Pilih Model AI"
                     >
                       {aiModels && aiModels.length > 0 ? (
                         aiModels.filter(m => m.is_enabled).map(m => (
                           <option key={m.id} value={m.id}>
-                            {m.name}
+                            {m.name.replace(" (Direct)", "").replace(" (Free OR)", "").replace(" (Pro OR)", "")}
                           </option>
                         ))
                       ) : (
                         <>
-                          <option value="gemini">Gemini (Direct)</option>
-                          <option value="llama3">Llama 3 (Free)</option>
-                          <option value="gemma2">Gemma 2 (Free)</option>
-                          <option value="claude">Claude 3.5 (Pro)</option>
+                          <option value="gemini">Gemini</option>
+                          <option value="llama3">Llama 3</option>
+                          <option value="gemma2">Gemma 2</option>
+                          <option value="claude">Claude</option>
                         </>
                       )}
                     </select>
 
+                    {/* Tone Dropdown */}
+                    <select
+                      value={selectedAiTone}
+                      onChange={(e) => setSelectedAiTone(e.target.value)}
+                      className="border border-slate-200 rounded-md px-1 py-1 text-[9px] text-slate-600 bg-white outline-none focus:border-indigo-500 transition shrink-0 max-w-[80px] cursor-pointer"
+                      title="Gaya Poles"
+                    >
+                      <option value="academic">Akademis</option>
+                      <option value="simplify">Sederhana</option>
+                      <option value="shorten">Ringkas</option>
+                      <option value="expand">Elaborasi</option>
+                    </select>
+
                     <button
-                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-sm transition text-[10px] cursor-pointer disabled:bg-indigo-400"
+                      className="flex-1 flex items-center justify-center gap-1 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-sm transition text-[9px] cursor-pointer disabled:bg-indigo-400"
                       onMouseDown={e => e.preventDefault()}
                       disabled={isImproving}
                       onClick={() => {
@@ -1393,8 +1948,8 @@ export function EditorLayout({
                     >
                       {isImproving ? (
                         <>
-                          <IconLoader className="h-3 w-3 animate-spin" />
-                          <span>Processing...</span>
+                          <IconLoader className="h-2.5 w-2.5 animate-spin" />
+                          <span>Poles...</span>
                         </>
                       ) : (
                         <>
@@ -1500,7 +2055,18 @@ export function EditorLayout({
                       >
                         {/* Top row: Article header details */}
                         <div className="flex justify-between items-center text-[10px] text-slate-400 font-medium">
-                          <span className="uppercase tracking-wider font-bold text-slate-500">Article</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="uppercase tracking-wider font-bold text-slate-500">Article</span>
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                              candidate.ranking_score >= 80 
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/50' 
+                                : candidate.ranking_score >= 50 
+                                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/50' 
+                                  : 'bg-slate-100 text-slate-600 border border-slate-200'
+                            }`}>
+                              🟢 {candidate.ranking_score}% Match
+                            </span>
+                          </div>
                           <div className="flex items-center gap-3">
                             <span>Cited by {candidate.cited_by_count}</span>
                             <span>IF {((candidate.cited_by_count * 0.02) + 0.11).toFixed(2)}</span>
@@ -1619,6 +2185,7 @@ export function EditorLayout({
           <main className="w-full flex-1 p-6 md:p-10 overflow-y-auto">
             <EditorJsEditor 
               ref={editorJsRef} 
+              initialContent={currentDocument?.content}
               onBlockTypeChange={setCurrentBlockType} 
               onAlignmentChange={setCurrentAlignment} 
               onStatsChange={onStatsChange}
@@ -1645,6 +2212,9 @@ export function EditorLayout({
               citationNote={citationNote}
               onApplyImprovedText={onApplyImprovedText}
               onImproveWriting={onImproveWriting}
+              onParaphrase={onParaphrase}
+              onSummarize={onSummarize}
+              onGenerateAbstract={onGenerateAbstract}
               onFindCitation={onFindCitation}
               onRepeatCitationSearch={onRepeatCitationSearch}
               onInsertCitation={onInsertCitation}
@@ -1652,8 +2222,23 @@ export function EditorLayout({
               onInsertImageSample={onInsertImageSample}
               onExportBibliographyText={onExportBibliographyText}
               onExportBibliographyJson={onExportBibliographyJson}
+              onExportBibliographyBibtex={onExportBibliographyBibtex}
+              onExportBibliographyRis={onExportBibliographyRis}
               onInsertCitationCandidate={onInsertCitationCandidate}
               onParafrasePlagiat={onParafrasePlagiat}
+              selectedAiModel={selectedAiModel}
+              isSynthesizing={isSynthesizing}
+              synthesizedText={synthesizedText}
+              synthesizeError={synthesizeError}
+              synthesizeDisclaimer={synthesizeDisclaimer}
+              onSynthesizeReview={onSynthesizeReview}
+              onInsertSynthesizedText={onInsertSynthesizedText}
+              citationStyle={citationStyle}
+              onChangeCitationStyle={onChangeCitationStyle}
+              folders={folders}
+              folderAssignments={folderAssignments}
+              onCreateFolder={onCreateFolder}
+              onAssignFolder={onAssignFolder}
             />
           )}
 
@@ -1702,6 +2287,250 @@ export function EditorLayout({
       documentId={currentDocument?.id}
       documentTitle={currentDocument?.title}
     />
+    {isPlanModalOpen && (
+      <div className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+        <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-2xl w-full max-w-lg flex flex-col gap-5 animate-scale-in text-slate-800">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 className="text-sm font-extrabold text-slate-800">
+              {selectedPlanForModal ? 'Edit Detail Paket Langganan' : 'Tambah Paket Baru'}
+            </h3>
+            <button
+              onClick={() => setIsPlanModalOpen(false)}
+              className="p-1 rounded-md text-slate-400 hover:bg-slate-100/80 hover:text-slate-650 transition cursor-pointer"
+            >
+              <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-4 overflow-y-auto max-h-[65vh] pr-1">
+            {/* ID Paket */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">ID Paket (Sistem)</label>
+              <input
+                type="text"
+                disabled={!!selectedPlanForModal}
+                placeholder="Contoh: basic, pro, ultra"
+                value={modalPlanState.id}
+                onChange={(e) => setModalPlanState(prev => ({ ...prev, id: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '') }))}
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-slate-50/10 disabled:bg-slate-100/60 disabled:text-slate-400 font-bold"
+              />
+            </div>
+
+            {/* Nama Paket */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Nama Paket</label>
+              <input
+                type="text"
+                placeholder="Contoh: Premium Writer"
+                value={modalPlanState.name}
+                onChange={(e) => setModalPlanState(prev => ({ ...prev, name: e.target.value }))}
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-700 font-bold outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-slate-50/10"
+              />
+            </div>
+
+            {/* Harga & Periode */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Harga (Rp)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400">Rp</span>
+                  <input
+                    type="number"
+                    value={modalPlanState.price}
+                    onChange={(e) => setModalPlanState(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
+                    className="w-full border border-slate-200 rounded-xl pl-8 pr-3.5 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-slate-50/10"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Periode</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: /bulan, /tahun"
+                  value={modalPlanState.price_period}
+                  onChange={(e) => setModalPlanState(prev => ({ ...prev, price_period: e.target.value }))}
+                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-slate-50/10"
+                />
+              </div>
+            </div>
+
+            {/* Promo Tagline */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Promo Tagline</label>
+              <input
+                type="text"
+                placeholder="Contoh: DISKON 30%"
+                value={modalPlanState.promo_text || ''}
+                onChange={(e) => setModalPlanState(prev => ({ ...prev, promo_text: e.target.value }))}
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-emerald-600 placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-slate-50/10"
+              />
+            </div>
+
+            {/* Deskripsi */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Deskripsi Singkat</label>
+              <textarea
+                rows={2}
+                placeholder="Deskripsi ringkas mengenai peruntukan paket..."
+                value={modalPlanState.description || ''}
+                onChange={(e) => setModalPlanState(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-650 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-slate-50/10 resize-none font-medium"
+              />
+            </div>
+
+            {/* Fitur Layanan */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Fitur Layanan (Satu baris = satu fitur)</label>
+              <textarea
+                rows={4}
+                placeholder="Contoh:&#10;Upload PDF referensi tak terbatas&#10;Akses premium AI model&#10;Ekspor format Word (.doc)"
+                value={modalPlanState.features.join('\n')}
+                onChange={(e) => setModalPlanState(prev => ({ ...prev, features: e.target.value.split('\n') }))}
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-650 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-slate-50/10 font-sans resize-y"
+              />
+            </div>
+
+            {/* Toggle Popular */}
+            <div className="flex items-center justify-between p-3.5 border border-slate-200/60 rounded-2xl bg-slate-50/20">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs font-bold text-slate-700">Tandai sebagai Terpopuler</span>
+                <span className="text-[9px] text-slate-400 leading-tight">Menampilkan lencana khusus pada pilihan pricing paket.</span>
+              </div>
+              <Switch
+                checked={modalPlanState.is_popular}
+                onChange={() => setModalPlanState(prev => ({ ...prev, is_popular: !prev.is_popular }))}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+            <button
+              onClick={() => setIsPlanModalOpen(false)}
+              className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold rounded-xl transition cursor-pointer"
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleSaveModalPlan}
+              disabled={savingPlanId === modalPlanState.id}
+              className="flex items-center gap-1.5 px-4.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs font-bold rounded-xl shadow-md hover:shadow-indigo-200 transition duration-200 cursor-pointer"
+            >
+              {savingPlanId === modalPlanState.id ? (
+                <IconLoader className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <IconDeviceFloppy className="h-3.5 w-3.5" />
+              )}
+              Simpan Data
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    {isModelModalOpen && (
+      <div className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+        <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-2xl w-full max-w-lg flex flex-col gap-5 animate-scale-in text-slate-800">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 className="text-sm font-extrabold text-slate-800">
+              {selectedModelForModal ? 'Edit Detail Model AI' : 'Tambah Model AI Baru'}
+            </h3>
+            <button
+              onClick={() => setIsModelModalOpen(false)}
+              className="p-1 rounded-md text-slate-400 hover:bg-slate-100/80 hover:text-slate-650 transition cursor-pointer"
+            >
+              <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            {/* ID Gateway / Gateway Key */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Gateway Key (ID Sistem)</label>
+              <input
+                type="text"
+                disabled={!!selectedModelForModal}
+                placeholder="Contoh: gemini-flash, claude-sonnet"
+                value={modalModelState.id}
+                onChange={(e) => setModalModelState(prev => ({ ...prev, id: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '') }))}
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-slate-50/10 disabled:bg-slate-100/60 disabled:text-slate-400 font-bold"
+              />
+            </div>
+
+            {/* Nama Tampilan Model */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Nama Tampilan Model</label>
+              <input
+                type="text"
+                placeholder="Contoh: Gemini Flash (Direct)"
+                value={modalModelState.name}
+                onChange={(e) => setModalModelState(prev => ({ ...prev, name: e.target.value }))}
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-700 font-bold outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-slate-50/10"
+              />
+            </div>
+
+            {/* ID Model API Asli */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">ID Model API Asli</label>
+              <input
+                type="text"
+                placeholder="Contoh: gemini-1.5-flash atau anthropic/claude-3-5-sonnet"
+                value={modalModelState.model_id}
+                onChange={(e) => setModalModelState(prev => ({ ...prev, model_id: e.target.value }))}
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-slate-50/10 font-mono"
+              />
+            </div>
+
+            {/* Toggle Enabled */}
+            <div className="flex items-center justify-between p-3.5 border border-slate-200/60 rounded-2xl bg-slate-50/20">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs font-bold text-slate-700">Status Keaktifan</span>
+                <span className="text-[9px] text-slate-400 leading-tight">Mengizinkan pengguna menggunakan model AI ini jika diaktifkan.</span>
+              </div>
+              <Switch
+                checked={modalModelState.is_enabled}
+                onChange={() => setModalModelState(prev => ({ ...prev, is_enabled: !prev.is_enabled }))}
+              />
+            </div>
+
+            {/* Toggle Premium / Pro Writer */}
+            <div className="flex items-center justify-between p-3.5 border border-slate-200/60 rounded-2xl bg-slate-50/20">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs font-bold text-slate-700">Hak Akses Model (Khusus Pro Writer)</span>
+                <span className="text-[9px] text-slate-400 leading-tight">Membatasi pemakaian model AI premium ini hanya untuk pelanggan Pro.</span>
+              </div>
+              <Switch
+                checked={modalModelState.is_premium}
+                onChange={() => setModalModelState(prev => ({ ...prev, is_premium: !prev.is_premium }))}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+            <button
+              onClick={() => setIsModelModalOpen(false)}
+              className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold rounded-xl transition cursor-pointer"
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleSaveModalModel}
+              disabled={savingModelId === modalModelState.id}
+              className="flex items-center gap-1.5 px-4.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs font-bold rounded-xl shadow-md hover:shadow-indigo-200 transition duration-200 cursor-pointer"
+            >
+              {savingModelId === modalModelState.id ? (
+                <IconLoader className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <IconDeviceFloppy className="h-3.5 w-3.5" />
+              )}
+              Simpan Data
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
   </div>
 );
 }

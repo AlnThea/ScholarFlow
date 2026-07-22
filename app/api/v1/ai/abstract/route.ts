@@ -1,68 +1,29 @@
-// app/api/v1/ai/improve/route.ts
+// app/api/v1/ai/abstract/route.ts
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
-function buildPrompt(text: string, tone: string): string {
-  let toneInstruction = '';
-  switch (tone) {
-    case 'simplify':
-      toneInstruction = 'Simplify complex jargon and sentence structures. Make it clear and highly readable while maintaining scholarly professionalism.';
-      break;
-    case 'shorten':
-      toneInstruction = 'Condense the text. Remove wordiness and redundancy to make it concise and direct without losing key academic meaning.';
-      break;
-    case 'expand':
-      toneInstruction = 'Elaborate on the arguments. Add detail and scholarly depth to expand the draft into a more complete, well-reasoned text.';
-      break;
-    case 'paraphrase':
-      toneInstruction = 'Paraphrase the text. Rewrite it with a different sentence structure and vocabulary while keeping the exact original meaning and a scholarly tone.';
-      break;
-    case 'summarize':
-      toneInstruction = 'Summarize the text. Condense it into a concise, high-level academic summary that highlights the key concepts and findings.';
-      break;
-    case 'academic':
-    default:
-      toneInstruction = 'Improve clarity, academic vocabulary, objectivity, and scholarly phrasing.';
-      break;
-  }
-
+function buildPrompt(text: string): string {
   return (
-    'You are an expert academic editor. Rewrite the selected text according to the following instructions:\n' +
-    `- Target Tone: ${tone.toUpperCase()}\n` +
-    `- Instruction: ${toneInstruction}\n` +
+    'You are an expert academic editor. Write a structured academic abstract (around 150-250 words) based on the following document context:\n\n' +
+    `Document Context:\n${text}\n\n` +
     'Requirements:\n' +
-    '- Keep the original meaning and core arguments.\n' +
-    '- Do not add external citations, facts, statistics, or unbacked claims.\n' +
-    '- Preserve the language of the input text (e.g. if Indonesian, reply in Indonesian; if English, reply in English).\n' +
-    '- Return ONLY the rewritten text. Do NOT wrap it in quotes, markdown block, or write any greeting/explanation.\n\n' +
-    `Text to rewrite:\n${text}`
+    '- Cover the research objective, methodology/proposed approach, and key expected results/conclusions.\n' +
+    '- Maintain a formal, objective, and scholarly academic tone.\n' +
+    '- Do not add external facts, citations, or statistics not mentioned in the context.\n' +
+    '- Preserve the language of the input text (e.g., if the context is Indonesian, reply in Indonesian; if English, reply in English).\n' +
+    '- Return ONLY the generated abstract. Do NOT wrap it in quotes, markdown code block, or write any greeting/explanation.'
   );
 }
 
-function fallbackResponse(text: string, tone: string, disclaimer: string) {
-  let cleanedText = text.replace(/\s+/g, ' ').trim();
-  let improvedText = cleanedText;
-
-  if (cleanedText) {
-    improvedText = cleanedText[0].toUpperCase() + cleanedText.substring(1);
-    if (!improvedText.endsWith('.')) {
-      improvedText += '.';
-    }
-  }
-
+function fallbackResponse(text: string, disclaimer: string) {
   return {
-    original_text: text,
-    improved_text: improvedText,
-    tone: tone,
+    abstract_text: "Abstract draft placeholder: Please configure Gemini API key to enable AI abstract generation based on your document content.",
     disclaimer: disclaimer,
   };
 }
 
-/**
- * Panggilan langsung ke API Google Gemini AI Studio
- */
 async function callDirectGemini(prompt: string, model: string): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY is not set');
@@ -81,7 +42,7 @@ async function callDirectGemini(prompt: string, model: string): Promise<string> 
         },
       ],
       generationConfig: {
-        temperature: 0.2,
+        temperature: 0.3,
         topP: 0.9,
         maxOutputTokens: 2048,
       },
@@ -107,9 +68,6 @@ async function callDirectGemini(prompt: string, model: string): Promise<string> 
   return text;
 }
 
-/**
- * Panggilan terpadu ke API OpenRouter
- */
 async function callOpenRouter(prompt: string, model: string): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set');
@@ -127,7 +85,7 @@ async function callOpenRouter(prompt: string, model: string): Promise<string> {
       messages: [
         { role: 'user', content: prompt }
       ],
-      temperature: 0.2,
+      temperature: 0.3,
     }),
   });
 
@@ -148,15 +106,15 @@ async function callOpenRouter(prompt: string, model: string): Promise<string> {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { text, tone = 'academic', model = 'gemini' } = body;
+    const { text, model = 'gemini' } = body;
 
     if (!text) {
       return NextResponse.json({ error: 'Text parameter is required.' }, { status: 400 });
     }
 
-    const prompt = buildPrompt(text, tone);
+    const prompt = buildPrompt(text);
 
-    // 1. Ambil seluruh model AI dari database Supabase (untuk fallback dinamis)
+    // 1. Ambil seluruh model AI dari database Supabase
     const { data: dbModels, error: dbError } = await supabase
       .from('ai_models')
       .select('*');
@@ -172,14 +130,12 @@ export async function POST(request: Request) {
       { id: 'claude', name: 'Claude 3.5 (Pro OR)', model_id: 'anthropic/claude-3.5-sonnet', is_enabled: true, is_premium: true }
     ];
 
-    // 2. Cari model pilihan utama user
+    // 2. Cari model pilihan utama
     const chosenModel = modelsList.find(m => m.id === model);
     const attempts: { name: string; run: () => Promise<string> }[] = [];
 
-    // Jika model pilihan user ditemukan dan diaktifkan, jadikan prioritas pertama
     if (chosenModel && chosenModel.is_enabled) {
       if (chosenModel.id === 'gemini') {
-        // Gunakan model_id dinamis dari DB
         attempts.push({
           name: chosenModel.name,
           run: () => callDirectGemini(prompt, chosenModel.model_id)
@@ -191,14 +147,13 @@ export async function POST(request: Request) {
         });
       }
     } else if (model === 'gemini') {
-      // Fallback jika DB kosong / error
       attempts.push({
         name: 'Gemini Flash (Direct)',
         run: () => callDirectGemini(prompt, process.env.GEMINI_MODEL || 'gemini-1.5-flash')
       });
     }
 
-    // 3. Masukkan model-model aktif non-premium lainnya sebagai antrean failover otomatis
+    // 3. Cadangan non-premium
     modelsList.forEach(item => {
       const isAlreadyTried = (model === item.id) || (model === 'gemini' && item.id === 'gemini');
       if (item.is_enabled && !item.is_premium && !isAlreadyTried) {
@@ -216,7 +171,7 @@ export async function POST(request: Request) {
       }
     });
 
-    // 4. Selalu tambahkan GPT-4o-mini sebagai baris pertahanan berbayar termurah jika semuanya gagal
+    // 4. Cadangan darurat
     const hasMiniInList = modelsList.some(item => item.model_id === 'openai/gpt-4o-mini' && item.is_enabled);
     const isMiniTried = model === 'openai/gpt-4o-mini';
     if (!isMiniTried && !hasMiniInList) {
@@ -231,13 +186,11 @@ export async function POST(request: Request) {
     let disclaimer = null;
     const errors: string[] = [];
 
-    // Eksekusi antrean cascading retry
     for (let i = 0; i < attempts.length; i++) {
       try {
         finalResult = await attempts[i].run();
         successfulModelName = attempts[i].name;
 
-        // Jika berhasil menggunakan cadangan, informasikan ke pengguna
         if (i > 0) {
           disclaimer = `Layanan AI Utama sedang sibuk. Otomatis dialihkan ke: ${successfulModelName}.`;
         }
@@ -251,20 +204,17 @@ export async function POST(request: Request) {
       return NextResponse.json(
         fallbackResponse(
           text,
-          tone,
           `Seluruh model AI sedang sibuk. Log Error: ${errors.join('; ')}`
         )
       );
     }
 
     return NextResponse.json({
-      original_text: text,
-      improved_text: finalResult,
-      tone: tone,
+      abstract_text: finalResult,
       disclaimer: disclaimer,
     });
   } catch (error) {
-    console.error('Error in dynamic AI cascading improve API:', error);
+    console.error('Error in abstract generation API:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

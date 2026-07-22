@@ -25,6 +25,11 @@ Using React's `useImperativeHandle`, the parent layout can control the editor in
 - `insertCitation(label, referenceId)`: Injects a `<cite>` tag at the cursor location (e.g. ` [Smith 2021]`).
 - `upsertBibliography(entries)`: Updates the bibliography blocks at the bottom of the editor canvas.
 
+### Programmatic Rendering & Save Protection
+To prevent race conditions and data loss during document loading/refreshing:
+- **`initialContent` Prop**: `EditorJsEditor` accepts an `initialContent` prop. If provided, the editor loads this content immediately on startup inside the `onReady` hook, preventing timing delays from asynchronous parent ref bindings.
+- **`isRenderingRef` Lock**: Since programmatic rendering (such as `editor.render()`) triggers the `onChange` event in Editor.js, it could cause the system to save empty or incomplete content to the database during initialization. To avoid this, a mutable lock (`isRenderingRef`) is set to `true` during rendering. While `isRenderingRef.current` is `true`, any `onChange` events are ignored and not passed to `onContentChange`, ensuring the Supabase database is never overwritten with uninitialized data.
+
 ---
 
 ## 🔄 2. Real-Time Citation & Bibliography Loop

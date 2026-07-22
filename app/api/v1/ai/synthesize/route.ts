@@ -1,61 +1,42 @@
-// app/api/v1/ai/improve/route.ts
+// app/api/v1/ai/synthesize/route.ts
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
-function buildPrompt(text: string, tone: string): string {
-  let toneInstruction = '';
-  switch (tone) {
-    case 'simplify':
-      toneInstruction = 'Simplify complex jargon and sentence structures. Make it clear and highly readable while maintaining scholarly professionalism.';
-      break;
-    case 'shorten':
-      toneInstruction = 'Condense the text. Remove wordiness and redundancy to make it concise and direct without losing key academic meaning.';
-      break;
-    case 'expand':
-      toneInstruction = 'Elaborate on the arguments. Add detail and scholarly depth to expand the draft into a more complete, well-reasoned text.';
-      break;
-    case 'paraphrase':
-      toneInstruction = 'Paraphrase the text. Rewrite it with a different sentence structure and vocabulary while keeping the exact original meaning and a scholarly tone.';
-      break;
-    case 'summarize':
-      toneInstruction = 'Summarize the text. Condense it into a concise, high-level academic summary that highlights the key concepts and findings.';
-      break;
-    case 'academic':
-    default:
-      toneInstruction = 'Improve clarity, academic vocabulary, objectivity, and scholarly phrasing.';
-      break;
-  }
+interface ReferenceInput {
+  title: string;
+  authors: string[];
+  year?: number;
+  source: string;
+  label: string;
+}
+
+function buildSynthesisPrompt(references: ReferenceInput[]): string {
+  const papersFormatted = references
+    .map((ref) => `- [${ref.label}] "${ref.title}" oleh ${ref.authors.join(', ')} (${ref.year || 't.t.'}), diterbitkan di ${ref.source}`)
+    .join('\n');
 
   return (
-    'You are an expert academic editor. Rewrite the selected text according to the following instructions:\n' +
-    `- Target Tone: ${tone.toUpperCase()}\n` +
-    `- Instruction: ${toneInstruction}\n` +
-    'Requirements:\n' +
-    '- Keep the original meaning and core arguments.\n' +
-    '- Do not add external citations, facts, statistics, or unbacked claims.\n' +
-    '- Preserve the language of the input text (e.g. if Indonesian, reply in Indonesian; if English, reply in English).\n' +
-    '- Return ONLY the rewritten text. Do NOT wrap it in quotes, markdown block, or write any greeting/explanation.\n\n' +
-    `Text to rewrite:\n${text}`
+    'Anda adalah seorang editor akademik dan ilmuwan senior. Tugas Anda adalah menulis sebuah paragraf Tinjauan Pustaka (Literature Review) ilmiah terstruktur yang mensintesis paper-paper penelitian berikut secara kohesif.\n\n' +
+    'Persyaratan:\n' +
+    '- Tulis dalam Bahasa Indonesia dengan gaya akademik yang sangat formal, objektif, dan elegan.\n' +
+    '- Sintesis temuan mereka secara logis dalam satu paragraf yang mengalir lancar (tidak berupa daftar terpisah).\n' +
+    '- Anda WAJIB menyertakan sitasi rujukan secara natural menggunakan label kurung siku yang diberikan (contoh: [Label] atau [1]). Letakkan sitasi tepat di bagian klaim kalimat yang dirujuk.\n' +
+    '- Jangan menambahkan klaim data, statistik, atau fakta baru dari luar paper yang diberikan.\n' +
+    '- Berikan HANYA teks paragraf hasil sintesis. Jangan menyertakan tanda kutip pembuka/penutup, blok markdown, salam, atau teks pengantar lainnya.\n\n' +
+    `Daftar Paper:\n${papersFormatted}\n\n` +
+    'Paragraf Tinjauan Pustaka:'
   );
 }
 
-function fallbackResponse(text: string, tone: string, disclaimer: string) {
-  let cleanedText = text.replace(/\s+/g, ' ').trim();
-  let improvedText = cleanedText;
-
-  if (cleanedText) {
-    improvedText = cleanedText[0].toUpperCase() + cleanedText.substring(1);
-    if (!improvedText.endsWith('.')) {
-      improvedText += '.';
-    }
-  }
+function fallbackResponse(references: ReferenceInput[], disclaimer: string) {
+  const synthesis = references
+    .map((ref) => `Penelitian oleh ${ref.authors[0]} et al. (${ref.year || 't.t.'}) membahas tentang "${ref.title}" [${ref.label}].`)
+    .join(' ');
 
   return {
-    original_text: text,
-    improved_text: improvedText,
-    tone: tone,
+    synthesized_text: `[Fallback] ${synthesis}`,
     disclaimer: disclaimer,
   };
 }
@@ -81,7 +62,7 @@ async function callDirectGemini(prompt: string, model: string): Promise<string> 
         },
       ],
       generationConfig: {
-        temperature: 0.2,
+        temperature: 0.3,
         topP: 0.9,
         maxOutputTokens: 2048,
       },
@@ -127,7 +108,7 @@ async function callOpenRouter(prompt: string, model: string): Promise<string> {
       messages: [
         { role: 'user', content: prompt }
       ],
-      temperature: 0.2,
+      temperature: 0.3,
     }),
   });
 
@@ -148,13 +129,13 @@ async function callOpenRouter(prompt: string, model: string): Promise<string> {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { text, tone = 'academic', model = 'gemini' } = body;
+    const { references, model = 'gemini' } = body;
 
-    if (!text) {
-      return NextResponse.json({ error: 'Text parameter is required.' }, { status: 400 });
+    if (!references || !Array.isArray(references) || references.length === 0) {
+      return NextResponse.json({ error: 'References array is required.' }, { status: 400 });
     }
 
-    const prompt = buildPrompt(text, tone);
+    const prompt = buildSynthesisPrompt(references);
 
     // 1. Ambil seluruh model AI dari database Supabase (untuk fallback dinamis)
     const { data: dbModels, error: dbError } = await supabase
@@ -162,7 +143,7 @@ export async function POST(request: Request) {
       .select('*');
 
     if (dbError) {
-      console.warn('Error loading dynamic models from DB, using fallback list:', dbError.message);
+      console.warn('Error loading dynamic models from DB for synthesize, using fallback list:', dbError.message);
     }
 
     const modelsList = dbModels || [
@@ -176,10 +157,8 @@ export async function POST(request: Request) {
     const chosenModel = modelsList.find(m => m.id === model);
     const attempts: { name: string; run: () => Promise<string> }[] = [];
 
-    // Jika model pilihan user ditemukan dan diaktifkan, jadikan prioritas pertama
     if (chosenModel && chosenModel.is_enabled) {
       if (chosenModel.id === 'gemini') {
-        // Gunakan model_id dinamis dari DB
         attempts.push({
           name: chosenModel.name,
           run: () => callDirectGemini(prompt, chosenModel.model_id)
@@ -191,7 +170,6 @@ export async function POST(request: Request) {
         });
       }
     } else if (model === 'gemini') {
-      // Fallback jika DB kosong / error
       attempts.push({
         name: 'Gemini Flash (Direct)',
         run: () => callDirectGemini(prompt, process.env.GEMINI_MODEL || 'gemini-1.5-flash')
@@ -237,7 +215,6 @@ export async function POST(request: Request) {
         finalResult = await attempts[i].run();
         successfulModelName = attempts[i].name;
 
-        // Jika berhasil menggunakan cadangan, informasikan ke pengguna
         if (i > 0) {
           disclaimer = `Layanan AI Utama sedang sibuk. Otomatis dialihkan ke: ${successfulModelName}.`;
         }
@@ -250,21 +227,18 @@ export async function POST(request: Request) {
     if (!finalResult) {
       return NextResponse.json(
         fallbackResponse(
-          text,
-          tone,
+          references,
           `Seluruh model AI sedang sibuk. Log Error: ${errors.join('; ')}`
         )
       );
     }
 
     return NextResponse.json({
-      original_text: text,
-      improved_text: finalResult,
-      tone: tone,
+      synthesized_text: finalResult,
       disclaimer: disclaimer,
     });
   } catch (error) {
-    console.error('Error in dynamic AI cascading improve API:', error);
+    console.error('Error in AI literature review synthesize API:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

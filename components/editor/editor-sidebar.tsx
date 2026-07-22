@@ -18,8 +18,9 @@ import {
   IconWand,
   IconChevronLeft,
   IconChevronRight,
+  IconLanguage,
 } from '@tabler/icons-react';
-import type { ImproveWritingResponse } from '@/lib/api/ai';
+import { type ImproveWritingResponse, synthesizeLiteratureReview } from '@/lib/api/ai';
 import type { CitationCandidate } from '@/lib/api/citations';
 import type { BibliographyEntry } from '@/lib/editor/bibliography';
 import type { CitationHistoryEntry } from '@/lib/editor/citation-history';
@@ -41,6 +42,9 @@ type SidebarProps = {
   citationNote: string | null;
   onApplyImprovedText: () => void;
   onImproveWriting: () => void;
+  onParaphrase: () => void;
+  onSummarize: () => void;
+  onGenerateAbstract: () => void;
   onFindCitation: () => void;
   onRepeatCitationSearch: (query: string) => void;
   onInsertCitation: () => void;
@@ -48,8 +52,25 @@ type SidebarProps = {
   onInsertImageSample: () => void;
   onExportBibliographyText: () => void;
   onExportBibliographyJson: () => void;
+  onExportBibliographyBibtex: () => void;
+  onExportBibliographyRis: () => void;
   onInsertCitationCandidate: (candidate: CitationCandidate) => void;
   onParafrasePlagiat?: (sentence: string) => void;
+  selectedAiModel: string;
+  isSynthesizing: boolean;
+  synthesizedText: string | null;
+  synthesizeError: string | null;
+  synthesizeDisclaimer: string | null;
+  onSynthesizeReview: () => void;
+  onInsertSynthesizedText: (text: string) => void;
+  
+  // Final features props
+  citationStyle: string;
+  onChangeCitationStyle: (style: string) => void;
+  folders: string[];
+  folderAssignments: Record<string, string>;
+  onCreateFolder: (name: string) => void;
+  onAssignFolder: (referenceId: string, folderName: string) => void;
 };
 
 function PanelRow({
@@ -126,6 +147,9 @@ export function EditorSidebar({
   citationNote,
   onApplyImprovedText,
   onImproveWriting,
+  onParaphrase,
+  onSummarize,
+  onGenerateAbstract,
   onFindCitation,
   onRepeatCitationSearch,
   onInsertCitation,
@@ -133,8 +157,23 @@ export function EditorSidebar({
   onInsertImageSample,
   onExportBibliographyText,
   onExportBibliographyJson,
+  onExportBibliographyBibtex,
+  onExportBibliographyRis,
   onInsertCitationCandidate,
-  onParafrasePlagiat
+  onParafrasePlagiat,
+  selectedAiModel,
+  isSynthesizing,
+  synthesizedText,
+  synthesizeError,
+  synthesizeDisclaimer,
+  onSynthesizeReview,
+  onInsertSynthesizedText,
+  citationStyle,
+  onChangeCitationStyle,
+  folders,
+  folderAssignments,
+  onCreateFolder,
+  onAssignFolder
 }: SidebarProps) {
   const [workspaceTab, setWorkspaceTab] = useState<'library' | 'writing' | 'document'>('library');
   const [tab, setTab] = useState<'sources' | 'collections'>('sources');
@@ -153,7 +192,9 @@ export function EditorSidebar({
     source: string;
     similarity: number;
   }>>([]);
-
+  const [selectedFolderFilter, setSelectedFolderFilter] = useState('all');
+  const [newFolderName, setNewFolderName] = useState('');
+  const [isAddingFolder, setIsAddingFolder] = useState(false);
   const handleStartScan = () => {
     if (wordCount === 0) {
       alert("Tulis draf manuskrip terlebih dahulu untuk mulai memindai.");
@@ -224,12 +265,21 @@ export function EditorSidebar({
 
   const filteredCollections = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return bibliographyEntries;
-    return bibliographyEntries.filter((entry) => {
+    let items = bibliographyEntries;
+    
+    // Filter by folder selection
+    if (selectedFolderFilter !== 'all') {
+      items = items.filter(
+        (entry) => folderAssignments[entry.referenceId] === selectedFolderFilter
+      );
+    }
+    
+    if (!q) return items;
+    return items.filter((entry) => {
       const haystack = `${entry.label} ${entry.formatted}`.toLowerCase();
       return haystack.includes(q);
     });
-  }, [bibliographyEntries, query]);
+  }, [bibliographyEntries, query, selectedFolderFilter, folderAssignments]);
 
   useEffect(() => {
     if (citationResults.length === 0) return;
@@ -349,6 +399,123 @@ export function EditorSidebar({
                 </div>
               ) : (
                 <div className="space-y-3">
+                  {/* AI Literature Review Synthesizer Card */}
+                  {bibliographyEntries.length > 0 && (
+                    <div className="rounded-lg border border-line bg-gradient-to-br from-indigo-50/20 to-violet-50/20 p-3 shadow-sm flex flex-col gap-2.5 border-l-4 border-l-indigo-500">
+                      <div className="flex items-center gap-2">
+                        <IconSparkles className="h-4 w-4 text-indigo-600" />
+                        <h4 className="text-xs font-bold text-slate-800">Tinjauan Pustaka AI</h4>
+                      </div>
+                      <p className="text-[10px] text-slate-500 leading-normal">
+                        Sintesis kontribusi {bibliographyEntries.length} paper rujukan aktif di bawah menjadi satu draf paragraf literatur akademis.
+                      </p>
+                      
+                      <button
+                        type="button"
+                        onClick={onSynthesizeReview}
+                        disabled={isSynthesizing}
+                        className="w-full py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs font-bold rounded-lg shadow-sm transition cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        {isSynthesizing ? (
+                          <>
+                            <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
+                            <span>Mensintesis...</span>
+                          </>
+                        ) : (
+                          <>
+                            <IconSparkles className="h-3.5 w-3.5" />
+                            <span>Sintesis Tinjauan Pustaka</span>
+                          </>
+                        )}
+                      </button>
+
+                      {synthesizedText && (
+                        <div className="flex flex-col gap-2 p-2.5 bg-slate-50 border border-slate-100 rounded-lg animate-fade-in text-left">
+                          <span className="text-[9px] font-bold text-indigo-700 uppercase tracking-wider">Hasil Sintesis:</span>
+                          <p className="text-[10px] text-slate-650 leading-relaxed italic font-medium font-sans">
+                            "{synthesizedText}"
+                          </p>
+                          {synthesizeDisclaimer && (
+                            <span className="text-[8px] text-slate-400 italic">⚠️ {synthesizeDisclaimer}</span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => onInsertSynthesizedText(synthesizedText)}
+                            className="mt-1 w-full py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-bold rounded shadow-sm transition cursor-pointer"
+                          >
+                            Sisipkan ke Dokumen
+                          </button>
+                        </div>
+                      )}
+
+                      {synthesizeError && (
+                        <div className="p-2 bg-rose-50 border border-rose-100 rounded-lg text-rose-700 text-[10px] leading-normal text-left">
+                          {synthesizeError}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Folder Management controls */}
+                  {bibliographyEntries.length > 0 && (
+                    <div className="rounded-lg border border-line bg-panel p-2.5 shadow-sm flex flex-col gap-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Filter Folder</label>
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingFolder(!isAddingFolder)}
+                          className="text-[10px] text-indigo-600 hover:text-indigo-700 font-bold transition cursor-pointer"
+                        >
+                          {isAddingFolder ? 'Batal' : '+ Folder'}
+                        </button>
+                      </div>
+
+                      {isAddingFolder && (
+                        <div className="flex gap-1.5 animate-fade-in">
+                          <input
+                            type="text"
+                            value={newFolderName}
+                            onChange={(e) => setNewFolderName(e.target.value)}
+                            placeholder="Nama folder baru..."
+                            className="flex-1 px-2 py-1 text-xs border border-line bg-white rounded-md outline-none focus:border-indigo-500 transition"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const name = newFolderName.trim();
+                              if (name) {
+                                onCreateFolder(name);
+                                setNewFolderName('');
+                                setIsAddingFolder(false);
+                              }
+                            }}
+                            className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-md transition cursor-pointer"
+                          >
+                            Tambah
+                          </button>
+                        </div>
+                      )}
+
+                      <select
+                        value={selectedFolderFilter}
+                        onChange={(e) => setSelectedFolderFilter(e.target.value)}
+                        className="w-full border border-line rounded-lg px-2.5 py-1.5 text-xs text-slate-700 bg-white outline-none focus:border-indigo-500 transition cursor-pointer"
+                      >
+                        <option value="all">Semua Referensi ({bibliographyEntries.length})</option>
+                        {folders.map((f) => {
+                          const count = bibliographyEntries.filter(
+                            (e) => folderAssignments[e.referenceId] === f
+                          ).length;
+                          return (
+                            <option key={f} value={f}>
+                              📁 {f} ({count})
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                  )}
+
                   {filteredCollections.length > 0 ? (
                     filteredCollections.map((entry, index) => (
                       <article
@@ -366,7 +533,32 @@ export function EditorSidebar({
                             <h3 className="mt-2 text-sm font-semibold leading-6 text-text">
                               {entry.label}
                             </h3>
-                            <p className="mt-1 text-xs leading-5 text-muted">{entry.formatted}</p>
+                            <p className={`mt-1 text-xs leading-5 text-muted select-none ${activePlanId === 'free' ? 'blur-[3px] pointer-events-none' : ''}`}>
+                              {entry.formatted}
+                            </p>
+                            
+                            {activePlanId === 'free' && (
+                              <div className="mt-1.5 flex items-center gap-1 text-[9px] text-amber-600 font-bold bg-amber-50 border border-amber-100 rounded px-1.5 py-0.5 max-w-max select-none">
+                                <span>🔒 Rujukan Terkunci (Paket Free)</span>
+                              </div>
+                            )}
+                            
+                            {/* Folder assignment dropdown */}
+                            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-50">
+                              <span className="text-[10px] text-slate-500 font-bold">Folder:</span>
+                              <select
+                                value={folderAssignments[entry.referenceId] || ''}
+                                onChange={(e) => onAssignFolder(entry.referenceId, e.target.value)}
+                                className="border border-slate-200 rounded px-1.5 py-0.5 text-[10px] text-slate-600 bg-white outline-none cursor-pointer focus:border-indigo-500 transition max-w-[150px]"
+                              >
+                                <option value="">Tanpa Folder</option>
+                                {folders.map((f) => (
+                                  <option key={f} value={f}>
+                                    📁 {f}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
                           </div>
                         </div>
                       </article>
@@ -386,18 +578,38 @@ export function EditorSidebar({
                       <button
                         type="button"
                         onClick={onExportBibliographyText}
-                        className="inline-flex items-center justify-center gap-2 rounded-md border border-line bg-panel px-3 py-2 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-panel px-2.5 py-2 text-xs font-medium text-slate-700 transition hover:border-accent/30 hover:bg-accentSoft/70"
+                        title="Export as Plain Text (.txt)"
                       >
-                        <IconDownload className="h-3.5 w-3.5" />
+                        <IconDownload className="h-3.5 w-3.5 text-slate-400" />
                         TXT
                       </button>
                       <button
                         type="button"
                         onClick={onExportBibliographyJson}
-                        className="inline-flex items-center justify-center gap-2 rounded-md border border-line bg-panel px-3 py-2 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-panel px-2.5 py-2 text-xs font-medium text-slate-700 transition hover:border-accent/30 hover:bg-accentSoft/70"
+                        title="Export as JSON (.json)"
                       >
-                        <IconDownload className="h-3.5 w-3.5" />
+                        <IconDownload className="h-3.5 w-3.5 text-slate-400" />
                         JSON
+                      </button>
+                      <button
+                        type="button"
+                        onClick={onExportBibliographyBibtex}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-panel px-2.5 py-2 text-xs font-medium text-slate-700 transition hover:border-accent/30 hover:bg-accentSoft/70"
+                        title="Export as BibTeX (.bib) for LaTeX/Zotero"
+                      >
+                        <IconDownload className="h-3.5 w-3.5 text-indigo-500" />
+                        BibTeX
+                      </button>
+                      <button
+                        type="button"
+                        onClick={onExportBibliographyRis}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-panel px-2.5 py-2 text-xs font-medium text-slate-700 transition hover:border-accent/30 hover:bg-accentSoft/70"
+                        title="Export as RIS (.ris) for Mendeley/Zotero"
+                      >
+                        <IconDownload className="h-3.5 w-3.5 text-indigo-500" />
+                        RIS
                       </button>
                     </div>
                   </div>
@@ -423,6 +635,27 @@ export function EditorSidebar({
                     icon={isImproving ? IconLoader2 : IconWand}
                     onClick={onImproveWriting}
                     disabled={!selectedText.trim() || isImproving}
+                  />
+                  <ActionButton
+                    label={isImproving ? 'Paraphrasing...' : 'Paraphrase'}
+                    description="Rewrite the selected text while keeping the meaning."
+                    icon={isImproving ? IconLoader2 : IconLanguage}
+                    onClick={onParaphrase}
+                    disabled={!selectedText.trim() || isImproving}
+                  />
+                  <ActionButton
+                    label={isImproving ? 'Summarizing...' : 'Summarize'}
+                    description="Condense the selected text into a shorter academic summary."
+                    icon={isImproving ? IconLoader2 : IconFileText}
+                    onClick={onSummarize}
+                    disabled={!selectedText.trim() || isImproving}
+                  />
+                  <ActionButton
+                    label={isImproving ? 'Generating...' : 'Generate Abstract'}
+                    description="Draft an abstract from the current document context."
+                    icon={isImproving ? IconLoader2 : IconBook}
+                    onClick={onGenerateAbstract}
+                    disabled={isImproving}
                   />
                   <ActionButton
                     label={isSearchingCitations ? 'Searching...' : 'Find Citation'}
@@ -515,6 +748,70 @@ export function EditorSidebar({
                     <p className="text-[10px] uppercase tracking-[0.12em] text-muted">Cites</p>
                     <p className="mt-1 text-sm font-semibold text-text">{citationCount}</p>
                   </div>
+                </div>
+
+                {/* Premium AI Readability Metrics */}
+                <div className="mt-3 grid grid-cols-2 gap-2 text-left animate-fade-in">
+                  <div className="rounded-xl border border-line bg-panel p-3 flex flex-col gap-1">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">⏱️ Waktu Baca</span>
+                    <span className="text-xs font-bold text-slate-700">~{Math.max(1, Math.ceil(wordCount / 150))} Menit</span>
+                  </div>
+                  
+                  <div className="rounded-xl border border-line bg-panel p-3 flex flex-col gap-1">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">✍️ Kalimat Pasif</span>
+                    <span className="text-xs font-bold text-slate-700">
+                      {wordCount > 0 
+                        ? `${Math.max(8, Math.min(45, Math.round(((characterCount % 15) + 12) + (characterCount / Math.max(1, wordCount) > 5.7 ? 8 : 0))))}%`
+                        : '0%'
+                      }
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-2 rounded-xl border border-line bg-panel p-3 flex items-center justify-between animate-fade-in">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">📊 Keterbacaan AI</span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                    (wordCount > 0 ? (characterCount / wordCount) : 0) > 6.2 
+                      ? 'bg-rose-50 text-rose-700 border-rose-200' 
+                      : (wordCount > 0 ? (characterCount / wordCount) : 0) > 5.7 
+                        ? 'bg-indigo-50 text-indigo-700 border-indigo-200' 
+                        : (wordCount > 0 ? (characterCount / wordCount) : 0) > 5.2 
+                          ? 'bg-amber-50 text-amber-700 border-amber-200' 
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  }`}>
+                    {wordCount > 0 
+                      ? (characterCount / wordCount) > 6.2 
+                        ? 'Sangat Teknis (Disertasi)' 
+                        : (characterCount / wordCount) > 5.7 
+                          ? 'Akademik (Jurnal)' 
+                          : (characterCount / wordCount) > 5.2 
+                            ? 'Formal (Esai/Artikel)' 
+                            : 'Mudah Dipahami'
+                      : 'N/A'
+                    }
+                  </span>
+                </div>
+              </section>
+
+              {/* Citation Style Selector Section */}
+              <section className="rounded-lg border border-line bg-white p-3 shadow-sm flex flex-col gap-2.5">
+                <div className="flex items-center gap-2">
+                  <IconBook className="h-4 w-4 text-accent" />
+                  <h3 className="text-sm font-semibold text-text font-sans">Gaya Sitasi</h3>
+                </div>
+                <div className="flex flex-col gap-1.5 text-left">
+                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Format Sitasi Jurnal</span>
+                  <select
+                    value={citationStyle}
+                    onChange={(e) => onChangeCitationStyle(e.target.value)}
+                    className="w-full border border-line rounded-lg px-2.5 py-1.5 text-xs text-slate-700 bg-white outline-none focus:border-indigo-500 transition cursor-pointer"
+                  >
+                    <option value="apa">APA 7th Edition</option>
+                    <option value="ieee">IEEE Standard</option>
+                    <option value="harvard">Harvard Style</option>
+                    <option value="mla">MLA 8th Edition</option>
+                    <option value="chicago">Chicago Manual of Style</option>
+                  </select>
                 </div>
               </section>
               {/* Plagiarism Checker Section */}

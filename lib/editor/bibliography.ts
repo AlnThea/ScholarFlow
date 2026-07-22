@@ -8,11 +8,119 @@ export type BibliographyEntry = {
   formatted: string;
 };
 
-function formatAuthors(authors: string[]): string {
+function formatAuthorsForStyle(authors: string[], style: string): string {
   if (authors.length === 0) return 'Unknown author';
-  if (authors.length === 1) return authors[0];
-  if (authors.length === 2) return `${authors[0]} & ${authors[1]}`;
-  return `${authors[0]} et al.`;
+  
+  // Clean authors to extract parts
+  const parsedAuthors = authors.map(author => {
+    if (author.includes(',')) {
+      const parts = author.split(',');
+      return {
+        family: parts[0].trim(),
+        given: parts.slice(1).join(',').trim()
+      };
+    } else {
+      const parts = author.trim().split(/\s+/);
+      if (parts.length === 1) {
+        return { family: author, given: '' };
+      } else {
+        const family = parts[parts.length - 1];
+        const given = parts.slice(0, parts.length - 1).join(' ');
+        return { family, given };
+      }
+    }
+  });
+
+  const getInitials = (given: string) => {
+    if (!given) return '';
+    return given.split(/\s+/).map(p => p[0] ? `${p[0]}.` : '').join(' ');
+  };
+
+  const cleanStyle = style.toLowerCase();
+
+  if (cleanStyle === 'ieee') {
+    // IEEE style: Initials Given Family (e.g. J. S. Smith)
+    const formattedList = parsedAuthors.map(auth => {
+      const init = getInitials(auth.given);
+      return init ? `${init} ${auth.family}` : auth.family;
+    });
+    if (formattedList.length === 1) return formattedList[0];
+    if (formattedList.length === 2) return `${formattedList[0]} and ${formattedList[1]}`;
+    return `${formattedList.slice(0, -1).join(', ')}, and ${formattedList[formattedList.length - 1]}`;
+  }
+
+  if (cleanStyle === 'mla' || cleanStyle === 'chicago') {
+    // MLA/Chicago style: Last, First for 1st author; First Last for subsequent ones
+    const formattedList = parsedAuthors.map((auth, idx) => {
+      if (idx === 0) {
+        return auth.given ? `${auth.family}, ${auth.given}` : auth.family;
+      } else {
+        return auth.given ? `${auth.given} ${auth.family}` : auth.family;
+      }
+    });
+    if (formattedList.length === 1) return formattedList[0];
+    if (formattedList.length === 2) return `${formattedList[0]} and ${formattedList[1]}`;
+    return `${formattedList.slice(0, -1).join(', ')}, and ${formattedList[formattedList.length - 1]}`;
+  }
+
+  if (cleanStyle === 'harvard') {
+    // Harvard style: Family, Initials (e.g. Smith, J.S.)
+    const formattedList = parsedAuthors.map(auth => {
+      const init = getInitials(auth.given);
+      return init ? `${auth.family}, ${init}` : auth.family;
+    });
+    if (formattedList.length === 1) return formattedList[0];
+    if (formattedList.length === 2) return `${formattedList[0]} and ${formattedList[1]}`;
+    return `${formattedList.slice(0, -1).join(', ')} & ${formattedList[formattedList.length - 1]}`;
+  }
+
+  // Default APA style: Family, Initials (e.g. Smith, J. S.) with &
+  const formattedList = parsedAuthors.map(auth => {
+    const init = getInitials(auth.given);
+    return init ? `${auth.family}, ${init}` : auth.family;
+  });
+  if (formattedList.length === 1) return formattedList[0];
+  if (formattedList.length === 2) return `${formattedList[0]} & ${formattedList[1]}`;
+  return `${formattedList.slice(0, -1).join(', ')}, & ${formattedList[formattedList.length - 1]}`;
+}
+
+function formatManualBibliography(candidate: CitationCandidate, style: string): string {
+  const authors = formatAuthorsForStyle(candidate.authors, style);
+  const year = candidate.year || '';
+  const title = candidate.title;
+  const source = candidate.source;
+
+  const cleanStyle = style.toLowerCase();
+
+  if (cleanStyle === 'ieee') {
+    return `${authors}, "${title}," *${source}*, ${year}.${candidate.doi ? ` DOI: ${candidate.doi}.` : ''}`;
+  }
+
+  if (cleanStyle === 'harvard') {
+    const yearStr = year ? ` (${year})` : ' (n.d.)';
+    return `${authors}${yearStr} '${title}', *${source}*.${candidate.doi ? ` DOI: ${candidate.doi}.` : candidate.url ? ` Available at: ${candidate.url}.` : ''}`;
+  }
+
+  if (cleanStyle === 'mla') {
+    const yearStr = year ? `, ${year}` : '';
+    return `${authors}. "${title}." *${source}*${yearStr}.${candidate.doi ? ` DOI: ${candidate.doi}.` : candidate.url ? ` ${candidate.url}.` : ''}`;
+  }
+
+  if (cleanStyle === 'chicago') {
+    const yearStr = year ? ` (${year})` : '';
+    return `${authors}. "${title}." *${source}*${yearStr}.${candidate.doi ? ` DOI: ${candidate.doi}.` : candidate.url ? ` ${candidate.url}.` : ''}`;
+  }
+
+  // Default APA
+  const yearStr = year ? `(${year})` : '(n.d.)';
+  const parts = [authors, yearStr, title, `*${source}*`].filter(Boolean);
+  const mainStr = parts.join('. ');
+  if (candidate.doi) {
+    return `${mainStr}. DOI: ${candidate.doi}`;
+  } else if (candidate.url) {
+    return `${mainStr}. ${candidate.url}`;
+  }
+  return mainStr;
 }
 
 export function formatBibliographyCandidate(
@@ -58,27 +166,14 @@ export function formatBibliographyCandidate(
     const cite = new Cite([csl]);
     const formatted = cite.format('bibliography', {
       format: 'text',
-      template: style,
+      template: style.toLowerCase(),
       lang: lang,
     });
 
     return formatted.trim();
   } catch (error) {
-    console.error('Error formatting citation with citation.js, falling back to manual format:', error);
-    // Fallback to original manual formatting logic
-    const authors = formatAuthors(candidate.authors);
-    const year = candidate.year ? `(${candidate.year})` : '(n.d.)';
-    const title = candidate.title;
-    const source = candidate.source;
-    const parts = [authors, year, title, source];
-
-    if (candidate.doi) {
-      parts.push(`DOI: ${candidate.doi}`);
-    } else if (candidate.url) {
-      parts.push(candidate.url);
-    }
-
-    return parts.filter(Boolean).join('. ');
+    // If citation-js fails (e.g. because style template is not loaded), fallback to manual styling
+    return formatManualBibliography(candidate, style);
   }
 }
 

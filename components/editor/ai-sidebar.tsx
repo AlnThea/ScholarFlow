@@ -28,6 +28,9 @@ type AiSidebarProps = {
   citationNote: string | null;
   citationHistory: CitationHistoryEntry[];
   onImproveWriting: () => void;
+  onParaphrase: () => void;
+  onSummarize: () => void;
+  onGenerateAbstract: () => void;
   onFindCitation: () => void;
   onRepeatCitationSearch: (query: string) => void;
   onApplyImprovedText: () => void;
@@ -80,6 +83,9 @@ export function AiSidebar({
   citationNote,
   citationHistory,
   onImproveWriting,
+  onParaphrase,
+  onSummarize,
+  onGenerateAbstract,
   onFindCitation,
   onRepeatCitationSearch,
   onApplyImprovedText,
@@ -158,25 +164,25 @@ export function AiSidebar({
             disabled={!hasSelection || isLoading}
           />
           <ActionButton
-            label="Paraphrase"
+            label={isLoading ? 'Paraphrasing...' : 'Paraphrase'}
             description="Rewrite the selected text while keeping the meaning."
-            icon={IconLanguage}
-            onClick={() => {}}
-            disabled
+            icon={isLoading ? IconLoader2 : IconLanguage}
+            onClick={onParaphrase}
+            disabled={!hasSelection || isLoading}
           />
           <ActionButton
-            label="Summarize"
+            label={isLoading ? 'Summarizing...' : 'Summarize'}
             description="Condense the selected text into a shorter academic summary."
-            icon={IconFileText}
-            onClick={() => {}}
-            disabled
+            icon={isLoading ? IconLoader2 : IconFileText}
+            onClick={onSummarize}
+            disabled={!hasSelection || isLoading}
           />
           <ActionButton
-            label="Generate Abstract"
+            label={isLoading ? 'Generating...' : 'Generate Abstract'}
             description="Draft an abstract from the current document context."
-            icon={IconBook}
-            onClick={() => {}}
-            disabled
+            icon={isLoading ? IconLoader2 : IconBook}
+            onClick={onGenerateAbstract}
+            disabled={isLoading}
           />
           <ActionButton
             label="Find Citation"

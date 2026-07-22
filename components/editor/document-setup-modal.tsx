@@ -14,16 +14,48 @@ import {
   IconX 
 } from '@tabler/icons-react';
 import { CitationStyleModal } from './citation-style-modal';
-import type { DocumentSettings } from '@/lib/api/documents';
+import type { DocumentSettings, DocumentListItem } from '@/lib/api/documents';
 
 interface DocumentSetupModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (title: string, settings: DocumentSettings) => void;
+  documents?: DocumentListItem[];
+  activePlanId?: string;
 }
 
-export function DocumentSetupModal({ isOpen, onClose, onSubmit }: DocumentSetupModalProps) {
+export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], activePlanId = 'free' }: DocumentSetupModalProps) {
   const [title, setTitle] = useState('');
+  
+  // Project creation states
+  const [createMode, setCreateMode] = useState<'independent' | 'new_project' | 'exist_project'>('independent');
+  const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectType, setNewProjectType] = useState<'skripsi' | 'jurnal' | 'makalah' | 'independent'>('skripsi');
+  const [selectedProjectId, setSelectedProjectId] = useState('');
+  const [projectPart, setProjectPart] = useState('');
+
+  // Extract unique existing projects
+  const existingProjects = React.useMemo(() => {
+    const map: Record<string, { id: string; name: string; type: string }> = {};
+    documents.forEach((doc) => {
+      const settings = doc.settings;
+      if (settings?.projectId && settings?.projectName) {
+        map[settings.projectId] = {
+          id: settings.projectId,
+          name: settings.projectName,
+          type: settings.projectType || 'independent'
+        };
+      }
+    });
+    return Object.values(map);
+  }, [documents]);
+
+  // Set default selected project if available
+  React.useEffect(() => {
+    if (existingProjects.length > 0 && !selectedProjectId) {
+      setSelectedProjectId(existingProjects[0].id);
+    }
+  }, [existingProjects, selectedProjectId]);
   
   // Document configurations
   const [publishYear, setPublishYear] = useState<'all' | '5_years' | 'custom'>('all');
@@ -35,6 +67,7 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit }: DocumentSetupM
   const [considerExternal, setConsiderExternal] = useState(false);
   const [considerLibrary, setConsiderLibrary] = useState(false);
   const [limitCollection, setLimitCollection] = useState('all');
+  const [templateId, setTemplateId] = useState<'empty' | 'ieee' | 'skripsi' | 'apa' | 'report'>('empty');
   
   const [citationStyle, setCitationStyle] = useState('apa');
   const [citationLocale, setCitationLocale] = useState('en-US');
@@ -69,7 +102,40 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit }: DocumentSetupM
   };
 
   const handleCreate = () => {
-    const finalTitle = title.trim() || 'Untitled Document';
+    let finalTitle = title.trim();
+    let pId: string | undefined = undefined;
+    let pName: string | undefined = undefined;
+    let pType: 'skripsi' | 'jurnal' | 'makalah' | 'independent' | undefined = undefined;
+    let pPart: string | undefined = undefined;
+
+    if (createMode === 'new_project') {
+      if (activePlanId === 'free' && existingProjects.length >= 1) {
+        alert("🔒 Pengguna paket Free terbatas hanya bisa membuat 1 Folder Proyek. Silakan upgrade ke paket Pro Writer di menu Pricing untuk membuat Proyek tanpa batas!");
+        return;
+      }
+      pId = 'proj_' + Math.random().toString(36).substring(2, 9);
+      pName = newProjectName.trim() || 'Proyek Baru';
+      pType = newProjectType;
+      pPart = projectPart.trim() || 'Bab 1';
+      finalTitle = `${pName} - ${pPart}`;
+    } else if (createMode === 'exist_project') {
+      const existingDocsInProj = documents.filter(doc => doc.settings?.projectId === selectedProjectId);
+      if (activePlanId === 'free' && existingDocsInProj.length >= 3) {
+        alert("🔒 Pengguna paket Free terbatas hanya bisa memiliki maksimal 3 Bab/Bagian dalam satu Proyek. Silakan upgrade ke paket Pro Writer di menu Pricing untuk menambah bab tanpa batas!");
+        return;
+      }
+      const proj = existingProjects.find(p => p.id === selectedProjectId);
+      if (proj) {
+        pId = proj.id;
+        pName = proj.name;
+        pType = proj.type as any;
+      }
+      pPart = projectPart.trim() || 'Bagian Baru';
+      finalTitle = `${pName || 'Proyek'} - ${pPart}`;
+    } else {
+      finalTitle = finalTitle || 'Dokumen Mandiri';
+    }
+
     const settings: DocumentSettings = {
       publishYear,
       publishYearStart: publishYear === 'custom' ? publishYearStart : null,
@@ -80,13 +146,18 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit }: DocumentSetupM
       limitCollection,
       citationStyle,
       citationLocale,
-      showPageNumber
+      showPageNumber,
+      projectId: pId,
+      projectName: pName,
+      projectType: pType,
+      projectPart: pPart,
+      templateId
     };
     onSubmit(finalTitle, settings);
   };
 
   const handleSkip = () => {
-    const finalTitle = title.trim() || 'Untitled Document';
+    const finalTitle = title.trim() || 'Dokumen Mandiri';
     const defaultSettings: DocumentSettings = {
       publishYear: 'all',
       publishYearStart: null,
@@ -97,7 +168,8 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit }: DocumentSetupM
       limitCollection: 'all',
       citationStyle: 'apa',
       citationLocale: 'en-US',
-      showPageNumber: false
+      showPageNumber: false,
+      templateId: 'empty'
     };
     onSubmit(finalTitle, defaultSettings);
   };
@@ -125,17 +197,169 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit }: DocumentSetupM
           {/* Form Scrollable Area */}
           <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 max-h-[60vh]">
             
-            {/* 1. Document Title Input */}
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="doc-title" className="text-xs font-bold text-slate-700">Judul Dokumen / Artikel</label>
-              <input
-                id="doc-title"
-                type="text"
-                placeholder="Rancang Bangun Sistem Informasi Donasi Berbasis Hybrid..."
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
-              />
+            {/* 0. Project Grouping Mode Selection */}
+            <div className="flex flex-col gap-2.5">
+              <label className="text-xs font-bold text-slate-700">Jenis Dokumen / Pengelompokan Proyek</label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCreateMode('independent')}
+                  className={`flex flex-col items-center justify-center p-3 rounded-xl border text-center transition cursor-pointer ${
+                    createMode === 'independent'
+                      ? 'border-indigo-600 bg-indigo-50/20 text-indigo-700 font-semibold'
+                      : 'border-slate-200 hover:bg-slate-50 text-slate-500'
+                  }`}
+                >
+                  <span className="text-xs">📄 Lepas</span>
+                  <span className="text-[9px] text-slate-400 mt-0.5">Dokumen Tunggal</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCreateMode('new_project')}
+                  className={`flex flex-col items-center justify-center p-3 rounded-xl border text-center transition cursor-pointer ${
+                    createMode === 'new_project'
+                      ? 'border-indigo-600 bg-indigo-50/20 text-indigo-700 font-semibold'
+                      : 'border-slate-200 hover:bg-slate-50 text-slate-500'
+                  }`}
+                >
+                  <span className="text-xs">📁 Proyek Baru</span>
+                  <span className="text-[9px] text-slate-400 mt-0.5">Bikin Folder Baru</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={existingProjects.length === 0}
+                  onClick={() => setCreateMode('exist_project')}
+                  className={`flex flex-col items-center justify-center p-3 rounded-xl border text-center transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
+                    createMode === 'exist_project'
+                      ? 'border-indigo-600 bg-indigo-50/20 text-indigo-700 font-semibold'
+                      : 'border-slate-200 hover:bg-slate-50 text-slate-500'
+                  }`}
+                >
+                  <span className="text-xs">➕ Gabung Folder</span>
+                  <span className="text-[9px] text-slate-400 mt-0.5">Tambah Bab/Bagian</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Dynamic Inputs based on mode */}
+            {createMode === 'independent' && (
+              <div className="flex flex-col gap-1.5 animate-fade-in">
+                <label htmlFor="doc-title" className="text-xs font-bold text-slate-700">Judul Dokumen / Artikel</label>
+                <input
+                  id="doc-title"
+                  type="text"
+                  placeholder="Rancang Bangun Sistem Informasi Donasi..."
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+                />
+              </div>
+            )}
+
+            {createMode === 'new_project' && (
+              <div className="flex flex-col gap-4 p-4 border border-indigo-100 bg-indigo-50/5 rounded-2xl animate-fade-in">
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="project-name" className="text-xs font-bold text-slate-700">Nama Proyek / Judul Besar (Tesis/Jurnal)</label>
+                  <input
+                    id="project-name"
+                    type="text"
+                    placeholder="Analisis Sentimen Twitter menggunakan LSTM"
+                    value={newProjectName}
+                    onChange={(e) => setNewProjectName(e.target.value)}
+                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-700">Kategori Penulisan</label>
+                    <select
+                      value={newProjectType}
+                      onChange={(e) => setNewProjectType(e.target.value as any)}
+                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 bg-white outline-none focus:border-indigo-500 transition"
+                    >
+                      <option value="skripsi">🎓 Skripsi / Tesis / Disertasi</option>
+                      <option value="jurnal">📚 Jurnal / Paper Ilmiah</option>
+                      <option value="makalah">📝 Makalah / Tugas Kuliah</option>
+                    </select>
+                  </div>
+                  
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="project-part" className="text-xs font-bold text-slate-700">Bagian / Nama Bab Dokumen</label>
+                    <input
+                      id="project-part"
+                      type="text"
+                      placeholder="Bab 1: Pendahuluan"
+                      value={projectPart}
+                      onChange={(e) => setProjectPart(e.target.value)}
+                      className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {createMode === 'exist_project' && (
+              <div className="flex flex-col gap-4 p-4 border border-indigo-100 bg-indigo-50/5 rounded-2xl animate-fade-in">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-700">Pilih Proyek / Folder</label>
+                    <select
+                      value={selectedProjectId}
+                      onChange={(e) => setSelectedProjectId(e.target.value)}
+                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 bg-white outline-none focus:border-indigo-500 transition"
+                    >
+                      {existingProjects.map((proj) => (
+                        <option key={proj.id} value={proj.id}>
+                          📁 {proj.name} ({proj.type})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="project-part-exist" className="text-xs font-bold text-slate-700">Bagian / Nama Bab Dokumen</label>
+                    <input
+                      id="project-part-exist"
+                      type="text"
+                      placeholder="Bab 2: Tinjauan Pustaka"
+                      value={projectPart}
+                      onChange={(e) => setProjectPart(e.target.value)}
+                      className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="h-px bg-slate-100 w-full" />
+
+            {/* 1.5. Writing Template Selector */}
+            <div className="flex flex-col gap-3">
+              <label className="text-xs font-bold text-slate-700">Pilih Templat Penulisan (Templates Gallery)</label>
+              <div className="grid grid-cols-5 gap-2">
+                {[
+                  { id: 'empty', label: '📄 Kosong', desc: 'Draf Putih Polos' },
+                  { id: 'skripsi', label: '🎓 Skripsi', desc: 'Bab 1 s.d 5 Lengkap' },
+                  { id: 'ieee', label: '📚 IEEE', desc: 'Format Jurnal IEEE' },
+                  { id: 'apa', label: '📝 APA Style', desc: 'Format Jurnal APA' },
+                  { id: 'report', label: '💼 Laporan', desc: 'Format Riset Umum' }
+                ].map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setTemplateId(t.id as any)}
+                    className={`flex flex-col items-center justify-center p-2 rounded-xl border text-center transition cursor-pointer ${
+                      templateId === t.id
+                        ? 'border-indigo-600 bg-indigo-50/20 text-indigo-700 font-semibold shadow-sm'
+                        : 'border-slate-200 hover:bg-slate-50 text-slate-500'
+                    }`}
+                  >
+                    <span className="text-[11px] font-bold truncate w-full">{t.label}</span>
+                    <span className="text-[8px] text-slate-400 mt-0.5 leading-tight line-clamp-1">{t.desc}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="h-px bg-slate-100 w-full" />

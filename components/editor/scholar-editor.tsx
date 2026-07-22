@@ -2,8 +2,9 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { improveWriting, type ImproveWritingResponse } from '@/lib/api/ai';
-import { fetchAIModels, updateAIModel, type AIModel } from '@/lib/api/ai-models';
+import { usePathname, useRouter, useParams } from 'next/navigation';
+import { improveWriting, type ImproveWritingResponse, synthesizeLiteratureReview, generateAbstract } from '@/lib/api/ai';
+import { fetchAIModels, updateAIModel, createAIModel, deleteAIModel, type AIModel } from '@/lib/api/ai-models';
 import EditorJsEditor, { type EditorJsMethods } from './editorjs-editor';
 import { EditorLayout } from './editor-layout';
 import { searchCitations, type CitationCandidate } from '@/lib/api/citations';
@@ -35,6 +36,30 @@ import {
 const STORAGE_KEY = 'scholarflow.editor.content.v1';
 const CITATION_LIBRARY_KEY = 'scholarflow.editor.citation-library.v1';
 const CITATION_HISTORY_KEY = 'scholarflow.editor.citation-history.v1';
+
+function extractTextFromContent(content: any): string {
+  if (!content || !content.blocks || !Array.isArray(content.blocks)) return '';
+  const texts: string[] = [];
+  for (const block of content.blocks) {
+    if (block.type === 'paragraph' || block.type === 'header') {
+      const txt = block.data?.text;
+      if (txt) {
+        // Strip HTML tags because Editor.js stores styled html
+        const clean = txt.replace(/<[^>]*>/g, '').trim();
+        if (clean) texts.push(clean);
+      }
+    } else if (block.type === 'list') {
+      const items = block.data?.items;
+      if (items && Array.isArray(items)) {
+        for (const item of items) {
+          const cleanItem = item.replace(/<[^>]*>/g, '').trim();
+          if (cleanItem) texts.push(cleanItem);
+        }
+      }
+    }
+  }
+  return texts.join('\n\n');
+}
 
 function countWords(text: string) {
   const trimmed = text.trim();
@@ -146,12 +171,14 @@ function findMostUniqueWord(sentence: string): string {
 }
 
 export function ScholarEditor() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const activePlanId = profile?.subscription_plan || 'free';
   const [hydrated, setHydrated] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [selectedText, setSelectedText] = useState('');
   const [improvedResult, setImprovedResult] = useState<ImproveWritingResponse | null>(null);
   const [selectedAiModel, setSelectedAiModel] = useState('gemini');
+  const [selectedAiTone, setSelectedAiTone] = useState('academic');
 
   // Document system state
   const [documents, setDocuments] = useState<DocumentListItem[]>([]);
@@ -177,6 +204,10 @@ export function ScholarEditor() {
   const [translatedCitedSentence, setTranslatedCitedSentence] = useState<string>('');
   const [isTranslating, setIsTranslating] = useState(false);
   const [aiModels, setAiModels] = useState<AIModel[]>([]);
+  const [isSynthesizing, setIsSynthesizing] = useState(false);
+  const [synthesizedText, setSynthesizedText] = useState<string | null>(null);
+  const [synthesizeError, setSynthesizeError] = useState<string | null>(null);
+  const [synthesizeDisclaimer, setSynthesizeDisclaimer] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAIModels().then(data => {
@@ -185,11 +216,54 @@ export function ScholarEditor() {
       console.error("Failed to load AI models:", err);
     });
   }, []);
+  const pathname = usePathname();
+  const router = useRouter();
+  const params = useParams();
+
+  useEffect(() => {
+    const docId = params?.id as string | undefined;
+    
+    if (docId) {
+      if (currentDocument?.id !== docId) {
+        fetchDocumentById(docId, user?.id || '').then(detail => {
+          if (detail) {
+            setCurrentDocument(detail);
+          }
+        }).catch(err => {
+          console.warn('Failed to sync document from URL path:', err);
+        });
+      }
+    } else {
+      if (currentDocument) {
+        setCurrentDocument(null);
+      }
+    }
+  }, [user?.id, params?.id, currentDocument?.id]);
 
   const handleUpdateAIModel = useCallback(async (id: string, updates: Partial<AIModel>) => {
     try {
       const updated = await updateAIModel(id, updates);
       setAiModels((prev) => prev.map(m => m.id === id ? updated : m));
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }, []);
+
+  const handleCreateAIModel = useCallback(async (model: Omit<AIModel, 'updated_at'>) => {
+    try {
+      const created = await createAIModel(model);
+      setAiModels((prev) => [...prev, created]);
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }, []);
+
+  const handleDeleteAIModel = useCallback(async (id: string) => {
+    try {
+      await deleteAIModel(id);
+      setAiModels((prev) => prev.filter(m => m.id !== id));
     } catch (err) {
       console.error(err);
       throw err;
@@ -205,7 +279,7 @@ export function ScholarEditor() {
   });
   const [activeReferenceIds, setActiveReferenceIds] = useState<string[]>([]);
 
-  const triggerDebouncedSave = useCallback((docId: string, titleToSave: string, contentToSave: any) => {
+  const triggerDebouncedSave = useCallback((docId: string, titleToSave: string, contentToSave: any, settingsToSave?: any) => {
     if (!user?.id) return;
     setSaveStatus('Menyimpan...');
 
@@ -215,10 +289,14 @@ export function ScholarEditor() {
 
     debounceTimeoutRef.current = setTimeout(async () => {
       try {
-        const res = await updateDocument(docId, user.id, {
+        const updates: any = {
           title: titleToSave,
           content: contentToSave
-        });
+        };
+        if (settingsToSave) {
+          updates.settings = settingsToSave;
+        }
+        const res = await updateDocument(docId, user.id, updates);
         if (res.success) {
           setSaveStatus('Tersimpan ke Cloud');
           
@@ -301,48 +379,99 @@ export function ScholarEditor() {
   }, [currentDocument]);
 
   const handleSelectDocument = useCallback(async (id: string) => {
-    if (!user?.id) return;
-    try {
-      const detail = await fetchDocumentById(id, user.id);
-      if (detail) {
-        setCurrentDocument(detail);
-      }
-    } catch (err) {
-      console.error('Error selecting document:', err);
+    if (!id) {
+      router.push('/dashboard');
+      return;
     }
-  }, [user]);
+    router.push(`/editor/${id}`);
+  }, [router]);
 
   const handleCreateDocument = useCallback(async (
     title: string = 'Untitled Document', 
     settings: Partial<DocumentSettings> = {}
   ) => {
     if (!user?.id) return;
+    let initialBlocks: any[] = [
+      {
+        id: "header-" + Math.random().toString(36).substring(2, 9),
+        type: "header",
+        data: {
+          text: title,
+          level: 2
+        }
+      },
+      {
+        id: "para-" + Math.random().toString(36).substring(2, 9),
+        type: "paragraph",
+        data: {
+          text: "Mulai menulis draf jurnal akademik Anda di sini..."
+        }
+      }
+    ];
+
+    if (settings.templateId === 'skripsi') {
+      initialBlocks = [
+        { id: "h-1", type: "header", data: { text: "Bab 1: Pendahuluan", level: 2 } },
+        { id: "p-1", type: "paragraph", data: { text: "[Tulis latar belakang penelitian, rumusan masalah, tujuan, dan manfaat riset Anda di sini...]" } },
+        { id: "h-2", type: "header", data: { text: "Bab 2: Tinjauan Pustaka", level: 2 } },
+        { id: "p-2", type: "paragraph", data: { text: "[Tulis studi literatur, teori dasar, dan kerangka penelitian rujukan Anda di sini...]" } },
+        { id: "h-3", type: "header", data: { text: "Bab 3: Metode Penelitian", level: 2 } },
+        { id: "p-3", type: "paragraph", data: { text: "[Tulis rancangan sistem, pengumpulan data, dan prosedur analisis di sini...]" } },
+        { id: "h-4", type: "header", data: { text: "Bab 4: Hasil dan Pembahasan", level: 2 } },
+        { id: "p-4", type: "paragraph", data: { text: "[Tampilkan data eksperimen, grafik, serta pembahasan mendalam atas temuan riset di sini...]" } },
+        { id: "h-5", type: "header", data: { text: "Bab 5: Penutup", level: 2 } },
+        { id: "p-5", type: "paragraph", data: { text: "[Tulis kesimpulan akhir dan saran pengembangan riset ke depan di sini...]" } }
+      ];
+    } else if (settings.templateId === 'ieee') {
+      initialBlocks = [
+        { id: "h-ieee-0", type: "header", data: { text: "Abstract", level: 2 } },
+        { id: "p-ieee-0", type: "paragraph", data: { text: "[Write a concise abstract summarizing your research objective, methodology, key findings, and conclusions here...]" } },
+        { id: "h-ieee-1", type: "header", data: { text: "I. Introduction", level: 2 } },
+        { id: "p-ieee-1", type: "paragraph", data: { text: "[Introduce the research domain, problem statement, existing works, and your contributions here...]" } },
+        { id: "h-ieee-2", type: "header", data: { text: "II. Proposed Methodology", level: 2 } },
+        { id: "p-ieee-2", type: "paragraph", data: { text: "[Detail your proposed system design, architecture, formulas, or algorithms here...]" } },
+        { id: "h-ieee-3", type: "header", data: { text: "III. Experimental Evaluation & Results", level: 2 } },
+        { id: "p-ieee-3", type: "paragraph", data: { text: "[Present dataset specifications, training configurations, performance plots, and discussions here...]" } },
+        { id: "h-ieee-4", type: "header", data: { text: "IV. Conclusion", level: 2 } },
+        { id: "p-ieee-4", type: "paragraph", data: { text: "[Summarize findings, highlight paper limitations, and future outlooks here...]" } }
+      ];
+    } else if (settings.templateId === 'apa') {
+      initialBlocks = [
+        { id: "h-apa-0", type: "header", data: { text: "Abstract", level: 2 } },
+        { id: "p-apa-0", type: "paragraph", data: { text: "[Abstract draft matching APA 7th edition formatting guidelines...]" } },
+        { id: "h-apa-1", type: "header", data: { text: "Introduction", level: 2 } },
+        { id: "p-apa-1", type: "paragraph", data: { text: "[Detail background information, theoretical foundations, and specific hypotheses...]" } },
+        { id: "h-apa-2", type: "header", data: { text: "Method", level: 2 } },
+        { id: "p-apa-2", type: "paragraph", data: { text: "[Specify participants, apparatus/materials, and exact experimental procedures...]" } },
+        { id: "h-apa-3", type: "header", data: { text: "Results", level: 2 } },
+        { id: "p-apa-3", type: "paragraph", data: { text: "[Present statistical analyses, ANOVA tables, or data indices here...]" } },
+        { id: "h-apa-4", type: "header", data: { text: "Discussion", level: 2 } },
+        { id: "p-apa-4", type: "paragraph", data: { text: "[Interpret findings in relation to initial hypotheses, acknowledge limitations...]" } }
+      ];
+    } else if (settings.templateId === 'report') {
+      initialBlocks = [
+        { id: "h-rep-1", type: "header", data: { text: "Ringkasan Eksekutif", level: 2 } },
+        { id: "p-rep-1", type: "paragraph", data: { text: "[Rangkuman ringkas poin-poin utama laporan riset...]" } },
+        { id: "h-rep-2", type: "header", data: { text: "Latar Belakang & Masalah", level: 2 } },
+        { id: "p-rep-2", type: "paragraph", data: { text: "[Deskripsi latar belakang kasus, isu yang diangkat, dan urgensi laporan riset...]" } },
+        { id: "h-rep-3", type: "header", data: { text: "Analisis Data & Temuan", level: 2 } },
+        { id: "p-rep-3", type: "paragraph", data: { text: "[Pembahasan mendalam atas fakta-fakta lapangan dan hasil analisis kuantitatif/kualitatif...]" } },
+        { id: "h-rep-4", type: "header", data: { text: "Rekomendasi & Solusi", level: 2 } },
+        { id: "p-rep-4", type: "paragraph", data: { text: "[Rekomendasi strategis dan solusi pemecahan masalah yang diusulkan...]" } }
+      ];
+    }
+
     try {
       const newDoc = await createDocument(user.id, title, {
         time: Date.now(),
-        blocks: [
-          {
-            id: "welcome-block-id",
-            type: "header",
-            data: {
-              text: title,
-              level: 2
-            }
-          },
-          {
-            id: "intro-block-id",
-            type: "paragraph",
-            data: {
-              text: "Mulai menulis draf jurnal akademik Anda di sini..."
-            }
-          }
-        ],
+        blocks: initialBlocks,
         version: "2.29.0"
       }, settings);
       if (newDoc) {
         setDocuments((prev) => [newDoc, ...prev]);
         setCurrentDocument(newDoc);
         setIsSetupModalOpen(false);
+        router.push(`/editor/${newDoc.id}`);
       }
     } catch (err) {
       console.error('Error creating document:', err);
@@ -393,6 +522,49 @@ export function ScholarEditor() {
 
     triggerDebouncedSave(currentDocument.id, currentDocument.title, content);
   }, [currentDocument, user, triggerDebouncedSave]);
+
+  const folders = useMemo(() => {
+    return currentDocument?.settings?.folders || ['Pendahuluan', 'Tinjauan Pustaka', 'Metodologi', 'Hasil & Diskusi'];
+  }, [currentDocument]);
+
+  const folderAssignments = useMemo(() => {
+    return currentDocument?.settings?.folder_assignments || {};
+  }, [currentDocument]);
+
+  const handleCreateFolder = useCallback((folderName: string) => {
+    if (!currentDocument) return;
+    const currentFolders = currentDocument.settings?.folders || ['Pendahuluan', 'Tinjauan Pustaka', 'Metodologi', 'Hasil & Diskusi'];
+    if (currentFolders.includes(folderName)) return;
+    const updatedFolders = [...currentFolders, folderName];
+    
+    const updatedSettings = { ...currentDocument.settings, folders: updatedFolders };
+    const updatedDoc = { ...currentDocument, settings: updatedSettings };
+    setCurrentDocument(updatedDoc);
+    
+    triggerDebouncedSave(currentDocument.id, currentDocument.title, currentDocument.content, updatedSettings);
+  }, [currentDocument, triggerDebouncedSave]);
+
+  const handleAssignFolder = useCallback((referenceId: string, folderName: string) => {
+    if (!currentDocument) return;
+    const currentAssignments = currentDocument.settings?.folder_assignments || {};
+    const updatedAssignments = { ...currentAssignments, [referenceId]: folderName };
+    
+    const updatedSettings = { ...currentDocument.settings, folder_assignments: updatedAssignments };
+    const updatedDoc = { ...currentDocument, settings: updatedSettings };
+    setCurrentDocument(updatedDoc);
+    
+    triggerDebouncedSave(currentDocument.id, currentDocument.title, currentDocument.content, updatedSettings);
+  }, [currentDocument, triggerDebouncedSave]);
+
+  const handleChangeCitationStyle = useCallback((style: string) => {
+    if (!currentDocument) return;
+    
+    const updatedSettings = { ...currentDocument.settings, citationStyle: style };
+    const updatedDoc = { ...currentDocument, settings: updatedSettings };
+    setCurrentDocument(updatedDoc);
+    
+    triggerDebouncedSave(currentDocument.id, currentDocument.title, currentDocument.content, updatedSettings);
+  }, [currentDocument, triggerDebouncedSave]);
 
   useEffect(() => {
     setHydrated(true);
@@ -599,13 +771,15 @@ export function ScholarEditor() {
     if (!hydrated) return;
     const entries = bibliographyEntries.map((e) => ({
       label: e.label,
-      formatted: e.formatted,
+      formatted: activePlanId === 'free'
+        ? '░░░░░░░░░░░░░░░░░░░░░░ 🔒 Daftar Pustaka Terkunci (Khusus Akun Pro Writer) ░░░░░░░░░░░░░░░░░░░░░░'
+        : e.formatted,
     }));
     const timer = setTimeout(() => {
       editorJsRef.current?.upsertBibliography(entries);
     }, 100);
     return () => clearTimeout(timer);
-  }, [bibliographyEntries, hydrated]);
+  }, [bibliographyEntries, hydrated, activePlanId]);
 
   const insertCitation = useCallback(() => {
     editorJsRef.current?.insertCitation();
@@ -632,20 +806,87 @@ export function ScholarEditor() {
 
 
   const exportBibliographyText = useCallback(() => {
+    if (activePlanId === 'free') {
+      alert("🔒 Fitur Ekspor Daftar Pustaka (.bib, .ris, .txt, .json) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing.");
+      return;
+    }
     downloadFile(
       'scholarflow-bibliography.txt',
       serializeBibliographyText(bibliographyEntries),
       'text/plain;charset=utf-8',
     );
-  }, [bibliographyEntries]);
+  }, [bibliographyEntries, activePlanId]);
 
   const exportBibliographyJson = useCallback(() => {
+    if (activePlanId === 'free') {
+      alert("🔒 Fitur Ekspor Daftar Pustaka (.bib, .ris, .txt, .json) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing.");
+      return;
+    }
     downloadFile(
       'scholarflow-bibliography.json',
       JSON.stringify(bibliographyEntries, null, 2),
       'application/json;charset=utf-8',
     );
-  }, [bibliographyEntries]);
+  }, [bibliographyEntries, activePlanId]);
+
+  const exportBibliographyBibtex = useCallback(() => {
+    if (activePlanId === 'free') {
+      alert("🔒 Fitur Ekspor Daftar Pustaka (.bib, .ris, .txt, .json) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing.");
+      return;
+    }
+    const uniqueActiveIds = Array.from(new Set(activeReferenceIds));
+    let bibtexContent = '';
+    uniqueActiveIds.forEach((id) => {
+      const candidate = citationLibrary[id];
+      if (!candidate) return;
+      const key = candidate.citation_label.replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '');
+      const authors = candidate.authors.join(' and ');
+      
+      bibtexContent += `@article{${key},\n`;
+      bibtexContent += `  author = {${authors}},\n`;
+      bibtexContent += `  title = {${candidate.title}},\n`;
+      bibtexContent += `  journal = {${candidate.source}},\n`;
+      if (candidate.year) bibtexContent += `  year = {${candidate.year}},\n`;
+      if (candidate.doi) bibtexContent += `  doi = {${candidate.doi}},\n`;
+      if (candidate.url) bibtexContent += `  url = {${candidate.url}},\n`;
+      bibtexContent += `}\n\n`;
+    });
+    
+    downloadFile(
+      'scholarflow-bibliography.bib',
+      bibtexContent || '% No bibliography entries available.',
+      'text/plain;charset=utf-8',
+    );
+  }, [citationLibrary, activeReferenceIds, activePlanId]);
+
+  const exportBibliographyRis = useCallback(() => {
+    if (activePlanId === 'free') {
+      alert("🔒 Fitur Ekspor Daftar Pustaka (.bib, .ris, .txt, .json) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing.");
+      return;
+    }
+    const uniqueActiveIds = Array.from(new Set(activeReferenceIds));
+    let risContent = '';
+    uniqueActiveIds.forEach((id) => {
+      const candidate = citationLibrary[id];
+      if (!candidate) return;
+      risContent += `TY  - JOUR\n`;
+      candidate.authors.forEach((author) => {
+        risContent += `AU  - ${author}\n`;
+      });
+      risContent += `TI  - ${candidate.title}\n`;
+      risContent += `JO  - ${candidate.source}\n`;
+      if (candidate.year) risContent += `PY  - ${candidate.year}\n`;
+      if (candidate.url) risContent += `UR  - ${candidate.url}\n`;
+      if (candidate.doi) risContent += `DO  - ${candidate.doi}\n`;
+      risContent += `ER  - \n\n`;
+    });
+    
+    downloadFile(
+      'scholarflow-bibliography.ris',
+      risContent || '% No bibliography entries available.',
+      'text/plain;charset=utf-8',
+    );
+  }, [citationLibrary, activeReferenceIds, activePlanId]);
 
   const exportCitationText = useCallback(() => {
     downloadFile(
@@ -663,6 +904,47 @@ export function ScholarEditor() {
     );
   }, [citationResults]);
 
+  const handleSynthesizeReview = useCallback(async () => {
+    const uniqueActiveIds = Array.from(new Set(activeReferenceIds));
+    if (uniqueActiveIds.length === 0) return;
+    
+    setIsSynthesizing(true);
+    setSynthesizeError(null);
+    setSynthesizedText(null);
+    setSynthesizeDisclaimer(null);
+    
+    try {
+      const referencesData = uniqueActiveIds
+        .map(id => {
+          const candidate = citationLibrary[id];
+          if (!candidate) return null;
+          return {
+            title: candidate.title,
+            authors: candidate.authors,
+            year: candidate.year,
+            source: candidate.source,
+            label: candidate.citation_label
+          };
+        })
+        .filter(Boolean);
+        
+      const response = await synthesizeLiteratureReview(referencesData as any[], selectedAiModel);
+      setSynthesizedText(response.synthesized_text);
+      if (response.disclaimer) {
+        setSynthesizeDisclaimer(response.disclaimer);
+      }
+    } catch (error: any) {
+      setSynthesizeError(error.message || 'Gagal mensintesis tinjauan pustaka.');
+    } finally {
+      setIsSynthesizing(false);
+    }
+  }, [citationLibrary, activeReferenceIds, selectedAiModel]);
+
+  const handleInsertSynthesizedText = useCallback((text: string) => {
+    editorJsRef.current?.insertText(text);
+    setSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+  }, []);
+
   const statusLabel = saveStatus;
 
   const runImproveWriting = useCallback(async () => {
@@ -672,7 +954,24 @@ export function ScholarEditor() {
     setAiError(null);
 
     try {
-      const response = await improveWriting(selectedText, 'academic', selectedAiModel);
+      const response = await improveWriting(selectedText, selectedAiTone, selectedAiModel);
+      setImprovedResult(response);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
+      setAiError(message);
+      setImprovedResult(null);
+    } finally {
+      setIsImproving(false);
+    }
+  }, [selectedText, selectedAiModel, selectedAiTone]);
+  const runParaphrase = useCallback(async () => {
+    if (!selectedText.trim()) return;
+
+    setIsImproving(true);
+    setAiError(null);
+
+    try {
+      const response = await improveWriting(selectedText, 'paraphrase', selectedAiModel);
       setImprovedResult(response);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
@@ -682,13 +981,15 @@ export function ScholarEditor() {
       setIsImproving(false);
     }
   }, [selectedText, selectedAiModel]);
-  const handleParafrasePlagiat = useCallback(async (sentence: string) => {
-    setSelectedText(sentence);
+
+  const runSummarize = useCallback(async () => {
+    if (!selectedText.trim()) return;
+
     setIsImproving(true);
     setAiError(null);
 
     try {
-      const response = await improveWriting(sentence, 'academic', selectedAiModel);
+      const response = await improveWriting(selectedText, 'summarize', selectedAiModel);
       setImprovedResult(response);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
@@ -697,7 +998,49 @@ export function ScholarEditor() {
     } finally {
       setIsImproving(false);
     }
-  }, [selectedAiModel]);
+  }, [selectedText, selectedAiModel]);
+
+  const runGenerateAbstract = useCallback(async () => {
+    setIsImproving(true);
+    setAiError(null);
+
+    try {
+      const fullText = extractTextFromContent(currentDocument?.content);
+      if (!fullText.trim()) {
+        throw new Error('Dokumen kosong. Silakan tulis isi dokumen sebelum membuat abstrak.');
+      }
+      const response = await generateAbstract(fullText, selectedAiModel);
+      setImprovedResult({
+        original_text: 'Document Context',
+        improved_text: response.abstract_text,
+        tone: 'academic',
+        disclaimer: response.disclaimer || 'Abstract generated based on document context.'
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
+      setAiError(message);
+      setImprovedResult(null);
+    } finally {
+      setIsImproving(false);
+    }
+  }, [currentDocument, selectedAiModel]);
+
+  const handleParafrasePlagiat = useCallback(async (sentence: string) => {
+    setSelectedText(sentence);
+    setIsImproving(true);
+    setAiError(null);
+
+    try {
+      const response = await improveWriting(sentence, selectedAiTone, selectedAiModel);
+      setImprovedResult(response);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
+      setAiError(message);
+      setImprovedResult(null);
+    } finally {
+      setIsImproving(false);
+    }
+  }, [selectedAiModel, selectedAiTone]);
 
   const applyImprovedText = useCallback(() => {
     if (!improvedResult) return;
@@ -808,7 +1151,20 @@ export function ScholarEditor() {
     },
     [user],
   );
-
+  const isUrlDocLoading = params?.id && !currentDocument;
+  if (isUrlDocLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <svg className="h-8 w-8 animate-spin text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" strokeOpacity="0.2" />
+            <path d="M12 2a10 10 0 0 1 10 10" />
+          </svg>
+          <span className="text-sm text-slate-400 font-medium">Loading Document...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -828,6 +1184,9 @@ export function ScholarEditor() {
         citationNote={citationNote}
         onApplyImprovedText={applyImprovedText}
         onImproveWriting={runImproveWriting}
+        onParaphrase={runParaphrase}
+        onSummarize={runSummarize}
+        onGenerateAbstract={runGenerateAbstract}
         onFindCitation={runCitationSearch}
         onRepeatCitationSearch={repeatCitationSearch}
         onInsertCitation={insertCitation}
@@ -835,6 +1194,8 @@ export function ScholarEditor() {
         onInsertImageSample={insertSampleImage}
         onExportBibliographyText={exportBibliographyText}
         onExportBibliographyJson={exportBibliographyJson}
+        onExportBibliographyBibtex={exportBibliographyBibtex}
+        onExportBibliographyRis={exportBibliographyRis}
         onInsertCitationCandidate={insertCitationCandidate}
         statusLabel={statusLabel}
         onSelectionChange={setSelectedText}
@@ -868,9 +1229,25 @@ export function ScholarEditor() {
         }}
         selectedAiModel={selectedAiModel}
         setSelectedAiModel={setSelectedAiModel}
+        selectedAiTone={selectedAiTone}
+        setSelectedAiTone={setSelectedAiTone}
         aiModels={aiModels}
         onUpdateAIModel={handleUpdateAIModel}
+        onCreateAIModel={handleCreateAIModel}
+        onDeleteAIModel={handleDeleteAIModel}
         onParafrasePlagiat={handleParafrasePlagiat}
+        isSynthesizing={isSynthesizing}
+        synthesizedText={synthesizedText}
+        synthesizeError={synthesizeError}
+        synthesizeDisclaimer={synthesizeDisclaimer}
+        onSynthesizeReview={handleSynthesizeReview}
+        onInsertSynthesizedText={handleInsertSynthesizedText}
+        citationStyle={currentDocument?.settings?.citationStyle || 'apa'}
+        onChangeCitationStyle={handleChangeCitationStyle}
+        folders={folders}
+        folderAssignments={folderAssignments}
+        onCreateFolder={handleCreateFolder}
+        onAssignFolder={handleAssignFolder}
       />
 
       {/* Citation Details Modal */}
@@ -1034,6 +1411,8 @@ export function ScholarEditor() {
         isOpen={isSetupModalOpen}
         onClose={() => setIsSetupModalOpen(false)}
         onSubmit={handleCreateDocument}
+        documents={documents}
+        activePlanId={activePlanId}
       />
     </>
   );

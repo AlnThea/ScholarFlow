@@ -53,3 +53,43 @@ export async function updatePricingPlan(
 
   return { success: true };
 }
+
+/**
+  * Menambah paket harga baru (Hanya admin)
+  */
+export async function createPricingPlan(
+  plan: Omit<PricingPlan, 'updated_at'>
+): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('pricing_plans')
+    .insert({
+      ...plan,
+      updated_at: new Date().toISOString()
+    });
+
+  if (error) {
+    console.error('Error creating pricing plan:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+/**
+  * Menghapus paket harga (Hanya admin)
+  */
+export async function deletePricingPlan(
+  planId: string
+): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('pricing_plans')
+    .delete()
+    .eq('id', planId);
+
+  if (error) {
+    console.error(`Error deleting pricing plan ${planId}:`, error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}

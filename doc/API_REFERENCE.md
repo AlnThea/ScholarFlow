@@ -32,7 +32,7 @@ A more robust and customized writing improvement endpoint. It wraps inputs insid
   ```json
   {
     "text": "Original text selection to improve.",
-    "tone": "academic"
+    "tone": "academic" | "paraphrase" | "summarize"
   }
   ```
 - **Response (200 OK - Successful Gemini Response)**:
@@ -52,6 +52,33 @@ A more robust and customized writing improvement endpoint. It wraps inputs insid
     "improved_text": "Original Text selection to improve.",
     "tone": "academic",
     "disclaimer": "Gemini API key is not configured. Set GEMINI_API_KEY in .env to enable AI rewriting."
+  }
+  ```
+
+---
+
+### `POST /api/v1/ai/abstract`
+Generates a structured, concise 150-250 word academic abstract based on the full text of the active document. Implements a fallback mode if the Gemini API key is missing.
+
+- **Request Body**:
+  ```json
+  {
+    "text": "The full compiled text content of the document.",
+    "model": "gemini-1.5-flash"
+  }
+  ```
+- **Response (200 OK - Successful Gemini Response)**:
+  ```json
+  {
+    "abstract_text": "Background: ... Methods: ... Results: ... Conclusion: ...",
+    "disclaimer": null
+  }
+  ```
+- **Response (200 OK - Fallback Mock Mode)**:
+  ```json
+  {
+    "abstract_text": "Background: [Abstract generation is disabled in mock mode.] ...",
+    "disclaimer": "Gemini API key is not configured. Set GEMINI_API_KEY in .env to enable AI abstract generation."
   }
   ```
 
