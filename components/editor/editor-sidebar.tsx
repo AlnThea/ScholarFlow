@@ -198,7 +198,6 @@ export function EditorSidebar({
   isApplied
 }: SidebarProps) {
   const [workspaceTab, setWorkspaceTab] = useState<'library' | 'writing' | 'document'>('library');
-  const [tab, setTab] = useState<'sources' | 'collections'>('sources');
   const [query, setQuery] = useState('');
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   
@@ -278,21 +277,6 @@ export function EditorSidebar({
     }
   };
 
-  const filteredSources = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return citationResults;
-    return citationResults.filter((candidate) => {
-      const haystack = [
-        candidate.title,
-        candidate.source,
-        candidate.authors.join(' '),
-        candidate.year?.toString() ?? '',
-      ]
-        .join(' ')
-        .toLowerCase();
-      return haystack.includes(q);
-    });
-  }, [citationResults, query]);
 
   const filteredCollections = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -315,13 +299,11 @@ export function EditorSidebar({
   useEffect(() => {
     if (citationResults.length === 0) return;
     setWorkspaceTab('library');
-    setTab('sources');
   }, [citationResults.length]);
 
   const handleFindCitation = () => {
     onFindCitation();
     setWorkspaceTab('library');
-    setTab('sources');
   };
 
   return (
@@ -398,53 +380,12 @@ export function EditorSidebar({
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search sources..."
+                  placeholder="Search collections..."
                   className="h-11 w-full rounded-md border border-line bg-panel pl-9 pr-3 text-sm outline-none transition placeholder:text-muted focus:border-accent/40"
                 />
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="inline-flex rounded-md border border-line bg-panel p-1 text-xs font-medium text-muted">
-                  <button
-                    type="button"
-                    onClick={() => setTab('sources')}
-                    className={
-                      tab === 'sources'
-                        ? 'rounded px-3 py-1.5 bg-white text-text shadow-sm'
-                        : 'rounded px-3 py-1.5'
-                    }
-                  >
-                    Sources
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTab('collections')}
-                    className={
-                      tab === 'collections'
-                        ? 'rounded px-3 py-1.5 bg-white text-text shadow-sm'
-                        : 'rounded px-3 py-1.5'
-                    }
-                  >
-                    Collections
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  className="inline-flex h-9 items-center gap-2 rounded-md border border-line bg-panel px-3 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
-                >
-                  <IconFilter className="h-3.5 w-3.5" />
-                  Filters
-                </button>
-              </div>
-
-              {tab === 'sources' ? (
-                <div className="space-y-3">
-                  <div className="rounded-lg border border-dashed border-line bg-panel p-4 text-xs leading-5 text-muted text-center">
-                    Citations are managed inline. Select text in the document and click "@ Find Citation" to search and insert citations.
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
+              <div className="space-y-3">
                   {/* AI Literature Review Synthesizer Card */}
                   {bibliographyEntries.length > 0 && (
                     <div className="rounded-lg border border-line bg-gradient-to-br from-indigo-50/20 to-violet-50/20 p-3 shadow-sm flex flex-col gap-2.5 border-l-4 border-l-indigo-500">
@@ -660,8 +601,7 @@ export function EditorSidebar({
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
           ) : workspaceTab === 'writing' ? (
             <div className="space-y-3">
               <section className="rounded-lg border border-line bg-white p-3 shadow-sm">

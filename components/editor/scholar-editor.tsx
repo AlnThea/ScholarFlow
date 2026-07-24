@@ -935,7 +935,7 @@ export function ScholarEditor() {
         };
       })
       .filter(Boolean) as Array<{ referenceId: string; label: string; formatted: string }>;
-  }, [citationLibrary, activeReferenceIds, currentDocument]);
+  }, [citationLibrary, activeReferenceIds, currentDocument?.settings?.citationStyle, currentDocument?.settings?.citationLocale]);
 
   // Sync bibliography entries to EditorJS in real-time
   useEffect(() => {

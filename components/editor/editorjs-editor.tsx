@@ -622,49 +622,68 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
     },
     upsertBibliography: (entries: Array<{ label: string; formatted: string }>) => {
       if (!editorRef.current || !editorRef.current.blocks) return;
-      const total = editorRef.current.blocks.getBlocksCount();
-      const storedIdx = bibliographyBlockIndexRef.current;
+      
+      try {
+        isRenderingRef.current = true;
 
-      // Remove existing bibliography blocks (header + content = 2 blocks)
-      if (storedIdx >= 0 && storedIdx + 1 < total) {
-        editorRef.current.blocks.delete(storedIdx + 1); // delete content block
-        editorRef.current.blocks.delete(storedIdx);     // delete header block
-        bibliographyBlockIndexRef.current = -1;
-      }
+        // Helper to find the bibliography header block index dynamically in the DOM
+        const findBibliographyBlockIndex = (): number => {
+          const holder = document.getElementById(holderId);
+          if (!holder) return -1;
+          const ceBlocks = Array.from(holder.querySelectorAll('.ce-block'));
+          return ceBlocks.findIndex(blockEl => {
+            const header = blockEl.querySelector('h2, .ce-header, [contenteditable="true"]');
+            return header && header.textContent?.trim() === 'Daftar Pustaka / References';
+          });
+        };
 
-      if (entries.length === 0) {
+        // Remove all existing bibliography blocks (header + content) to clean up duplicates
+        let foundIdx = findBibliographyBlockIndex();
+        while (foundIdx >= 0) {
+          const total = editorRef.current.blocks.getBlocksCount();
+          if (foundIdx + 1 < total) {
+            editorRef.current.blocks.delete(foundIdx + 1); // delete content block
+          }
+          editorRef.current.blocks.delete(foundIdx);       // delete header block
+          foundIdx = findBibliographyBlockIndex();
+        }
+
+        if (entries.length === 0) {
+          calculateLiveStats();
+          return;
+        }
+
+        // Fresh block count after deletion
+        const insertAt = editorRef.current.blocks.getBlocksCount();
+
+        // Insert References header
+        editorRef.current.blocks.insert(
+          'header',
+          { text: 'Daftar Pustaka / References', level: 2 },
+          undefined,
+          insertAt,
+          true,
+        );
+
+        // Build labeled list as HTML paragraph
+        const biblioHtml = entries
+          .map(e => `[${e.label}] ${e.formatted}`)
+          .join('<br><br>');
+
+        editorRef.current.blocks.insert(
+          'paragraph',
+          { text: biblioHtml },
+          undefined,
+          insertAt + 1,
+          true,
+        );
+
         calculateLiveStats();
-        return;
+      } finally {
+        setTimeout(() => {
+          isRenderingRef.current = false;
+        }, 150);
       }
-
-      // Fresh block count after deletion
-      const insertAt = editorRef.current.blocks.getBlocksCount();
-
-      // Insert References header
-      editorRef.current.blocks.insert(
-        'header',
-        { text: 'Daftar Pustaka / References', level: 2 },
-        undefined,
-        insertAt,
-        true,
-      );
-
-      // Build labeled list as HTML paragraph
-      const biblioHtml = entries
-        .map(e => `[${e.label}] ${e.formatted}`)
-        .join('<br><br>');
-
-      editorRef.current.blocks.insert(
-        'paragraph',
-        { text: biblioHtml },
-        undefined,
-        insertAt + 1,
-        true,
-      );
-
-      // Remember the header block index for next update
-      bibliographyBlockIndexRef.current = insertAt;
-      calculateLiveStats();
     },
     renderContent: (data: any) => {
       if (editorRef.current) {

@@ -111,3 +111,10 @@
   - Disables the button once clicked
   - Automatically reactivates the button if the user performs an undo (Ctrl+Z) in the canvas reverting it back to the original content state
 
+## v0.1.6 - In Progress
+- Fixed infinite auto-save and bibliography rendering/flickering loop:
+  - Wrapped `upsertBibliography` modifications in `components/editor/editorjs-editor.tsx` inside an `isRenderingRef` lock to prevent programmatic bibliography updates from triggering `onChange` / `onContentChange`.
+  - Refined `useMemo` dependency array for `bibliographyEntries` in `components/editor/scholar-editor.tsx` to target specific configuration properties (`citationStyle` and `citationLocale`) rather than the entire `currentDocument` object, preventing unnecessary array recreation and formatting overhead on every keystroke.
+- Refactored the Research Assistant right sidebar (`components/editor/editor-sidebar.tsx`) to remove the unused "Sources" sub-tab and "Filters" placeholder button, directly displaying document "Collections" in the Library tab.
+- Updated `AI_RULES_MINI.md` to add a new "safe code deletion" requirement, permitting the removal of unused/deprecated code/features upon user request, provided that all dependent code is fully repaired to ensure normal system behavior.
+

@@ -82,6 +82,7 @@ Requirements:
 - proper error handling
 - responsive UI
 - maintainable code
+- safe code deletion: deleting unused/deprecated code or features is allowed when requested by the user, but all connected/dependent code must be cleaned up and repaired to ensure normal system behavior.
 
 Avoid:
 - spaghetti code
