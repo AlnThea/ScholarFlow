@@ -77,33 +77,63 @@ function refineQuery(query: string): string {
   const trimmed = query.trim();
   if (!trimmed) return '';
 
-  const words = trimmed.split(/\s+/);
+  // Pecah berdasarkan spasi dan tanda baca agar kata yang dempet koma/titik (misal: "mengumpulkan,mengolah") terpisah dengan benar
+  const words = trimmed.split(/[\s,.;:!?()]+/).filter(Boolean);
   if (words.length <= 5) return trimmed;
 
-  // Stop words Bahasa Indonesia & English
+  // Stop words Bahasa Indonesia & English yang komprehensif
   const stopWords = new Set([
     // Indonesian stop words
     'yang', 'di', 'dari', 'untuk', 'dengan', 'dan', 'atau', 'pada', 'ke', 'telah', 'mengalami', 
     'signifikan', 'terhadap', 'dalam', 'adalah', 'bahwa', 'ini', 'itu', 'oleh', 'sebagai', 
     'serta', 'secara', 'perkembangan', 'pergeseran', 'paradigma',
     'bisa', 'ada', 'kok', 'nah', 'malah', 'keluar', 'sama', 'seharus', 'nya', 'saya', 'nyari',
-    'didapat', 'jelas', 'banyak', 'seperti', 'ambil', 'pernah', 'pake', 'tapi',
+    'didapat', 'jelas', 'banyak', 'seperti', 'ambil', 'pernah', 'pake', 'tapi', 'sangat', 'bagi',
+    'ia', 'ya', 'hal',
+    // Indonesian filler/definition words
+    'merupakan', 'ialah', 'yaitu', 'yakni', 'adapun', 'bahwasanya',
+    'sekumpulan', 'kumpulan', 'komponen', 'saling', 'proses', 'suatu', 'sebuah', 'satu', 'dua', 
+    'beberapa', 'banyak', 'berbagai', 'tersebut', 'terutama', 'maupun', 'lalu', 'kemudian',
+    'mengumpulkan', 'mengolah', 'menyimpan', 'menyajikan', 'guna', 'mendukung', 'melakukan', 
+    'membuat', 'menggunakan', 'menghasilkan', 'meningkatkan', 'menurunkan', 'membantu', 
+    'dapat', 'oleh', 'tentang', 'buat', 'supaya', 'agar', 'bagi', 'pada', 'tentang', 'mengenai',
+    'secara', 'sehingga', 'jika', 'maka', 'namun', 'tetapi', 'melainkan', 'sementara', 'sedangkan',
+    'sambil', 'seraya', 'tatkala', 'sewaktu', 'ketika', 'sebelum', 'sesudah', 'setelah', 'sejak', 
+    'semenjak', 'hingga', 'sampai', 'demi', 'atas', 'bagaikan', 'umpama', 'laksana', 'ibarat', 
+    'sebab', 'karena', 'daripada', 'tentu', 'tentunya', 'juga', 'saja', 'pun', 'hanya', 'saja',
+    'bahkan', 'malah', 'justru', 'selain', 'melainkan', 'hanya', 'kecuali', 'tentang',
     // English stop words
     'the', 'of', 'and', 'a', 'to', 'in', 'is', 'for', 'on', 'that', 'by', 'this', 'with', 'as', 
-    'an', 'are', 'from', 'at', 'it', 'be', 'or', 'was', 'were', 'which'
+    'an', 'are', 'from', 'at', 'it', 'be', 'or', 'was', 'were', 'which', 'about', 'also', 'has',
+    'have', 'had', 'been', 'will', 'would', 'should', 'can', 'could', 'may', 'might', 'must',
+    'about', 'above', 'after', 'again', 'against', 'all', 'am', 'any', 'are', 'arent', 'as', 'at',
+    'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by', 'cant',
+    'cannot', 'could', 'couldnt', 'did', 'didnt', 'do', 'does', 'doesnt', 'doing', 'dont', 'down',
+    'during', 'each', 'few', 'for', 'from', 'further', 'had', 'hadnt', 'has', 'hasnt', 'have',
+    'havent', 'having', 'he', 'hed', 'hell', 'hes', 'her', 'here', 'heres', 'hers', 'herself',
+    'him', 'himself', 'his', 'how', 'hows', 'i', 'id', 'ill', 'im', 'ive', 'if', 'in', 'into',
+    'is', 'isnt', 'it', 'its', 'itself', 'lets', 'me', 'more', 'most', 'mustnt', 'my', 'myself',
+    'no', 'nor', 'not', 'of', 'off', 'on', 'once', 'only', 'or', 'other', 'ought', 'our', 'ours',
+    'ourselves', 'out', 'over', 'own', 'same', 'shant', 'she', 'shed', 'shell', 'shes', 'should',
+    'shouldnt', 'so', 'some', 'such', 'than', 'that', 'thats', 'the', 'their', 'theirs', 'them',
+    'themselves', 'then', 'there', 'theres', 'these', 'they', 'theyd', 'theyll', 'theyre',
+    'theyve', 'this', 'those', 'through', 'to', 'too', 'under', 'until', 'up', 'very', 'was',
+    'wasnt', 'we', 'wed', 'well', 'were', 'weve', 'werent', 'what', 'whats', 'when', 'whens',
+    'where', 'wheres', 'which', 'while', 'who', 'whos', 'whom', 'why', 'whys', 'with', 'wont',
+    'would', 'wouldnt', 'you', 'youd', 'youll', 'youre', 'youve', 'your', 'yours', 'yourself',
+    'yourselves'
   ]);
 
   const cleanWords = words
     .map(w => w.replace(/[^a-zA-Z0-9-]/g, '').toLowerCase())
-    .filter(w => w.length > 2 && !stopWords.has(w));
+    .filter(w => w.length >= 2 && !stopWords.has(w));
 
   if (cleanWords.length === 0) {
     return words.slice(0, 5).join(' ');
   }
 
-  // Pilih maks 6 kata terpanjang/terpenting (istilah teknis)
-  const sortedKeywords = cleanWords.sort((a, b) => b.length - a.length);
-  const selectedSet = new Set(sortedKeywords.slice(0, 6));
+  // Ambil maks 12 kata bersih pertama untuk menjaga agar kata kunci utama di seluruh kalimat tetap terjaga
+  const selectedSet = new Set(cleanWords.slice(0, 12));
 
   const finalKeywords = words
     .map(w => w.replace(/[^a-zA-Z0-9-]/g, ''))
@@ -347,16 +377,29 @@ async function fetchCrossref(query: string, limit: number): Promise<CitationCand
 
 // ─── Ranking ────────────────────────────────────────────────
 
-function scoreCandidate(query: string, c: CitationCandidate): number {
+function scoreCandidateRaw(query: string, c: CitationCandidate): number {
   const qTokens = new Set(query.toLowerCase().match(/[a-z0-9]+/g) ?? []);
-  const titleTokens = (c.title.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+  // Deduplicate title tokens so repeated words don't inflate the score
+  const titleTokens = Array.from(new Set(c.title.toLowerCase().match(/[a-z0-9]+/g) ?? []));
   const overlap = titleTokens.filter(t => qTokens.has(t)).length;
   let score = overlap * 12;
   if (c.doi) score += 10;
   if (c.authors.length > 0) score += 5;
   if (c.year && c.year >= 2015) score += 3;
   if (c.source === 'OpenAlex') score += 2;
-  return Math.min(score, 100);
+  return score;
+}
+
+function scoreCandidate(query: string, c: CitationCandidate): number {
+  return Math.min(scoreCandidateRaw(query, c), 100);
+}
+
+function getOverlapRatio(query: string, c: CitationCandidate): number {
+  const qTokens = new Set(query.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+  const titleTokens = Array.from(new Set(c.title.toLowerCase().match(/[a-z0-9]+/g) ?? []));
+  if (titleTokens.length === 0) return 0;
+  const overlap = titleTokens.filter(t => qTokens.has(t)).length;
+  return overlap / titleTokens.length;
 }
 
 // ─── POST handler ────────────────────────────────────────────
@@ -394,9 +437,15 @@ export async function POST(request: Request) {
       .eq('query_hash', queryHash)
       .then(() => {});
 
+    const cachedResults = (cached.results as CitationCandidate[]) ?? [];
+    const hasPerfectMatch = cachedResults.some(c => c.ranking_score === 100);
+    const finalResults = hasPerfectMatch
+      ? cachedResults.filter(c => c.ranking_score === 100)
+      : cachedResults;
+
     return NextResponse.json({
       query,
-      results: cached.results,
+      results: finalResults.slice(0, limit),
       sources: cached.sources,
       cached: true,
       note: null,
@@ -407,9 +456,12 @@ export async function POST(request: Request) {
   const refined = refineQuery(query);
   console.log(`[citations] Fetching for query: "${query}" (refined to: "${refined}")`);
   
+  // Gunakan limit pencarian eksternal yang lebih besar agar tidak terpotong ranking bawaan API
+  // sebelum dinilai ulang secara presisi menggunakan fungsi overlap scoreCandidate kita.
+  const fetchLimit = 40;
   const [openAlexResult, crossrefResult] = await Promise.allSettled([
-    fetchOpenAlex(refined, limit),
-    fetchCrossref(refined, limit),
+    fetchOpenAlex(refined, fetchLimit),
+    fetchCrossref(refined, fetchLimit),
   ]);
 
   const openAlex = openAlexResult.status === 'fulfilled' ? openAlexResult.value : [];
@@ -437,12 +489,25 @@ export async function POST(request: Request) {
 
   // ── 4. Ranking & sort ──────────────────────────────────────
   const ranked = merged
-    .map(c => ({ ...c, ranking_score: scoreCandidate(query, c) }))
+    .map(c => {
+      const raw = scoreCandidateRaw(query, c);
+      return { ...c, raw_score: raw, ranking_score: Math.min(raw, 100) };
+    })
     .sort((a, b) =>
-      b.ranking_score - a.ranking_score ||
+      b.raw_score - a.raw_score ||
+      (getOverlapRatio(query, b) - getOverlapRatio(query, a)) ||
       (b.year ?? 0) - (a.year ?? 0)
     )
-    .slice(0, limit);
+    .map(({ raw_score, ...c }) => c as CitationCandidate);
+
+  // Jika ada paper dengan tingkat kecocokan sempurna (ranking_score === 100),
+  // filter dan hanya kembalikan paper yang memiliki skor 100 tersebut.
+  const hasPerfectMatch = ranked.some(c => c.ranking_score === 100);
+  const finalResults = hasPerfectMatch
+    ? ranked.filter(c => c.ranking_score === 100)
+    : ranked;
+
+  const slicedResults = finalResults.slice(0, limit);
 
   const sources = [
     ...(openAlex.length > 0 ? ['OpenAlex'] : []),
@@ -450,14 +515,14 @@ export async function POST(request: Request) {
   ];
 
   // ── 5. Simpan ke cache (fire & forget) ────────────────────
-  if (ranked.length > 0) {
+  if (slicedResults.length > 0) {
     supabaseAdmin
       .from('citation_cache')
       .upsert(
         {
           query_hash: queryHash,
           query_text: query,
-          results: ranked,
+          results: slicedResults,
           sources,
           hit_count: 1,
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
@@ -469,9 +534,9 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     query,
-    results: ranked,
+    results: slicedResults,
     sources,
     cached: false,
-    note: ranked.length === 0 ? 'No citation candidates found.' : null,
+    note: slicedResults.length === 0 ? 'No citation candidates found.' : null,
   });
 }

@@ -953,7 +953,7 @@ export function ScholarEditor() {
   }, [bibliographyEntries, hydrated, activePlanId]);
 
   const insertCitation = useCallback(() => {
-    editorJsRef.current?.insertCitation();
+    editorJsRef.current?.insertCitationSearch();
   }, []);
 
   const insertBibliography = useCallback(() => {
@@ -1376,9 +1376,11 @@ export function ScholarEditor() {
   }, []);
 
   const insertCitationCandidate = useCallback(
-    (candidate: CitationCandidate) => {
-      // 1. Selalu sisipkan label sitasi secara inline dengan referenceId
-      editorJsRef.current?.insertCitation(candidate.citation_label, candidate.reference_id);
+    (candidate: CitationCandidate, skipEditorInsert = false) => {
+      // 1. Selalu sisipkan label sitasi secara inline dengan referenceId jika tidak di-skip
+      if (!skipEditorInsert) {
+        editorJsRef.current?.insertCitation(candidate.citation_label, candidate.reference_id);
+      }
 
       // 2. Perbarui state library
       setCitationLibrary((current) => {

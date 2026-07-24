@@ -121,7 +121,7 @@ type EditorLayoutProps = {
   onExportBibliographyJson: () => void;
   onExportBibliographyBibtex: () => void;
   onExportBibliographyRis: () => void;
-  onInsertCitationCandidate: (candidate: CitationCandidate) => void;
+  onInsertCitationCandidate: (candidate: CitationCandidate, skipEditorInsert?: boolean) => void;
   statusLabel: string;
   onSelectionChange?: (text: string) => void;
   onStatsChange?: (stats: { wordCount: number; characterCount: number; citationCount: number }) => void;
@@ -717,6 +717,14 @@ export function EditorLayout({
     });
   };
 
+  const [bubbleSearchQuery, setBubbleSearchQuery] = useState('');
+
+  useEffect(() => {
+    if (bubbleMode === 'citation') {
+      setBubbleSearchQuery(selectedText);
+    }
+  }, [bubbleMode, selectedText]);
+
   useEffect(() => {
     const saved = localStorage.getItem('sidebar-expanded');
     if (saved !== null) setIsSidebarExpanded(saved === 'true');
@@ -780,9 +788,6 @@ export function EditorLayout({
       const rect = range.getBoundingClientRect();
       const text = selection.toString().trim();
       setBubbleMenuRect(rect);
-      setShowBubbleMenu(true);
-      // Reset to format mode whenever a new selection is made
-      setBubbleMode('format');
       onSelectionChange?.(text);
     };
 
@@ -1831,7 +1836,7 @@ export function EditorLayout({
             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-indigo-50 hover:bg-indigo-100/80 text-xs font-semibold text-indigo-700 transition"
             title="Insert Inline Citation"
             onMouseDown={(e) => e.preventDefault()}
-            onClick={() => editorJsRef.current?.insertCitation()}
+            onClick={onInsertCitation}
           >
             <IconAt className="h-4 w-4" />
             Citation
@@ -2184,7 +2189,7 @@ export function EditorLayout({
                   </button>
                   <IconSearch className="h-3.5 w-3.5 text-indigo-500 flex-shrink-0" />
                   <span className="text-xs font-semibold text-slate-700 truncate flex-1">
-                    &ldquo;{selectedText.slice(0, 40)}{selectedText.length > 40 ? '…' : ''}&rdquo;
+                    {typeof document !== 'undefined' && document.querySelector('span[data-citation-search="true"]') ? 'Mencari Sitasi...' : `"${selectedText.slice(0, 40)}${selectedText.length > 40 ? '…' : ''}"`}
                   </span>
                   <button
                     className="p-0.5 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition flex-shrink-0"
@@ -2281,7 +2286,13 @@ export function EditorLayout({
                             <button
                               type="button"
                               onClick={() => {
-                                onInsertCitationCandidate(candidate);
+                                const hasSearchSpan = !!document.querySelector('span[data-citation-search="true"]');
+                                if (hasSearchSpan) {
+                                  editorJsRef.current?.insertCitationAtSearch(candidate.citation_label, candidate.reference_id);
+                                  onInsertCitationCandidate(candidate, true);
+                                } else {
+                                  onInsertCitationCandidate(candidate);
+                                }
                                 setShowBubbleMenu(false);
                                 setBubbleMode('format');
                               }}
@@ -2357,7 +2368,22 @@ export function EditorLayout({
 
         {/* Editor canvas area + Right sidebar */}
         <div className="flex flex-1 overflow-hidden">
-          <main className="w-full flex-1 p-6 md:p-10 overflow-y-auto">
+          <main 
+            className="w-full flex-1 p-6 md:p-10 overflow-y-auto"
+            onContextMenu={(e) => {
+              const selection = window.getSelection();
+              if (selection && !selection.isCollapsed && selection.toString().trim()) {
+                const holder = document.getElementById('editorjs-holder');
+                if (holder && holder.contains(selection.anchorNode)) {
+                  e.preventDefault();
+                  const range = selection.getRangeAt(0);
+                  setBubbleMenuRect(range.getBoundingClientRect());
+                  setBubbleMode('format');
+                  setShowBubbleMenu(true);
+                }
+              }
+            }}
+          >
             <EditorJsEditor 
               ref={editorJsRef} 
               initialContent={currentDocument?.content}
@@ -2366,6 +2392,17 @@ export function EditorLayout({
               onStatsChange={onStatsChange}
               onCiteClick={onCiteClick}
               onContentChange={onContentChange}
+              onCitationSearchChange={(query, rect) => {
+                setBubbleMenuRect(rect);
+                setBubbleMode('citation');
+                setShowBubbleMenu(true);
+                setBubbleSearchQuery(query);
+                onRepeatCitationSearch(query);
+              }}
+              onCitationSearchCancel={() => {
+                editorJsRef.current?.cancelCitationSearch();
+                setShowBubbleMenu(false);
+              }}
             />
           </main>
 
