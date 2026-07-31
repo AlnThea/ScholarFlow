@@ -155,3 +155,7 @@ body {
 .tippy-box[data-theme~='scholarflow-bubble'] > .tippy-content {
   padding: 0;
 }
+
+.sf-upgrade-btn:hover {
+  background-color: #4f46e5 !important;
+}

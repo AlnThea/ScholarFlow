@@ -425,6 +425,8 @@ export function EditorLayout({
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    
+    // Theme loading
     const localTheme = window.localStorage.getItem('sf-theme');
     if (localTheme === 'dark') {
       setIsDarkMode(true);
@@ -433,6 +435,15 @@ export function EditorLayout({
       setIsDarkMode(false);
       document.documentElement.classList.remove('dark');
     }
+
+    // Trigger pricing modal from locked bibliography banner click
+    const handleTriggerPricing = () => {
+      setIsPricingOpen(true);
+    };
+    window.addEventListener('sf-trigger-pricing', handleTriggerPricing);
+    return () => {
+      window.removeEventListener('sf-trigger-pricing', handleTriggerPricing);
+    };
   }, []);
 
   const toggleDarkMode = () => {

@@ -153,3 +153,7 @@
   - Enabled auto-saving (`onContentChange`) immediately on format toggle.
   - Enhanced Microsoft Word export in `lib/editor/citation-export-word.ts` to support image block rendering with captions, math block formula formatting, and clean processing of inline math elements.
   - Updated bibliography formatting in `lib/editor/bibliography.ts` to output HTML instead of plain text, enabling native italic formatting for sources/journals, and corrected the manual fallback to use HTML tags.
+  - Prevented redundant document saves to the database on initial page load and editor rendering using a `lastSavedContentRef` JSON comparison hook inside `scholar-editor.tsx`.
+  - Implemented premium bibliography locking UI for the Free tier, showing a blurred bibliography effect overlaid with a beautifully styled "References are a paid feature" call-to-action banner, complete with a functional "See Pricing" trigger.
+  - Extended the EditorJS whitelisted sanitizer tools (`div`, `span`, `button` tags and style/onclick attributes) and save content cleaner to ensure the dynamic billing banner isn't permanently written to the backend database.
+

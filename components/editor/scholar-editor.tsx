@@ -194,6 +194,7 @@ export function ScholarEditor() {
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const loadedDocumentIdRef = useRef<string | null>(null);
+  const lastSavedContentRef = useRef<string>('');
   const [citationResults, setCitationResults] = useState<CitationCandidate[]>([]);
   const [citationLibrary, setCitationLibrary] = useState<Record<string, CitationCandidate>>({});
   const [citationHistory, setCitationHistory] = useState<CitationHistoryEntry[]>([]);
@@ -291,6 +292,7 @@ export function ScholarEditor() {
                   settings: offlineData.settings || detail.settings,
                 };
                 setCurrentDocument(merged);
+                lastSavedContentRef.current = JSON.stringify(merged.content || { blocks: [] });
                 setSaveStatus('Menggunakan Cadangan Offline');
                 
                 // Try to sync to cloud if currently online
@@ -303,6 +305,7 @@ export function ScholarEditor() {
               }
             }
             setCurrentDocument(detail);
+            lastSavedContentRef.current = JSON.stringify(detail.content || { blocks: [] });
           }
         }).catch(err => {
           console.warn('Failed to sync document from URL path:', err);
@@ -322,6 +325,7 @@ export function ScholarEditor() {
                 updated_at: new Date().toISOString()
               };
               setCurrentDocument(fallbackDoc);
+              lastSavedContentRef.current = JSON.stringify(fallbackDoc.content || { blocks: [] });
               setSaveStatus('Gagal Sinkronisasi (Offline)');
             } catch (e) {
               console.error('Failed to parse offline backup on failure fallback:', e);
@@ -613,6 +617,7 @@ export function ScholarEditor() {
       }, settings);
       if (newDoc) {
         setDocuments((prev) => [newDoc, ...prev]);
+        lastSavedContentRef.current = JSON.stringify(newDoc.content || { blocks: [] });
         setCurrentDocument(newDoc);
         setIsSetupModalOpen(false);
         router.push(`/editor/${newDoc.id}`);
@@ -673,6 +678,13 @@ export function ScholarEditor() {
     const updatedDoc = { ...currentDocument, content };
     setCurrentDocument(updatedDoc);
 
+    // Compare content structures to avoid redundant cloud updates on load or rendering
+    const contentString = JSON.stringify(content || { blocks: [] });
+    if (contentString === lastSavedContentRef.current) {
+      return;
+    }
+
+    lastSavedContentRef.current = contentString;
     triggerDebouncedSave(currentDocument.id, currentDocument.title, content);
   }, [currentDocument, user, triggerDebouncedSave, isApplied, contentBeforeApply]);
 
@@ -942,12 +954,10 @@ export function ScholarEditor() {
     if (!hydrated) return;
     const entries = bibliographyEntries.map((e) => ({
       label: e.label,
-      formatted: activePlanId === 'free'
-        ? '░░░░░░░░░░░░░░░░░░░░░░ 🔒 Daftar Pustaka Terkunci (Khusus Akun Pro Writer) ░░░░░░░░░░░░░░░░░░░░░░'
-        : e.formatted,
+      formatted: e.formatted,
     }));
     const timer = setTimeout(() => {
-      editorJsRef.current?.upsertBibliography(entries);
+      editorJsRef.current?.upsertBibliography(entries, activePlanId === 'free');
     }, 100);
     return () => clearTimeout(timer);
   }, [bibliographyEntries, hydrated, activePlanId]);

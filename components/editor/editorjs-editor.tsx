@@ -163,6 +163,20 @@ class CustomFormatsSanitizerTool {
         target: true,
         rel: true,
         class: true
+      },
+      div: {
+        class: true,
+        style: true,
+        contenteditable: true
+      },
+      span: {
+        class: true,
+        style: true
+      },
+      button: {
+        class: true,
+        style: true,
+        onclick: true
       }
     };
   }
@@ -190,7 +204,7 @@ export interface EditorJsMethods {
   insertText: (text: string) => void;
   setFontSize: (size: string) => void;
   insertBibliographyText: (text: string) => void;
-  upsertBibliography: (entries: Array<{ label: string; formatted: string }>) => void;
+  upsertBibliography: (entries: Array<{ label: string; formatted: string }>, isFreeTier?: boolean) => void;
   renderContent: (data: any) => void;
   insertCitationSearch: () => void;
   insertCitationAtSearch: (label: string, referenceId: string) => void;
@@ -285,6 +299,21 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
       const textNode = document.createTextNode(span.textContent || '');
       span.parentNode?.replaceChild(textNode, span);
     });
+
+    // Clean premium banner and unwrap blurred bibliography
+    const premiumBanner = tempDiv.querySelector('.sf-premium-banner-container');
+    if (premiumBanner) {
+      premiumBanner.remove();
+    }
+    const blurredContainer = tempDiv.querySelector('.sf-bibliography-blur');
+    if (blurredContainer) {
+      const fragment = document.createDocumentFragment();
+      while (blurredContainer.firstChild) {
+        fragment.appendChild(blurredContainer.firstChild);
+      }
+      blurredContainer.parentNode?.replaceChild(fragment, blurredContainer);
+    }
+
     return tempDiv.innerHTML;
   };
 
@@ -910,7 +939,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
       editorRef.current.blocks.insert('paragraph', { text }, undefined, count, true);
       calculateLiveStats();
     },
-    upsertBibliography: (entries: Array<{ label: string; formatted: string }>) => {
+    upsertBibliography: (entries: Array<{ label: string; formatted: string }>, isFreeTier: boolean = false) => {
       if (!editorRef.current || !editorRef.current.blocks) return;
       
       try {
@@ -967,9 +996,35 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         );
 
         // Build labeled list as HTML paragraph
-        const biblioHtml = entries
+        let biblioHtml = entries
           .map(e => `[${e.label}] ${e.formatted}`)
           .join('<br><br>');
+
+        if (isFreeTier) {
+          // Wrapped in a blurred div
+          const blurredHtml = `<div class="sf-bibliography-blur" style="filter: blur(3px); opacity: 0.25; user-select: none; pointer-events: none; margin-top: 15px;">${biblioHtml}</div>`;
+          
+          // Premium lock card
+          const bannerHtml = `
+            <div class="sf-premium-banner-container" contenteditable="false" style="margin-bottom: 20px; user-select: none;">
+              <div style="background-color: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 15px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="background-color: #6366f1; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; font-size: 14px;">
+                    ⚡
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 2px; text-align: left;">
+                    <span style="font-size: 13px; font-weight: 700; color: #4338ca;">References are a paid feature</span>
+                    <span style="font-size: 11px; color: #6366f1; font-weight: 500;">Upgrade to view, copy, and export references.</span>
+                  </div>
+                </div>
+                <button class="sf-upgrade-btn" style="background-color: #6366f1; color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 11px; font-weight: 700; cursor: pointer; transition: background-color 0.2s; flex-shrink: 0;" onclick="window.dispatchEvent(new CustomEvent('sf-trigger-pricing'))">
+                  See Pricing
+                </button>
+              </div>
+            </div>
+          `;
+          biblioHtml = bannerHtml + blurredHtml;
+        }
 
         editorRef.current.blocks.insert(
           'paragraph',
