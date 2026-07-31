@@ -9,7 +9,33 @@ interface EditorBlock {
     items?: string[];
     style?: string;
     content?: string[][];
+    url?: string;
+    caption?: string;
+    formula?: string;
   };
+}
+
+/**
+ * Helper to process HTML and replace inline math spans with standard text formatting
+ */
+function processTextHtml(html: string): string {
+  if (!html) return '';
+  if (typeof document === 'undefined') return html;
+  try {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    
+    const mathSpans = tempDiv.querySelectorAll('.sf-inline-math');
+    mathSpans.forEach((span) => {
+      const formula = span.getAttribute('data-formula') || '';
+      const textNode = document.createTextNode(`\\( ${formula} \\)`);
+      span.parentNode?.replaceChild(textNode, span);
+    });
+    
+    return tempDiv.innerHTML;
+  } catch (e) {
+    return html;
+  }
 }
 
 /**
@@ -97,6 +123,38 @@ export function generateWordHtml(
           text-align: justify;
           font-size: 11pt;
         }
+        cite {
+          font-style: normal;
+          color: #000000;
+          text-decoration: none;
+        }
+        .document-image-container {
+          text-align: center;
+          margin-top: 12pt;
+          margin-bottom: 12pt;
+          page-break-inside: avoid;
+        }
+        .document-image {
+          max-width: 100%;
+          height: auto;
+          display: block;
+          margin-left: auto;
+          margin-right: auto;
+        }
+        .image-caption {
+          font-size: 10pt;
+          font-style: italic;
+          text-align: center;
+          margin-top: 6pt;
+          line-height: 1.15;
+        }
+        .math-block {
+          text-align: center;
+          font-family: 'Courier New', Courier, monospace;
+          margin-top: 12pt;
+          margin-bottom: 12pt;
+          font-size: 11pt;
+        }
       </style>
     </head>
     <body>
@@ -114,7 +172,7 @@ export function generateWordHtml(
     switch (block.type) {
       case 'header': {
         const level = block.data.level || 2;
-        bodyContent += `<h${level}>${block.data.text || ''}</h${level}>`;
+        bodyContent += `<h${level}>${processTextHtml(block.data.text || '')}</h${level}>`;
         break;
       }
       case 'list': {
@@ -122,7 +180,7 @@ export function generateWordHtml(
         bodyContent += `<${tag}>`;
         if (block.data.items) {
           block.data.items.forEach((item) => {
-            bodyContent += `<li>${item}</li>`;
+            bodyContent += `<li>${processTextHtml(item)}</li>`;
           });
         }
         bodyContent += `</${tag}>`;
@@ -135,9 +193,9 @@ export function generateWordHtml(
             bodyContent += '<tr>';
             row.forEach((cell) => {
               if (rowIndex === 0) {
-                bodyContent += `<th>${cell}</th>`;
+                bodyContent += `<th>${processTextHtml(cell)}</th>`;
               } else {
-                bodyContent += `<td>${cell}</td>`;
+                bodyContent += `<td>${processTextHtml(cell)}</td>`;
               }
             });
             bodyContent += '</tr>';
@@ -146,10 +204,29 @@ export function generateWordHtml(
         bodyContent += '</table>';
         break;
       }
+      case 'image': {
+        const url = block.data.url || '';
+        const caption = block.data.caption || '';
+        if (url) {
+          bodyContent += `
+            <div class="document-image-container">
+              <img class="document-image" src="${url}" alt="${caption}" />
+              ${caption ? `<div class="image-caption">${caption}</div>` : ''}
+            </div>
+          `;
+        }
+        break;
+      }
+      case 'math': {
+        const formula = block.data.formula || '';
+        if (formula) {
+          bodyContent += `<div class="math-block">$$\\displaystyle ${formula}$$</div>`;
+        }
+        break;
+      }
       case 'paragraph':
       default: {
-        // Hapus kode tag math/LaTeX jika ada untuk ekspor bersih, atau biarkan textnya
-        bodyContent += `<p>${block.data.text || ''}</p>`;
+        bodyContent += `<p>${processTextHtml(block.data.text || '')}</p>`;
         break;
       }
     }
@@ -159,8 +236,8 @@ export function generateWordHtml(
   if (bibliography && bibliography.length > 0) {
     bodyContent += `<div class="bibliography-title">DAFTAR PUSTAKA</div>`;
     bibliography.forEach((entry) => {
-      // Hilangkan tag HTML jika ada pada entri sitasi
-      const cleanEntry = entry.replace(/<\/?[^>]+(>|$)/g, '');
+      // Hilangkan tag HTML selain formatting italic if ada
+      const cleanEntry = entry.replace(/<\/?(?!i\b)[^>]+(>|$)/g, '');
       bodyContent += `<div class="bibliography-entry">${cleanEntry}</div>`;
     });
   }

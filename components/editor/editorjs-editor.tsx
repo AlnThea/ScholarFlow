@@ -139,6 +139,38 @@ class CitationSanitizerTool {
   checkState() { return false; }
 }
 
+class CustomFormatsSanitizerTool {
+  static get isInline() { return true; }
+  static get sanitize() {
+    return {
+      u: {},
+      strike: {},
+      s: {},
+      code: {
+        class: true
+      },
+      mark: {
+        class: true
+      },
+      sup: {},
+      sub: {},
+      b: {},
+      strong: {},
+      i: {},
+      em: {},
+      a: {
+        href: true,
+        target: true,
+        rel: true,
+        class: true
+      }
+    };
+  }
+  render() { return document.createElement('button'); }
+  surround() {}
+  checkState() { return false; }
+}
+
 // Storage keys
 const STORAGE_KEY = 'scholarflow.editorjs.content.v1';
 const ALIGNMENT_KEY = 'scholarflow.editorjs.alignments.v1';
@@ -492,48 +524,126 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
       }
     },
     toggleInlineFormat: (format: string) => {
-      document.execCommand('styleWithCSS', false, 'false');
-      if (format === 'bold') {
-        document.execCommand('bold', false);
-      } else if (format === 'italic') {
-        document.execCommand('italic', false);
-      } else if (format === 'underline') {
-        document.execCommand('underline', false);
-      } else if (format === 'strikethrough') {
-        document.execCommand('strikeThrough', false);
-      } else if (format === 'superscript') {
-        document.execCommand('superscript', false);
-      } else if (format === 'subscript') {
-        document.execCommand('subscript', false);
-      } else if (format === 'highlight') {
+      const toggleTag = (tagName: string, className?: string) => {
         const selection = window.getSelection();
-        if (!selection || selection.rangeCount === 0) return;
+        if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
+        
         const range = selection.getRangeAt(0);
-        const text = range.toString();
-        if (!text) return;
-        const mark = document.createElement('mark');
-        mark.className = 'bg-yellow-200/80 px-1 py-0.5 rounded';
-        mark.textContent = text;
-        range.deleteContents();
-        range.insertNode(mark);
-      } else if (format === 'code') {
-        const selection = window.getSelection();
-        if (!selection || selection.rangeCount === 0) return;
-        const range = selection.getRangeAt(0);
-        const text = range.toString();
-        if (!text) return;
-        const code = document.createElement('code');
-        code.className = 'bg-slate-100 dark:bg-slate-800 text-rose-600 px-1 py-0.5 rounded font-mono text-xs';
-        code.textContent = text;
-        range.deleteContents();
-        range.insertNode(code);
-      } else if (format === 'link') {
-        const url = prompt('Enter link URL:');
-        if (url) {
-          document.execCommand('createLink', false, url);
+        
+        // Find closest parent that matches the holder container or tag
+        let parent = range.commonAncestorContainer as HTMLElement | null;
+        if (parent && parent.nodeType === Node.TEXT_NODE) {
+          parent = parent.parentElement;
         }
+        
+        const targetTag = tagName.toUpperCase();
+        let node: HTMLElement | null = parent;
+        let isWrapped = false;
+        
+        while (node && node.id !== holderId && node.tagName !== 'DIV') {
+          if (node.tagName === targetTag && (!className || node.classList.contains(className))) {
+            isWrapped = true;
+            break;
+          }
+          node = node.parentElement;
+        }
+        
+        if (isWrapped && node) {
+          // Unwrap: replace node with its child nodes
+          const fragment = document.createDocumentFragment();
+          while (node.firstChild) {
+            fragment.appendChild(node.firstChild);
+          }
+          node.parentNode?.replaceChild(fragment, node);
+        } else {
+          // Wrap: wrap selection contents in a new element
+          const element = document.createElement(tagName);
+          if (className) {
+            element.className = className;
+          }
+          try {
+            const fragment = range.extractContents();
+            element.appendChild(fragment);
+            range.insertNode(element);
+            
+            // Re-select wrapped element
+            const newRange = document.createRange();
+            newRange.selectNodeContents(element);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+          } catch (e) {
+            console.warn('Failed to wrap selection:', e);
+          }
+        }
+        calculateLiveStats();
+      };
+
+      if (format === 'bold') {
+        toggleTag('b');
+      } else if (format === 'italic') {
+        toggleTag('i');
+      } else if (format === 'underline') {
+        toggleTag('u');
+      } else if (format === 'strikethrough') {
+        toggleTag('s');
+      } else if (format === 'superscript') {
+        toggleTag('sup');
+      } else if (format === 'subscript') {
+        toggleTag('sub');
+      } else if (format === 'highlight') {
+        toggleTag('mark', 'bg-yellow-200/80 px-1 py-0.5 rounded');
+      } else if (format === 'code') {
+        toggleTag('code', 'bg-slate-100 dark:bg-slate-800 text-rose-600 px-1 py-0.5 rounded font-mono text-xs');
+      } else if (format === 'link') {
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed) return;
+        const range = selection.getRangeAt(0);
+        let parent = range.commonAncestorContainer as HTMLElement | null;
+        if (parent && parent.nodeType === Node.TEXT_NODE) {
+          parent = parent.parentElement;
+        }
+        let existingLink: HTMLAnchorElement | null = null;
+        let node = parent;
+        while (node && node.id !== holderId && node.tagName !== 'DIV') {
+          if (node.tagName === 'A') {
+            existingLink = node as HTMLAnchorElement;
+            break;
+          }
+          node = node.parentElement;
+        }
+        if (existingLink) {
+          // Remove link
+          const fragment = document.createDocumentFragment();
+          while (existingLink.firstChild) {
+            fragment.appendChild(existingLink.firstChild);
+          }
+          existingLink.parentNode?.replaceChild(fragment, existingLink);
+        } else {
+          const url = prompt('Enter link URL:');
+          if (url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.className = 'text-indigo-650 underline';
+            try {
+              const fragment = range.extractContents();
+              a.appendChild(fragment);
+              range.insertNode(a);
+            } catch (e) {
+              console.warn('Failed to wrap selection with link:', e);
+            }
+          }
+        }
+        calculateLiveStats();
       }
-      calculateLiveStats();
+
+      // Auto save to trigger parent state update
+      if (onContentChange && editorRef.current) {
+        saveCleanContent().then(content => {
+          if (content) onContentChange(content);
+        }).catch(console.error);
+      }
     },
     setBlockAlignment: async (align: string) => {
       if (!editorRef.current || !editorRef.current.blocks) return;
@@ -948,6 +1058,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
               math: MathBlockTool as any,
               inlineMathSanitizer: InlineMathSanitizerTool as any,
               citationSanitizer: CitationSanitizerTool as any,
+              customFormatsSanitizer: CustomFormatsSanitizerTool as any,
             },
             onReady: () => {
               if (!isMounted) return;

@@ -93,27 +93,27 @@ function formatManualBibliography(candidate: CitationCandidate, style: string): 
   const cleanStyle = style.toLowerCase();
 
   if (cleanStyle === 'ieee') {
-    return `${authors}, "${title}," *${source}*, ${year}.${candidate.doi ? ` DOI: ${candidate.doi}.` : ''}`;
+    return `${authors}, "${title}," <i>${source}</i>, ${year}.${candidate.doi ? ` DOI: ${candidate.doi}.` : ''}`;
   }
 
   if (cleanStyle === 'harvard') {
     const yearStr = year ? ` (${year})` : ' (n.d.)';
-    return `${authors}${yearStr} '${title}', *${source}*.${candidate.doi ? ` DOI: ${candidate.doi}.` : candidate.url ? ` Available at: ${candidate.url}.` : ''}`;
+    return `${authors}${yearStr} '${title}', <i>${source}</i>.${candidate.doi ? ` DOI: ${candidate.doi}.` : candidate.url ? ` Available at: ${candidate.url}.` : ''}`;
   }
 
   if (cleanStyle === 'mla') {
     const yearStr = year ? `, ${year}` : '';
-    return `${authors}. "${title}." *${source}*${yearStr}.${candidate.doi ? ` DOI: ${candidate.doi}.` : candidate.url ? ` ${candidate.url}.` : ''}`;
+    return `${authors}. "${title}." <i>${source}</i>${yearStr}.${candidate.doi ? ` DOI: ${candidate.doi}.` : candidate.url ? ` ${candidate.url}.` : ''}`;
   }
 
   if (cleanStyle === 'chicago') {
     const yearStr = year ? ` (${year})` : '';
-    return `${authors}. "${title}." *${source}*${yearStr}.${candidate.doi ? ` DOI: ${candidate.doi}.` : candidate.url ? ` ${candidate.url}.` : ''}`;
+    return `${authors}. "${title}." <i>${source}</i>${yearStr}.${candidate.doi ? ` DOI: ${candidate.doi}.` : candidate.url ? ` ${candidate.url}.` : ''}`;
   }
 
   // Default APA
   const yearStr = year ? `(${year})` : '(n.d.)';
-  const parts = [authors, yearStr, title, `*${source}*`].filter(Boolean);
+  const parts = [authors, yearStr, title, `<i>${source}</i>`].filter(Boolean);
   const mainStr = parts.join('. ');
   if (candidate.doi) {
     return `${mainStr}. DOI: ${candidate.doi}`;
@@ -164,13 +164,19 @@ export function formatBibliographyCandidate(
     }
 
     const cite = new Cite([csl]);
-    const formatted = cite.format('bibliography', {
-      format: 'text',
+    let formatted = cite.format('bibliography', {
+      format: 'html',
       template: style.toLowerCase(),
       lang: lang,
-    });
+    }) as string;
 
-    return formatted.trim();
+    // Clean outer div tags commonly returned in html format by citation-js
+    formatted = formatted
+      .replace(/<div[^>]*>/g, '')
+      .replace(/<\/div>/g, '')
+      .trim();
+
+    return formatted;
   } catch (error) {
     // If citation-js fails (e.g. because style template is not loaded), fallback to manual styling
     return formatManualBibliography(candidate, style);

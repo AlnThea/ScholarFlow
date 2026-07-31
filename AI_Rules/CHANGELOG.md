@@ -111,7 +111,7 @@
   - Disables the button once clicked
   - Automatically reactivates the button if the user performs an undo (Ctrl+Z) in the canvas reverting it back to the original content state
 
-## v0.1.6 - In Progress
+## v0.1.6
 - Fixed infinite auto-save and bibliography rendering/flickering loop:
   - Wrapped `upsertBibliography` modifications in `components/editor/editorjs-editor.tsx` inside an `isRenderingRef` lock to prevent programmatic bibliography updates from triggering `onChange` / `onContentChange`.
   - Refined `useMemo` dependency array for `bibliographyEntries` in `components/editor/scholar-editor.tsx` to target specific configuration properties (`citationStyle` and `citationLocale`) rather than the entire `currentDocument` object, preventing unnecessary array recreation and formatting overhead on every keystroke.
@@ -147,3 +147,9 @@
   - Automatically triggered auto-saving (`onContentChange`) immediately upon inserting or updating inline equations to ensure math edits are saved in real-time.
   - Expanded the LaTeX Math Helper Panel database from 16 basic items to a comprehensive academic math library categorized into Tabs (Umum, Yunani, Operator, Kalkulus, Struktur, Semua), adding advanced trigonometry (sin, cos, tan, arcsin, etc.), set theory/logic (union, intersect, empty set, Kronecker tensor product), blackboard bold number sets (real, integer, complex, natural numbers), vector calculus (triple integrals, contour integrals, derivatives, curl, gradient, Laplacian), and math text styles.
   - Integrated an interactive real-time search box inside the LaTeX Math Helper Panel to instantly filter mathematical formulas and symbols.
+- Modernized editor inline formatting & Word export:
+  - Replaced browser's deprecated `document.execCommand` with modern selection range wrapping API in `components/editor/editorjs-editor.tsx` for bold, italic, underline, strike, sub/sup, code, highlight, and links.
+  - Added a `CustomFormatsSanitizerTool` to the EditorJS configurations to whitelist custom formatting tags (`u`, `strike`, `s`, `code`, `mark`, `sup`, `sub`, `b`, `strong`, `i`, `em`, `a`) from parser sanitization.
+  - Enabled auto-saving (`onContentChange`) immediately on format toggle.
+  - Enhanced Microsoft Word export in `lib/editor/citation-export-word.ts` to support image block rendering with captions, math block formula formatting, and clean processing of inline math elements.
+  - Updated bibliography formatting in `lib/editor/bibliography.ts` to output HTML instead of plain text, enabling native italic formatting for sources/journals, and corrected the manual fallback to use HTML tags.
