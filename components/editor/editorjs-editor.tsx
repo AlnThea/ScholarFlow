@@ -379,6 +379,41 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
     };
   }, [holderId, onCitationSearchChange, onCitationSearchCancel]);
 
+  const insertInlineEquationLocal = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    const range = selection.getRangeAt(0);
+    const selectedText = range.toString().trim() || 'E = mc^2';
+
+    const formula = prompt('Masukkan rumus LaTeX (misal: \\frac{a}{b}):', selectedText);
+    if (formula === null) return; // cancelled
+
+    const span = document.createElement('span');
+    span.className = 'sf-inline-math inline-block align-middle my-0.5 mx-1 px-1 bg-indigo-50/50 hover:bg-indigo-100/50 rounded border border-indigo-100 hover:border-indigo-200 transition cursor-pointer';
+    span.setAttribute('data-formula', formula);
+    span.setAttribute('contenteditable', 'false');
+
+    try {
+      import('katex').then((kateMod) => {
+        const katex = kateMod.default;
+        katex.render(formula, span, { displayMode: false, throwOnError: false });
+      });
+    } catch (err) {
+      span.textContent = `\\( ${formula} \\)`;
+    }
+
+    range.deleteContents();
+    range.insertNode(span);
+    calculateLiveStats();
+
+    // Auto save to trigger parent state update
+    if (onContentChange && editorRef.current) {
+      saveCleanContent().then(content => {
+        if (content) onContentChange(content);
+      }).catch(console.error);
+    }
+  };
+
   // Expose methods to parent
   useImperativeHandle(ref, () => ({
     undo: () => {
@@ -694,31 +729,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
       calculateLiveStats();
     },
     insertInlineEquation: () => {
-      const selection = window.getSelection();
-      if (!selection || selection.rangeCount === 0) return;
-      const range = selection.getRangeAt(0);
-      const selectedText = range.toString().trim() || 'E = mc^2';
-
-      const formula = prompt('Enter LaTeX formula (e.g. \\frac{a}{b}):', selectedText);
-      if (formula === null) return; // cancelled
-
-      const span = document.createElement('span');
-      span.className = 'sf-inline-math inline-block align-middle my-0.5 mx-1 px-1 bg-indigo-50/50 hover:bg-indigo-100/50 rounded border border-indigo-100 hover:border-indigo-200 transition cursor-pointer';
-      span.setAttribute('data-formula', formula);
-      span.setAttribute('contenteditable', 'false');
-
-      try {
-        import('katex').then((kateMod) => {
-          const katex = kateMod.default;
-          katex.render(formula, span, { displayMode: false, throwOnError: false });
-        });
-      } catch (err) {
-        span.textContent = `\\( ${formula} \\)`;
-      }
-
-      range.deleteContents();
-      range.insertNode(span);
-      calculateLiveStats();
+      insertInlineEquationLocal();
     },
     insertText: (text: string) => {
       document.execCommand('insertText', false, text);
@@ -1067,6 +1078,13 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           }
         }}
         onKeyDown={(e) => {
+          // Keyboard shortcut for inline math (Ctrl+Shift+M or Alt+M)
+          if ((e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'm') || (e.altKey && e.key.toLowerCase() === 'm')) {
+            e.preventDefault();
+            insertInlineEquationLocal();
+            return;
+          }
+
           if (e.key === 'Escape') {
             const activeSearchSpan = document.querySelector('span[data-citation-search="true"]');
             if (activeSearchSpan) {

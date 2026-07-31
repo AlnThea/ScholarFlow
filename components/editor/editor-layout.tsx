@@ -299,6 +299,130 @@ export function EditorLayout({
   const [dashboardExpandedProjects, setDashboardExpandedProjects] = useState<Record<string, boolean>>({});
   const [isDarkMode, setIsDarkMode] = useState(false);
 
+  const [activeMathCategory, setActiveMathCategory] = useState<'all' | 'general' | 'greek' | 'operators' | 'advanced' | 'structures'>('general');
+  const [mathSearchQuery, setMathSearchQuery] = useState('');
+
+  const mathHelperItems = useMemo(() => [
+    // 1. General
+    { label: 'Pecahan', code: '\\frac{a}{b}', category: 'general', isLong: false },
+    { label: 'Akar Kuadrat', code: '\\sqrt{x}', category: 'general', isLong: false },
+    { label: 'Akar Pangkat N', code: '\\sqrt[n]{x}', category: 'general', isLong: false },
+    { label: 'Kurung Kunci', code: '\\left( x \\right)', category: 'general', isLong: true },
+    { label: 'Subskrip', code: 'x_{i}', category: 'general', isLong: false },
+    { label: 'Superskrip', code: 'x^{2}', category: 'general', isLong: false },
+    { label: 'Sub & Super', code: 'x_{i}^{2}', category: 'general', isLong: true },
+    { label: 'Vektor', code: '\\vec{x}', category: 'general', isLong: false },
+    { label: 'Hat', code: '\\hat{x}', category: 'general', isLong: false },
+    { label: 'Rata-rata', code: '\\bar{x}', category: 'general', isLong: false },
+    { label: 'Teks Biasa', code: '\\text{teks}', category: 'general', isLong: false },
+    { label: 'Teks Tebal (Bold)', code: '\\mathbf{x}', category: 'general', isLong: false },
+    { label: 'Kaligrafi (Cal)', code: '\\mathcal{L}', category: 'general', isLong: false },
+    { label: 'Bilangan Riil (R)', code: '\\mathbb{R}', category: 'general', isLong: false },
+    { label: 'Bilangan Bulat (Z)', code: '\\mathbb{Z}', category: 'general', isLong: false },
+    { label: 'Bilangan Kompleks (C)', code: '\\mathbb{C}', category: 'general', isLong: false },
+    { label: 'Bilangan Asli (N)', code: '\\mathbb{N}', category: 'general', isLong: false },
+
+    // 2. Greek
+    { label: 'Alpha (α)', code: '\\alpha', category: 'greek', isLong: false },
+    { label: 'Beta (β)', code: '\\beta', category: 'greek', isLong: false },
+    { label: 'Gamma (γ)', code: '\\gamma', category: 'greek', isLong: false },
+    { label: 'Delta (δ)', code: '\\delta', category: 'greek', isLong: false },
+    { label: 'Delta (Δ)', code: '\\Delta', category: 'greek', isLong: false },
+    { label: 'Theta (θ)', code: '\\theta', category: 'greek', isLong: false },
+    { label: 'Theta (Θ)', code: '\\Theta', category: 'greek', isLong: false },
+    { label: 'Lambda (λ)', code: '\\lambda', category: 'greek', isLong: false },
+    { label: 'Lambda (Λ)', code: '\\Lambda', category: 'greek', isLong: false },
+    { label: 'Sigma (σ)', code: '\\sigma', category: 'greek', isLong: false },
+    { label: 'Sigma (Σ)', code: '\\Sigma', category: 'greek', isLong: false },
+    { label: 'Pi (π)', code: '\\pi', category: 'greek', isLong: false },
+    { label: 'Phi (φ)', code: '\\phi', category: 'greek', isLong: false },
+    { label: 'Phi (Φ)', code: '\\Phi', category: 'greek', isLong: false },
+    { label: 'Omega (ω)', code: '\\omega', category: 'greek', isLong: false },
+    { label: 'Omega (Ω)', code: '\\Omega', category: 'greek', isLong: false },
+    { label: 'Mu (μ)', code: '\\mu', category: 'greek', isLong: false },
+    { label: 'Epsilon (ε)', code: '\\epsilon', category: 'greek', isLong: false },
+    { label: 'Rho (ρ)', code: '\\rho', category: 'greek', isLong: false },
+    { label: 'Tau (τ)', code: '\\tau', category: 'greek', isLong: false },
+    { label: 'Psi (ψ)', code: '\\psi', category: 'greek', isLong: false },
+    { label: 'Psi (Ψ)', code: '\\Psi', category: 'greek', isLong: false },
+    { label: 'Eta (η)', code: '\\eta', category: 'greek', isLong: false },
+    { label: 'Kappa (κ)', code: '\\kappa', category: 'greek', isLong: false },
+
+    // 3. Operators & Logic
+    { label: 'Kurang Lebih (±)', code: '\\pm', category: 'operators', isLong: false },
+    { label: 'Kali (Dot ·)', code: '\\cdot', category: 'operators', isLong: false },
+    { label: 'Kali (Cross ×)', code: '\\times', category: 'operators', isLong: false },
+    { label: 'Tidak Sama Dengan (≠)', code: '\\neq', category: 'operators', isLong: false },
+    { label: 'Mendekati (≈)', code: '\\approx', category: 'operators', isLong: false },
+    { label: 'Kurang Dari (≤)', code: '\\le', category: 'operators', isLong: false },
+    { label: 'Lebih Dari (≥)', code: '\\ge', category: 'operators', isLong: false },
+    { label: 'Proporsional (∝)', code: '\\propto', category: 'operators', isLong: false },
+    { label: 'Untuk Semua (∀)', code: '\\forall', category: 'operators', isLong: false },
+    { label: 'Ada (∃)', code: '\\exists', category: 'operators', isLong: false },
+    { label: 'Anggota Dari (∈)', code: '\\in', category: 'operators', isLong: false },
+    { label: 'Bukan Anggota (∉)', code: '\\notin', category: 'operators', isLong: false },
+    { label: 'Tak Terhingga (∞)', code: '\\infty', category: 'operators', isLong: false },
+    { label: 'Panah Kanan (→)', code: '\\to', category: 'operators', isLong: false },
+    { label: 'Panah Kiri (←)', code: '\\gets', category: 'operators', isLong: false },
+    { label: 'Panah Ganda (⇒)', code: '\\Rightarrow', category: 'operators', isLong: false },
+    { label: 'Panah Ganda Kiri-Kanan (⇔)', code: '\\Leftrightarrow', category: 'operators', isLong: true },
+    { label: 'Gabungan (Union ∪)', code: '\\cup', category: 'operators', isLong: false },
+    { label: 'Irisan (Intersect ∩)', code: '\\cap', category: 'operators', isLong: false },
+    { label: 'Himpunan Kosong (Ø)', code: '\\emptyset', category: 'operators', isLong: false },
+    { label: 'Ekuivalen (≡)', code: '\\equiv', category: 'operators', isLong: false },
+    { label: 'Kali Tensor (⊗)', code: '\\otimes', category: 'operators', isLong: false },
+    { label: 'Tambah Langsung (⊕)', code: '\\oplus', category: 'operators', isLong: false },
+    { label: 'Bagian Dari (⊆)', code: '\\subseteq', category: 'operators', isLong: false },
+    { label: 'Logika DAN (∧)', code: '\\land', category: 'operators', isLong: false },
+    { label: 'Logika ATAU (∨)', code: '\\lor', category: 'operators', isLong: false },
+    { label: 'Negasi (¬)', code: '\\neg', category: 'operators', isLong: false },
+
+    // 4. Advanced Math
+    { label: 'Integral', code: '\\int_{a}^{b} f(x) dx', category: 'advanced', isLong: true },
+    { label: 'Integral Ganda', code: '\\iint_{D} f(x,y) dA', category: 'advanced', isLong: true },
+    { label: 'Integral Lipat Tiga', code: '\\iiint_{V} f(x,y,z) dV', category: 'advanced', isLong: true },
+    { label: 'Integral Lintasan (O)', code: '\\oint_{C} f(z) dz', category: 'advanced', isLong: true },
+    { label: 'Sigma (Sum)', code: '\\sum_{i=1}^{n} x_i', category: 'advanced', isLong: true },
+    { label: 'Produk (Product)', code: '\\prod_{i=1}^{n} x_i', category: 'advanced', isLong: true },
+    { label: 'Limit', code: '\\lim_{x \\to \\infty}', category: 'advanced', isLong: true },
+    { label: 'Turunan Parsial', code: '\\partial', category: 'advanced', isLong: false },
+    { label: 'Nabla/Gradien', code: '\\nabla', category: 'advanced', isLong: false },
+    { label: 'Logaritma', code: '\\log_{b}(x)', category: 'advanced', isLong: false },
+    { label: 'Logaritma Natural', code: '\\ln(x)', category: 'advanced', isLong: false },
+    { label: 'Turunan Pecahan', code: '\\frac{dy}{dx}', category: 'advanced', isLong: false },
+    { label: 'Turunan Parsial Pecahan', code: '\\frac{\\partial y}{\\partial x}', category: 'advanced', isLong: true },
+    { label: 'Turunan Kedua Pecahan', code: '\\frac{d^2 y}{dx^2}', category: 'advanced', isLong: true },
+    { label: 'Sinus (sin)', code: '\\sin(x)', category: 'advanced', isLong: false },
+    { label: 'Kosinus (cos)', code: '\\cos(x)', category: 'advanced', isLong: false },
+    { label: 'Tangen (tan)', code: '\\tan(x)', category: 'advanced', isLong: false },
+    { label: 'Arc Sinus (arcsin)', code: '\\arcsin(x)', category: 'advanced', isLong: false },
+    { label: 'Arc Kosinus (arccos)', code: '\\arccos(x)', category: 'advanced', isLong: false },
+    { label: 'Arc Tangen (arctan)', code: '\\arctan(x)', category: 'advanced', isLong: false },
+    { label: 'Divergensi', code: '\\nabla \\cdot \\vec{F}', category: 'advanced', isLong: false },
+    { label: 'Curl (Rotasi)', code: '\\nabla \\times \\vec{F}', category: 'advanced', isLong: false },
+    { label: 'Laplacian', code: '\\nabla^2 f', category: 'advanced', isLong: false },
+
+    // 5. Structures
+    { label: 'Matriks 2x2', code: '\\begin{matrix} a & b \\\\ c & d \\end{matrix}', category: 'structures', isLong: true },
+    { label: 'Matriks 3x3', code: '\\begin{matrix} a & b & c \\\\ d & e & f \\\\ g & h & i \\end{matrix}', category: 'structures', isLong: true },
+    { label: 'Matriks Tanda Kurung', code: '\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}', category: 'structures', isLong: true },
+    { label: 'Sistem Persamaan (Cases)', code: 'f(x) = \\begin{cases} x & x \\ge 0 \\\\ -x & x < 0 \\end{cases}', category: 'structures', isLong: true }
+  ], []);
+
+  const filteredMathHelperItems = useMemo(() => {
+    let items = mathHelperItems;
+    if (mathSearchQuery.trim()) {
+      const q = mathSearchQuery.toLowerCase();
+      items = items.filter(item => 
+        item.label.toLowerCase().includes(q) || 
+        item.code.toLowerCase().includes(q)
+      );
+    } else if (activeMathCategory !== 'all') {
+      items = items.filter(item => item.category === activeMathCategory);
+    }
+    return items;
+  }, [mathHelperItems, activeMathCategory, mathSearchQuery]);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const localTheme = window.localStorage.getItem('sf-theme');
@@ -1937,72 +2061,110 @@ export function EditorLayout({
                 <IconX className="h-4.5 w-4.5" />
               </button>
             </div>
+
+            {/* Search Input Box */}
+            <div className="relative">
+              <input
+                type="text"
+                value={mathSearchQuery}
+                onChange={(e) => setMathSearchQuery(e.target.value)}
+                placeholder="Cari simbol (misal: sigma, integral)..."
+                className="w-full pl-7.5 pr-3 py-1.5 text-[10px] border border-slate-200 rounded-lg outline-none focus:border-indigo-500 transition font-sans text-slate-800"
+              />
+              <IconSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              {mathSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setMathSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[10px] font-semibold"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {/* Category Tabs (Horizontal Scrollable) */}
+            {!mathSearchQuery && (
+              <div className="flex items-center gap-1 overflow-x-auto pb-1.5 scrollbar-thin border-b border-slate-100 text-[9px] font-semibold text-slate-500">
+                {[
+                  { id: 'general', label: 'Umum' },
+                  { id: 'greek', label: 'Yunani' },
+                  { id: 'operators', label: 'Operator' },
+                  { id: 'advanced', label: 'Kalkulus' },
+                  { id: 'structures', label: 'Struktur' },
+                  { id: 'all', label: 'Semua' }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => setActiveMathCategory(tab.id as any)}
+                    className={`px-2 py-1 rounded transition shrink-0 cursor-pointer ${
+                      activeMathCategory === tab.id
+                        ? 'bg-indigo-50 text-indigo-700 font-bold'
+                        : 'hover:bg-slate-100 hover:text-slate-700'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
             
             <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500">
               <div className="col-span-2 text-[9px] bg-slate-50/50 p-2 rounded border border-slate-100 leading-normal mb-1">
                 📌 <strong className="text-slate-600">Info:</strong> Jika kotak input rumus aktif, mengklik rumus akan langsung menyisipkannya. Jika tidak, rumus disalin ke clipboard.
               </div>
-              {[
-                { label: 'Pecahan', code: '\\frac{a}{b}', isLong: false },
-                { label: 'Akar', code: '\\sqrt{x}', isLong: false },
-                { label: 'Akar N', code: '\\sqrt[n]{x}', isLong: false },
-                { label: 'Alpha', code: '\\alpha', isLong: false },
-                { label: 'Beta', code: '\\beta', isLong: false },
-                { label: 'Gamma', code: '\\gamma', isLong: false },
-                { label: 'Theta', code: '\\theta', isLong: false },
-                { label: 'Pi', code: '\\pi', isLong: false },
-                { label: 'Lambda', code: '\\lambda', isLong: false },
-                { label: 'Infinity', code: '\\infty', isLong: false },
-                { label: 'Integral', code: '\\int_{a}^{b} x dx', isLong: true },
-                { label: 'Sigma (Sum)', code: '\\sum_{i=1}^{n} i', isLong: true },
-                { label: 'Produk', code: '\\prod_{i=1}^{n}', isLong: true },
-                { label: 'Matriks 2x2', code: '\\begin{matrix} a & b \\\\ c & d \\end{matrix}', isLong: true },
-                { label: 'Limit', code: '\\lim_{x \\to \\infty}', isLong: true },
-                { label: 'Kurung Kunci', code: '\\left( x \\right)', isLong: true }
-              ].map((item) => (
-                <button
-                  key={item.code}
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()} // Prevents losing editor focus
-                  onClick={async () => {
-                    const activeEl = document.activeElement as HTMLElement | null;
-                    const isMathTextarea = activeEl && 
-                      activeEl.tagName === 'TEXTAREA' && 
-                      (activeEl as HTMLTextAreaElement).placeholder?.includes('LaTeX formula');
+              {filteredMathHelperItems.length === 0 ? (
+                <div className="col-span-2 text-center py-6 text-slate-400 italic">
+                  Tidak ada simbol yang cocok.
+                </div>
+              ) : (
+                filteredMathHelperItems.map((item) => (
+                  <button
+                    key={item.code}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()} // Prevents losing editor focus
+                    onClick={async () => {
+                      const activeEl = document.activeElement as HTMLElement | null;
+                      const isMathTextarea = activeEl && 
+                        activeEl.tagName === 'TEXTAREA' && 
+                        (activeEl as HTMLTextAreaElement).placeholder?.includes('LaTeX formula');
 
-                    if (isMathTextarea) {
-                      const txtEl = activeEl as HTMLTextAreaElement;
-                      const start = txtEl.selectionStart;
-                      const end = txtEl.selectionEnd;
-                      const textVal = txtEl.value;
-                      txtEl.value = textVal.substring(0, start) + item.code + textVal.substring(end);
-                      txtEl.selectionStart = txtEl.selectionEnd = start + item.code.length;
-                      txtEl.dispatchEvent(new InputEvent('input', { bubbles: true }));
-                      
-                      setMathToast('Disisipkan!');
-                      setTimeout(() => setMathToast(null), 2000);
-                    } else {
-                      try {
-                        await navigator.clipboard.writeText(item.code);
-                        setMathToast('Disalin!');
+                      if (isMathTextarea) {
+                        const txtEl = activeEl as HTMLTextAreaElement;
+                        const start = txtEl.selectionStart;
+                        const end = txtEl.selectionEnd;
+                        const textVal = txtEl.value;
+                        txtEl.value = textVal.substring(0, start) + item.code + textVal.substring(end);
+                        txtEl.selectionStart = txtEl.selectionEnd = start + item.code.length;
+                        txtEl.dispatchEvent(new InputEvent('input', { bubbles: true }));
+                        
+                        setMathToast('Disisipkan!');
                         setTimeout(() => setMathToast(null), 2000);
-                      } catch (err) {
-                        console.error('Failed to copy text:', err);
+                      } else {
+                        try {
+                          await navigator.clipboard.writeText(item.code);
+                          setMathToast('Disalin!');
+                          setTimeout(() => setMathToast(null), 2000);
+                        } catch (err) {
+                          console.error('Failed to copy text:', err);
+                        }
                       }
-                    }
-                  }}
-                  className={`p-2.5 rounded border border-slate-200/80 hover:border-indigo-300 bg-white hover:bg-indigo-50/40 text-left transition cursor-pointer flex items-center justify-between gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:shadow-sm ${item.isLong ? 'col-span-2' : 'col-span-1'}`}
-                  title={item.code}
-                >
-                  <div className="flex flex-col min-w-0 flex-1">
-                    <span className="font-semibold text-slate-750 text-[10px]">{item.label}</span>
-                    <span className="font-mono text-[8.5px] text-slate-400 truncate w-full mt-0.5">{item.code}</span>
-                  </div>
-                  <div className="flex-shrink-0 bg-slate-50 border border-slate-100/70 rounded px-1.5 py-1 min-h-[26px] flex items-center justify-center min-w-[36px]">
-                    <KatexPreview formula={item.code} />
-                  </div>
-                </button>
-              ))}
+                    }}
+                    className={`p-2.5 rounded border border-slate-200/80 hover:border-indigo-300 bg-white hover:bg-indigo-50/40 text-left transition cursor-pointer flex items-center justify-between gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:shadow-sm ${item.isLong ? 'col-span-2' : 'col-span-1'}`}
+                    title={item.code}
+                  >
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="font-semibold text-slate-750 text-[10px]">{item.label}</span>
+                      <span className="font-mono text-[8.5px] text-slate-400 truncate w-full mt-0.5">{item.code}</span>
+                    </div>
+                    <div className="flex-shrink-0 bg-slate-50 border border-slate-100/70 rounded px-1.5 py-1 min-h-[26px] flex items-center justify-center min-w-[36px]">
+                      <KatexPreview formula={item.code} />
+                    </div>
+                  </button>
+                ))
+              )}
             </div>
           </div>
         )}
@@ -2143,6 +2305,24 @@ export function EditorLayout({
                     <div className="flex flex-col text-left">
                       <span className="text-xs text-slate-800">Parafrase Kalimat</span>
                       <span className="text-[9px] text-slate-400 font-normal">Tulis ulang kalimat terpilih (AI)</span>
+                    </div>
+                  </button>
+
+                  {/* Inline Math (LaTeX) Button */}
+                  <button
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-slate-700 hover:bg-slate-50 transition font-semibold cursor-pointer border-b border-slate-100/40"
+                    onMouseDown={e => e.preventDefault()}
+                    onClick={() => {
+                      setShowBubbleMenu(false);
+                      editorJsRef.current?.insertInlineEquation();
+                    }}
+                  >
+                    <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 shrink-0">
+                      <IconSum className="h-4 w-4 text-indigo-600" />
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="text-xs text-slate-800">Rumus Matematika (LaTeX)</span>
+                      <span className="text-[9px] text-slate-400 font-normal">Ubah teks terpilih menjadi rumus</span>
                     </div>
                   </button>
 

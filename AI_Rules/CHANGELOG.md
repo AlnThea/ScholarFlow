@@ -141,4 +141,9 @@
   - Modified `handleSelectionChange` to not automatically show the bubble menu when text is selected/highlighted, allowing free selection without blocking the view.
   - Added an `onContextMenu` right-click event listener to the main editor container in `components/editor/editor-layout.tsx` to display the custom bubble menu at the selection rect only if an active highlighted text selection inside the editor is right-clicked.
   - Removed the autofocus `<input>` search field from the bubble menu and reverted to a static header text block. This prevents browser focus-theft, ensuring text selections remain highlighted and insertion ranges do not get collapsed/lost.
-
+- Added LaTeX Math Editor UX enhancements:
+  - Added a "Rumus Matematika (LaTeX)" button to the custom right-click context menu in `components/editor/editor-layout.tsx` to let users quickly convert highlighted text directly into inline math equations.
+  - Implemented keyboard shortcuts (`Ctrl + Shift + M` and `Alt + M`) inside the editor container keydown listener in `components/editor/editorjs-editor.tsx` to insert inline equations without manual toolbar clicks.
+  - Automatically triggered auto-saving (`onContentChange`) immediately upon inserting or updating inline equations to ensure math edits are saved in real-time.
+  - Expanded the LaTeX Math Helper Panel database from 16 basic items to a comprehensive academic math library categorized into Tabs (Umum, Yunani, Operator, Kalkulus, Struktur, Semua), adding advanced trigonometry (sin, cos, tan, arcsin, etc.), set theory/logic (union, intersect, empty set, Kronecker tensor product), blackboard bold number sets (real, integer, complex, natural numbers), vector calculus (triple integrals, contour integrals, derivatives, curl, gradient, Laplacian), and math text styles.
+  - Integrated an interactive real-time search box inside the LaTeX Math Helper Panel to instantly filter mathematical formulas and symbols.
