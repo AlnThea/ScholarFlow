@@ -156,4 +156,25 @@
   - Prevented redundant document saves to the database on initial page load and editor rendering using a `lastSavedContentRef` JSON comparison hook inside `scholar-editor.tsx`.
   - Implemented premium bibliography locking UI for the Free tier, showing a blurred bibliography effect overlaid with a beautifully styled "References are a paid feature" call-to-action banner, complete with a functional "See Pricing" trigger.
   - Extended the EditorJS whitelisted sanitizer tools (`div`, `span`, `button` tags and style/onclick attributes) and save content cleaner to ensure the dynamic billing banner isn't permanently written to the backend database.
+- Improved Image Block Integration & Custom Modal:
+  - Fixed a `TypeError` by configuring a client-side base64 FileReader uploader for the EditorJS ImageTool, allowing users to upload local images directly without relying on server-side upload endpoints.
+  - Wrapped image URLs in a `{ file: { url } }` object to match the block data schema expected by `@editorjs/image`, resolving the issue where image blocks would render as empty file upload dropzones.
+  - Created a custom popup modal (`isImageModalOpen`) in `components/editor/editor-layout.tsx` to replace the browser's native Javascript `prompt` dialog, featuring responsive styling, autoFocus, and Enter key confirmation.
+  - Portaled the image modal using React's `createPortal` to render it directly under `document.body`, resolving absolute/fixed centering alignment bugs caused by parent CSS `transform` layouts.
+  - Replaced non-standard `z-55` classes with `z-[9999]` for the image, pricing plan, and AI model modals, and portaled all three modals to `document.body` to resolve layering/z-index issues.
+- Fixed Editor.js Initialization Race Condition:
+  - Added a type safety guard to `renderContent` in `components/editor/editorjs-editor.tsx` that checks if `editorRef.current.render` is a function before calling it. If the editor is still in the process of initializing, the content is queued into `pendingContentRef` and rendered automatically in the `onReady` hook.
+- Custom LaTeX Math Inline Equation Modal:
+  - Updated `insertInlineEquation` and `insertInlineEquationLocal` in `components/editor/editorjs-editor.tsx` to support direct insertion of custom LaTeX formulas via an optional parameter.
+  - Implemented a custom inline equation popup modal (`isMathModalOpen`) in `components/editor/editor-layout.tsx` portaled to `document.body` with `z-[9999]`, replacing window.prompt.
+  - Pre-populated the input field of the math modal with the currently selected text in the document for enhanced math editor user experience.
+  - Resolved caret selection loss inside `insertInlineEquationLocal` by falling back to `lastSelectionRangeRef` when the active selection is outside the editor, and restored the caret position immediately after the inserted equation span.
+  - Corrected DOM insertion sequence by focusing the contenteditable block parent and explicitly restoring the active range in the browser selection object prior to mutating DOM nodes, resolving EditorJS warning mismatch (`redactor dom changed` unsubscribed handler error).
+  - Dispatched a mock `input` DOM event on the block parent to ensure EditorJS recognizes the inline equation insert and serializes it successfully on auto-save.
+  - Implemented `saveSelectionRange` API method and called it synchronously inside the math toolbar button's click handler to prevent selection loss before opening the custom modal. Added user alert warning if no target cursor range is focused in the document.
+  - Whitelisted `'data-formula'` and `contenteditable` attributes inside `CustomFormatsSanitizerTool`'s span element sanitization schema in `components/editor/editorjs-editor.tsx` to prevent LaTeX formula strings from being stripped on save.
+  - Added a DOM container guard to EditorJS initialization in `components/editor/editorjs-editor.tsx` to return early if `editorjs-holder` is not found, resolving race condition crashes in development (React Strict Mode double-effect unmount error).
+  - Hid scrollbars inside the LaTeX Math Helper category tabs in `components/editor/editor-layout.tsx` across all web rendering engines (Webkit/Firefox/IE) and increased font sizes to standard `text-xs` (12px) to prevent button click overlapping issues.
+  - Added vertical padding (`py-1.5`) and `overflow-y-hidden` to the LaTeX Math Helper tabs wrapper in `components/editor/editor-layout.tsx` to resolve vertical text clipping on the tab buttons.
+  - Replaced non-standard `pl-7.5` with standard `pl-8` on the LaTeX Math Helper search input in `components/editor/editor-layout.tsx` to resolve search icon overlapping text issues.
 

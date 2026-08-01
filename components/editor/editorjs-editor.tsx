@@ -171,7 +171,9 @@ class CustomFormatsSanitizerTool {
       },
       span: {
         class: true,
-        style: true
+        style: true,
+        'data-formula': true,
+        contenteditable: true
       },
       button: {
         class: true,
@@ -200,7 +202,8 @@ export interface EditorJsMethods {
   insertTable: () => void;
   insertCodeBlock: () => void;
   insertMathBlock: () => void;
-  insertInlineEquation: () => void;
+  insertInlineEquation: (formula?: string) => void;
+  saveSelectionRange: () => void;
   insertText: (text: string) => void;
   setFontSize: (size: string) => void;
   insertBibliographyText: (text: string) => void;
@@ -440,14 +443,35 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
     };
   }, [holderId, onCitationSearchChange, onCitationSearchCancel]);
 
-  const insertInlineEquationLocal = () => {
+  const insertInlineEquationLocal = (customFormula?: string) => {
     const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
-    const range = selection.getRangeAt(0);
+    let range: Range | null = null;
+
+    if (selection && selection.rangeCount > 0) {
+      const activeRange = selection.getRangeAt(0);
+      const holder = document.getElementById(holderId);
+      if (holder && holder.contains(activeRange.commonAncestorContainer)) {
+        range = activeRange;
+      }
+    }
+
+    if (!range && lastSelectionRangeRef.current) {
+      range = lastSelectionRangeRef.current;
+    }
+
+    if (!range) {
+      alert('Posisikan kursor ketik Anda di dalam dokumen teks editor terlebih dahulu sebelum menyisipkan rumus.');
+      return;
+    }
+
     const selectedText = range.toString().trim() || 'E = mc^2';
 
-    const formula = prompt('Masukkan rumus LaTeX (misal: \\frac{a}{b}):', selectedText);
-    if (formula === null) return; // cancelled
+    let formula = customFormula;
+    if (formula === undefined) {
+      const result = prompt('Masukkan rumus LaTeX (misal: \\frac{a}{b}):', selectedText);
+      if (result === null) return; // cancelled
+      formula = result;
+    }
 
     const span = document.createElement('span');
     span.className = 'sf-inline-math inline-block align-middle my-0.5 mx-1 px-1 bg-indigo-50/50 hover:bg-indigo-100/50 rounded border border-indigo-100 hover:border-indigo-200 transition cursor-pointer';
@@ -457,14 +481,48 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
     try {
       import('katex').then((kateMod) => {
         const katex = kateMod.default;
-        katex.render(formula, span, { displayMode: false, throwOnError: false });
+        katex.render(formula!, span, { displayMode: false, throwOnError: false });
       });
     } catch (err) {
       span.textContent = `\\( ${formula} \\)`;
     }
 
+    // 1. Focus the contenteditable block parent first
+    const contentEditable = range.commonAncestorContainer.nodeType === Node.TEXT_NODE
+      ? range.commonAncestorContainer.parentElement
+      : range.commonAncestorContainer as HTMLElement;
+    const blockEl = contentEditable?.closest('[contenteditable="true"]') as HTMLElement | null;
+    if (blockEl) {
+      blockEl.focus();
+    }
+
+    // 2. Restore range selection in browser active session
+    const sel = window.getSelection();
+    if (sel) {
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    // 3. Perform DOM insertion
     range.deleteContents();
     range.insertNode(span);
+
+    // 4. Dispatch input event to let EditorJS know of changes
+    if (blockEl) {
+      const event = new Event('input', { bubbles: true });
+      blockEl.dispatchEvent(event);
+    }
+
+    // 5. Place cursor right after the newly inserted formula span
+    if (sel) {
+      const newRange = document.createRange();
+      newRange.setStartAfter(span);
+      newRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+      lastSelectionRangeRef.current = newRange.cloneRange();
+    }
+
     calculateLiveStats();
 
     // Auto save to trigger parent state update
@@ -838,7 +896,11 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
     },
     insertImage: (url: string) => {
       if (!editorRef.current || !editorRef.current.blocks) return;
-      editorRef.current.blocks.insert('image', { url }, undefined, activeBlockIndexRef.current + 1, true);
+      editorRef.current.blocks.insert('image', {
+        file: {
+          url: url
+        }
+      }, undefined, activeBlockIndexRef.current + 1, true);
       calculateLiveStats();
     },
     insertTable: () => {
@@ -867,8 +929,18 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
       }, undefined, activeBlockIndexRef.current + 1, true);
       calculateLiveStats();
     },
-    insertInlineEquation: () => {
-      insertInlineEquationLocal();
+    insertInlineEquation: (formula?: string) => {
+      insertInlineEquationLocal(formula);
+    },
+    saveSelectionRange: () => {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const holder = document.getElementById(holderId);
+        if (holder && holder.contains(range.commonAncestorContainer)) {
+          lastSelectionRangeRef.current = range.cloneRange();
+        }
+      }
     },
     insertText: (text: string) => {
       document.execCommand('insertText', false, text);
@@ -1042,7 +1114,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
       }
     },
     renderContent: (data: any) => {
-      if (editorRef.current) {
+      if (editorRef.current && typeof editorRef.current.render === 'function') {
         try {
           isRenderingRef.current = true;
           editorRef.current.render(data)
@@ -1097,9 +1169,10 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
 
           // Ensure the editor container is clean before creating a new instance
           const container = document.getElementById(holderId);
-          if (container) {
-            container.innerHTML = '';
+          if (!container) {
+            return;
           }
+          container.innerHTML = '';
 
           const editor = new EditorJS({
             holder: holderId,
@@ -1107,7 +1180,35 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
             tools: {
               header: Header,
               list: List,
-              image: ImageTool,
+              image: {
+                class: ImageTool,
+                config: {
+                  uploader: {
+                    uploadByFile(file: File) {
+                      return new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                          resolve({
+                            success: 1,
+                            file: {
+                              url: e.target?.result,
+                            }
+                          });
+                        };
+                        reader.readAsDataURL(file);
+                      });
+                    },
+                    uploadByUrl(url: string) {
+                      return Promise.resolve({
+                        success: 1,
+                        file: {
+                          url: url,
+                        }
+                      });
+                    }
+                  }
+                }
+              },
               table: Table,
               code: CodeTool,
               math: MathBlockTool as any,

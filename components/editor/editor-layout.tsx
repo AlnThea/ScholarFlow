@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
 import { EditorJsEditor, type EditorJsMethods } from './editorjs-editor';
 import { EditorSidebar } from './editor-sidebar';
@@ -298,6 +299,11 @@ export function EditorLayout({
   const [mathToast, setMathToast] = useState<string | null>(null);
   const [dashboardExpandedProjects, setDashboardExpandedProjects] = useState<Record<string, boolean>>({});
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [activeMathCategory, setActiveMathCategory] = useState<'all' | 'general' | 'greek' | 'operators' | 'advanced' | 'structures'>('general');
   const [mathSearchQuery, setMathSearchQuery] = useState('');
@@ -700,6 +706,28 @@ export function EditorLayout({
     }
   };
 
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [imageUrlInput, setImageUrlInput] = useState('');
+
+  const handleInsertImageConfirm = () => {
+    if (imageUrlInput.trim()) {
+      editorJsRef.current?.insertImage(imageUrlInput.trim());
+      setIsImageModalOpen(false);
+      setImageUrlInput('');
+    }
+  };
+
+  const [isMathModalOpen, setIsMathModalOpen] = useState(false);
+  const [mathFormulaInput, setMathFormulaInput] = useState('');
+
+  const handleInsertMathConfirm = () => {
+    if (mathFormulaInput.trim()) {
+      editorJsRef.current?.insertInlineEquation(mathFormulaInput.trim());
+      setIsMathModalOpen(false);
+      setMathFormulaInput('');
+    }
+  };
+
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [selectedPlanForModal, setSelectedPlanForModal] = useState<PricingPlan | null>(null);
   const [modalPlanState, setModalPlanState] = useState<Omit<PricingPlan, 'updated_at'>>({
@@ -949,7 +977,7 @@ export function EditorLayout({
     }`;
   };
 
-  const isAnyModalOpen = isPlanModalOpen || isModelModalOpen;
+  const isAnyModalOpen = isPlanModalOpen || isModelModalOpen || isImageModalOpen || isMathModalOpen;
 
   return (
     <div className="flex min-h-screen bg-slate-50/50">
@@ -1985,8 +2013,8 @@ export function EditorLayout({
             title="Insert Image Block"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
-              const url = prompt('Enter image URL:');
-              if (url) editorJsRef.current?.insertImage(url);
+              setImageUrlInput('');
+              setIsImageModalOpen(true);
             }}
           >
             <IconPhoto className="h-4 w-4" />
@@ -2015,7 +2043,11 @@ export function EditorLayout({
             className="p-1.5 rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition" 
             title="Insert Inline Equation"
             onMouseDown={(e) => e.preventDefault()}
-            onClick={() => editorJsRef.current?.insertInlineEquation()}
+            onClick={() => {
+              editorJsRef.current?.saveSelectionRange();
+              setMathFormulaInput(selectedText || '');
+              setIsMathModalOpen(true);
+            }}
           >
             <IconSum className="h-4 w-4 text-indigo-600" />
           </button>
@@ -2080,7 +2112,7 @@ export function EditorLayout({
                 value={mathSearchQuery}
                 onChange={(e) => setMathSearchQuery(e.target.value)}
                 placeholder="Cari simbol (misal: sigma, integral)..."
-                className="w-full pl-7.5 pr-3 py-1.5 text-[10px] border border-slate-200 rounded-lg outline-none focus:border-indigo-500 transition font-sans text-slate-800"
+                className="w-full pl-8 pr-3 py-1.5 text-[10px] border border-slate-200 rounded-lg outline-none focus:border-indigo-500 transition font-sans text-slate-800"
               />
               <IconSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               {mathSearchQuery && (
@@ -2096,7 +2128,10 @@ export function EditorLayout({
 
             {/* Category Tabs (Horizontal Scrollable) */}
             {!mathSearchQuery && (
-              <div className="flex items-center gap-1 overflow-x-auto pb-1.5 scrollbar-thin border-b border-slate-100 text-[9px] font-semibold text-slate-500">
+              <div 
+                className="flex items-center gap-1 overflow-x-auto overflow-y-hidden py-1.5 border-b border-slate-100 text-xs font-semibold text-slate-500 [&::-webkit-scrollbar]:hidden"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
                 {[
                   { id: 'general', label: 'Umum' },
                   { id: 'greek', label: 'Yunani' },
@@ -2702,8 +2737,124 @@ export function EditorLayout({
       documentId={currentDocument?.id}
       documentTitle={currentDocument?.title}
     />
-    {isPlanModalOpen && (
-      <div className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+    {mounted && isImageModalOpen && typeof window !== 'undefined' && createPortal(
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in font-sans">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-2xl w-full max-w-md flex flex-col gap-5 animate-scale-in text-slate-800">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 className="text-sm font-extrabold text-slate-800">
+              Sisipkan Gambar via URL
+            </h3>
+            <button
+              onClick={() => setIsImageModalOpen(false)}
+              className="p-1 rounded-md text-slate-400 hover:bg-slate-100/80 hover:text-slate-650 transition cursor-pointer"
+            >
+              <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Masukkan alamat URL gambar (misalnya dari internet) untuk menyisipkannya langsung ke dalam dokumen Anda.
+            </p>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">URL Gambar</label>
+              <input
+                type="text"
+                placeholder="https://example.com/image.png"
+                value={imageUrlInput}
+                onChange={(e) => setImageUrlInput(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleInsertImageConfirm();
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+            <button
+              onClick={() => setIsImageModalOpen(false)}
+              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-100 transition cursor-pointer"
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleInsertImageConfirm}
+              disabled={!imageUrlInput.trim()}
+              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
+            >
+              Sisipkan Gambar
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+    {mounted && isMathModalOpen && typeof window !== 'undefined' && createPortal(
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in font-sans">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-2xl w-full max-w-md flex flex-col gap-5 animate-scale-in text-slate-800">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 className="text-sm font-extrabold text-slate-800">
+              Sisipkan Rumus Matematika (LaTeX)
+            </h3>
+            <button
+              onClick={() => setIsMathModalOpen(false)}
+              className="p-1 rounded-md text-slate-400 hover:bg-slate-100/80 hover:text-slate-650 transition cursor-pointer"
+            >
+              <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Masukkan kode LaTeX untuk rumus matematika yang ingin disisipkan (seperti: <code>{`\\frac{a}{b}`}</code> atau <code>{`\\sum x^2`}</code>).
+            </p>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Formula LaTeX</label>
+              <input
+                type="text"
+                placeholder="E = mc^2"
+                value={mathFormulaInput}
+                onChange={(e) => setMathFormulaInput(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-mono focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleInsertMathConfirm();
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+            <button
+              onClick={() => setIsMathModalOpen(false)}
+              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-100 transition cursor-pointer"
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleInsertMathConfirm}
+              disabled={!mathFormulaInput.trim()}
+              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
+            >
+              Sisipkan Rumus
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+    {mounted && isPlanModalOpen && typeof window !== 'undefined' && createPortal(
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
         <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-2xl w-full max-w-lg flex flex-col gap-5 animate-scale-in text-slate-800">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 className="text-sm font-extrabold text-slate-800">
@@ -2841,10 +2992,11 @@ export function EditorLayout({
             </button>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     )}
-    {isModelModalOpen && (
-      <div className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+    {mounted && isModelModalOpen && typeof window !== 'undefined' && createPortal(
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
         <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-2xl w-full max-w-lg flex flex-col gap-5 animate-scale-in text-slate-800">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 className="text-sm font-extrabold text-slate-800">
@@ -2944,7 +3096,8 @@ export function EditorLayout({
             </button>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     )}
   </div>
 );
