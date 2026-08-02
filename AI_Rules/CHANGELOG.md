@@ -178,3 +178,15 @@
   - Added vertical padding (`py-1.5`) and `overflow-y-hidden` to the LaTeX Math Helper tabs wrapper in `components/editor/editor-layout.tsx` to resolve vertical text clipping on the tab buttons.
   - Replaced non-standard `pl-7.5` with standard `pl-8` on the LaTeX Math Helper search input in `components/editor/editor-layout.tsx` to resolve search icon overlapping text issues.
 
+## v0.1.7
+- Implemented platform-wide dynamic bilingual (i18n) localization supporting English (default) and Indonesian:
+  - Created a client-side React context provider (`LanguageProvider` in `language-context.tsx`) with localStorage session state persistence to avoid hydration mismatches.
+  - Added a responsive language toggle button dropdown inside the main editor header adjacent to the user profile menu.
+  - Localized the main workspace layouts, search placeholders, tone selector badges, and toast feedback messages.
+  - Localized payment setup dialogs (`gateway-selector-modal.tsx`), checkout menus (`stripe-checkout-modal.tsx`, `midtrans-checkout-modal.tsx`), draft share access configuration modals (`share-document-modal.tsx`), and OpenAlex database search components (`insert-citation-modal.tsx`).
+  - Localized LaTeX Math Helper panel tabs and dynamic description lists, wrapping category choices using a CSS `flex-wrap` layout to avoid horizontal overflow bars on narrow screens.
+- Standardized academic document template structures inside `scholar-editor.tsx` to inject English metadata outlines (Chapter 1: Introduction, Chapter 2: Literature Review, etc.) dynamically based on client settings.
+- Adapted server AI endpoints (`/synthesize`, `/improve`, `/abstract`) to accept a language parameter, delivering system instructions in English but constraining target outputs to write in the dynamically selected target language (English/Indonesian).
+- Localized the MS Word exporter (`citation-export-word.ts`) to print either "REFERENCES" or "DAFTAR PUSTAKA" based on document locale settings.
+- Verified and compiled type check parameters (`npx tsc --noEmit` and `npm run build`) successfully across all modules.
+

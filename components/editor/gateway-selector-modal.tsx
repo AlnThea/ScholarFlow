@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { IconX, IconCreditCard, IconWallet, IconLoader, IconArrowRight } from '@tabler/icons-react';
 import { fetchPaymentGateways, type PaymentGateway } from '@/lib/api/payment-gateways';
+import { useLanguage } from '../i18n/language-context';
 
 interface GatewaySelectorModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export function GatewaySelectorModal({
   onClose,
   onSelectGateway
 }: GatewaySelectorModalProps) {
+  const { language } = useLanguage();
   const [gateways, setGateways] = useState<PaymentGateway[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -52,8 +54,12 @@ export function GatewaySelectorModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 bg-slate-50/50">
           <div className="flex flex-col gap-0.5">
-            <h3 className="text-xs font-bold text-slate-800">Pilih Jalur Pembayaran</h3>
-            <p className="text-[10px] text-slate-400">Pilih gerbang pembayaran yang sesuai dengan lokasi Anda.</p>
+            <h3 className="text-xs font-bold text-slate-800">
+              {language === 'en' ? 'Select Payment Gateway' : 'Pilih Jalur Pembayaran'}
+            </h3>
+            <p className="text-[10px] text-slate-400">
+              {language === 'en' ? 'Select the payment gateway that matches your location.' : 'Pilih gerbang pembayaran yang sesuai dengan lokasi Anda.'}
+            </p>
           </div>
           <button 
             onClick={onClose}
@@ -68,7 +74,9 @@ export function GatewaySelectorModal({
           {loading ? (
             <div className="py-8 flex flex-col items-center justify-center gap-2">
               <IconLoader className="h-6 w-6 text-indigo-600 animate-spin" />
-              <span className="text-[10px] text-slate-400">Memeriksa metode aktif...</span>
+              <span className="text-[10px] text-slate-400">
+                {language === 'en' ? 'Checking active methods...' : 'Memeriksa metode aktif...'}
+              </span>
             </div>
           ) : (
             gateways.map((g) => {
@@ -93,13 +101,15 @@ export function GatewaySelectorModal({
                   
                   <div className="flex-1 flex flex-col gap-0.5">
                     <span className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                      {isStripe ? 'Kartu Kredit Global (Stripe)' : 'E-Wallet & Bank Lokal (Midtrans)'}
+                      {isStripe 
+                        ? (language === 'en' ? 'Global Credit Card (Stripe)' : 'Kartu Kredit Global (Stripe)') 
+                        : (language === 'en' ? 'E-Wallet & Local Bank (Midtrans)' : 'E-Wallet & Bank Lokal (Midtrans)')}
                       <IconArrowRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition text-indigo-600" />
                     </span>
                     <span className="text-[10px] text-slate-400 leading-normal">
                       {isStripe 
-                        ? 'Cocok untuk pembayaran internasional dengan kartu kredit/debit global.' 
-                        : 'Cocok untuk Indonesia. Bayar dengan GoPay, QRIS, atau Virtual Account Bank lokal.'}
+                        ? (language === 'en' ? 'Suitable for international payments with global credit/debit cards.' : 'Cocok untuk pembayaran internasional dengan kartu kredit/debit global.') 
+                        : (language === 'en' ? 'Suitable for Indonesia. Pay with GoPay, QRIS, or local Bank Virtual Accounts.' : 'Cocok untuk Indonesia. Bayar dengan GoPay, QRIS, atau Virtual Account Bank lokal.')}
                     </span>
                   </div>
                 </button>

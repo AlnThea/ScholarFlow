@@ -11,6 +11,7 @@ import {
   IconBook
 } from '@tabler/icons-react';
 import type { CitationCandidate } from '@/lib/api/citations';
+import { useLanguage } from '../i18n/language-context';
 
 type InsertCitationModalProps = {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export function InsertCitationModal({
   onClose,
   onInsertCitation
 }: InsertCitationModalProps) {
+  const { language } = useLanguage();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<CitationCandidate[]>([]);
   const [loading, setLoading] = useState(false);
@@ -64,13 +66,13 @@ export function InsertCitationModal({
         body: JSON.stringify({ query, limit: 10 })
       });
       if (!res.ok) {
-        throw new Error('Gagal mencari sitasi dari API.');
+        throw new Error(language === 'en' ? 'Failed to search citations from API.' : 'Gagal mencari sitasi dari API.');
       }
       const data = await res.json();
       setResults(data.results || []);
     } catch (err: any) {
       console.error(err);
-      setError(err?.message || 'Terjadi kesalahan saat mencari sitasi.');
+      setError(err?.message || (language === 'en' ? 'An error occurred while searching citations.' : 'Terjadi kesalahan saat mencari sitasi.'));
     } finally {
       setLoading(false);
     }
@@ -88,7 +90,9 @@ export function InsertCitationModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <div className="flex items-center gap-2">
             <IconBook className="h-5 w-5 text-indigo-600" />
-            <h3 className="text-sm font-bold text-slate-800">Cari & Sisipkan Sitasi</h3>
+            <h3 className="text-sm font-bold text-slate-800">
+              {language === 'en' ? 'Search & Insert Citation' : 'Cari & Sisipkan Sitasi'}
+            </h3>
           </div>
           <button 
             onClick={onClose}
@@ -107,7 +111,7 @@ export function InsertCitationModal({
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Ketik kata kunci judul, topik, atau penulis jurnal ilmiah..."
+              placeholder={language === 'en' ? 'Type keywords for title, topic, or author...' : 'Ketik kata kunci judul, topik, atau penulis jurnal ilmiah...'}
               className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 bg-white text-sm outline-none transition focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 placeholder:text-slate-400"
             />
             {loading && (
@@ -131,8 +135,8 @@ export function InsertCitationModal({
               </div>
               <span className="text-xs text-slate-400 max-w-sm leading-normal">
                 {query.trim() 
-                  ? 'Tidak ditemukan kecocokan untuk kata kunci tersebut. Coba ganti kata kunci pencarian.'
-                  : 'Ketikkan kata kunci di atas untuk mencari referensi dari OpenAlex & Crossref secara real-time.'}
+                  ? (language === 'en' ? 'No matches found for this keyword. Try changing your search query.' : 'Tidak ditemukan kecocokan untuk kata kunci tersebut. Coba ganti kata kunci pencarian.')
+                  : (language === 'en' ? 'Type keywords above to search references from OpenAlex & Crossref in real-time.' : 'Ketikkan kata kunci di atas untuk mencari referensi dari OpenAlex & Crossref secara real-time.')}
               </span>
             </div>
           )}
@@ -196,7 +200,7 @@ export function InsertCitationModal({
                         className="inline-flex items-center justify-center gap-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 text-[10px] font-semibold shadow-sm transition whitespace-nowrap cursor-pointer"
                       >
                         <IconQuote className="h-3 w-3" />
-                        Sisipkan Sitasi
+                        {language === 'en' ? 'Insert Citation' : 'Sisipkan Sitasi'}
                       </button>
                       <button 
                         type="button"
@@ -205,7 +209,7 @@ export function InsertCitationModal({
                         className="inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-650 px-3 py-1.5 text-[10px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 whitespace-nowrap cursor-pointer"
                       >
                         <IconExternalLink className="h-3 w-3" />
-                        Buka Jurnal
+                        {language === 'en' ? 'Open Journal' : 'Buka Jurnal'}
                       </button>
                     </div>
                   </div>
@@ -222,7 +226,7 @@ export function InsertCitationModal({
             onClick={onClose}
             className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
           >
-            Batal
+            {language === 'en' ? 'Cancel' : 'Batal'}
           </button>
         </div>
       </div>

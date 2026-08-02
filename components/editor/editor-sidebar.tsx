@@ -31,6 +31,7 @@ import type { BibliographyEntry } from '@/lib/editor/bibliography';
 import type { CitationHistoryEntry } from '@/lib/editor/citation-history';
 import type { AiHistoryEntry } from '@/lib/editor/ai-history';
 import { useAuth } from '@/components/auth/auth-provider';
+import { useLanguage } from '../i18n/language-context';
 
 type SidebarProps = {
   selectedText: string;
@@ -197,6 +198,7 @@ export function EditorSidebar({
   onClearAiHistory,
   isApplied
 }: SidebarProps) {
+  const { language, t } = useLanguage();
   const [workspaceTab, setWorkspaceTab] = useState<'library' | 'writing' | 'document'>('library');
   const [query, setQuery] = useState('');
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -616,7 +618,7 @@ export function EditorSidebar({
                     className="text-xs font-bold text-indigo-650 hover:text-indigo-800 transition flex items-center gap-1 cursor-pointer"
                   >
                     <IconHistory className="h-3.5 w-3.5" />
-                    <span>Riwayat</span>
+                    <span>{t('sidebar.history')}</span>
                   </button>
                 </div>
                 <div className="mb-3 max-h-28 overflow-y-auto rounded-md border border-dashed border-line bg-slate-50 p-3 text-xs leading-5 text-muted">
@@ -660,16 +662,25 @@ export function EditorSidebar({
                     onClick={handleFindCitation}
                     disabled={!selectedText.trim() || isSearchingCitations}
                   />
-                  <ActionButton
+                   <ActionButton
                     label="Auto-Suggest Citation (AI)"
-                    description="🔒 Rekomendasi sitasi otomatis berdasarkan isi klaim kalimat Anda (Pro)."
+                    description={language === 'en'
+                      ? "🔒 Automated citation suggestions based on your statement claims (Pro)."
+                      : "🔒 Rekomendasi sitasi otomatis berdasarkan isi klaim kalimat Anda (Pro)."
+                    }
                     icon={IconSparkles}
                     onClick={() => {
                       if (activePlanId === 'free') {
-                        alert("🔒 Fitur Rekomendasi Sitasi AI khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing.");
+                        alert(language === 'en'
+                          ? "🔒 Automated AI Citation Suggestion feature is exclusive to Pro Writer plans. Please upgrade your account in the Pricing menu."
+                          : "🔒 Fitur Rekomendasi Sitasi AI khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing."
+                        );
                       } else {
                         onRepeatCitationSearch(selectedText);
-                        alert("AI merekomendasikan referensi berdasarkan klaim kalimat Anda. Hasil pencarian referensi dapat dilihat di tab 'Library' -> 'Sources'.");
+                        alert(language === 'en'
+                          ? "AI is recommending references based on your statement claims. Search results can be viewed in the 'Library' tab."
+                          : "AI merekomendasikan referensi berdasarkan klaim kalimat Anda. Hasil pencarian referensi dapat dilihat di tab 'Library' -> 'Sources'."
+                        );
                       }
                     }}
                     disabled={!selectedText.trim()}
@@ -967,8 +978,10 @@ export function EditorSidebar({
                 <IconHistory className="h-5 w-5" />
               </div>
               <div className="flex flex-col">
-                <h3 className="text-base font-extrabold text-slate-800">Riwayat Perbaikan AI</h3>
-                <span className="text-xs text-slate-400">Total {aiHistory.length} perubahan dicatat</span>
+                <h3 className="text-base font-extrabold text-slate-800">{t('ai.title')}</h3>
+                <span className="text-xs text-slate-400">
+                  {language === 'en' ? `Total ${aiHistory.length} changes recorded` : `Total ${aiHistory.length} perubahan dicatat`}
+                </span>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -976,13 +989,13 @@ export function EditorSidebar({
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm("Apakah Anda yakin ingin menghapus seluruh riwayat perbaikan AI?")) {
+                    if (confirm(t('ai.delete_history_confirm'))) {
                       onClearAiHistory();
                     }
                   }}
                   className="text-xs font-bold text-rose-600 hover:text-rose-800 transition cursor-pointer"
                 >
-                  Bersihkan Semua
+                  {language === 'en' ? 'Clear All' : 'Bersihkan Semua'}
                 </button>
               )}
               <button
@@ -1021,30 +1034,30 @@ export function EditorSidebar({
                                     : 'bg-indigo-50 text-indigo-700 border border-indigo-100'
                       }`}>
                         {item.tone === 'simplify' 
-                          ? 'Sederhana' 
+                          ? (language === 'en' ? 'Simplify' : 'Sederhana') 
                           : item.tone === 'shorten'
-                            ? 'Ringkas'
+                            ? (language === 'en' ? 'Condense' : 'Ringkas')
                             : item.tone === 'expand'
-                              ? 'Elaborasi'
+                              ? (language === 'en' ? 'Elaborate' : 'Elaborasi')
                               : item.tone === 'paraphrase'
-                                ? 'Parafrase'
+                                ? (language === 'en' ? 'Paraphrase' : 'Parafrase')
                                 : item.tone === 'summarize'
-                                  ? 'Ringkasan'
+                                  ? (language === 'en' ? 'Summarize' : 'Ringkasan')
                                   : item.tone === 'abstract'
-                                    ? 'Abstrak'
-                                    : 'Akademis'}
+                                    ? (language === 'en' ? 'Abstract' : 'Abstrak')
+                                    : (language === 'en' ? 'Academic' : 'Akademis')}
                       </span>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white text-slate-505 border border-slate-200/60 font-mono">
                         {item.model.replace(" (Direct)", "").replace(" (Free OR)", "").replace(" (Pro OR)", "")}
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-slate-400 font-medium font-mono">{item.savedAt}</span>
+                       <span className="text-xs text-slate-400 font-medium font-mono">{item.savedAt}</span>
                       <button
                         type="button"
                         onClick={() => onDeleteAiHistoryEntry(item.id)}
                         className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
-                        title="Hapus entri"
+                        title={language === 'en' ? 'Delete entry' : 'Hapus entri'}
                       >
                         <IconTrash className="h-4 w-4" />
                       </button>
@@ -1053,12 +1066,12 @@ export function EditorSidebar({
 
                   {/* Preview Area: Original vs AI Result */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                    <div className="flex flex-col gap-1.5 bg-white p-3 rounded-xl border border-slate-100/60 text-left">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Draf Asli:</span>
+                    <div className="flex flex-col gap-1.5 bg-white p-3 rounded-xl border border-slate-100 text-left">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{language === 'en' ? 'Original Draft:' : 'Draf Asli:'}</span>
                       <p className="text-slate-500 italic leading-relaxed">"{item.originalText}"</p>
                     </div>
                     <div className="flex flex-col gap-1.5 bg-indigo-50/10 p-3 rounded-xl border border-indigo-100/40 text-left">
-                      <span className="text-[9px] font-bold text-indigo-500 uppercase tracking-wider">Hasil Poles AI:</span>
+                      <span className="text-[9px] font-bold text-indigo-500 uppercase tracking-wider">{language === 'en' ? 'AI Polished Result:' : 'Hasil Poles AI:'}</span>
                       <p className="text-slate-700 font-semibold leading-relaxed">"{item.improvedText}"</p>
                     </div>
                   </div>
@@ -1070,7 +1083,7 @@ export function EditorSidebar({
                       onClick={async () => {
                         try {
                           await navigator.clipboard.writeText(item.improvedText);
-                          alert("Disalin ke clipboard!");
+                          alert(language === 'en' ? 'Copied to clipboard!' : 'Disalin ke clipboard!');
                         } catch (err) {
                           console.error('Failed to copy text:', err);
                         }
@@ -1078,7 +1091,7 @@ export function EditorSidebar({
                       className="px-4 py-2 border border-slate-200 hover:bg-slate-50 hover:text-slate-800 text-slate-655 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5"
                     >
                       <IconCopy className="h-4 w-4" />
-                      Salin
+                      {language === 'en' ? 'Copy' : 'Salin'}
                     </button>
                     <button
                       type="button"
@@ -1089,7 +1102,7 @@ export function EditorSidebar({
                       className="px-4.5 py-2.5 bg-indigo-650 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
                     >
                       <IconCheck className="h-4 w-4" />
-                      Terapkan ke Canvas
+                      {language === 'en' ? 'Apply to Canvas' : 'Terapkan ke Canvas'}
                     </button>
                   </div>
                 </div>
@@ -1097,8 +1110,13 @@ export function EditorSidebar({
             ) : (
               <div className="py-16 text-center flex flex-col items-center justify-center gap-2">
                 <IconHistory className="h-12 w-12 text-slate-300" />
-                <span className="text-sm font-semibold text-slate-500">Belum ada riwayat perbaikan AI</span>
-                <span className="text-xs text-slate-400 text-center">Gunakan asisten AI untuk memoles tulisan Anda dan catatannya akan muncul di sini.</span>
+                <span className="text-sm font-semibold text-slate-500">{t('ai.no_history')}</span>
+                <span className="text-xs text-slate-400 text-center">
+                  {language === 'en' 
+                    ? 'Use the AI assistant to polish your writing and its changes will appear here.'
+                    : 'Gunakan asisten AI untuk memoles tulisan Anda dan catatannya akan muncul di sini.'
+                  }
+                </span>
               </div>
             )}
           </div>
@@ -1109,7 +1127,7 @@ export function EditorSidebar({
               onClick={() => setIsHistoryModalOpen(false)}
               className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer"
             >
-              Tutup
+              {language === 'en' ? 'Close' : 'Tutup'}
             </button>
           </div>
         </div>

@@ -10,6 +10,7 @@ import { EditorLayout } from './editor-layout';
 import { searchCitations, type CitationCandidate } from '@/lib/api/citations';
 import { fetchCitationLibrary, saveCitationToLibrary } from '@/lib/api/citation-library';
 import { useAuth } from '@/components/auth/auth-provider';
+import { useLanguage } from '../i18n/language-context';
 import {
   fetchDocuments,
   fetchDocumentById,
@@ -176,6 +177,7 @@ function findMostUniqueWord(sentence: string): string {
 }
 
 export function ScholarEditor() {
+  const { language, t } = useLanguage();
   const { user, profile } = useAuth();
   const activePlanId = profile?.subscription_plan || 'free';
   const [hydrated, setHydrated] = useState(false);
@@ -190,7 +192,7 @@ export function ScholarEditor() {
   // Document system state
   const [documents, setDocuments] = useState<DocumentListItem[]>([]);
   const [currentDocument, setCurrentDocument] = useState<DocumentEntry | null>(null);
-  const [saveStatus, setSaveStatus] = useState<string>('Tersimpan ke Cloud');
+  const [saveStatus, setSaveStatus] = useState<string>(language === 'en' ? 'Saved to Cloud' : 'Tersimpan ke Cloud');
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const loadedDocumentIdRef = useRef<string | null>(null);
@@ -231,7 +233,7 @@ export function ScholarEditor() {
 
   const triggerDebouncedSave = useCallback((docId: string, titleToSave: string, contentToSave: any, settingsToSave?: any) => {
     if (!user?.id) return;
-    setSaveStatus('Menyimpan...');
+    setSaveStatus(language === 'en' ? 'Saving...' : 'Menyimpan...');
 
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
@@ -248,7 +250,7 @@ export function ScholarEditor() {
       try {
         const res = await updateDocument(docId, user.id, updates);
         if (res.success) {
-          setSaveStatus('Tersimpan ke Cloud');
+          setSaveStatus(language === 'en' ? 'Saved to Cloud' : 'Tersimpan ke Cloud');
           localStorage.removeItem(`scholarflow.offline_backup.${docId}`);
           
           // Refresh list to update title/timestamps
@@ -326,7 +328,7 @@ export function ScholarEditor() {
               };
               setCurrentDocument(fallbackDoc);
               lastSavedContentRef.current = JSON.stringify(fallbackDoc.content || { blocks: [] });
-              setSaveStatus('Gagal Sinkronisasi (Offline)');
+              setSaveStatus(language === 'en' ? 'Sync Failed (Offline)' : 'Gagal Sinkronisasi (Offline)');
             } catch (e) {
               console.error('Failed to parse offline backup on failure fallback:', e);
             }
@@ -391,7 +393,7 @@ export function ScholarEditor() {
   // Prevent closing the tab when save status is "Menyimpan..."
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (saveStatus === 'Menyimpan...') {
+      if (saveStatus === 'Menyimpan...' || saveStatus === 'Saving...') {
         e.preventDefault();
         e.returnValue = ''; // Standard trigger for modern browsers
         return '';
@@ -458,9 +460,9 @@ export function ScholarEditor() {
       }
       
       if (hasError) {
-        setSaveStatus('Gagal Sinkronisasi');
+        setSaveStatus(language === 'en' ? 'Sync Failed' : 'Gagal Sinkronisasi');
       } else {
-        setSaveStatus('Tersimpan ke Cloud');
+        setSaveStatus(language === 'en' ? 'Saved to Cloud' : 'Tersimpan ke Cloud');
       }
     };
 
@@ -552,23 +554,23 @@ export function ScholarEditor() {
         id: "para-" + Math.random().toString(36).substring(2, 9),
         type: "paragraph",
         data: {
-          text: "Mulai menulis draf jurnal akademik Anda di sini..."
+          text: language === 'en' ? "Start writing your academic journal draft here..." : "Mulai menulis draf jurnal akademik Anda di sini..."
         }
       }
     ];
 
     if (settings.templateId === 'skripsi') {
       initialBlocks = [
-        { id: "h-1", type: "header", data: { text: "Bab 1: Pendahuluan", level: 2 } },
-        { id: "p-1", type: "paragraph", data: { text: "[Tulis latar belakang penelitian, rumusan masalah, tujuan, dan manfaat riset Anda di sini...]" } },
-        { id: "h-2", type: "header", data: { text: "Bab 2: Tinjauan Pustaka", level: 2 } },
-        { id: "p-2", type: "paragraph", data: { text: "[Tulis studi literatur, teori dasar, dan kerangka penelitian rujukan Anda di sini...]" } },
-        { id: "h-3", type: "header", data: { text: "Bab 3: Metode Penelitian", level: 2 } },
-        { id: "p-3", type: "paragraph", data: { text: "[Tulis rancangan sistem, pengumpulan data, dan prosedur analisis di sini...]" } },
-        { id: "h-4", type: "header", data: { text: "Bab 4: Hasil dan Pembahasan", level: 2 } },
-        { id: "p-4", type: "paragraph", data: { text: "[Tampilkan data eksperimen, grafik, serta pembahasan mendalam atas temuan riset di sini...]" } },
-        { id: "h-5", type: "header", data: { text: "Bab 5: Penutup", level: 2 } },
-        { id: "p-5", type: "paragraph", data: { text: "[Tulis kesimpulan akhir dan saran pengembangan riset ke depan di sini...]" } }
+        { id: "h-1", type: "header", data: { text: language === 'en' ? "Chapter 1: Introduction" : "Bab 1: Pendahuluan", level: 2 } },
+        { id: "p-1", type: "paragraph", data: { text: language === 'en' ? "[Write research background, problem formulation, objectives, and benefits of your research here...]" : "[Tulis latar belakang penelitian, rumusan masalah, tujuan, dan manfaat riset Anda di sini...]" } },
+        { id: "h-2", type: "header", data: { text: language === 'en' ? "Chapter 2: Literature Review" : "Bab 2: Tinjauan Pustaka", level: 2 } },
+        { id: "p-2", type: "paragraph", data: { text: language === 'en' ? "[Write literature study, basic theory, and framework of your reference research here...]" : "[Tulis studi literatur, teori dasar, dan kerangka penelitian rujukan Anda di sini...]" } },
+        { id: "h-3", type: "header", data: { text: language === 'en' ? "Chapter 3: Research Methodology" : "Bab 3: Metode Penelitian", level: 2 } },
+        { id: "p-3", type: "paragraph", data: { text: language === 'en' ? "[Write system design, data collection, and analysis procedures here...]" : "[Tulis rancangan sistem, pengumpulan data, dan prosedur analisis di sini...]" } },
+        { id: "h-4", type: "header", data: { text: language === 'en' ? "Chapter 4: Results and Discussion" : "Bab 4: Hasil dan Pembahasan", level: 2 } },
+        { id: "p-4", type: "paragraph", data: { text: language === 'en' ? "[Present experimental data, charts, and detailed discussion of research findings here...]" : "[Tampilkan data eksperimen, grafik, serta pembahasan mendalam atas temuan riset di sini...]" } },
+        { id: "h-5", type: "header", data: { text: language === 'en' ? "Chapter 5: Conclusion" : "Bab 5: Penutup", level: 2 } },
+        { id: "p-5", type: "paragraph", data: { text: language === 'en' ? "[Write final conclusions and recommendations for future research here...]" : "[Tulis kesimpulan akhir dan saran pengembangan riset ke depan di sini...]" } }
       ];
     } else if (settings.templateId === 'ieee') {
       initialBlocks = [
@@ -598,14 +600,14 @@ export function ScholarEditor() {
       ];
     } else if (settings.templateId === 'report') {
       initialBlocks = [
-        { id: "h-rep-1", type: "header", data: { text: "Ringkasan Eksekutif", level: 2 } },
-        { id: "p-rep-1", type: "paragraph", data: { text: "[Rangkuman ringkas poin-poin utama laporan riset...]" } },
-        { id: "h-rep-2", type: "header", data: { text: "Latar Belakang & Masalah", level: 2 } },
-        { id: "p-rep-2", type: "paragraph", data: { text: "[Deskripsi latar belakang kasus, isu yang diangkat, dan urgensi laporan riset...]" } },
-        { id: "h-rep-3", type: "header", data: { text: "Analisis Data & Temuan", level: 2 } },
-        { id: "p-rep-3", type: "paragraph", data: { text: "[Pembahasan mendalam atas fakta-fakta lapangan dan hasil analisis kuantitatif/kualitatif...]" } },
-        { id: "h-rep-4", type: "header", data: { text: "Rekomendasi & Solusi", level: 2 } },
-        { id: "p-rep-4", type: "paragraph", data: { text: "[Rekomendasi strategis dan solusi pemecahan masalah yang diusulkan...]" } }
+        { id: "h-rep-1", type: "header", data: { text: language === 'en' ? "Executive Summary" : "Ringkasan Eksekutif", level: 2 } },
+        { id: "p-rep-1", type: "paragraph", data: { text: language === 'en' ? "[Concise summary of key points of the research report...]" : "[Rangkuman ringkas poin-poin utama laporan riset...]" } },
+        { id: "h-rep-2", type: "header", data: { text: language === 'en' ? "Background & Problem" : "Latar Belakang & Masalah", level: 2 } },
+        { id: "p-rep-2", type: "paragraph", data: { text: language === 'en' ? "[Description of case background, issues raised, and urgency of the research report...]" : "[Deskripsi latar belakang kasus, isu yang diangkat, dan urgensi laporan riset...]" } },
+        { id: "h-rep-3", type: "header", data: { text: language === 'en' ? "Data Analysis & Findings" : "Analisis Data & Temuan", level: 2 } },
+        { id: "p-rep-3", type: "paragraph", data: { text: language === 'en' ? "[In-depth discussion of field facts and quantitative/qualitative analysis results...]" : "[Pembahasan mendalam atas fakta-fakta lapangan dan hasil analisis kuantitatif/kualitatif...]" } },
+        { id: "h-rep-4", type: "header", data: { text: language === 'en' ? "Recommendations & Solutions" : "Rekomendasi & Solusi", level: 2 } },
+        { id: "p-rep-4", type: "paragraph", data: { text: language === 'en' ? "[Strategic recommendations and proposed problem-solving solutions...]" : "[Rekomendasi strategis dan solusi pemecahan masalah yang diusulkan...]" } }
       ];
     }
 
@@ -689,8 +691,10 @@ export function ScholarEditor() {
   }, [currentDocument, user, triggerDebouncedSave, isApplied, contentBeforeApply]);
 
   const folders = useMemo(() => {
-    return currentDocument?.settings?.folders || ['Pendahuluan', 'Tinjauan Pustaka', 'Metodologi', 'Hasil & Diskusi'];
-  }, [currentDocument]);
+    return currentDocument?.settings?.folders || (language === 'en'
+      ? ['Introduction', 'Literature Review', 'Methodology', 'Results & Discussion']
+      : ['Pendahuluan', 'Tinjauan Pustaka', 'Metodologi', 'Hasil & Diskusi']);
+  }, [currentDocument, language]);
 
   const folderAssignments = useMemo(() => {
     return currentDocument?.settings?.folder_assignments || {};
@@ -698,7 +702,9 @@ export function ScholarEditor() {
 
   const handleCreateFolder = useCallback((folderName: string) => {
     if (!currentDocument) return;
-    const currentFolders = currentDocument.settings?.folders || ['Pendahuluan', 'Tinjauan Pustaka', 'Metodologi', 'Hasil & Diskusi'];
+    const currentFolders = currentDocument.settings?.folders || (language === 'en'
+      ? ['Introduction', 'Literature Review', 'Methodology', 'Results & Discussion']
+      : ['Pendahuluan', 'Tinjauan Pustaka', 'Metodologi', 'Hasil & Diskusi']);
     if (currentFolders.includes(folderName)) return;
     const updatedFolders = [...currentFolders, folderName];
     
@@ -1109,17 +1115,17 @@ export function ScholarEditor() {
         })
         .filter(Boolean);
         
-      const response = await synthesizeLiteratureReview(referencesData as any[], selectedAiModel);
+      const response = await synthesizeLiteratureReview(referencesData as any[], selectedAiModel, language);
       setSynthesizedText(response.synthesized_text);
       if (response.disclaimer) {
         setSynthesizeDisclaimer(response.disclaimer);
       }
     } catch (error: any) {
-      setSynthesizeError(error.message || 'Gagal mensintesis tinjauan pustaka.');
+      setSynthesizeError(error.message || (language === 'en' ? 'Failed to synthesize literature review.' : 'Gagal mensintesis tinjauan pustaka.'));
     } finally {
       setIsSynthesizing(false);
     }
-  }, [citationLibrary, activeReferenceIds, selectedAiModel]);
+  }, [citationLibrary, activeReferenceIds, selectedAiModel, language]);
 
   const handleInsertSynthesizedText = useCallback((text: string) => {
     editorJsRef.current?.insertText(text);
@@ -1135,7 +1141,7 @@ export function ScholarEditor() {
     setAiError(null);
 
     try {
-      const response = await improveWriting(selectedText, selectedAiTone, selectedAiModel);
+      const response = await improveWriting(selectedText, selectedAiTone, selectedAiModel, language);
       setImprovedResult(response);
       setContentBeforeApply(currentDocument?.content);
       setIsApplied(false);
@@ -1156,7 +1162,7 @@ export function ScholarEditor() {
     } finally {
       setIsImproving(false);
     }
-  }, [selectedText, selectedAiModel, selectedAiTone, setAiHistory, currentDocument]);
+  }, [selectedText, selectedAiModel, selectedAiTone, setAiHistory, currentDocument, language]);
 
   const runParaphrase = useCallback(async () => {
     if (!selectedText.trim()) return;
@@ -1165,7 +1171,7 @@ export function ScholarEditor() {
     setAiError(null);
 
     try {
-      const response = await improveWriting(selectedText, 'paraphrase', selectedAiModel);
+      const response = await improveWriting(selectedText, 'paraphrase', selectedAiModel, language);
       setImprovedResult(response);
       setContentBeforeApply(currentDocument?.content);
       setIsApplied(false);
@@ -1186,7 +1192,7 @@ export function ScholarEditor() {
     } finally {
       setIsImproving(false);
     }
-  }, [selectedText, selectedAiModel, setAiHistory, currentDocument]);
+  }, [selectedText, selectedAiModel, setAiHistory, currentDocument, language]);
 
   const runSummarize = useCallback(async () => {
     if (!selectedText.trim()) return;
@@ -1195,7 +1201,7 @@ export function ScholarEditor() {
     setAiError(null);
 
     try {
-      const response = await improveWriting(selectedText, 'summarize', selectedAiModel);
+      const response = await improveWriting(selectedText, 'summarize', selectedAiModel, language);
       setImprovedResult(response);
       setContentBeforeApply(currentDocument?.content);
       setIsApplied(false);
@@ -1216,7 +1222,7 @@ export function ScholarEditor() {
     } finally {
       setIsImproving(false);
     }
-  }, [selectedText, selectedAiModel, setAiHistory, currentDocument]);
+  }, [selectedText, selectedAiModel, setAiHistory, currentDocument, language]);
 
   const runGenerateAbstract = useCallback(async () => {
     setIsImproving(true);
@@ -1225,9 +1231,9 @@ export function ScholarEditor() {
     try {
       const fullText = extractTextFromContent(currentDocument?.content);
       if (!fullText.trim()) {
-        throw new Error('Dokumen kosong. Silakan tulis isi dokumen sebelum membuat abstrak.');
+        throw new Error(language === 'en' ? 'Document is empty. Please write some content before generating abstract.' : 'Dokumen kosong. Silakan tulis isi dokumen sebelum membuat abstrak.');
       }
-      const response = await generateAbstract(fullText, selectedAiModel);
+      const response = await generateAbstract(fullText, selectedAiModel, language);
       setImprovedResult({
         original_text: 'Document Context',
         improved_text: response.abstract_text,
@@ -1253,7 +1259,7 @@ export function ScholarEditor() {
     } finally {
       setIsImproving(false);
     }
-  }, [currentDocument, selectedAiModel, setAiHistory]);
+  }, [currentDocument, selectedAiModel, setAiHistory, language]);
 
   const handleParafrasePlagiat = useCallback(async (sentence: string) => {
     setSelectedText(sentence);
@@ -1261,7 +1267,7 @@ export function ScholarEditor() {
     setAiError(null);
 
     try {
-      const response = await improveWriting(sentence, selectedAiTone, selectedAiModel);
+      const response = await improveWriting(sentence, selectedAiTone, selectedAiModel, language);
       setImprovedResult(response);
       setContentBeforeApply(currentDocument?.content);
       setIsApplied(false);
@@ -1282,7 +1288,7 @@ export function ScholarEditor() {
     } finally {
       setIsImproving(false);
     }
-  }, [selectedAiModel, selectedAiTone, setAiHistory, currentDocument]);
+  }, [selectedAiModel, selectedAiTone, setAiHistory, currentDocument, language]);
 
   const applyImprovedText = useCallback(() => {
     if (!improvedResult) return;

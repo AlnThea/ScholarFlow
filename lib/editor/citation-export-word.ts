@@ -44,7 +44,8 @@ function processTextHtml(html: string): string {
 export function generateWordHtml(
   title: string,
   blocks: EditorBlock[],
-  bibliography: string[]
+  bibliography: string[],
+  language: 'en' | 'id' = 'en'
 ): string {
   // Styles spec khusus Microsoft Word (mso-styles) untuk kertas A4, margin 1 inci, dan font Times New Roman 12pt
   const htmlHeader = `
@@ -234,7 +235,8 @@ export function generateWordHtml(
 
   // Tambahkan daftar pustaka di bagian akhir dokumen
   if (bibliography && bibliography.length > 0) {
-    bodyContent += `<div class="bibliography-title">DAFTAR PUSTAKA</div>`;
+    const bibTitle = language === 'en' ? 'REFERENCES' : 'DAFTAR PUSTAKA';
+    bodyContent += `<div class="bibliography-title">${bibTitle}</div>`;
     bibliography.forEach((entry) => {
       // Hilangkan tag HTML selain formatting italic if ada
       const cleanEntry = entry.replace(/<\/?(?!i\b)[^>]+(>|$)/g, '');
@@ -251,9 +253,10 @@ export function generateWordHtml(
 export function exportToWordFile(
   title: string,
   blocks: EditorBlock[],
-  bibliography: string[]
+  bibliography: string[],
+  language: 'en' | 'id' = 'en'
 ) {
-  const htmlContent = generateWordHtml(title, blocks, bibliography);
+  const htmlContent = generateWordHtml(title, blocks, bibliography, language);
   
   // Gunakan Blob dengan mimetype application/msword untuk kompatibilitas Word (.doc)
   const blob = new Blob(['\ufeff' + htmlContent], {

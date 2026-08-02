@@ -14,6 +14,7 @@ import {
   IconX 
 } from '@tabler/icons-react';
 import { CitationStyleModal } from './citation-style-modal';
+import { useLanguage } from '../i18n/language-context';
 import type { DocumentSettings, DocumentListItem } from '@/lib/api/documents';
 
 interface DocumentSetupModalProps {
@@ -25,6 +26,7 @@ interface DocumentSetupModalProps {
 }
 
 export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], activePlanId = 'free' }: DocumentSetupModalProps) {
+  const { language, t } = useLanguage();
   const [title, setTitle] = useState('');
   
   // Project creation states
@@ -110,18 +112,18 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
 
     if (createMode === 'new_project') {
       if (activePlanId === 'free' && existingProjects.length >= 1) {
-        alert("🔒 Pengguna paket Free terbatas hanya bisa membuat 1 Folder Proyek. Silakan upgrade ke paket Pro Writer di menu Pricing untuk membuat Proyek tanpa batas!");
+        alert(t('setup.free_project_limit'));
         return;
       }
       pId = 'proj_' + Math.random().toString(36).substring(2, 9);
-      pName = newProjectName.trim() || 'Proyek Baru';
+      pName = newProjectName.trim() || (language === 'en' ? 'New Project' : 'Proyek Baru');
       pType = newProjectType;
-      pPart = projectPart.trim() || 'Bab 1';
+      pPart = projectPart.trim() || (language === 'en' ? 'Chapter 1' : 'Bab 1');
       finalTitle = `${pName} - ${pPart}`;
     } else if (createMode === 'exist_project') {
       const existingDocsInProj = documents.filter(doc => doc.settings?.projectId === selectedProjectId);
       if (activePlanId === 'free' && existingDocsInProj.length >= 3) {
-        alert("🔒 Pengguna paket Free terbatas hanya bisa memiliki maksimal 3 Bab/Bagian dalam satu Proyek. Silakan upgrade ke paket Pro Writer di menu Pricing untuk menambah bab tanpa batas!");
+        alert(t('setup.free_part_limit'));
         return;
       }
       const proj = existingProjects.find(p => p.id === selectedProjectId);
@@ -130,10 +132,10 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
         pName = proj.name;
         pType = proj.type as any;
       }
-      pPart = projectPart.trim() || 'Bagian Baru';
-      finalTitle = `${pName || 'Proyek'} - ${pPart}`;
+      pPart = projectPart.trim() || (language === 'en' ? 'New Section' : 'Bagian Baru');
+      finalTitle = `${pName || (language === 'en' ? 'Project' : 'Proyek')} - ${pPart}`;
     } else {
-      finalTitle = finalTitle || 'Dokumen Mandiri';
+      finalTitle = finalTitle || (language === 'en' ? 'Independent Document' : 'Dokumen Mandiri');
     }
 
     const settings: DocumentSettings = {
@@ -157,7 +159,7 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
   };
 
   const handleSkip = () => {
-    const finalTitle = title.trim() || 'Dokumen Mandiri';
+    const finalTitle = title.trim() || (language === 'en' ? 'Independent Document' : 'Dokumen Mandiri');
     const defaultSettings: DocumentSettings = {
       publishYear: 'all',
       publishYearStart: null,
@@ -184,7 +186,7 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
           <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
             <div className="flex items-center gap-2">
               <IconFilePlus className="h-5 w-5 text-indigo-600" />
-              <h2 className="text-base font-bold text-slate-800">Buat Dokumen Akademik Baru</h2>
+              <h2 className="text-base font-bold text-slate-800">{t('setup.title')}</h2>
             </div>
             <button 
               onClick={onClose}
@@ -199,7 +201,7 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
             
             {/* 0. Project Grouping Mode Selection */}
             <div className="flex flex-col gap-2.5">
-              <label className="text-xs font-bold text-slate-700">Jenis Dokumen / Pengelompokan Proyek</label>
+              <label className="text-xs font-bold text-slate-700">{t('setup.type')}</label>
               <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
@@ -210,8 +212,8 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
                       : 'border-slate-200 hover:bg-slate-50 text-slate-500'
                   }`}
                 >
-                  <span className="text-xs">📄 Lepas</span>
-                  <span className="text-[9px] text-slate-400 mt-0.5">Dokumen Tunggal</span>
+                  <span className="text-xs">{language === 'en' ? '📄 Independent' : '📄 Lepas'}</span>
+                  <span className="text-[9px] text-slate-400 mt-0.5">{t('setup.single')}</span>
                 </button>
                 <button
                   type="button"
@@ -222,8 +224,8 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
                       : 'border-slate-200 hover:bg-slate-50 text-slate-500'
                   }`}
                 >
-                  <span className="text-xs">📁 Proyek Baru</span>
-                  <span className="text-[9px] text-slate-400 mt-0.5">Bikin Folder Baru</span>
+                  <span className="text-xs">{language === 'en' ? '📁 New Project' : '📁 Proyek Baru'}</span>
+                  <span className="text-[9px] text-slate-400 mt-0.5">{language === 'en' ? 'Create New Folder' : 'Bikin Folder Baru'}</span>
                 </button>
                 <button
                   type="button"
@@ -235,8 +237,8 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
                       : 'border-slate-200 hover:bg-slate-50 text-slate-500'
                   }`}
                 >
-                  <span className="text-xs">➕ Gabung Folder</span>
-                  <span className="text-[9px] text-slate-400 mt-0.5">Tambah Bab/Bagian</span>
+                  <span className="text-xs">{language === 'en' ? '➕ Join Folder' : '➕ Gabung Folder'}</span>
+                  <span className="text-[9px] text-slate-400 mt-0.5">{t('setup.folder')}</span>
                 </button>
               </div>
             </div>
@@ -244,11 +246,13 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
             {/* Dynamic Inputs based on mode */}
             {createMode === 'independent' && (
               <div className="flex flex-col gap-1.5 animate-fade-in">
-                <label htmlFor="doc-title" className="text-xs font-bold text-slate-700">Judul Dokumen / Artikel</label>
+                <label htmlFor="doc-title" className="text-xs font-bold text-slate-700">
+                  {language === 'en' ? 'Document / Article Title' : 'Judul Dokumen / Artikel'}
+                </label>
                 <input
                   id="doc-title"
                   type="text"
-                  placeholder="Rancang Bangun Sistem Informasi Donasi..."
+                  placeholder={language === 'en' ? 'Design and Implementation of Donation Information System...' : 'Rancang Bangun Sistem Informasi Donasi...'}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
@@ -259,11 +263,11 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
             {createMode === 'new_project' && (
               <div className="flex flex-col gap-4 p-4 border border-indigo-100 bg-indigo-50/5 rounded-2xl animate-fade-in">
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="project-name" className="text-xs font-bold text-slate-700">Nama Proyek / Judul Besar (Tesis/Jurnal)</label>
+                  <label htmlFor="project-name" className="text-xs font-bold text-slate-700">{t('setup.project_name')}</label>
                   <input
                     id="project-name"
                     type="text"
-                    placeholder="Analisis Sentimen Twitter menggunakan LSTM"
+                    placeholder={language === 'en' ? 'Twitter Sentiment Analysis using LSTM...' : 'Analisis Sentimen Twitter menggunakan LSTM'}
                     value={newProjectName}
                     onChange={(e) => setNewProjectName(e.target.value)}
                     className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
@@ -272,24 +276,24 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-slate-700">Kategori Penulisan</label>
+                    <label className="text-xs font-bold text-slate-700">{language === 'en' ? 'Writing Category' : 'Kategori Penulisan'}</label>
                     <select
                       value={newProjectType}
                       onChange={(e) => setNewProjectType(e.target.value as any)}
                       className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 bg-white outline-none focus:border-indigo-500 transition"
                     >
-                      <option value="skripsi">🎓 Skripsi / Tesis / Disertasi</option>
-                      <option value="jurnal">📚 Jurnal / Paper Ilmiah</option>
-                      <option value="makalah">📝 Makalah / Tugas Kuliah</option>
+                      <option value="skripsi">{language === 'en' ? '🎓 Thesis / Dissertation' : '🎓 Skripsi / Tesis / Disertasi'}</option>
+                      <option value="jurnal">{language === 'en' ? '📚 Journal / Scientific Paper' : '📚 Jurnal / Paper Ilmiah'}</option>
+                      <option value="makalah">{language === 'en' ? '📝 College Paper / Assignment' : '📝 Makalah / Tugas Kuliah'}</option>
                     </select>
                   </div>
                   
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="project-part" className="text-xs font-bold text-slate-700">Bagian / Nama Bab Dokumen</label>
+                    <label htmlFor="project-part" className="text-xs font-bold text-slate-700">{language === 'en' ? 'Section / Chapter Document Name' : 'Bagian / Nama Bab Dokumen'}</label>
                     <input
                       id="project-part"
                       type="text"
-                      placeholder="Bab 1: Pendahuluan"
+                      placeholder={language === 'en' ? 'Chapter 1: Introduction' : 'Bab 1: Pendahuluan'}
                       value={projectPart}
                       onChange={(e) => setProjectPart(e.target.value)}
                       className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
@@ -303,7 +307,7 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
               <div className="flex flex-col gap-4 p-4 border border-indigo-100 bg-indigo-50/5 rounded-2xl animate-fade-in">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-slate-700">Pilih Proyek / Folder</label>
+                    <label className="text-xs font-bold text-slate-700">{language === 'en' ? 'Choose Project / Folder' : 'Pilih Proyek / Folder'}</label>
                     <select
                       value={selectedProjectId}
                       onChange={(e) => setSelectedProjectId(e.target.value)}
@@ -318,11 +322,11 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="project-part-exist" className="text-xs font-bold text-slate-700">Bagian / Nama Bab Dokumen</label>
+                    <label htmlFor="project-part-exist" className="text-xs font-bold text-slate-700">{language === 'en' ? 'Section / Chapter Document Name' : 'Bagian / Nama Bab Dokumen'}</label>
                     <input
                       id="project-part-exist"
                       type="text"
-                      placeholder="Bab 2: Tinjauan Pustaka"
+                      placeholder={language === 'en' ? 'Chapter 2: Literature Review' : 'Bab 2: Tinjauan Pustaka'}
                       value={projectPart}
                       onChange={(e) => setProjectPart(e.target.value)}
                       className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
@@ -336,14 +340,14 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
 
             {/* 1.5. Writing Template Selector */}
             <div className="flex flex-col gap-3">
-              <label className="text-xs font-bold text-slate-700">Pilih Templat Penulisan (Templates Gallery)</label>
+              <label className="text-xs font-bold text-slate-700">{language === 'en' ? 'Choose Writing Template (Templates Gallery)' : 'Pilih Templat Penulisan (Templates Gallery)'}</label>
               <div className="grid grid-cols-5 gap-2">
                 {[
-                  { id: 'empty', label: '📄 Kosong', desc: 'Draf Putih Polos' },
-                  { id: 'skripsi', label: '🎓 Skripsi', desc: 'Bab 1 s.d 5 Lengkap' },
-                  { id: 'ieee', label: '📚 IEEE', desc: 'Format Jurnal IEEE' },
-                  { id: 'apa', label: '📝 APA Style', desc: 'Format Jurnal APA' },
-                  { id: 'report', label: '💼 Laporan', desc: 'Format Riset Umum' }
+                  { id: 'empty', label: language === 'en' ? '📄 Empty' : '📄 Kosong', desc: language === 'en' ? 'Blank Draft' : 'Draf Putih Polos' },
+                  { id: 'skripsi', label: language === 'en' ? '🎓 Thesis' : '🎓 Skripsi', desc: language === 'en' ? 'Complete Chapters 1 to 5' : 'Bab 1 s.d 5 Lengkap' },
+                  { id: 'ieee', label: '📚 IEEE', desc: language === 'en' ? 'IEEE Journal Format' : 'Format Jurnal IEEE' },
+                  { id: 'apa', label: '📝 APA Style', desc: language === 'en' ? 'APA Journal Format' : 'Format Jurnal APA' },
+                  { id: 'report', label: language === 'en' ? '💼 Report' : '💼 Laporan', desc: language === 'en' ? 'General Research Format' : 'Format Riset Umum' }
                 ].map((t) => (
                   <button
                     key={t.id}
@@ -362,20 +366,18 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
               </div>
             </div>
 
-            <div className="h-px bg-slate-100 w-full" />
-
             {/* 2. Publish Year Settings */}
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
                 <IconCalendar className="h-4 w-4 text-slate-400" />
-                <span>Filter Tahun Terbit (Publish Year)</span>
+                <span>{language === 'en' ? 'Filter Publication Year' : 'Filter Tahun Terbit (Publish Year)'}</span>
               </div>
               
               <div className="grid grid-cols-3 gap-2.5">
                 {[
-                  { id: 'all', label: 'Semua Tahun' },
-                  { id: '5_years', label: '5 Tahun Terakhir' },
-                  { id: 'custom', label: 'Tahun Kustom' }
+                  { id: 'all', label: language === 'en' ? 'All Years' : 'Semua Tahun' },
+                  { id: '5_years', label: language === 'en' ? 'Last 5 Years' : '5 Tahun Terakhir' },
+                  { id: 'custom', label: language === 'en' ? 'Custom Year' : 'Tahun Kustom' }
                 ].map((option) => (
                   <button
                     key={option.id}
@@ -394,7 +396,7 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
               {publishYear === 'custom' && (
                 <div className="flex items-center gap-3 bg-slate-50 rounded-xl p-3 border border-slate-100 animate-slide-down">
                   <div className="flex items-center gap-1.5 flex-1">
-                    <span className="text-[10px] font-semibold text-slate-400">Dari:</span>
+                    <span className="text-[10px] font-semibold text-slate-400">{language === 'en' ? 'From:' : 'Dari:'}</span>
                     <input
                       type="number"
                       value={publishYearStart}
@@ -403,7 +405,7 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
                     />
                   </div>
                   <div className="flex items-center gap-1.5 flex-1">
-                    <span className="text-[10px] font-semibold text-slate-400">Sampai:</span>
+                    <span className="text-[10px] font-semibold text-slate-400">{language === 'en' ? 'To:' : 'Sampai:'}</span>
                     <input
                       type="number"
                       value={publishYearEnd}
@@ -419,11 +421,11 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
                 <IconSettings className="h-4 w-4 text-slate-400" />
-                <span>Batas Impact Factor Jurnal</span>
+                <span>{language === 'en' ? 'Journal Impact Factor Limit' : 'Batas Impact Factor Jurnal'}</span>
               </div>
               <div className="grid grid-cols-4 gap-2.5">
                 {[
-                  { id: 'all', label: 'Semua Jurnal' },
+                  { id: 'all', label: language === 'en' ? 'All Journals' : 'Semua Jurnal' },
                   { id: '0.25+', label: '0.25+' },
                   { id: '3+', label: '3+' },
                   { id: '10+', label: '10+' }
@@ -451,9 +453,11 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
                 <div className="flex flex-col gap-0.5">
                   <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                     <IconSparkles className="h-3.5 w-3.5 text-indigo-500" />
-                    Consider External Sources
+                    {language === 'en' ? 'Consider External Sources' : 'Pertimbangkan Sumber Eksternal'}
                   </span>
-                  <span className="text-[10px] text-slate-400">Aktifkan pencarian dan rujukan dari web luar</span>
+                  <span className="text-[10px] text-slate-400">
+                    {language === 'en' ? 'Enable searching and referencing from external web sources' : 'Aktifkan pencarian dan rujukan dari web luar'}
+                  </span>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer select-none">
                   <input
@@ -473,9 +477,11 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
                 <div className="flex flex-col gap-0.5">
                   <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                     <IconDatabase className="h-3.5 w-3.5 text-indigo-500" />
-                    Consider Library Sources
+                    {language === 'en' ? 'Consider Library Sources' : 'Pertimbangkan Sumber Pustaka'}
                   </span>
-                  <span className="text-[10px] text-slate-400">Gunakan PDF yang di-upload sebagai konteks sitasi AI</span>
+                  <span className="text-[10px] text-slate-400">
+                    {language === 'en' ? 'Use uploaded PDFs as AI citation context' : 'Gunakan PDF yang di-upload sebagai konteks sitasi AI'}
+                  </span>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer select-none">
                   <input
@@ -495,37 +501,41 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
                 <div className="flex flex-col gap-0.5">
                   <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                     <IconBookmark className="h-3.5 w-3.5 text-indigo-500" />
-                    Limit to a Collection
+                    {language === 'en' ? 'Limit to a Collection' : 'Batasi pada Koleksi'}
                   </span>
-                  <span className="text-[10px] text-slate-400">Batasi pencarian hanya pada koleksi tertentu</span>
+                  <span className="text-[10px] text-slate-400">
+                    {language === 'en' ? 'Limit search to a specific collection' : 'Batasi pencarian hanya pada koleksi tertentu'}
+                  </span>
                 </div>
                 <select
                   value={limitCollection}
                   onChange={(e) => setLimitCollection(e.target.value)}
                   className="rounded border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 outline-none transition focus:border-indigo-400"
                 >
-                  <option value="all">Semua Koleksi (All Sources)</option>
-                  <option value="journals">Jurnal Internal</option>
-                  <option value="proceedings">Prosiding Donasi</option>
+                  <option value="all">{language === 'en' ? 'All Collections' : 'Semua Koleksi (All Sources)'}</option>
+                  <option value="journals">{language === 'en' ? 'Internal Journal' : 'Jurnal Internal'}</option>
+                  <option value="proceedings">{language === 'en' ? 'Donated Proceedings' : 'Prosiding Donasi'}</option>
                 </select>
               </div>
             </div>
 
             {/* 5. Citation Style Selector */}
             <div className="flex flex-col gap-3">
-              <span className="text-xs font-bold text-slate-700">Gaya Sitasi Dokumen (Citation Style)</span>
+              <span className="text-xs font-bold text-slate-700">{t('setup.citation_style')}</span>
               
               <div className="flex items-center justify-between border border-slate-200 rounded-xl p-3 bg-white shadow-sm">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-xs font-bold text-slate-800">{getStyleDisplayName(citationStyle)}</span>
-                  <span className="text-[10px] text-slate-400">Bahasa Lokalisasi: {getLocaleDisplayName(citationLocale)}</span>
+                  <span className="text-[10px] text-slate-400">
+                    {language === 'en' ? 'Localization Language: ' : 'Bahasa Lokalisasi: '}{getLocaleDisplayName(citationLocale)}
+                  </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setIsStyleModalOpen(true)}
                   className="px-3.5 py-1.5 border border-slate-200 hover:bg-slate-50 text-indigo-600 hover:text-indigo-700 text-xs font-semibold rounded-lg shadow-sm transition cursor-pointer"
                 >
-                  Pilih Gaya Sitasi
+                  {language === 'en' ? 'Select Citation Style' : 'Pilih Gaya Sitasi'}
                 </button>
               </div>
             </div>
@@ -535,9 +545,11 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
               <div className="flex flex-col gap-0.5">
                 <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                   <IconPageBreak className="h-3.5 w-3.5 text-indigo-500" />
-                  Show Page Number in Citation
+                  {language === 'en' ? 'Show Page Number in Citation' : 'Tampilkan Nomor Halaman di Sitasi'}
                 </span>
-                <span className="text-[10px] text-slate-400">Sertakan nomor halaman saat menyisipkan sitasi</span>
+                <span className="text-[10px] text-slate-400">
+                  {language === 'en' ? 'Include page numbers when inserting citations' : 'Sertakan nomor halaman saat menyisipkan sitasi'}
+                </span>
               </div>
               <label className="relative inline-flex items-center cursor-pointer select-none">
                 <input
@@ -552,9 +564,12 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
 
             {/* Hint Note */}
             <div className="flex items-start gap-2 bg-indigo-50/50 border border-indigo-100 rounded-xl p-3.5">
-              <IconInfoCircle className="h-4 w-4 text-indigo-600 flex-shrink-0 mt-0.5" />
+              <IconInfoCircle className="h-4 w-4 text-indigo-500 shrink-0 mt-0.5" />
               <p className="text-[10px] text-indigo-800 leading-normal">
-                Preferensi pencarian dan gaya sitasi di atas akan disimpan dan diterapkan khusus pada draf dokumen yang baru dibuat ini.
+                {language === 'en' 
+                  ? 'The search preferences and citation style above will be saved and applied specifically to this newly created draft document.'
+                  : 'Preferensi pencarian dan gaya sitasi di atas akan disimpan dan diterapkan khusus pada draf dokumen yang baru dibuat ini.'
+                }
               </p>
             </div>
           </div>
@@ -565,20 +580,20 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
               onClick={handleSkip}
               className="px-4 py-2 border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition shadow-sm cursor-pointer"
             >
-              Lewati (Skip Setup)
+              {language === 'en' ? 'Skip Setup' : 'Lewati (Skip Setup)'}
             </button>
             <div className="flex items-center gap-3">
               <button
                 onClick={onClose}
                 className="px-4 py-2 border border-transparent text-xs font-semibold text-slate-500 hover:text-slate-800 rounded-xl transition"
               >
-                Batal
+                {t('setup.cancel')}
               </button>
               <button
                 onClick={handleCreate}
                 className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-sm transition cursor-pointer"
               >
-                Buat Dokumen
+                {t('setup.create')}
               </button>
             </div>
           </div>

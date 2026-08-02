@@ -9,6 +9,7 @@ import {
   IconBook,
   IconX 
 } from '@tabler/icons-react';
+import { useLanguage } from '../i18n/language-context';
 
 export type CitationStyleOption = {
   id: string;
@@ -118,6 +119,7 @@ export function CitationStyleModal({
   showPageNumber,
   onSelect
 }: CitationStyleModalProps) {
+  const { language, t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAllStyles, setShowAllStyles] = useState(false);
   const [activeStyle, setActiveStyle] = useState(selectedStyle);
@@ -170,7 +172,7 @@ export function CitationStyleModal({
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
           <div className="flex items-center gap-2">
             <IconBook className="h-5 w-5 text-indigo-600" />
-            <h2 className="text-base font-bold text-slate-800">Pilih Gaya Sitasi & Lokalisasi</h2>
+            <h2 className="text-base font-bold text-slate-800">{t('style.title')}</h2>
           </div>
           <button 
             onClick={onClose}
@@ -184,14 +186,14 @@ export function CitationStyleModal({
         <div className="flex flex-1 overflow-hidden min-h-[350px]">
           {/* Left Column: Styles selection */}
           <div className="w-1/2 border-r border-slate-100 p-5 flex flex-col gap-3">
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pilih Gaya (Citation Style)</h3>
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{language === 'en' ? 'Select Style (Citation Style)' : 'Pilih Gaya (Citation Style)'}</h3>
             
             {/* Search Input */}
             <div className="relative flex items-center bg-slate-100 hover:bg-slate-200/50 rounded-xl px-3 py-2 transition duration-150">
               <IconSearch className="h-4 w-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Cari gaya sitasi (misal: APA, IEEE...)"
+                placeholder={t('style.search')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="ml-2 w-full bg-transparent text-xs text-slate-700 placeholder-slate-400 outline-none border-none p-0 focus:ring-0"
@@ -220,7 +222,7 @@ export function CitationStyleModal({
                   onClick={() => setShowAllStyles(true)}
                   className="w-full text-center py-2 text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 transition mt-1"
                 >
-                  Lihat Gaya Lainnya...
+                  {language === 'en' ? 'View More Styles...' : 'Lihat Gaya Lainnya...'}
                 </button>
               )}
             </div>
@@ -228,7 +230,7 @@ export function CitationStyleModal({
 
           {/* Right Column: Localizations selection */}
           <div className="w-1/2 p-5 flex flex-col gap-3">
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Lokalisasi Bahasa (Localized For)</h3>
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('style.lang')}</h3>
             
             <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1.5 max-h-[300px]">
               {LOCALES_DATA.map((locale) => (
@@ -302,7 +304,7 @@ export function CitationStyleModal({
               onClick={onClose}
               className="px-4 py-2 border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition shadow-sm"
             >
-              Batal
+              {t('setup.cancel')}
             </button>
             <button
               onClick={() => {
@@ -311,7 +313,7 @@ export function CitationStyleModal({
               }}
               className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-sm transition"
             >
-              Simpan Pilihan
+              {t('style.save')}
             </button>
           </div>
         </div>

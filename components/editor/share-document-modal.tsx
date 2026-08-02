@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { IconX, IconCopy, IconCheck, IconShare, IconLock, IconWorld } from '@tabler/icons-react';
+import { useLanguage } from '../i18n/language-context';
 
 interface ShareDocumentModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export function ShareDocumentModal({
   documentId,
   documentTitle
 }: ShareDocumentModalProps) {
+  const { language } = useLanguage();
   const [isLinkActive, setIsLinkActive] = useState(true);
   const [copied, setCopied] = useState(false);
   const [permission, setPermission] = useState<'view' | 'edit'>('view');
@@ -39,7 +41,9 @@ export function ShareDocumentModal({
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 bg-slate-50/50">
           <div className="flex items-center gap-2">
             <IconShare className="h-4.5 w-4.5 text-indigo-600" />
-            <h3 className="text-xs font-bold text-slate-800">Bagikan Draf Jurnal</h3>
+            <h3 className="text-xs font-bold text-slate-800">
+              {language === 'en' ? 'Share Journal Draft' : 'Bagikan Draf Jurnal'}
+            </h3>
           </div>
           <button 
             onClick={onClose}
@@ -52,7 +56,9 @@ export function ShareDocumentModal({
         {/* Body */}
         <div className="p-5 flex flex-col gap-4">
           <div className="flex flex-col gap-0.5">
-            <span className="text-[11px] font-semibold text-slate-500">Judul Dokumen</span>
+            <span className="text-[11px] font-semibold text-slate-500">
+              {language === 'en' ? 'Document Title' : 'Judul Dokumen'}
+            </span>
             <span className="text-xs font-bold text-slate-800 line-clamp-1">{documentTitle || 'Untitled Document'}</span>
           </div>
 
@@ -71,8 +77,12 @@ export function ShareDocumentModal({
                 </div>
               )}
               <div className="flex flex-col gap-0.5">
-                <span className="text-xs font-bold text-slate-700">Tautan Berbagi Publik</span>
-                <span className="text-[9px] text-slate-400">Siapa pun yang memiliki tautan ini dapat mengakses.</span>
+                <span className="text-xs font-bold text-slate-700">
+                  {language === 'en' ? 'Public Share Link' : 'Tautan Berbagi Publik'}
+                </span>
+                <span className="text-[9px] text-slate-400">
+                  {language === 'en' ? 'Anyone with this link can access.' : 'Siapa pun yang memiliki tautan ini dapat mengakses.'}
+                </span>
               </div>
             </div>
 
@@ -96,14 +106,16 @@ export function ShareDocumentModal({
             <div className="flex flex-col gap-3 animate-fade-in">
               {/* Permission select */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Akses Izin Tautan</label>
+                <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                  {language === 'en' ? 'Link Access Permission' : 'Akses Izin Tautan'}
+                </label>
                 <select
                   value={permission}
                   onChange={(e) => setPermission(e.target.value as any)}
                   className="border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 bg-white outline-none focus:border-indigo-500 transition"
                 >
-                  <option value="view">Dapat membaca saja (Read-only)</option>
-                  <option value="edit">Dapat mengedit draf (Co-Editor)</option>
+                  <option value="view">{language === 'en' ? 'Read-only access' : 'Dapat membaca saja (Read-only)'}</option>
+                  <option value="edit">{language === 'en' ? 'Can edit draft (Co-Editor)' : 'Dapat mengedit draf (Co-Editor)'}</option>
                 </select>
               </div>
 
@@ -124,12 +136,12 @@ export function ShareDocumentModal({
                   {copied ? (
                     <>
                       <IconCheck className="h-4 w-4" />
-                      <span>Copied</span>
+                      <span>{language === 'en' ? 'Copied' : 'Tersalin'}</span>
                     </>
                   ) : (
                     <>
                       <IconCopy className="h-4 w-4" />
-                      <span>Salin</span>
+                      <span>{language === 'en' ? 'Copy' : 'Salin'}</span>
                     </>
                   )}
                 </button>
@@ -140,9 +152,13 @@ export function ShareDocumentModal({
           {!isLinkActive && (
             <div className="py-4 flex flex-col items-center justify-center text-center gap-2">
               <IconLock className="h-8 w-8 text-slate-300" />
-              <span className="text-xs text-slate-500 font-semibold">Tautan Dinonaktifkan</span>
+              <span className="text-xs text-slate-500 font-semibold">
+                {language === 'en' ? 'Link Sharing Disabled' : 'Tautan Dinonaktifkan'}
+              </span>
               <span className="text-[10px] text-slate-400 max-w-[250px] leading-normal">
-                Hanya Anda yang dapat melihat dan menulis di draf dokumen ini di dalam akun Anda.
+                {language === 'en' 
+                  ? 'Only you can view and edit this draft document in your account.' 
+                  : 'Hanya Anda yang dapat melihat dan menulis di draf dokumen ini di dalam akun Anda.'}
               </span>
             </div>
           )}

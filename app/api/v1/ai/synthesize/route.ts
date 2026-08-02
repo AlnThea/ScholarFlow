@@ -12,10 +12,30 @@ interface ReferenceInput {
   label: string;
 }
 
-function buildSynthesisPrompt(references: ReferenceInput[]): string {
+function buildSynthesisPrompt(references: ReferenceInput[], language = 'en'): string {
+  const isEn = language === 'en';
   const papersFormatted = references
-    .map((ref) => `- [${ref.label}] "${ref.title}" oleh ${ref.authors.join(', ')} (${ref.year || 't.t.'}), diterbitkan di ${ref.source}`)
+    .map((ref) => {
+      const auth = ref.authors.join(', ');
+      const yr = ref.year || (isEn ? 'n.d.' : 't.t.');
+      const pubText = isEn ? `, published in ${ref.source}` : `, diterbitkan di ${ref.source}`;
+      return `- [${ref.label}] "${ref.title}" by ${auth} (${yr})${pubText}`;
+    })
     .join('\n');
+
+  if (isEn) {
+    return (
+      'You are an expert academic editor and senior scientist. Your task is to write a cohesive, well-structured Literature Review paragraph synthesizing the following research papers.\n\n' +
+      'Requirements:\n' +
+      '- Write in English with a highly formal, objective, and elegant academic style.\n' +
+      '- Synthesize their findings logically in one fluid paragraph (do not use bullet points or separate lists).\n' +
+      '- You MUST naturally integrate inline citations using the provided bracketed labels (e.g. [Label] or [1]). Place each citation exactly next to the claim it supports.\n' +
+      '- Do not add external data claims, statistics, or facts not present in the provided papers.\n' +
+      '- Return ONLY the synthesized paragraph. Do NOT include quotes, markdown formatting block wrappers, greetings, or intro/outro text.\n\n' +
+      `Paper List:\n${papersFormatted}\n\n` +
+      'Literature Review Paragraph:'
+    );
+  }
 
   return (
     'Anda adalah seorang editor akademik dan ilmuwan senior. Tugas Anda adalah menulis sebuah paragraf Tinjauan Pustaka (Literature Review) ilmiah terstruktur yang mensintesis paper-paper penelitian berikut secara kohesif.\n\n' +
@@ -30,9 +50,15 @@ function buildSynthesisPrompt(references: ReferenceInput[]): string {
   );
 }
 
-function fallbackResponse(references: ReferenceInput[], disclaimer: string) {
+function fallbackResponse(references: ReferenceInput[], disclaimer: string, language = 'en') {
+  const isEn = language === 'en';
   const synthesis = references
-    .map((ref) => `Penelitian oleh ${ref.authors[0]} et al. (${ref.year || 't.t.'}) membahas tentang "${ref.title}" [${ref.label}].`)
+    .map((ref) => {
+      const yr = ref.year || (isEn ? 'n.d.' : 't.t.');
+      return isEn 
+        ? `Research by ${ref.authors[0]} et al. (${yr}) discusses "${ref.title}" [${ref.label}].`
+        : `Penelitian oleh ${ref.authors[0]} et al. (${yr}) membahas tentang "${ref.title}" [${ref.label}].`;
+    })
     .join(' ');
 
   return {
@@ -129,13 +155,13 @@ async function callOpenRouter(prompt: string, model: string): Promise<string> {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { references, model = 'gemini' } = body;
+    const { references, model = 'gemini', language = 'en' } = body;
 
     if (!references || !Array.isArray(references) || references.length === 0) {
       return NextResponse.json({ error: 'References array is required.' }, { status: 400 });
     }
 
-    const prompt = buildSynthesisPrompt(references);
+    const prompt = buildSynthesisPrompt(references, language);
 
     // 1. Ambil seluruh model AI dari database Supabase (untuk fallback dinamis)
     const { data: dbModels, error: dbError } = await supabase
@@ -216,7 +242,9 @@ export async function POST(request: Request) {
         successfulModelName = attempts[i].name;
 
         if (i > 0) {
-          disclaimer = `Layanan AI Utama sedang sibuk. Otomatis dialihkan ke: ${successfulModelName}.`;
+          disclaimer = language === 'en'
+            ? `Primary AI service is busy. Automatically fell back to: ${successfulModelName}.`
+            : `Layanan AI Utama sedang sibuk. Otomatis dialihkan ke: ${successfulModelName}.`;
         }
         break;
       } catch (err: any) {
@@ -228,7 +256,10 @@ export async function POST(request: Request) {
       return NextResponse.json(
         fallbackResponse(
           references,
-          `Seluruh model AI sedang sibuk. Log Error: ${errors.join('; ')}`
+          language === 'en'
+            ? `All AI models are busy. Log Error: ${errors.join('; ')}`
+            : `Seluruh model AI sedang sibuk. Log Error: ${errors.join('; ')}`,
+          language
         )
       );
     }

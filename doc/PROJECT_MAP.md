@@ -54,6 +54,9 @@ Reusable and page-level React components.
   - [components/editor/stripe-checkout-modal.tsx](file:///c:/web/ScholarFlow/components/editor/stripe-checkout-modal.tsx) - Simulated checkout flow styling matching Stripe Checkout interface.
   - [components/editor/midtrans-checkout-modal.tsx](file:///c:/web/ScholarFlow/components/editor/midtrans-checkout-modal.tsx) - Simulated Snap checkout popup for GoPay, QRIS, and Virtual Accounts.
 
+- **`components/i18n/`**
+  - [components/i18n/language-context.tsx](file:///c:/web/ScholarFlow/components/i18n/language-context.tsx) - React Context provider (`LanguageProvider`) and hook (`useLanguage`) managing the active language and dictionary lookups.
+
 ---
 
 ### 3. Business Logic & Utilities (`lib/`)

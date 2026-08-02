@@ -14,6 +14,7 @@ import {
 } from '@tabler/icons-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/auth/auth-provider';
+import { useLanguage } from '../i18n/language-context';
 
 interface MidtransCheckoutModalProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ export function MidtransCheckoutModal({
   planPeriod,
   onSuccess
 }: MidtransCheckoutModalProps) {
+  const { language } = useLanguage();
   const { user, refreshProfile } = useAuth();
   
   const [activeMethod, setActiveMethod] = useState<PaymentMethodType>('qris');
@@ -73,7 +75,7 @@ export function MidtransCheckoutModal({
 
   const processPayment = async () => {
     if (!user?.id) {
-      alert('Silakan login terlebih dahulu.');
+      alert(language === 'en' ? 'Please log in first.' : 'Silakan login terlebih dahulu.');
       return;
     }
     
@@ -100,7 +102,7 @@ export function MidtransCheckoutModal({
       setSuccess(true);
     } catch (err: any) {
       console.error('Error simulating Midtrans payment:', err);
-      alert('Gagal mensimulasikan pembayaran Midtrans: ' + err.message);
+      alert((language === 'en' ? 'Failed to simulate Midtrans payment: ' : 'Gagal mensimulasikan pembayaran Midtrans: ') + err.message);
     } finally {
       setLoading(false);
     }
@@ -120,7 +122,9 @@ export function MidtransCheckoutModal({
         <div className="bg-slate-50 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="h-2.5 w-2.5 rounded-full bg-sky-500"></div>
-            <span className="text-xs font-bold text-slate-700 tracking-wider">M-Snap Pembayaran</span>
+            <span className="text-xs font-bold text-slate-700 tracking-wider">
+              {language === 'en' ? 'M-Snap Payment' : 'M-Snap Pembayaran'}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-bold text-slate-400">Order ID: SF-{Date.now().toString().slice(-6)}</span>
@@ -140,7 +144,9 @@ export function MidtransCheckoutModal({
             <span className="text-xs font-bold text-slate-800">ScholarFlow Indonesia</span>
           </div>
           <div className="flex flex-col items-end gap-0.5">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Tagihan</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              {language === 'en' ? 'Total Bill' : 'Total Tagihan'}
+            </span>
             <span className="text-sm font-extrabold text-indigo-700">{formatPrice(planPrice)}</span>
           </div>
         </div>
@@ -152,9 +158,13 @@ export function MidtransCheckoutModal({
               <IconCheck className="h-8 w-8 stroke-[3]" />
             </div>
             <div className="flex flex-col gap-1.5">
-              <h3 className="text-base font-bold text-slate-800">Pembayaran Berhasil!</h3>
+              <h3 className="text-base font-bold text-slate-800">
+                {language === 'en' ? 'Payment Successful!' : 'Pembayaran Berhasil!'}
+              </h3>
               <p className="text-xs text-slate-500 leading-normal max-w-sm">
-                Terima kasih. Pembayaran via Midtrans sukses diverifikasi. Akun **{planName}** Anda sudah aktif selama 30 hari ke depan.
+                {language === 'en' 
+                  ? `Thank you. Payment via Midtrans was successfully verified. Your **${planName}** account is active for the next 30 days.` 
+                  : `Terima kasih. Pembayaran via Midtrans sukses diverifikasi. Akun **${planName}** Anda sudah aktif selama 30 hari ke depan.`}
               </p>
             </div>
             <button
@@ -164,7 +174,7 @@ export function MidtransCheckoutModal({
               }}
               className="mt-4 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer"
             >
-              Kembali ke Workspace
+              {language === 'en' ? 'Back to Workspace' : 'Kembali ke Workspace'}
             </button>
           </div>
         ) : (
@@ -173,7 +183,9 @@ export function MidtransCheckoutModal({
             
             {/* Left Column: Menu Methods */}
             <div className="md:w-1/3 bg-slate-50/50 border-r border-slate-100 flex flex-col p-3 gap-2">
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-1">Pilih Cara Bayar</span>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-1">
+                {language === 'en' ? 'Payment Method' : 'Pilih Cara Bayar'}
+              </span>
               
               <button
                 onClick={() => setActiveMethod('qris')}
@@ -208,7 +220,7 @@ export function MidtransCheckoutModal({
                 }`}
               >
                 <IconCreditCard className="h-4.5 w-4.5" />
-                <span>Kartu Kredit/Debit</span>
+                <span>{language === 'en' ? 'Credit/Debit Card' : 'Kartu Kredit/Debit'}</span>
               </button>
             </div>
 
@@ -218,7 +230,9 @@ export function MidtransCheckoutModal({
               {activeMethod === 'qris' && (
                 /* QRIS payment */
                 <div className="flex flex-col items-center text-center gap-4 animate-fade-in">
-                  <span className="text-xs font-bold text-slate-700">Bayar dengan GoPay / ShopeePay / e-Wallet</span>
+                  <span className="text-xs font-bold text-slate-700">
+                    {language === 'en' ? 'Pay with GoPay / ShopeePay / e-Wallet' : 'Bayar dengan GoPay / ShopeePay / e-Wallet'}
+                  </span>
                   
                   {/* Mock QR Code */}
                   <div className="border border-slate-200 rounded-xl p-3 bg-white shadow-sm flex flex-col items-center gap-2">
@@ -236,7 +250,9 @@ export function MidtransCheckoutModal({
 
                   <div className="flex items-center gap-2 text-[10px] text-slate-400">
                     <IconClock className="h-4 w-4 text-amber-500" />
-                    <span>Masa berlaku kueri bayar: 15 menit</span>
+                    <span>
+                      {language === 'en' ? 'Payment query validity: 15 minutes' : 'Masa berlaku kueri bayar: 15 menit'}
+                    </span>
                   </div>
 
                   <button
@@ -247,7 +263,7 @@ export function MidtransCheckoutModal({
                     {loading ? (
                       <IconLoader className="h-4 w-4 animate-spin" />
                     ) : (
-                      'Simulasi Konfirmasi Bayar (Scan Sukses)'
+                      language === 'en' ? 'Simulate Payment Confirmation (Scan Success)' : 'Simulasi Konfirmasi Bayar (Scan Sukses)'
                     )}
                   </button>
                 </div>
@@ -256,7 +272,9 @@ export function MidtransCheckoutModal({
               {activeMethod === 'va' && (
                 /* Virtual Account payment */
                 <div className="flex flex-col gap-4 animate-fade-in">
-                  <span className="text-xs font-bold text-slate-700">Pilih Virtual Account Bank</span>
+                  <span className="text-xs font-bold text-slate-700">
+                    {language === 'en' ? 'Select Virtual Account Bank' : 'Pilih Virtual Account Bank'}
+                  </span>
                   
                   {/* Bank buttons selection */}
                   <div className="grid grid-cols-3 gap-2">
@@ -277,7 +295,9 @@ export function MidtransCheckoutModal({
                   </div>
 
                   <div className="border border-slate-200 rounded-xl p-4 bg-slate-50 flex flex-col gap-2">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Nomor Virtual Account</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                      {language === 'en' ? 'Virtual Account Number' : 'Nomor Virtual Account'}
+                    </span>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-bold text-slate-700 tracking-wider">{getVANumber()}</span>
                       <button
@@ -286,7 +306,9 @@ export function MidtransCheckoutModal({
                         title="Salin nomor"
                       >
                         {copied ? (
-                          <span className="text-[9px] font-bold text-emerald-600">Tersalin!</span>
+                          <span className="text-[9px] font-bold text-emerald-600">
+                            {language === 'en' ? 'Copied!' : 'Tersalin!'}
+                          </span>
                         ) : (
                           <IconCopy className="h-4 w-4" />
                         )}
@@ -295,9 +317,15 @@ export function MidtransCheckoutModal({
                   </div>
 
                   <div className="text-[10px] text-slate-400 leading-normal flex flex-col gap-1">
-                    <span>1. Salin nomor Virtual Account di atas.</span>
-                    <span>2. Transfer nominal tepat via Mobile Banking / ATM.</span>
-                    <span>3. Sistem akan memverifikasi pembayaran secara otomatis.</span>
+                    <span>
+                      {language === 'en' ? '1. Copy the Virtual Account number above.' : '1. Salin nomor Virtual Account di atas.'}
+                    </span>
+                    <span>
+                      {language === 'en' ? '2. Transfer the exact amount via Mobile Banking / ATM.' : '2. Transfer nominal tepat via Mobile Banking / ATM.'}
+                    </span>
+                    <span>
+                      {language === 'en' ? '3. The system will verify the payment automatically.' : '3. Sistem akan memverifikasi pembayaran secara otomatis.'}
+                    </span>
                   </div>
 
                   <button
@@ -308,7 +336,7 @@ export function MidtransCheckoutModal({
                     {loading ? (
                       <IconLoader className="h-4 w-4 animate-spin" />
                     ) : (
-                      'Simulasi Transfer Bank (Bayar VA)'
+                      language === 'en' ? 'Simulate Bank Transfer (Pay VA)' : 'Simulasi Transfer Bank (Bayar VA)'
                     )}
                   </button>
                 </div>
@@ -317,11 +345,15 @@ export function MidtransCheckoutModal({
               {activeMethod === 'card' && (
                 /* Card payment */
                 <div className="flex flex-col gap-4 animate-fade-in">
-                  <span className="text-xs font-bold text-slate-700">Kartu Kredit / Debit Online</span>
+                  <span className="text-xs font-bold text-slate-700">
+                    {language === 'en' ? 'Online Credit / Debit Card' : 'Kartu Kredit / Debit Online'}
+                  </span>
 
                   <div className="flex flex-col gap-3">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Nomor Kartu</label>
+                      <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                        {language === 'en' ? 'Card Number' : 'Nomor Kartu'}
+                      </label>
                       <input
                         type="text"
                         value={cardNumber}
@@ -332,7 +364,9 @@ export function MidtransCheckoutModal({
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Masa Berlaku</label>
+                        <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                          {language === 'en' ? 'Expiry Date' : 'Masa Berlaku'}
+                        </label>
                         <input
                           type="text"
                           value={expiry}
@@ -362,7 +396,7 @@ export function MidtransCheckoutModal({
                     {loading ? (
                       <IconLoader className="h-4 w-4 animate-spin" />
                     ) : (
-                      `Bayar Sekarang (${formatPrice(planPrice)})`
+                      language === 'en' ? `Pay Now (${formatPrice(planPrice)})` : `Bayar Sekarang (${formatPrice(planPrice)})`
                     )}
                   </button>
                 </div>
@@ -370,12 +404,14 @@ export function MidtransCheckoutModal({
 
               {/* Info transparan Beli Putus */}
               <div className="mt-4 p-2.5 bg-slate-50 border border-slate-100 rounded-lg text-center text-[10px] text-slate-500 leading-normal">
-                Beli sekali untuk 30 hari. Tanpa perpanjangan otomatis. Anda memegang kendali penuh.
+                {language === 'en' 
+                  ? 'One-time purchase for 30 days. No auto-renewal. You are in full control.' 
+                  : 'Beli sekali untuk 30 hari. Tanpa perpanjangan otomatis. Anda memegang kendali penuh.'}
               </div>
 
               {/* Secure footer badge */}
               <div className="mt-4 border-t border-slate-100 pt-3 flex items-center justify-between text-[8px] text-slate-400 font-semibold tracking-wider">
-                <span>DILINDUNGI OLEH MIDTRANS INTEGRITY</span>
+                <span>{language === 'en' ? 'PROTECTED BY MIDTRANS INTEGRITY' : 'DILINDUNGI OLEH MIDTRANS INTEGRITY'}</span>
                 <span>SECURE PAYMENT GATEWAY</span>
               </div>
 

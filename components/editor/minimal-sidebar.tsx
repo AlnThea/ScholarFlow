@@ -19,6 +19,7 @@ import {
   IconLayoutDashboard
 } from '@tabler/icons-react';
 import { useAuth } from '@/components/auth/auth-provider';
+import { useLanguage } from '../i18n/language-context';
 import { signOut } from '@/lib/auth';
 import { getUserDisplayName, getUserInitials } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
@@ -53,6 +54,7 @@ export function MinimalSidebar({
   activeDashboardTab?: 'user' | 'admin' | 'billing' | 'admin-pricing' | 'admin-models' | 'admin-gateways';
   className?: string;
 }) {
+  const { language, t } = useLanguage();
   const { user, profile } = useAuth();
   const activePlanId = profile?.subscription_plan || 'free';
   const [openSubmenu, setOpenSubmenu] = React.useState<string | null>(null);
@@ -159,7 +161,7 @@ export function MinimalSidebar({
     const isRis = file.name.endsWith('.ris');
 
     if (!isPdf && !isRis) {
-      setUploadError('Hanya file PDF atau RIS yang didukung.');
+      setUploadError(language === 'en' ? 'Only PDF or RIS files are supported.' : 'Hanya file PDF atau RIS yang didukung.');
       setUploadStatus('error');
       return;
     }
@@ -167,7 +169,10 @@ export function MinimalSidebar({
     // Check plan limits: Free users can only upload up to 5 PDFs/RIS references
     const entriesCount = Object.keys(libraryEntries).length;
     if (activePlanId === 'free' && entriesCount >= 5) {
-      setUploadError('🔒 Pengguna paket Free terbatas hanya bisa mengunggah maksimal 5 referensi PDF/RIS. Silakan upgrade ke paket Pro Writer di menu Pricing untuk unggahan tanpa batas!');
+      setUploadError(language === 'en'
+        ? '🔒 Free plan users are limited to a maximum of 5 PDF/RIS references. Please upgrade to the Pro Writer plan in the Pricing menu for unlimited uploads!'
+        : '🔒 Pengguna paket Free terbatas hanya bisa mengunggah maksimal 5 referensi PDF/RIS. Silakan upgrade ke paket Pro Writer di menu Pricing untuk unggahan tanpa batas!'
+      );
       setUploadStatus('error');
       return;
     }
@@ -191,7 +196,7 @@ export function MinimalSidebar({
 
         if (!res.ok) {
           const errData = await res.json();
-          throw new Error(errData.error || 'Gagal mengunggah PDF.');
+          throw new Error(errData.error || (language === 'en' ? 'Failed to upload PDF.' : 'Gagal mengunggah PDF.'));
         }
 
         const data = await res.json();
@@ -203,7 +208,7 @@ export function MinimalSidebar({
         }));
       } catch (err: any) {
         console.error(err);
-        setUploadError(err.message || 'Gagal memproses PDF.');
+        setUploadError(err.message || (language === 'en' ? 'Failed to process PDF.' : 'Gagal memproses PDF.'));
         setUploadStatus('error');
       } finally {
         setIsUploadingPdf(false);
@@ -234,11 +239,11 @@ export function MinimalSidebar({
           pdf_url: null
         };
 
-        if (!user?.id) throw new Error('Pengguna tidak terautentikasi.');
+        if (!user?.id) throw new Error(language === 'en' ? 'User not authenticated.' : 'Pengguna tidak terautentikasi.');
         
         const res = await saveCitationToLibrary(candidate, user.id);
         if (!res.success) {
-          throw new Error(res.error || 'Gagal menyimpan sitasi RIS ke database.');
+          throw new Error(res.error || (language === 'en' ? 'Failed to save RIS citation to database.' : 'Gagal menyimpan sitasi RIS ke database.'));
         }
 
         setUploadStatus('success');
@@ -248,7 +253,7 @@ export function MinimalSidebar({
         }));
       } catch (err: any) {
         console.error(err);
-        setUploadError(err.message || 'Gagal memproses file RIS.');
+        setUploadError(err.message || (language === 'en' ? 'Failed to process RIS file.' : 'Gagal memproses file RIS.'));
         setUploadStatus('error');
       } finally {
         setIsUploadingPdf(false);
@@ -259,7 +264,7 @@ export function MinimalSidebar({
   };
 
   const handleDeleteLibraryItem = async (refId: string) => {
-    if (!confirm('Hapus rujukan PDF ini dari library Anda?')) return;
+    if (!confirm(language === 'en' ? 'Delete this PDF reference from your library?' : 'Hapus rujukan PDF ini dari library Anda?')) return;
     try {
       const res = await deleteCitationFromLibrary(refId);
       if (res.success) {
@@ -269,11 +274,11 @@ export function MinimalSidebar({
           return next;
         });
       } else {
-        alert(res.error || 'Gagal menghapus rujukan.');
+        alert(res.error || (language === 'en' ? 'Failed to delete reference.' : 'Gagal menghapus rujukan.'));
       }
     } catch (err) {
       console.error(err);
-      alert('Terjadi kesalahan saat menghapus rujukan.');
+      alert(language === 'en' ? 'An error occurred while deleting reference.' : 'Terjadi kesalahan saat menghapus rujukan.');
     }
   };
 
@@ -372,7 +377,7 @@ export function MinimalSidebar({
               type="button"
               onClick={() => setActiveView('main')}
               className="bg-transparent border-0 p-1.5 rounded-md text-slate-400 hover:bg-slate-100/80 hover:text-slate-700 cursor-pointer flex items-center justify-center transition-all duration-200"
-              title="Kembali ke Menu Utama"
+              title={language === 'en' ? 'Back to Main Menu' : 'Kembali ke Menu Utama'}
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -380,7 +385,7 @@ export function MinimalSidebar({
               </svg>
             </button>
             <span className="text-[14px] font-semibold text-slate-800 tracking-tight whitespace-nowrap truncate">
-              Dokumen Saya
+              {language === 'en' ? 'My Documents' : 'Dokumen Saya'}
             </span>
           </div>
 
@@ -393,7 +398,7 @@ export function MinimalSidebar({
               </svg>
               <input
                 type="text"
-                placeholder="Cari draf..."
+                placeholder={language === 'en' ? 'Search drafts...' : 'Cari draf...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="ml-2 w-full bg-transparent text-xs text-slate-700 placeholder-slate-400 outline-none border-none p-0"
@@ -419,7 +424,7 @@ export function MinimalSidebar({
               className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition hover:shadow duration-150 cursor-pointer"
             >
               <IconFilePlus className="h-3.5 w-3.5" />
-              Buat Dokumen Baru
+              {language === 'en' ? 'Create New Document' : 'Buat Dokumen Baru'}
             </button>
           </div>
 
@@ -479,12 +484,12 @@ export function MinimalSidebar({
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (confirm(`Hapus dokumen "${doc.title}"?`)) {
+                                    if (confirm(language === 'en' ? `Delete document "${doc.title}"?` : `Hapus dokumen "${doc.title}"?`)) {
                                       onDeleteDocument(doc.id);
                                     }
                                   }}
                                   className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-red-50 hover:text-red-600 text-slate-400 transition cursor-pointer"
-                                  title="Hapus Dokumen"
+                                  title={language === 'en' ? 'Delete Document' : 'Hapus Dokumen'}
                                 >
                                   <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <polyline points="3 6 5 6 21 6"></polyline>
@@ -503,7 +508,9 @@ export function MinimalSidebar({
                 {/* 2. Independent / Single Documents */}
                 {groupedDocs.independent.length > 0 && (
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">Dokumen Mandiri</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">
+                      {language === 'en' ? 'Independent Documents' : 'Dokumen Mandiri'}
+                    </span>
                     {groupedDocs.independent.map((doc) => (
                       <div
                         key={doc.id}
@@ -524,12 +531,12 @@ export function MinimalSidebar({
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (confirm(`Hapus dokumen "${doc.title}"?`)) {
+                              if (confirm(language === 'en' ? `Delete document "${doc.title}"?` : `Hapus dokumen "${doc.title}"?`)) {
                                 onDeleteDocument(doc.id);
                               }
                             }}
                             className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-red-50 hover:text-red-600 text-slate-400 transition cursor-pointer"
-                            title="Hapus Dokumen"
+                            title={language === 'en' ? 'Delete Document' : 'Hapus Dokumen'}
                           >
                             <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <polyline points="3 6 5 6 21 6"></polyline>
@@ -544,7 +551,7 @@ export function MinimalSidebar({
               </div>
             ) : (
               <div className="text-center py-6 text-xs text-slate-400">
-                Dokumen tidak ditemukan
+                {language === 'en' ? 'Documents not found' : 'Dokumen tidak ditemukan'}
               </div>
             )}
           </div>
@@ -560,7 +567,7 @@ export function MinimalSidebar({
               type="button"
               onClick={() => setActiveView('main')}
               className="bg-transparent border-0 p-1.5 rounded-md text-slate-400 hover:bg-slate-100/80 hover:text-slate-700 cursor-pointer flex items-center justify-center transition-all duration-200"
-              title="Kembali ke Menu Utama"
+              title={language === 'en' ? 'Back to Main Menu' : 'Kembali ke Menu Utama'}
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -568,7 +575,7 @@ export function MinimalSidebar({
               </svg>
             </button>
             <span className="text-[14px] font-semibold text-slate-800 tracking-tight whitespace-nowrap truncate">
-              Koleksi Jurnal (PDF/RIS)
+              {language === 'en' ? 'Journal Collection (PDF/RIS)' : 'Koleksi Jurnal (PDF/RIS)'}
             </span>
           </div>
 
@@ -587,25 +594,25 @@ export function MinimalSidebar({
                 <polyline points="17 8 12 3 7 8"></polyline>
                 <line x1="12" y1="3" x2="12" y2="15"></line>
               </svg>
-              <span className="text-[10px] font-bold text-slate-700">Unggah PDF / RIS</span>
-              <span className="text-[9px] text-slate-400 mt-0.5">Ekstrak rujukan ke AI</span>
+              <span className="text-[10px] font-bold text-slate-700">{language === 'en' ? 'Upload PDF / RIS' : 'Unggah PDF / RIS'}</span>
+              <span className="text-[9px] text-slate-400 mt-0.5">{language === 'en' ? 'Extract reference to AI' : 'Ekstrak rujukan ke AI'}</span>
             </label>
 
             {/* Upload alerts */}
             {uploadStatus === 'uploading' && (
               <div className="text-[9px] font-medium text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg py-1 px-2.5 flex items-center gap-1.5 animate-pulse">
                 <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 animate-ping" />
-                Memproses berkas...
+                {language === 'en' ? 'Processing file...' : 'Memproses berkas...'}
               </div>
             )}
             {uploadStatus === 'success' && (
               <div className="text-[9px] font-medium text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-lg py-1 px-2.5">
-                Berhasil diunggah!
+                {language === 'en' ? 'Successfully uploaded!' : 'Berhasil diunggah!'}
               </div>
             )}
             {uploadStatus === 'error' && (
               <div className="text-[9px] font-medium text-rose-600 bg-rose-50 border border-rose-100 rounded-lg py-1 px-2.5 leading-normal">
-                {uploadError || 'Gagal memproses file.'}
+                {uploadError || (language === 'en' ? 'Failed to process file.' : 'Gagal memproses file.')}
               </div>
             )}
           </div>
@@ -619,7 +626,7 @@ export function MinimalSidebar({
               </svg>
               <input
                 type="text"
-                placeholder="Cari rujukan..."
+                placeholder={language === 'en' ? 'Search references...' : 'Cari rujukan...'}
                 value={librarySearchQuery}
                 onChange={(e) => setLibrarySearchQuery(e.target.value)}
                 className="ml-2 w-full bg-transparent text-xs text-slate-700 placeholder-slate-400 outline-none border-none p-0"
@@ -657,7 +664,7 @@ export function MinimalSidebar({
                   <button
                     onClick={() => handleDeleteLibraryItem(refId)}
                     className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-red-50 hover:text-red-600 text-slate-400 transition cursor-pointer"
-                    title="Hapus Rujukan"
+                    title={language === 'en' ? 'Delete Reference' : 'Hapus Rujukan'}
                   >
                     <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="3 6 5 6 21 6"></polyline>
@@ -668,7 +675,7 @@ export function MinimalSidebar({
               ))
             ) : (
               <div className="text-center py-6 text-xs text-slate-400">
-                Library kosong
+                {language === 'en' ? 'Library is empty' : 'Library kosong'}
               </div>
             )}
           </div>
@@ -713,9 +720,8 @@ export function MinimalSidebar({
             {isEffectiveExpanded ? (
               /* Expanded state layout */
               <nav className="flex flex-col gap-1">
-                {/* Dashboard & Documents Group */}
                 <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400/90 px-4 pt-4 pb-1">
-                  Menu Utama
+                  {language === 'en' ? 'Main Menu' : 'Menu Utama'}
                 </div>
                 <div className="flex flex-col gap-1 px-2">
                   {/* Dashboard */}
@@ -732,7 +738,9 @@ export function MinimalSidebar({
                     }}
                   >
                     <IconLayoutDashboard className="h-[18px] w-[18px] text-inherit flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
-                    <span className="ml-2.5 whitespace-nowrap overflow-hidden text-ellipsis">Dasbor</span>
+                    <span className="ml-2.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                      {language === 'en' ? 'Dashboard' : 'Dasbor'}
+                    </span>
                   </button>
 
                   {/* New Document */}
@@ -741,7 +749,9 @@ export function MinimalSidebar({
                     onClick={onCreateDocument}
                   >
                     <IconFilePlus className="h-[18px] w-[18px] text-inherit flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
-                    <span className="ml-2.5 whitespace-nowrap overflow-hidden text-ellipsis">Buat Baru</span>
+                    <span className="ml-2.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                      {language === 'en' ? 'Create New' : 'Buat Baru'}
+                    </span>
                   </button>
 
                   {/* Documents list sub-menu trigger */}
@@ -750,7 +760,9 @@ export function MinimalSidebar({
                     onClick={() => setActiveView('documents')}
                   >
                     <IconFile className="h-[18px] w-[18px] text-inherit flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
-                    <span className="ml-2.5 whitespace-nowrap overflow-hidden text-ellipsis">Dokumen Saya</span>
+                    <span className="ml-2.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                      {language === 'en' ? 'My Documents' : 'Dokumen Saya'}
+                    </span>
                     <IconChevronRight className="ml-auto h-3.5 w-3.5 text-slate-400" />
                   </button>
 
@@ -760,7 +772,9 @@ export function MinimalSidebar({
                     onClick={() => setActiveView('library')}
                   >
                     <IconBook className="h-[18px] w-[18px] text-inherit flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
-                    <span className="ml-2.5 whitespace-nowrap overflow-hidden text-ellipsis">Perpustakaan</span>
+                    <span className="ml-2.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                      {language === 'en' ? 'Library' : 'Perpustakaan'}
+                    </span>
                     <IconChevronRight className="ml-auto h-3.5 w-3.5 text-slate-400" />
                   </button>
 
@@ -778,7 +792,9 @@ export function MinimalSidebar({
                     }}
                   >
                     <IconCreditCard className="h-[18px] w-[18px] text-inherit flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
-                    <span className="ml-2.5 whitespace-nowrap overflow-hidden text-ellipsis">Akun & Billing</span>
+                    <span className="ml-2.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                      {language === 'en' ? 'Account & Billing' : 'Akun & Billing'}
+                    </span>
                   </button>
                 </div>
 
@@ -803,8 +819,8 @@ export function MinimalSidebar({
                       ? 'text-indigo-700 bg-indigo-50/70'
                       : 'text-slate-400 hover:bg-slate-100/80 hover:text-slate-900'
                   }`}
-                  title="Dasbor"
-                  aria-label="Dasbor"
+                  title={language === 'en' ? 'Dashboard' : 'Dasbor'}
+                  aria-label={language === 'en' ? 'Dashboard' : 'Dasbor'}
                   onClick={() => {
                     onSelectDocument?.('');
                     onSelectAdminTab?.('user');
@@ -817,8 +833,8 @@ export function MinimalSidebar({
                 {/* New Document Button (collapsed) */}
                 <button
                   className="flex items-center justify-center w-full aspect-square rounded-lg bg-transparent text-slate-400 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 relative group"
-                  title="Buat Baru"
-                  aria-label="Buat Baru"
+                  title={language === 'en' ? 'Create New' : 'Buat Baru'}
+                  aria-label={language === 'en' ? 'Create New' : 'Buat Baru'}
                   onClick={onCreateDocument}
                 >
                   <IconFilePlus className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
@@ -827,8 +843,8 @@ export function MinimalSidebar({
                 {/* Documents Button (collapsed) */}
                 <button
                   className="flex items-center justify-center w-full aspect-square rounded-lg bg-transparent text-slate-400 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 relative group"
-                  title="Dokumen Saya"
-                  aria-label="Dokumen Saya"
+                  title={language === 'en' ? 'My Documents' : 'Dokumen Saya'}
+                  aria-label={language === 'en' ? 'My Documents' : 'Dokumen Saya'}
                   onClick={() => setActiveView('documents')}
                 >
                   <IconFile className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
@@ -837,8 +853,8 @@ export function MinimalSidebar({
                 {/* Library Button (collapsed) */}
                 <button
                   className="flex items-center justify-center w-full aspect-square rounded-lg bg-transparent text-slate-400 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 relative group"
-                  title="Perpustakaan"
-                  aria-label="Perpustakaan"
+                  title={language === 'en' ? 'Library' : 'Perpustakaan'}
+                  aria-label={language === 'en' ? 'Library' : 'Perpustakaan'}
                   onClick={() => setActiveView('library')}
                 >
                   <IconBook className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
@@ -851,8 +867,8 @@ export function MinimalSidebar({
                       ? 'text-indigo-700 bg-indigo-50/70'
                       : 'text-slate-400 hover:bg-slate-100/80 hover:text-slate-900'
                   }`}
-                  title="Akun & Billing"
-                  aria-label="Akun & Billing"
+                  title={language === 'en' ? 'Account & Billing' : 'Akun & Billing'}
+                  aria-label={language === 'en' ? 'Account & Billing' : 'Akun & Billing'}
                   onClick={() => {
                     onSelectDocument?.('');
                     onSelectAdminTab?.('billing');
@@ -893,14 +909,16 @@ export function MinimalSidebar({
                 </svg>
               </button>
               <span className="text-xs font-bold text-slate-800 tracking-tight truncate">
-                Pengaturan
+                {language === 'en' ? 'Settings' : 'Pengaturan'}
               </span>
             </div>
           </div>
 
           {/* Settings list */}
           <div className="flex-1 overflow-y-auto min-h-0 px-3 py-4 flex flex-col gap-2">
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-2">Menu Pengaturan Admin</span>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-2">
+              {language === 'en' ? 'Admin Settings Menu' : 'Menu Pengaturan Admin'}
+            </span>
             
             <button
               onClick={() => {
@@ -915,8 +933,12 @@ export function MinimalSidebar({
             >
               <IconCreditCard className="h-4 w-4 text-indigo-500 flex-shrink-0" />
               <div className="flex flex-col text-left">
-                <span className="font-bold text-slate-700">Kelola Paket Harga</span>
-                <span className="text-[8px] text-slate-400 leading-tight font-medium">Ubah detail & harga paket langganan</span>
+                <span className="font-bold text-slate-700">
+                  {language === 'en' ? 'Manage Pricing Plans' : 'Kelola Paket Harga'}
+                </span>
+                <span className="text-[8px] text-slate-400 leading-tight font-medium">
+                  {language === 'en' ? 'Edit subscription details & prices' : 'Ubah detail & harga paket langganan'}
+                </span>
               </div>
             </button>
 
@@ -933,8 +955,12 @@ export function MinimalSidebar({
             >
               <IconSparkles className="h-4 w-4 text-indigo-500 flex-shrink-0" />
               <div className="flex flex-col text-left">
-                <span className="font-bold text-slate-700">Kelola Model AI</span>
-                <span className="text-[8px] text-slate-400 leading-tight font-medium">Aktifkan/nonaktifkan model LLM</span>
+                <span className="font-bold text-slate-700">
+                  {language === 'en' ? 'Manage AI Models' : 'Kelola Model AI'}
+                </span>
+                <span className="text-[8px] text-slate-400 leading-tight font-medium">
+                  {language === 'en' ? 'Enable/disable LLM models' : 'Aktifkan/nonaktifkan model LLM'}
+                </span>
               </div>
             </button>
 
@@ -954,8 +980,12 @@ export function MinimalSidebar({
                 <line x1="2" y1="10" x2="22" y2="10" />
               </svg>
               <div className="flex flex-col text-left">
-                <span className="font-bold text-slate-700">Saluran Pembayaran</span>
-                <span className="text-[8px] text-slate-400 leading-tight font-medium">Atur Stripe & Midtrans gateway</span>
+                <span className="font-bold text-slate-700">
+                  {language === 'en' ? 'Payment Gateways' : 'Saluran Pembayaran'}
+                </span>
+                <span className="text-[8px] text-slate-400 leading-tight font-medium">
+                  {language === 'en' ? 'Configure Stripe & Midtrans gateways' : 'Atur Stripe & Midtrans gateway'}
+                </span>
               </div>
             </button>
           </div>
@@ -975,7 +1005,9 @@ export function MinimalSidebar({
               }`}
             >
               <IconSettings className="h-[18px] w-[18px] text-inherit flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
-              <span className="ml-2.5 whitespace-nowrap overflow-hidden text-ellipsis">Pengaturan</span>
+              <span className="ml-2.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                {language === 'en' ? 'Settings' : 'Pengaturan'}
+              </span>
               <IconChevronRight className="ml-auto h-3.5 w-3.5 text-slate-400 animate-pulse" />
             </button>
           ) : (
@@ -989,7 +1021,7 @@ export function MinimalSidebar({
                   ? 'text-indigo-700 bg-indigo-50/70'
                   : 'text-slate-400 hover:bg-slate-100/80 hover:text-slate-900'
               }`}
-              title="Pengaturan"
+              title={language === 'en' ? 'Settings' : 'Pengaturan'}
             >
               <IconSettings className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
             </button>

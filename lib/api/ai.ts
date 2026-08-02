@@ -11,12 +11,13 @@ export type ImproveWritingResponse = {
 export async function improveWriting(
   text: string,
   tone = 'academic',
-  model = 'gemini'
+  model = 'gemini',
+  language = 'en'
 ): Promise<ImproveWritingResponse> {
   const response = await fetch('/api/v1/ai/improve', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, tone, model }),
+    body: JSON.stringify({ text, tone, model, language }),
   });
 
   if (!response.ok) {
@@ -35,12 +36,13 @@ export async function synthesizeLiteratureReview(
     source: string;
     label: string;
   }>,
-  model = 'gemini'
+  model = 'gemini',
+  language = 'en'
 ): Promise<{ synthesized_text: string; disclaimer?: string }> {
   const response = await fetch('/api/v1/ai/synthesize', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ references, model }),
+    body: JSON.stringify({ references, model, language }),
   });
 
   if (!response.ok) {
@@ -58,12 +60,13 @@ export type GenerateAbstractResponse = {
 
 export async function generateAbstract(
   text: string,
-  model = 'gemini'
+  model = 'gemini',
+  language = 'en'
 ): Promise<GenerateAbstractResponse> {
   const response = await fetch('/api/v1/ai/abstract', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, model }),
+    body: JSON.stringify({ text, model, language }),
   });
 
   if (!response.ok) {

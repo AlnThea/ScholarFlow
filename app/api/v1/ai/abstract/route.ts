@@ -4,7 +4,8 @@ import { supabase } from '@/lib/supabase';
 
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
-function buildPrompt(text: string): string {
+function buildPrompt(text: string, language: string = 'en'): string {
+  const langText = language === 'en' ? 'English' : 'Indonesian';
   return (
     'You are an expert academic editor. Write a structured academic abstract (around 150-250 words) based on the following document context:\n\n' +
     `Document Context:\n${text}\n\n` +
@@ -12,7 +13,7 @@ function buildPrompt(text: string): string {
     '- Cover the research objective, methodology/proposed approach, and key expected results/conclusions.\n' +
     '- Maintain a formal, objective, and scholarly academic tone.\n' +
     '- Do not add external facts, citations, or statistics not mentioned in the context.\n' +
-    '- Preserve the language of the input text (e.g., if the context is Indonesian, reply in Indonesian; if English, reply in English).\n' +
+    `- Write the abstract in ${langText}.\n` +
     '- Return ONLY the generated abstract. Do NOT wrap it in quotes, markdown code block, or write any greeting/explanation.'
   );
 }
@@ -106,13 +107,13 @@ async function callOpenRouter(prompt: string, model: string): Promise<string> {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { text, model = 'gemini' } = body;
+    const { text, model = 'gemini', language = 'en' } = body;
 
     if (!text) {
       return NextResponse.json({ error: 'Text parameter is required.' }, { status: 400 });
     }
 
-    const prompt = buildPrompt(text);
+    const prompt = buildPrompt(text, language);
 
     // 1. Ambil seluruh model AI dari database Supabase
     const { data: dbModels, error: dbError } = await supabase
@@ -192,7 +193,9 @@ export async function POST(request: Request) {
         successfulModelName = attempts[i].name;
 
         if (i > 0) {
-          disclaimer = `Layanan AI Utama sedang sibuk. Otomatis dialihkan ke: ${successfulModelName}.`;
+          disclaimer = language === 'en'
+            ? `Primary AI service is busy. Automatically fell back to: ${successfulModelName}.`
+            : `Layanan AI Utama sedang sibuk. Otomatis dialihkan ke: ${successfulModelName}.`;
         }
         break;
       } catch (err: any) {
@@ -204,7 +207,9 @@ export async function POST(request: Request) {
       return NextResponse.json(
         fallbackResponse(
           text,
-          `Seluruh model AI sedang sibuk. Log Error: ${errors.join('; ')}`
+          language === 'en'
+            ? `All AI models are busy. Log Error: ${errors.join('; ')}`
+            : `Seluruh model AI sedang sibuk. Log Error: ${errors.join('; ')}`
         )
       );
     }

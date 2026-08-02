@@ -12,6 +12,7 @@ import {
 } from '@tabler/icons-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/auth/auth-provider';
+import { useLanguage } from '../i18n/language-context';
 
 interface StripeCheckoutModalProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export function StripeCheckoutModal({
   planPeriod,
   onSuccess
 }: StripeCheckoutModalProps) {
+  const { language } = useLanguage();
   const { user, refreshProfile } = useAuth();
   const [email, setEmail] = useState(user?.email || '');
   const [cardNumber, setCardNumber] = useState('');
@@ -79,7 +81,7 @@ export function StripeCheckoutModal({
     if (!user?.id) return;
 
     if (!cardNumber || !expiry || !cvc || !cardName) {
-      setErrorMsg('Silakan lengkapi informasi kartu kredit Anda.');
+      setErrorMsg(language === 'en' ? 'Please complete your credit card information.' : 'Silakan lengkapi informasi kartu kredit Anda.');
       return;
     }
 
@@ -109,7 +111,7 @@ export function StripeCheckoutModal({
       setSuccess(true);
     } catch (err: any) {
       console.error('Error simulating stripe payment:', err);
-      setErrorMsg(err.message || 'Terjadi kegagalan koneksi Stripe.');
+      setErrorMsg(err.message || (language === 'en' ? 'A Stripe connection failure occurred.' : 'Terjadi kegagalan koneksi Stripe.'));
     } finally {
       setLoading(false);
     }
@@ -136,11 +138,15 @@ export function StripeCheckoutModal({
 
             <span className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest">ScholarFlow Checkout</span>
             <div className="mt-6 flex flex-col gap-1.5">
-              <span className="text-xs text-indigo-200 font-medium">Berlangganan</span>
+              <span className="text-xs text-indigo-200 font-medium">
+                {language === 'en' ? 'Subscription' : 'Berlangganan'}
+              </span>
               <h3 className="text-xl font-bold">{planName}</h3>
               <div className="mt-3 flex items-baseline gap-1">
                 <span className="text-2xl font-extrabold">{formatPrice(planPrice)}</span>
-                <span className="text-xs text-indigo-300">/ {planPeriod}</span>
+                <span className="text-xs text-indigo-300">
+                  / {language === 'en' ? (planPeriod === 'bulan' ? 'month' : planPeriod === 'tahun' ? 'year' : planPeriod) : planPeriod}
+                </span>
               </div>
             </div>
 
@@ -148,15 +154,15 @@ export function StripeCheckoutModal({
 
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between text-xs text-indigo-200">
-                <span>Paket Langganan</span>
+                <span>{language === 'en' ? 'Subscription Plan' : 'Paket Langganan'}</span>
                 <span>{formatPrice(planPrice)}</span>
               </div>
               <div className="flex items-center justify-between text-xs text-indigo-200">
-                <span>Pajak & Biaya Admin</span>
+                <span>{language === 'en' ? 'Tax & Admin Fee' : 'Pajak & Biaya Admin'}</span>
                 <span>Rp 0</span>
               </div>
               <div className="flex items-center justify-between text-sm font-bold border-t border-white/10 pt-3">
-                <span>Total Hari Ini</span>
+                <span>{language === 'en' ? 'Total Today' : 'Total Hari Ini'}</span>
                 <span>{formatPrice(planPrice)}</span>
               </div>
             </div>
@@ -164,7 +170,7 @@ export function StripeCheckoutModal({
 
           <div className="relative z-10 mt-8 flex items-center gap-1.5 text-[10px] text-indigo-300">
             <IconLock className="h-3.5 w-3.5" />
-            <span>Koneksi terenkripsi SSL 256-bit</span>
+            <span>{language === 'en' ? '256-bit SSL encrypted connection' : 'Koneksi terenkripsi SSL 256-bit'}</span>
           </div>
 
           {/* Background shapes */}
@@ -189,9 +195,13 @@ export function StripeCheckoutModal({
                 <IconCheck className="h-10 w-10 stroke-[3]" />
               </div>
               <div className="flex flex-col gap-2">
-                <h3 className="text-lg font-bold text-slate-800">Pembayaran Berhasil!</h3>
+                <h3 className="text-lg font-bold text-slate-800">
+                  {language === 'en' ? 'Payment Successful!' : 'Pembayaran Berhasil!'}
+                </h3>
                 <p className="text-xs text-slate-500 leading-normal max-w-sm">
-                  Selamat, akun Anda telah berhasil ditingkatkan ke **{planName}**. Semua fitur pro kini aktif di ruang kerja Anda.
+                  {language === 'en' 
+                    ? `Congratulations, your account has been successfully upgraded to **${planName}**. All pro features are now active in your workspace.` 
+                    : `Selamat, akun Anda telah berhasil ditingkatkan ke **${planName}**. Semua fitur pro kini aktif di ruang kerja Anda.`}
                 </p>
               </div>
               <button
@@ -201,7 +211,7 @@ export function StripeCheckoutModal({
                 }}
                 className="mt-4 flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer"
               >
-                Kembali ke Workspace
+                {language === 'en' ? 'Back to Workspace' : 'Kembali ke Workspace'}
                 <IconArrowRight className="h-4 w-4" />
               </button>
             </div>
@@ -209,8 +219,12 @@ export function StripeCheckoutModal({
             /* Stripe Form */
             <form onSubmit={handlePay} className="flex flex-col gap-5">
               <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-bold text-slate-800">Bayar dengan Kartu</span>
-                <span className="text-[10px] text-slate-400">Masukkan detail kartu kredit internasional Anda secara aman di bawah ini.</span>
+                <span className="text-sm font-bold text-slate-800">
+                  {language === 'en' ? 'Pay with Card' : 'Bayar dengan Kartu'}
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  {language === 'en' ? 'Enter your international credit card details securely below.' : 'Masukkan detail kartu kredit internasional Anda secara aman di bawah ini.'}
+                </span>
               </div>
 
               {errorMsg && (
@@ -234,7 +248,9 @@ export function StripeCheckoutModal({
 
               {/* Card Details */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Informasi Kartu</label>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  {language === 'en' ? 'Card Information' : 'Informasi Kartu'}
+                </label>
                 <div className="border border-slate-200 rounded-xl overflow-hidden focus-within:border-indigo-500 transition bg-white flex flex-col">
                   {/* Card Number */}
                   <div className="flex items-center px-3 py-2.5 border-b border-slate-100">
@@ -275,26 +291,32 @@ export function StripeCheckoutModal({
                     </div>
                   </div>
                 </div>
-                <span className="text-[9px] text-slate-400 italic">Gunakan kartu uji Stripe: 4242 4242 4242 4242</span>
+                <span className="text-[9px] text-slate-400 italic">
+                  {language === 'en' ? 'Use Stripe test card: 4242 4242 4242 4242' : 'Gunakan kartu uji Stripe: 4242 4242 4242 4242'}
+                </span>
               </div>
 
               {/* Cardholder Name */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nama di Kartu</label>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  {language === 'en' ? 'Name on Card' : 'Nama di Kartu'}
+                </label>
                 <input
                   type="text"
                   required
                   value={cardName}
                   onChange={(e) => setCardName(e.target.value)}
                   className="border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-500 transition"
-                  placeholder="Nama Lengkap Pemilik Kartu"
+                  placeholder={language === 'en' ? 'Cardholder Full Name' : 'Nama Lengkap Pemilik Kartu'}
                 />
               </div>
 
               {/* Country & ZIP */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Negara / Wilayah</label>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    {language === 'en' ? 'Country / Region' : 'Negara / Wilayah'}
+                  </label>
                   <select
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
@@ -308,7 +330,9 @@ export function StripeCheckoutModal({
                   </select>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Kode Pos</label>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    {language === 'en' ? 'ZIP / Postal Code' : 'Kode Pos'}
+                  </label>
                   <input
                     type="text"
                     required
@@ -329,16 +353,18 @@ export function StripeCheckoutModal({
                 {loading ? (
                   <>
                     <IconLoader className="h-4 w-4 animate-spin" />
-                    Memproses Pembayaran...
+                    {language === 'en' ? 'Processing Payment...' : 'Memproses Pembayaran...'}
                   </>
                 ) : (
-                  `Bayar ${formatPrice(planPrice)}`
+                  language === 'en' ? `Pay ${formatPrice(planPrice)}` : `Bayar ${formatPrice(planPrice)}`
                 )}
               </button>
 
               {/* Info transparan Beli Putus */}
               <div className="mt-4 p-2.5 bg-slate-50 border border-slate-100 rounded-lg text-center text-[10px] text-slate-500 leading-normal">
-                Beli sekali untuk 30 hari. Tanpa perpanjangan otomatis. Anda memegang kendali penuh.
+                {language === 'en' 
+                  ? 'One-time purchase for 30 days. No auto-renewal. You are in full control.' 
+                  : 'Beli sekali untuk 30 hari. Tanpa perpanjangan otomatis. Anda memegang kendali penuh.'}
               </div>
 
               {/* Stripe Brand Badge */}

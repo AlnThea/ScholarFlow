@@ -55,6 +55,7 @@ import {
   IconX
 } from '@tabler/icons-react';
 import { MinimalSidebar } from './minimal-sidebar';
+import { useLanguage } from '../i18n/language-context';
 import type { ImproveWritingResponse } from '@/lib/api/ai';
 import type { CitationCandidate } from '@/lib/api/citations';
 import type { CitationHistoryEntry } from '@/lib/editor/citation-history';
@@ -288,6 +289,7 @@ export function EditorLayout({
   onClearAiHistory,
   isApplied
 }: EditorLayoutProps) {
+  const { language, setLanguage, t } = useLanguage();
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [showRightSidebar, setShowRightSidebar] = useState(false);
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
@@ -310,23 +312,23 @@ export function EditorLayout({
 
   const mathHelperItems = useMemo(() => [
     // 1. General
-    { label: 'Pecahan', code: '\\frac{a}{b}', category: 'general', isLong: false },
-    { label: 'Akar Kuadrat', code: '\\sqrt{x}', category: 'general', isLong: false },
-    { label: 'Akar Pangkat N', code: '\\sqrt[n]{x}', category: 'general', isLong: false },
-    { label: 'Kurung Kunci', code: '\\left( x \\right)', category: 'general', isLong: true },
-    { label: 'Subskrip', code: 'x_{i}', category: 'general', isLong: false },
-    { label: 'Superskrip', code: 'x^{2}', category: 'general', isLong: false },
-    { label: 'Sub & Super', code: 'x_{i}^{2}', category: 'general', isLong: true },
-    { label: 'Vektor', code: '\\vec{x}', category: 'general', isLong: false },
-    { label: 'Hat', code: '\\hat{x}', category: 'general', isLong: false },
-    { label: 'Rata-rata', code: '\\bar{x}', category: 'general', isLong: false },
-    { label: 'Teks Biasa', code: '\\text{teks}', category: 'general', isLong: false },
-    { label: 'Teks Tebal (Bold)', code: '\\mathbf{x}', category: 'general', isLong: false },
-    { label: 'Kaligrafi (Cal)', code: '\\mathcal{L}', category: 'general', isLong: false },
-    { label: 'Bilangan Riil (R)', code: '\\mathbb{R}', category: 'general', isLong: false },
-    { label: 'Bilangan Bulat (Z)', code: '\\mathbb{Z}', category: 'general', isLong: false },
-    { label: 'Bilangan Kompleks (C)', code: '\\mathbb{C}', category: 'general', isLong: false },
-    { label: 'Bilangan Asli (N)', code: '\\mathbb{N}', category: 'general', isLong: false },
+    { label: language === 'en' ? 'Fraction' : 'Pecahan', code: '\\frac{a}{b}', category: 'general', isLong: false },
+    { label: language === 'en' ? 'Square Root' : 'Akar Kuadrat', code: '\\sqrt{x}', category: 'general', isLong: false },
+    { label: language === 'en' ? 'N-th Root' : 'Akar Pangkat N', code: '\\sqrt[n]{x}', category: 'general', isLong: false },
+    { label: language === 'en' ? 'Brackets' : 'Kurung Kunci', code: '\\left( x \\right)', category: 'general', isLong: true },
+    { label: language === 'en' ? 'Subscript' : 'Subskrip', code: 'x_{i}', category: 'general', isLong: false },
+    { label: language === 'en' ? 'Superscript' : 'Superskrip', code: 'x^{2}', category: 'general', isLong: false },
+    { label: language === 'en' ? 'Sub & Super' : 'Sub & Super', code: 'x_{i}^{2}', category: 'general', isLong: true },
+    { label: language === 'en' ? 'Vector' : 'Vektor', code: '\\vec{x}', category: 'general', isLong: false },
+    { label: language === 'en' ? 'Hat' : 'Hat', code: '\\hat{x}', category: 'general', isLong: false },
+    { label: language === 'en' ? 'Average (Bar)' : 'Rata-rata', code: '\\bar{x}', category: 'general', isLong: false },
+    { label: language === 'en' ? 'Regular Text' : 'Teks Biasa', code: '\\text{teks}', category: 'general', isLong: false },
+    { label: language === 'en' ? 'Bold Text' : 'Teks Tebal (Bold)', code: '\\mathbf{x}', category: 'general', isLong: false },
+    { label: language === 'en' ? 'Calligraphic (Cal)' : 'Kaligrafi (Cal)', code: '\\mathcal{L}', category: 'general', isLong: false },
+    { label: language === 'en' ? 'Real Numbers (R)' : 'Bilangan Riil (R)', code: '\\mathbb{R}', category: 'general', isLong: false },
+    { label: language === 'en' ? 'Integers (Z)' : 'Bilangan Bulat (Z)', code: '\\mathbb{Z}', category: 'general', isLong: false },
+    { label: language === 'en' ? 'Complex Numbers (C)' : 'Bilangan Kompleks (C)', code: '\\mathbb{C}', category: 'general', isLong: false },
+    { label: language === 'en' ? 'Natural Numbers (N)' : 'Bilangan Asli (N)', code: '\\mathbb{N}', category: 'general', isLong: false },
 
     // 2. Greek
     { label: 'Alpha (α)', code: '\\alpha', category: 'greek', isLong: false },
@@ -355,65 +357,65 @@ export function EditorLayout({
     { label: 'Kappa (κ)', code: '\\kappa', category: 'greek', isLong: false },
 
     // 3. Operators & Logic
-    { label: 'Kurang Lebih (±)', code: '\\pm', category: 'operators', isLong: false },
-    { label: 'Kali (Dot ·)', code: '\\cdot', category: 'operators', isLong: false },
-    { label: 'Kali (Cross ×)', code: '\\times', category: 'operators', isLong: false },
-    { label: 'Tidak Sama Dengan (≠)', code: '\\neq', category: 'operators', isLong: false },
-    { label: 'Mendekati (≈)', code: '\\approx', category: 'operators', isLong: false },
-    { label: 'Kurang Dari (≤)', code: '\\le', category: 'operators', isLong: false },
-    { label: 'Lebih Dari (≥)', code: '\\ge', category: 'operators', isLong: false },
-    { label: 'Proporsional (∝)', code: '\\propto', category: 'operators', isLong: false },
-    { label: 'Untuk Semua (∀)', code: '\\forall', category: 'operators', isLong: false },
-    { label: 'Ada (∃)', code: '\\exists', category: 'operators', isLong: false },
-    { label: 'Anggota Dari (∈)', code: '\\in', category: 'operators', isLong: false },
-    { label: 'Bukan Anggota (∉)', code: '\\notin', category: 'operators', isLong: false },
-    { label: 'Tak Terhingga (∞)', code: '\\infty', category: 'operators', isLong: false },
-    { label: 'Panah Kanan (→)', code: '\\to', category: 'operators', isLong: false },
-    { label: 'Panah Kiri (←)', code: '\\gets', category: 'operators', isLong: false },
-    { label: 'Panah Ganda (⇒)', code: '\\Rightarrow', category: 'operators', isLong: false },
-    { label: 'Panah Ganda Kiri-Kanan (⇔)', code: '\\Leftrightarrow', category: 'operators', isLong: true },
-    { label: 'Gabungan (Union ∪)', code: '\\cup', category: 'operators', isLong: false },
-    { label: 'Irisan (Intersect ∩)', code: '\\cap', category: 'operators', isLong: false },
-    { label: 'Himpunan Kosong (Ø)', code: '\\emptyset', category: 'operators', isLong: false },
-    { label: 'Ekuivalen (≡)', code: '\\equiv', category: 'operators', isLong: false },
-    { label: 'Kali Tensor (⊗)', code: '\\otimes', category: 'operators', isLong: false },
-    { label: 'Tambah Langsung (⊕)', code: '\\oplus', category: 'operators', isLong: false },
-    { label: 'Bagian Dari (⊆)', code: '\\subseteq', category: 'operators', isLong: false },
-    { label: 'Logika DAN (∧)', code: '\\land', category: 'operators', isLong: false },
-    { label: 'Logika ATAU (∨)', code: '\\lor', category: 'operators', isLong: false },
-    { label: 'Negasi (¬)', code: '\\neg', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Plus-Minus (±)' : 'Kurang Lebih (±)', code: '\\pm', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Multiply (Dot ·)' : 'Kali (Dot ·)', code: '\\cdot', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Multiply (Cross ×)' : 'Kali (Cross ×)', code: '\\times', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Not Equal To (≠)' : 'Tidak Sama Dengan (≠)', code: '\\neq', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Approximately (≈)' : 'Mendekati (≈)', code: '\\approx', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Less Than or Equal (≤)' : 'Kurang Dari (≤)', code: '\\le', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Greater Than or Equal (≥)' : 'Lebih Dari (≥)', code: '\\ge', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Proportional (∝)' : 'Proporsional (∝)', code: '\\propto', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'For All (∀)' : 'Untuk Semua (∀)', code: '\\forall', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Exists (∃)' : 'Ada (∃)', code: '\\exists', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Element Of (∈)' : 'Anggota Dari (∈)', code: '\\in', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Not Element Of (∉)' : 'Bukan Anggota (∉)', code: '\\notin', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Infinity (∞)' : 'Tak Terhingga (∞)', code: '\\infty', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Right Arrow (→)' : 'Panah Kanan (→)', code: '\\to', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Left Arrow (←)' : 'Panah Kiri (←)', code: '\\gets', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Double Arrow (⇒)' : 'Panah Ganda (⇒)', code: '\\Rightarrow', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Double Left-Right Arrow (⇔)' : 'Panah Ganda Kiri-Kanan (⇔)', code: '\\Leftrightarrow', category: 'operators', isLong: true },
+    { label: language === 'en' ? 'Union (∪)' : 'Gabungan (Union ∪)', code: '\\cup', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Intersection (∩)' : 'Irisan (Intersect ∩)', code: '\\cap', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Empty Set (Ø)' : 'Himpunan Kosong (Ø)', code: '\\emptyset', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Equivalent (≡)' : 'Ekuivalen (≡)', code: '\\equiv', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Tensor Product (⊗)' : 'Kali Tensor (⊗)', code: '\\otimes', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Direct Sum (⊕)' : 'Tambah Langsung (⊕)', code: '\\oplus', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Subset Of (⊆)' : 'Bagian Dari (⊆)', code: '\\subseteq', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Logical AND (∧)' : 'Logika DAN (∧)', code: '\\land', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Logical OR (∨)' : 'Logika ATAU (∨)', code: '\\lor', category: 'operators', isLong: false },
+    { label: language === 'en' ? 'Negation (¬)' : 'Negasi (¬)', code: '\\neg', category: 'operators', isLong: false },
 
     // 4. Advanced Math
     { label: 'Integral', code: '\\int_{a}^{b} f(x) dx', category: 'advanced', isLong: true },
-    { label: 'Integral Ganda', code: '\\iint_{D} f(x,y) dA', category: 'advanced', isLong: true },
-    { label: 'Integral Lipat Tiga', code: '\\iiint_{V} f(x,y,z) dV', category: 'advanced', isLong: true },
-    { label: 'Integral Lintasan (O)', code: '\\oint_{C} f(z) dz', category: 'advanced', isLong: true },
-    { label: 'Sigma (Sum)', code: '\\sum_{i=1}^{n} x_i', category: 'advanced', isLong: true },
-    { label: 'Produk (Product)', code: '\\prod_{i=1}^{n} x_i', category: 'advanced', isLong: true },
+    { label: language === 'en' ? 'Double Integral' : 'Integral Ganda', code: '\\iint_{D} f(x,y) dA', category: 'advanced', isLong: true },
+    { label: language === 'en' ? 'Triple Integral' : 'Integral Lipat Tiga', code: '\\iiint_{V} f(x,y,z) dV', category: 'advanced', isLong: true },
+    { label: language === 'en' ? 'Contour Integral' : 'Integral Lintasan (O)', code: '\\oint_{C} f(z) dz', category: 'advanced', isLong: true },
+    { label: language === 'en' ? 'Summation (Sigma)' : 'Sigma (Sum)', code: '\\sum_{i=1}^{n} x_i', category: 'advanced', isLong: true },
+    { label: language === 'en' ? 'Product' : 'Produk (Product)', code: '\\prod_{i=1}^{n} x_i', category: 'advanced', isLong: true },
     { label: 'Limit', code: '\\lim_{x \\to \\infty}', category: 'advanced', isLong: true },
-    { label: 'Turunan Parsial', code: '\\partial', category: 'advanced', isLong: false },
-    { label: 'Nabla/Gradien', code: '\\nabla', category: 'advanced', isLong: false },
-    { label: 'Logaritma', code: '\\log_{b}(x)', category: 'advanced', isLong: false },
-    { label: 'Logaritma Natural', code: '\\ln(x)', category: 'advanced', isLong: false },
-    { label: 'Turunan Pecahan', code: '\\frac{dy}{dx}', category: 'advanced', isLong: false },
-    { label: 'Turunan Parsial Pecahan', code: '\\frac{\\partial y}{\\partial x}', category: 'advanced', isLong: true },
-    { label: 'Turunan Kedua Pecahan', code: '\\frac{d^2 y}{dx^2}', category: 'advanced', isLong: true },
-    { label: 'Sinus (sin)', code: '\\sin(x)', category: 'advanced', isLong: false },
-    { label: 'Kosinus (cos)', code: '\\cos(x)', category: 'advanced', isLong: false },
-    { label: 'Tangen (tan)', code: '\\tan(x)', category: 'advanced', isLong: false },
-    { label: 'Arc Sinus (arcsin)', code: '\\arcsin(x)', category: 'advanced', isLong: false },
-    { label: 'Arc Kosinus (arccos)', code: '\\arccos(x)', category: 'advanced', isLong: false },
-    { label: 'Arc Tangen (arctan)', code: '\\arctan(x)', category: 'advanced', isLong: false },
-    { label: 'Divergensi', code: '\\nabla \\cdot \\vec{F}', category: 'advanced', isLong: false },
-    { label: 'Curl (Rotasi)', code: '\\nabla \\times \\vec{F}', category: 'advanced', isLong: false },
+    { label: language === 'en' ? 'Partial Derivative' : 'Turunan Parsial', code: '\\partial', category: 'advanced', isLong: false },
+    { label: language === 'en' ? 'Nabla / Gradient' : 'Nabla/Gradien', code: '\\nabla', category: 'advanced', isLong: false },
+    { label: language === 'en' ? 'Logarithm' : 'Logaritma', code: '\\log_{b}(x)', category: 'advanced', isLong: false },
+    { label: language === 'en' ? 'Natural Logarithm' : 'Logaritma Natural', code: '\\ln(x)', category: 'advanced', isLong: false },
+    { label: language === 'en' ? 'Derivative Fraction' : 'Turunan Pecahan', code: '\\frac{dy}{dx}', category: 'advanced', isLong: false },
+    { label: language === 'en' ? 'Partial Derivative Fraction' : 'Turunan Parsial Pecahan', code: '\\frac{\\partial y}{\\partial x}', category: 'advanced', isLong: true },
+    { label: language === 'en' ? 'Second Derivative Fraction' : 'Turunan Kedua Pecahan', code: '\\frac{d^2 y}{dx^2}', category: 'advanced', isLong: true },
+    { label: language === 'en' ? 'Sine (sin)' : 'Sinus (sin)', code: '\\sin(x)', category: 'advanced', isLong: false },
+    { label: language === 'en' ? 'Cosine (cos)' : 'Kosinus (cos)', code: '\\cos(x)', category: 'advanced', isLong: false },
+    { label: language === 'en' ? 'Tangent (tan)' : 'Tangen (tan)', code: '\\tan(x)', category: 'advanced', isLong: false },
+    { label: language === 'en' ? 'Arcsine (arcsin)' : 'Arc Sinus (arcsin)', code: '\\arcsin(x)', category: 'advanced', isLong: false },
+    { label: language === 'en' ? 'Arccosine (arccos)' : 'Arc Kosinus (arccos)', code: '\\arccos(x)', category: 'advanced', isLong: false },
+    { label: language === 'en' ? 'Arctangent (arctan)' : 'Arc Tangen (arctan)', code: '\\arctan(x)', category: 'advanced', isLong: false },
+    { label: language === 'en' ? 'Divergence' : 'Divergensi', code: '\\nabla \\cdot \\vec{F}', category: 'advanced', isLong: false },
+    { label: language === 'en' ? 'Curl (Rotation)' : 'Curl (Rotasi)', code: '\\nabla \\times \\vec{F}', category: 'advanced', isLong: false },
     { label: 'Laplacian', code: '\\nabla^2 f', category: 'advanced', isLong: false },
 
     // 5. Structures
-    { label: 'Matriks 2x2', code: '\\begin{matrix} a & b \\\\ c & d \\end{matrix}', category: 'structures', isLong: true },
-    { label: 'Matriks 3x3', code: '\\begin{matrix} a & b & c \\\\ d & e & f \\\\ g & h & i \\end{matrix}', category: 'structures', isLong: true },
-    { label: 'Matriks Tanda Kurung', code: '\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}', category: 'structures', isLong: true },
-    { label: 'Sistem Persamaan (Cases)', code: 'f(x) = \\begin{cases} x & x \\ge 0 \\\\ -x & x < 0 \\end{cases}', category: 'structures', isLong: true }
-  ], []);
+    { label: language === 'en' ? '2x2 Matrix' : 'Matriks 2x2', code: '\\begin{matrix} a & b \\\\ c & d \\end{matrix}', category: 'structures', isLong: true },
+    { label: language === 'en' ? '3x3 Matrix' : 'Matriks 3x3', code: '\\begin{matrix} a & b & c \\\\ d & e & f \\\\ g & h & i \\end{matrix}', category: 'structures', isLong: true },
+    { label: language === 'en' ? 'Parenthesized Matrix' : 'Matriks Tanda Kurung', code: '\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}', category: 'structures', isLong: true },
+    { label: language === 'en' ? 'System of Equations (Cases)' : 'Sistem Persamaan (Cases)', code: 'f(x) = \\begin{cases} x & x \\ge 0 \\\\ -x & x < 0 \\end{cases}', category: 'structures', isLong: true }
+  ], [language]);
 
   const filteredMathHelperItems = useMemo(() => {
     let items = mathHelperItems;
@@ -1748,7 +1750,10 @@ export function EditorLayout({
             <button 
               onClick={() => {
                 if (role !== 'admin' && activePlanId === 'free') {
-                  alert("🔒 Fitur Ekspor Microsoft Word (.doc) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda.");
+                  alert(language === 'en' 
+                    ? "🔒 Microsoft Word (.doc) Export feature is exclusive to Pro Writer plans. Please upgrade your account."
+                    : "🔒 Fitur Ekspor Microsoft Word (.doc) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda."
+                  );
                 } else {
                   const title = currentDocument?.title || 'Untitled Document';
                   const docContent = currentDocument?.content;
@@ -1762,13 +1767,13 @@ export function EditorLayout({
                     }
                   }
                   const bibs = bibliographyEntries.map(e => e.formatted);
-                  exportToWordFile(title, bList, bibs);
+                  exportToWordFile(title, bList, bibs, language);
                 }
               }}
               className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition shadow-sm cursor-pointer"
             >
               <IconFileWord className="h-4 w-4 text-slate-400" />
-              Export Word
+              {language === 'en' ? 'Export Word' : 'Ekspor Word'}
             </button>
             
             <button 
@@ -1776,7 +1781,7 @@ export function EditorLayout({
               className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition shadow-sm cursor-pointer"
             >
               <IconShare className="h-4 w-4 text-slate-400" />
-              Share
+              {language === 'en' ? 'Share' : 'Bagikan'}
             </button>
 
             <button 
@@ -1784,23 +1789,32 @@ export function EditorLayout({
               className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition shadow-sm cursor-pointer"
             >
               <IconCreditCard className="h-4 w-4 text-slate-400" />
-              Pricing
+              {language === 'en' ? 'Pricing' : 'Langganan'}
+            </button>
+
+            <button 
+              onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition shadow-sm cursor-pointer"
+              title={language === 'en' ? 'Switch to Indonesian' : 'Ubah ke Bahasa Indonesia'}
+            >
+              <IconLanguage className="h-4 w-4 text-slate-400" />
+              <span>{language === 'en' ? '🇺🇸 EN' : '🇮🇩 ID'}</span>
             </button>
 
             <button 
               onClick={toggleDarkMode}
               className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition shadow-sm cursor-pointer"
-              title="Toggle Mode Gelap/Terang"
+              title={language === 'en' ? 'Toggle Dark/Light Mode' : 'Toggle Mode Gelap/Terang'}
             >
               {isDarkMode ? (
                 <>
                   <IconSun className="h-4 w-4 text-amber-500" />
-                  <span>Terang</span>
+                  <span>{language === 'en' ? 'Light' : 'Terang'}</span>
                 </>
               ) : (
                 <>
                   <IconMoon className="h-4 w-4 text-indigo-500" />
-                  <span>Gelap</span>
+                  <span>{language === 'en' ? 'Dark' : 'Gelap'}</span>
                 </>
               )}
             </button>
@@ -1812,10 +1826,10 @@ export function EditorLayout({
                   ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100' 
                   : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
               }`}
-              title="Toggle Bilah Asisten Riset"
+              title={language === 'en' ? 'Toggle Research Assistant Panel' : 'Toggle Bilah Asisten Riset'}
             >
               <IconLayoutSidebarRightCollapse className={`h-4 w-4 ${showRightSidebar ? 'text-indigo-600' : 'text-slate-400'}`} />
-              Asisten Riset
+              {language === 'en' ? 'Research Assistant' : 'Asisten Riset'}
             </button>
             <button className="p-2 rounded-md hover:bg-slate-100 transition text-slate-400 hover:text-slate-700" aria-label="More options">
               <IconDots className="h-5 w-5" />
@@ -2093,13 +2107,15 @@ export function EditorLayout({
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <div className="flex flex-col">
                 <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">LaTeX Math Helper</span>
-                <span className="text-[9px] text-slate-400 italic">Pintasan Rumus Cepat</span>
+                <span className="text-[9px] text-slate-400 italic">
+                  {language === 'en' ? 'Quick Formula Shortcuts' : 'Pintasan Rumus Cepat'}
+                </span>
               </div>
               <button
                 type="button"
                 onClick={() => setIsMathHelperOpen(false)}
                 className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition cursor-pointer"
-                title="Tutup Panel"
+                title={language === 'en' ? 'Close Panel' : 'Tutup Panel'}
               >
                 <IconX className="h-4.5 w-4.5" />
               </button>
@@ -2111,7 +2127,7 @@ export function EditorLayout({
                 type="text"
                 value={mathSearchQuery}
                 onChange={(e) => setMathSearchQuery(e.target.value)}
-                placeholder="Cari simbol (misal: sigma, integral)..."
+                placeholder={language === 'en' ? 'Search symbol (e.g. sigma, integral)...' : 'Cari simbol (misal: sigma, integral)...'}
                 className="w-full pl-8 pr-3 py-1.5 text-[10px] border border-slate-200 rounded-lg outline-none focus:border-indigo-500 transition font-sans text-slate-800"
               />
               <IconSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
@@ -2129,16 +2145,15 @@ export function EditorLayout({
             {/* Category Tabs (Horizontal Scrollable) */}
             {!mathSearchQuery && (
               <div 
-                className="flex items-center gap-1 overflow-x-auto overflow-y-hidden py-1.5 border-b border-slate-100 text-xs font-semibold text-slate-500 [&::-webkit-scrollbar]:hidden"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                className="flex flex-wrap items-center gap-1 py-1.5 border-b border-slate-100 text-xs font-semibold text-slate-500"
               >
                 {[
-                  { id: 'general', label: 'Umum' },
-                  { id: 'greek', label: 'Yunani' },
-                  { id: 'operators', label: 'Operator' },
-                  { id: 'advanced', label: 'Kalkulus' },
-                  { id: 'structures', label: 'Struktur' },
-                  { id: 'all', label: 'Semua' }
+                  { id: 'general', label: language === 'en' ? 'General' : 'Umum' },
+                  { id: 'greek', label: language === 'en' ? 'Greek' : 'Yunani' },
+                  { id: 'operators', label: language === 'en' ? 'Operators' : 'Operator' },
+                  { id: 'advanced', label: language === 'en' ? 'Calculus' : 'Kalkulus' },
+                  { id: 'structures', label: language === 'en' ? 'Structures' : 'Struktur' },
+                  { id: 'all', label: language === 'en' ? 'All' : 'Semua' }
                 ].map(tab => (
                   <button
                     key={tab.id}
@@ -2159,11 +2174,15 @@ export function EditorLayout({
             
             <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500">
               <div className="col-span-2 text-[9px] bg-slate-50/50 p-2 rounded border border-slate-100 leading-normal mb-1">
-                📌 <strong className="text-slate-600">Info:</strong> Jika kotak input rumus aktif, mengklik rumus akan langsung menyisipkannya. Jika tidak, rumus disalin ke clipboard.
+                {language === 'en' ? (
+                  <>📌 <strong className="text-slate-600">Info:</strong> If the formula input box is active, clicking a formula will insert it directly. Otherwise, it will be copied to clipboard.</>
+                ) : (
+                  <>📌 <strong className="text-slate-600">Info:</strong> Jika kotak input rumus aktif, mengklik rumus akan langsung menyisipkannya. Jika tidak, rumus disalin ke clipboard.</>
+                )}
               </div>
               {filteredMathHelperItems.length === 0 ? (
                 <div className="col-span-2 text-center py-6 text-slate-400 italic">
-                  Tidak ada simbol yang cocok.
+                  {language === 'en' ? 'No matching symbols.' : 'Tidak ada simbol yang cocok.'}
                 </div>
               ) : (
                 filteredMathHelperItems.map((item) => (
@@ -2186,12 +2205,12 @@ export function EditorLayout({
                         txtEl.selectionStart = txtEl.selectionEnd = start + item.code.length;
                         txtEl.dispatchEvent(new InputEvent('input', { bubbles: true }));
                         
-                        setMathToast('Disisipkan!');
+                        setMathToast(language === 'en' ? 'Inserted!' : 'Disisipkan!');
                         setTimeout(() => setMathToast(null), 2000);
                       } else {
                         try {
                           await navigator.clipboard.writeText(item.code);
-                          setMathToast('Disalin!');
+                          setMathToast(language === 'en' ? 'Copied!' : 'Disalin!');
                           setTimeout(() => setMathToast(null), 2000);
                         } catch (err) {
                           console.error('Failed to copy text:', err);
@@ -2236,12 +2255,11 @@ export function EditorLayout({
                   <button className={getBtnClass(activeFormats.strikethrough)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('strikethrough')} title="Strikethrough"><IconStrikethrough className="h-3.5 w-3.5" /></button>
                   <button className={getBtnClass(activeFormats.code)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('code')} title="Code"><IconCode className="h-3.5 w-3.5" /></button>
                   <button className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition" onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('link')} title="Link"><IconLink className="h-3.5 w-3.5" /></button>
-                  <button className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition" onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('highlight')} title="Highlight"><IconHighlight className="h-3.5 w-3.5" /></button>
                 </div>
-                
+
                 {/* AI Configuration Section Header */}
                 <div className="flex items-center justify-between px-3 py-1.5 border-b border-slate-100/50 text-[9px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/40">
-                  <span>Pengaturan AI</span>
+                  <span>{t('menu.settings')}</span>
                 </div>
 
                 {/* AI Dropdowns */}
@@ -2253,7 +2271,7 @@ export function EditorLayout({
                       value={selectedAiModel}
                       onChange={(e) => setSelectedAiModel(e.target.value)}
                       className="w-full border border-slate-200 rounded px-1.5 py-1 text-[10px] text-slate-700 bg-white outline-none focus:border-indigo-500 transition cursor-pointer font-semibold"
-                      title="Pilih Model AI"
+                      title={language === 'en' ? 'Select AI Model' : 'Pilih Model AI'}
                     >
                       {aiModels && aiModels.length > 0 ? (
                         aiModels.filter(m => m.is_enabled).map(m => (
@@ -2274,24 +2292,24 @@ export function EditorLayout({
 
                   {/* Tone Select */}
                   <div className="flex flex-col gap-1 flex-1 min-w-0">
-                    <span className="text-[8px] font-bold text-slate-400 uppercase">Gaya</span>
+                    <span className="text-[8px] font-bold text-slate-400 uppercase">{language === 'en' ? 'Tone' : 'Gaya'}</span>
                     <select
                       value={selectedAiTone}
                       onChange={(e) => setSelectedAiTone(e.target.value)}
                       className="w-full border border-slate-200 rounded px-1.5 py-1 text-[10px] text-slate-700 bg-white outline-none focus:border-indigo-500 transition cursor-pointer font-semibold"
-                      title="Gaya Poles AI"
+                      title={language === 'en' ? 'AI Polish Tone' : 'Gaya Poles AI'}
                     >
-                      <option value="academic">Akademis</option>
-                      <option value="simplify">Sederhana</option>
-                      <option value="shorten">Ringkas</option>
-                      <option value="expand">Elaborasi</option>
+                      <option value="academic">{language === 'en' ? 'Academic' : 'Akademis'}</option>
+                      <option value="simplify">{language === 'en' ? 'Simplify' : 'Sederhana'}</option>
+                      <option value="shorten">{language === 'en' ? 'Condense' : 'Ringkas'}</option>
+                      <option value="expand">{language === 'en' ? 'Elaborate' : 'Elaborasi'}</option>
                     </select>
                   </div>
                 </div>
 
                 {/* Actions Section Header */}
                 <div className="flex items-center justify-between px-3 py-1.5 border-b border-slate-100/50 text-[9px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/40">
-                  <span>Aksi Asisten</span>
+                  <span>{t('menu.actions')}</span>
                 </div>
 
                 {/* Actions List */}
@@ -2305,7 +2323,10 @@ export function EditorLayout({
                       const modelObj = aiModels.find(m => m.id === selectedAiModel);
                       const isPremium = modelObj ? modelObj.is_premium : (selectedAiModel === 'claude');
                       if (isPremium && activePlanId === 'free') {
-                        alert(`🔒 Model "${modelObj?.name || 'Premium'}" khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda.`);
+                        alert(language === 'en'
+                          ? `🔒 Model "${modelObj?.name || 'Premium'}" is exclusive to Pro Writer plans. Please upgrade your account.`
+                          : `🔒 Model "${modelObj?.name || 'Premium'}" khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda.`
+                        );
                       } else {
                         onImproveWriting();
                         setShowRightSidebar(true);
@@ -2320,8 +2341,10 @@ export function EditorLayout({
                       )}
                     </div>
                     <div className="flex flex-col text-left">
-                      <span className="text-xs text-slate-800">Poles dengan AI</span>
-                      <span className="text-[9px] text-slate-400 font-normal">Meningkatkan gaya bahasa & akademis</span>
+                      <span className="text-xs text-slate-800">{t('menu.polish')}</span>
+                      <span className="text-[9px] text-slate-400 font-normal">
+                        {language === 'en' ? 'Improve style and academic phrasing' : 'Meningkatkan gaya bahasa & akademis'}
+                      </span>
                     </div>
                   </button>
 
@@ -2334,7 +2357,10 @@ export function EditorLayout({
                       const modelObj = aiModels.find(m => m.id === selectedAiModel);
                       const isPremium = modelObj ? modelObj.is_premium : (selectedAiModel === 'claude');
                       if (isPremium && activePlanId === 'free') {
-                        alert(`🔒 Model "${modelObj?.name || 'Premium'}" khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda.`);
+                        alert(language === 'en'
+                          ? `🔒 Model "${modelObj?.name || 'Premium'}" is exclusive to Pro Writer plans. Please upgrade your account.`
+                          : `🔒 Model "${modelObj?.name || 'Premium'}" khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda.`
+                        );
                       } else {
                         onParaphrase();
                         setShowRightSidebar(true);
@@ -2349,8 +2375,10 @@ export function EditorLayout({
                       )}
                     </div>
                     <div className="flex flex-col text-left">
-                      <span className="text-xs text-slate-800">Parafrase Kalimat</span>
-                      <span className="text-[9px] text-slate-400 font-normal">Tulis ulang kalimat terpilih (AI)</span>
+                      <span className="text-xs text-slate-800">{t('menu.paraphrase')}</span>
+                      <span className="text-[9px] text-slate-400 font-normal">
+                        {language === 'en' ? 'Rewrite selected sentence (AI)' : 'Tulis ulang kalimat terpilih (AI)'}
+                      </span>
                     </div>
                   </button>
 
@@ -2367,8 +2395,10 @@ export function EditorLayout({
                       <IconSum className="h-4 w-4 text-indigo-600" />
                     </div>
                     <div className="flex flex-col text-left">
-                      <span className="text-xs text-slate-800">Rumus Matematika (LaTeX)</span>
-                      <span className="text-[9px] text-slate-400 font-normal">Ubah teks terpilih menjadi rumus</span>
+                      <span className="text-xs text-slate-800">{language === 'en' ? 'Mathematical Equation (LaTeX)' : 'Rumus Matematika (LaTeX)'}</span>
+                      <span className="text-[9px] text-slate-400 font-normal">
+                        {language === 'en' ? 'Convert selected text to equation' : 'Ubah teks terpilih menjadi rumus'}
+                      </span>
                     </div>
                   </button>
 
@@ -2386,8 +2416,10 @@ export function EditorLayout({
                       <IconSearch className="h-4 w-4" />
                     </div>
                     <div className="flex flex-col text-left">
-                      <span className="text-xs text-slate-800">Cari Kutipan / Sitasi</span>
-                      <span className="text-[9px] text-slate-400 font-normal">Temukan sitasi jurnal ilmiah</span>
+                      <span className="text-xs text-slate-800">{language === 'en' ? 'Find Citations' : 'Cari Kutipan / Sitasi'}</span>
+                      <span className="text-[9px] text-slate-400 font-normal">
+                        {language === 'en' ? 'Find scientific journal citations' : 'Temukan sitasi jurnal ilmiah'}
+                      </span>
                     </div>
                   </button>
                 </div>
