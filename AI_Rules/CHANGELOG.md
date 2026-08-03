@@ -190,3 +190,11 @@
 - Localized the MS Word exporter (`citation-export-word.ts`) to print either "REFERENCES" or "DAFTAR PUSTAKA" based on document locale settings.
 - Verified and compiled type check parameters (`npx tsc --noEmit` and `npm run build`) successfully across all modules.
 
+## v0.1.8
+- Fixed missing images bug in Microsoft Word export by transitioning the export format from plain HTML to MHTML (multipart/related).
+- Added `getBase64FromUrl` and `generateWordMhtml` helpers to dynamically fetch and encode inline base64, blob, relative, and external images on the client-side.
+- Added `getImageDimensions` helper to extract dimensions of PNG, JPEG, and GIF images from base64 binary headers.
+- Resolved vertical image stretching (distortion) in MS Word by dynamically calculating and injecting proportional HTML `height` attributes alongside the physical `width="576"` attribute, while keeping `style="max-width: 100%; height: auto;"` for web browser responsiveness.
+- Kept the original `generateWordHtml` layout formatting intact while converting `exportToWordFile` to an asynchronous operation.
+- Verified and type-checked compiling parameters (`npx tsc --noEmit`) successfully.
+
