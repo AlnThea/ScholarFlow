@@ -197,5 +197,6 @@
 - Resolved vertical image stretching (distortion) in MS Word by dynamically calculating and injecting proportional HTML `height` attributes alongside the physical `width="576"` attribute, while keeping `style="max-width: 100%; height: auto;"` for web browser responsiveness.
 - Kept the original `generateWordHtml` layout formatting intact while converting `exportToWordFile` to an asynchronous operation.
 - Implemented premium auto-growing (`adjustAllCodeTextareaHeights`) and word-wrapping (`white-space: pre-wrap`) features for EditorJS code block textareas, preventing code truncation and horizontal scrollbar overflows.
+- Added `case 'code'` support in `generateWordHtml` and `generateWordMhtml` templates to correctly format and render pre-formatted code block sections with HTML-escaping, gray backgrounds, and left borders in the exported MS Word document.
 - Verified and type-checked compiling parameters (`npx tsc --noEmit`) successfully.
 

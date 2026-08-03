@@ -15,6 +15,7 @@ interface EditorBlock {
     };
     caption?: string;
     formula?: string;
+    code?: string;
   };
 }
 
@@ -295,6 +296,19 @@ export function generateWordHtml(
               <img class="document-image" src="${url}" alt="${caption}" width="576" ${heightAttr} style="max-width: 100%; height: auto;" />
               ${caption ? `<div class="image-caption">${caption}</div>` : ''}
             </div>
+          `;
+        }
+        break;
+      }
+      case 'code': {
+        const codeText = block.data.code || '';
+        if (codeText) {
+          const escapedCode = codeText
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+          bodyContent += `
+            <pre style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-left: 4px solid #6c757d; padding: 10px; font-family: 'Courier New', Courier, monospace; font-size: 10pt; line-height: 1.2; white-space: pre-wrap; margin-top: 12pt; margin-bottom: 12pt;">${escapedCode}</pre>
           `;
         }
         break;
@@ -601,6 +615,19 @@ export async function generateWordMhtml(
               </div>
             `;
           }
+        }
+        break;
+      }
+      case 'code': {
+        const codeText = block.data.code || '';
+        if (codeText) {
+          const escapedCode = codeText
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+          bodyContent += `
+            <pre style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-left: 4px solid #6c757d; padding: 10px; font-family: 'Courier New', Courier, monospace; font-size: 10pt; line-height: 1.2; white-space: pre-wrap; margin-top: 12pt; margin-bottom: 12pt;">${escapedCode}</pre>
+          `;
         }
         break;
       }
