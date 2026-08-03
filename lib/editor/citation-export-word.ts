@@ -245,8 +245,19 @@ export function generateWordHtml(
 
   let bodyContent = `<h1>${title}</h1>`;
 
+  // Filter out editor-inserted bibliography blocks to prevent duplicates
+  const cleanedBlocks: EditorBlock[] = [];
+  for (let i = 0; i < blocks.length; i++) {
+    const block = blocks[i];
+    if (block.type === 'header' && block.data?.text === 'Daftar Pustaka / References') {
+      i++; // Skip the next block (which is the bibliography content)
+      continue;
+    }
+    cleanedBlocks.push(block);
+  }
+
   // Iterasi block EditorJS dan ubah ke tag HTML
-  blocks.forEach((block) => {
+  cleanedBlocks.forEach((block) => {
     switch (block.type) {
       case 'header': {
         const level = block.data.level || 2;
@@ -590,8 +601,19 @@ export async function generateWordMhtml(
     }
   };
 
+  // Filter out editor-inserted bibliography blocks to prevent duplicates
+  const cleanedBlocks: EditorBlock[] = [];
+  for (let i = 0; i < blocks.length; i++) {
+    const block = blocks[i];
+    if (block.type === 'header' && block.data?.text === 'Daftar Pustaka / References') {
+      i++; // Skip the next block (which is the bibliography content)
+      continue;
+    }
+    cleanedBlocks.push(block);
+  }
+
   // Memproses blocks secara sekuensial agar konversi gambar asinkron berjalan lancar
-  for (const block of blocks) {
+  for (const block of cleanedBlocks) {
     switch (block.type) {
       case 'header': {
         const level = block.data.level || 2;

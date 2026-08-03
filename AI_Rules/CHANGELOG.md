@@ -201,5 +201,6 @@
 - Integrated high-fidelity CodeCogs LaTeX-to-PNG image generation for both block and inline math formulas, ensuring equations are embedded as local, high-quality images that render correctly in MS Word.
 - Added asynchronous inline math parsing and local MHTML attachment support (`processTextHtmlMhtml`), resolving the issue where inline equations were blocked in Microsoft Word's Protected View.
 - Resolved a critical infinite saving loop bug by removing height-adjusting DOM manipulations from the editor's `onChange` callback, preventing save state locks.
+- Filtered out editor-inserted bibliography blocks (`Daftar Pustaka / References` header and its subsequent block) in the Word exporters (`generateWordHtml` and `generateWordMhtml`) to eliminate duplicate bibliography entries in the exported Word document.
 - Verified and type-checked compiling parameters (`npx tsc --noEmit`) successfully.
 
