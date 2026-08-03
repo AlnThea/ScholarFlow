@@ -32,8 +32,16 @@ function processTextHtml(html: string): string {
     const mathSpans = tempDiv.querySelectorAll('.sf-inline-math');
     mathSpans.forEach((span) => {
       const formula = span.getAttribute('data-formula') || '';
-      const textNode = document.createTextNode(`\\( ${formula} \\)`);
-      span.parentNode?.replaceChild(textNode, span);
+      const encodedFormula = encodeURIComponent(formula);
+      const url = `https://latex.codecogs.com/png.image?\\dpi{110}\\bg{white}${encodedFormula}`;
+      
+      const imgNode = document.createElement('img');
+      imgNode.setAttribute('src', url);
+      imgNode.setAttribute('alt', formula);
+      imgNode.setAttribute('style', 'vertical-align: middle; margin: 0 2px;');
+      imgNode.setAttribute('class', 'inline-math-img');
+      
+      span.parentNode?.replaceChild(imgNode, span);
     });
     
     return tempDiv.innerHTML;
@@ -316,7 +324,13 @@ export function generateWordHtml(
       case 'math': {
         const formula = block.data.formula || '';
         if (formula) {
-          bodyContent += `<div class="math-block">$$\\displaystyle ${formula}$$</div>`;
+          const encodedFormula = encodeURIComponent(formula);
+          const url = `https://latex.codecogs.com/png.image?\\dpi{150}\\bg{white}${encodedFormula}`;
+          bodyContent += `
+            <div class="math-block" style="text-align: center; margin: 12pt 0;">
+              <img src="${url}" alt="${formula}" />
+            </div>
+          `;
         }
         break;
       }
@@ -634,7 +648,45 @@ export async function generateWordMhtml(
       case 'math': {
         const formula = block.data.formula || '';
         if (formula) {
-          bodyContent += `<div class="math-block">$$\\displaystyle ${formula}$$</div>`;
+          const encodedFormula = encodeURIComponent(formula);
+          const url = `https://latex.codecogs.com/png.image?\\dpi{150}\\bg{white}${encodedFormula}`;
+          
+          const imgData = await getBase64FromUrl(url);
+          if (imgData) {
+            const ext = 'png';
+            const location = `file:///C:/math_${imageCounter}.${ext}`;
+            attachedImages.push({
+              location,
+              mimeType: imgData.mimeType,
+              base64Data: imgData.base64Data
+            });
+            imageCounter++;
+
+            let heightAttr = '';
+            const dims = getImageDimensions(imgData.base64Data, imgData.mimeType);
+            if (dims && dims.width > 0) {
+              const width = Math.min(dims.width, 576);
+              const height = Math.round(width * (dims.height / dims.width));
+              bodyContent += `
+                <div class="math-block" style="text-align: center; margin: 12pt 0;">
+                  <img src="${location}" width="${width}" height="${height}" alt="${formula}" />
+                </div>
+              `;
+            } else {
+              bodyContent += `
+                <div class="math-block" style="text-align: center; margin: 12pt 0;">
+                  <img src="${location}" alt="${formula}" />
+                </div>
+              `;
+            }
+          } else {
+            // Fallback ke url asli jika gagal konversi
+            bodyContent += `
+              <div class="math-block" style="text-align: center; margin: 12pt 0;">
+                <img src="${url}" alt="${formula}" />
+              </div>
+            `;
+          }
         }
         break;
       }

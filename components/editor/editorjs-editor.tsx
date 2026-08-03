@@ -1281,7 +1281,6 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
             onChange: async () => {
               syncActiveBlockType();
               calculateLiveStats();
-              adjustAllCodeTextareaHeights();
               
               if (isRenderingRef.current) {
                 return;

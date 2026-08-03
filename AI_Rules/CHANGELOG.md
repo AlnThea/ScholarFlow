@@ -198,5 +198,7 @@
 - Kept the original `generateWordHtml` layout formatting intact while converting `exportToWordFile` to an asynchronous operation.
 - Implemented premium auto-growing (`adjustAllCodeTextareaHeights`) and word-wrapping (`white-space: pre-wrap`) features for EditorJS code block textareas, preventing code truncation and horizontal scrollbar overflows.
 - Added `case 'code'` support in `generateWordHtml` and `generateWordMhtml` templates to correctly format and render pre-formatted code block sections with HTML-escaping, gray backgrounds, and left borders in the exported MS Word document.
+- Integrated high-fidelity CodeCogs LaTeX-to-PNG image generation for both block and inline math formulas, ensuring equations are embedded as local, high-quality images that render correctly in MS Word.
+- Resolved a critical infinite saving loop bug by removing height-adjusting DOM manipulations from the editor's `onChange` callback, preventing save state locks.
 - Verified and type-checked compiling parameters (`npx tsc --noEmit`) successfully.
 
