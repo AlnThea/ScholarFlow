@@ -170,3 +170,11 @@ body {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Custom Code block textarea auto-grow styling */
+.ce-code__textarea {
+  overflow-y: hidden !important;
+  resize: none !important;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+}

@@ -247,6 +247,16 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
   // Tracks index of bibliography header block (-1 = not yet inserted)
   const bibliographyBlockIndexRef = useRef<number>(-1);
 
+    // Adjust heights of all code textareas based on their content scrollHeight
+    const adjustAllCodeTextareaHeights = () => {
+      if (typeof document === 'undefined') return;
+      const textareas = document.querySelectorAll('.ce-code__textarea') as NodeListOf<HTMLTextAreaElement>;
+      textareas.forEach((textarea) => {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+      });
+    };
+
   // Restore alignment styles to all editor blocks based on saved localStorage map
   const restoreBlockAlignments = () => {
     if (!editorRef.current || !editorRef.current.blocks) return;
@@ -1141,11 +1151,21 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
     },
   }));
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return; // client‑side only
-    if (editorRef.current) return;
+    useEffect(() => {
+      if (typeof window === 'undefined') return; // client‑side only
+      if (editorRef.current) return;
 
-    let isMounted = true;
+      let isMounted = true;
+
+      const handleCodeInput = (e: Event) => {
+        const target = e.target as HTMLElement;
+        if (target && target.classList.contains('ce-code__textarea')) {
+          const textarea = target as HTMLTextAreaElement;
+          textarea.style.height = 'auto';
+          textarea.style.height = textarea.scrollHeight + 'px';
+        }
+      };
+      document.addEventListener('input', handleCodeInput);
 
     // Dynamically import EditorJS and its plugins to prevent SSR import errors
     import('@editorjs/editorjs')
@@ -1236,6 +1256,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
                       renderAllInlineMath();
                       setTimeout(() => {
                         isRenderingRef.current = false;
+                        adjustAllCodeTextareaHeights();
                       }, 150);
                     })
                     .catch((e) => {
@@ -1254,11 +1275,13 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
                 restoreBlockAlignments();
                 renderAllInlineMath();
                 calculateLiveStats();
+                adjustAllCodeTextareaHeights();
               }, 150);
             },
             onChange: async () => {
               syncActiveBlockType();
               calculateLiveStats();
+              adjustAllCodeTextareaHeights();
               
               if (isRenderingRef.current) {
                 return;
@@ -1282,6 +1305,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
 
     return () => {
       isMounted = false;
+      document.removeEventListener('input', handleCodeInput);
       if (editorRef.current) {
         try {
           if (typeof editorRef.current.destroy === 'function') {
