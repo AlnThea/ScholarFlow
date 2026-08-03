@@ -542,21 +542,69 @@ export async function generateWordMhtml(
 
   let imageCounter = 0;
 
+  // Helper to process inline HTML and embed any inline math formulas as local images
+  const processTextHtmlMhtml = async (html: string): Promise<string> => {
+    if (!html) return '';
+    if (typeof document === 'undefined') return html;
+    try {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html;
+      
+      const mathSpans = tempDiv.querySelectorAll('.sf-inline-math');
+      for (const span of Array.from(mathSpans)) {
+        const formula = span.getAttribute('data-formula') || '';
+        const encodedFormula = encodeURIComponent(formula);
+        const url = `https://latex.codecogs.com/png.image?\\dpi{110}\\bg{white}${encodedFormula}`;
+        
+        const imgData = await getBase64FromUrl(url);
+        if (imgData) {
+          const ext = 'png';
+          const location = `file:///C:/inline_math_${imageCounter}.${ext}`;
+          attachedImages.push({
+            location,
+            mimeType: imgData.mimeType,
+            base64Data: imgData.base64Data
+          });
+          imageCounter++;
+          
+          const imgNode = document.createElement('img');
+          imgNode.setAttribute('src', location);
+          imgNode.setAttribute('alt', formula);
+          imgNode.setAttribute('style', 'vertical-align: middle; margin: 0 2px;');
+          imgNode.setAttribute('class', 'inline-math-img');
+          
+          span.parentNode?.replaceChild(imgNode, span);
+        } else {
+          // Fallback to online url if fetching fails
+          const imgNode = document.createElement('img');
+          imgNode.setAttribute('src', url);
+          imgNode.setAttribute('alt', formula);
+          imgNode.setAttribute('style', 'vertical-align: middle; margin: 0 2px;');
+          imgNode.setAttribute('class', 'inline-math-img');
+          span.parentNode?.replaceChild(imgNode, span);
+        }
+      }
+      return tempDiv.innerHTML;
+    } catch (e) {
+      return html;
+    }
+  };
+
   // Memproses blocks secara sekuensial agar konversi gambar asinkron berjalan lancar
   for (const block of blocks) {
     switch (block.type) {
       case 'header': {
         const level = block.data.level || 2;
-        bodyContent += `<h${level}>${processTextHtml(block.data.text || '')}</h${level}>`;
+        bodyContent += `<h${level}>${await processTextHtmlMhtml(block.data.text || '')}</h${level}>`;
         break;
       }
       case 'list': {
         const tag = block.data.style === 'ordered' ? 'ol' : 'ul';
         bodyContent += `<${tag}>`;
         if (block.data.items) {
-          block.data.items.forEach((item) => {
-            bodyContent += `<li>${processTextHtml(item)}</li>`;
-          });
+          for (const item of block.data.items) {
+            bodyContent += `<li>${await processTextHtmlMhtml(item)}</li>`;
+          }
         }
         bodyContent += `</${tag}>`;
         break;
@@ -564,17 +612,19 @@ export async function generateWordMhtml(
       case 'table': {
         bodyContent += '<table>';
         if (block.data.content) {
-          block.data.content.forEach((row, rowIndex) => {
+          for (let rIndex = 0; rIndex < block.data.content.length; rIndex++) {
+            const row = block.data.content[rIndex];
             bodyContent += '<tr>';
-            row.forEach((cell) => {
-              if (rowIndex === 0) {
-                bodyContent += `<th>${processTextHtml(cell)}</th>`;
+            for (const cell of row) {
+              const cleanCell = await processTextHtmlMhtml(cell);
+              if (rIndex === 0) {
+                bodyContent += `<th>${cleanCell}</th>`;
               } else {
-                bodyContent += `<td>${processTextHtml(cell)}</td>`;
+                bodyContent += `<td>${cleanCell}</td>`;
               }
-            });
+            }
             bodyContent += '</tr>';
-          });
+          }
         }
         bodyContent += '</table>';
         break;
@@ -692,7 +742,7 @@ export async function generateWordMhtml(
       }
       case 'paragraph':
       default: {
-        bodyContent += `<p>${processTextHtml(block.data.text || '')}</p>`;
+        bodyContent += `<p>${await processTextHtmlMhtml(block.data.text || '')}</p>`;
         break;
       }
     }
@@ -702,10 +752,11 @@ export async function generateWordMhtml(
   if (bibliography && bibliography.length > 0) {
     const bibTitle = language === 'en' ? 'REFERENCES' : 'DAFTAR PUSTAKA';
     bodyContent += `<div class="bibliography-title">${bibTitle}</div>`;
-    bibliography.forEach((entry) => {
+    for (const entry of bibliography) {
       const cleanEntry = entry.replace(/<\/?(?!i\b)[^>]+(>|$)/g, '');
-      bodyContent += `<div class="bibliography-entry">${cleanEntry}</div>`;
-    });
+      const formattedEntry = await processTextHtmlMhtml(cleanEntry);
+      bodyContent += `<div class="bibliography-entry">${formattedEntry}</div>`;
+    }
   }
 
   const htmlContent = `${htmlHeader}${bodyContent}${htmlFooter}`;
