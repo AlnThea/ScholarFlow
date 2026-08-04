@@ -16,7 +16,10 @@ import {
   IconFolderOpen,
   IconCreditCard,
   IconSparkles,
-  IconLayoutDashboard
+  IconLayoutDashboard,
+  IconLanguage,
+  IconSun,
+  IconMoon
 } from '@tabler/icons-react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useLanguage } from '../i18n/language-context';
@@ -41,7 +44,9 @@ export function MinimalSidebar({
   onDeleteDocument,
   onSelectAdminTab,
   activeDashboardTab,
-  className
+  className,
+  isDarkMode = false,
+  onToggleDarkMode
 }: { 
   isExpanded: boolean; 
   onToggle: () => void;
@@ -53,8 +58,10 @@ export function MinimalSidebar({
   onSelectAdminTab?: (tab: 'user' | 'admin' | 'billing' | 'admin-pricing' | 'admin-models' | 'admin-gateways') => void;
   activeDashboardTab?: 'user' | 'admin' | 'billing' | 'admin-pricing' | 'admin-models' | 'admin-gateways';
   className?: string;
+  isDarkMode?: boolean;
+  onToggleDarkMode?: () => void;
 }) {
-  const { language, t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const { user, profile } = useAuth();
   const activePlanId = profile?.subscription_plan || 'free';
   const [openSubmenu, setOpenSubmenu] = React.useState<string | null>(null);
@@ -1076,42 +1083,105 @@ export function MinimalSidebar({
         </>
       )}
 
-      {/* Pengaturan (hanya jika role === 'admin') */}
-      {role === 'admin' && (
-        <div className="px-3 py-2 border-t border-slate-200/40">
-          {isEffectiveExpanded ? (
+      {/* Row of Settings (Admin only) + Language + Dark Mode toggles */}
+      <div className="px-3 py-2 border-t border-slate-200/40">
+        {isEffectiveExpanded ? (
+          <div className="flex items-center gap-2 w-full">
+            {role === 'admin' && (
+              <button
+                type="button"
+                onClick={() => setActiveView('settings')}
+                className={`flex items-center justify-center flex-1 py-2 px-1 rounded-lg border border-slate-200/85 text-xs font-bold transition-all duration-200 group cursor-pointer ${
+                  activeView === 'settings' || ['admin-pricing', 'admin-models', 'admin-gateways'].includes(activeDashboardTab || '')
+                    ? 'text-indigo-700 bg-indigo-50/70 border-indigo-200/80'
+                    : 'text-slate-600 bg-white hover:bg-slate-50 hover:text-slate-900'
+                }`}
+                title={language === 'en' ? 'Admin Settings' : 'Pengaturan Admin'}
+              >
+                <IconSettings className="h-[15px] w-[15px] text-slate-500 shrink-0" />
+                <span className="ml-1 text-[10px] truncate leading-none">
+                  {language === 'en' ? 'Admin' : 'Admin'}
+                </span>
+              </button>
+            )}
+
+            {/* Language toggle */}
             <button
-              onClick={() => setActiveView('settings')}
-              className={`flex items-center w-full px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 group cursor-pointer ${
-                activeView === 'settings' || ['admin-pricing', 'admin-models', 'admin-gateways'].includes(activeDashboardTab || '')
-                  ? 'text-indigo-700 bg-indigo-50/70 font-semibold'
-                  : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
-              }`}
+              type="button"
+              onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
+              className="flex items-center justify-center flex-1 py-2 px-1 rounded-lg border border-slate-200/85 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all duration-200 group cursor-pointer text-xs font-bold"
+              title={language === 'en' ? 'Switch to Indonesian' : 'Ubah ke Bahasa Indonesia'}
             >
-              <IconSettings className="h-[18px] w-[18px] text-inherit flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
-              <span className="ml-2.5 whitespace-nowrap overflow-hidden text-ellipsis">
-                {language === 'en' ? 'Settings' : 'Pengaturan'}
+              <IconLanguage className="h-[15px] w-[15px] text-slate-500 shrink-0" />
+              <span className="ml-1 text-[10px] leading-none">
+                {language === 'en' ? 'EN' : 'ID'}
               </span>
-              <IconChevronRight className="ml-auto h-3.5 w-3.5 text-slate-400 animate-pulse" />
             </button>
-          ) : (
+
+            {/* Dark Mode toggle */}
             <button
-              onClick={() => {
-                setActiveView('settings');
-                onToggle(); // expand sidebar if collapsed to see settings list
-              }}
-              className={`flex items-center justify-center w-full aspect-square rounded-lg transition-all duration-200 relative group cursor-pointer ${
-                activeView === 'settings' || ['admin-pricing', 'admin-models', 'admin-gateways'].includes(activeDashboardTab || '')
-                  ? 'text-indigo-700 bg-indigo-50/70'
-                  : 'text-slate-400 hover:bg-slate-100/80 hover:text-slate-900'
-              }`}
-              title={language === 'en' ? 'Settings' : 'Pengaturan'}
+              type="button"
+              onClick={onToggleDarkMode}
+              className="flex items-center justify-center flex-1 py-2 px-1 rounded-lg border border-slate-200/85 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all duration-200 group cursor-pointer text-xs font-bold"
+              title={language === 'en' ? 'Toggle Theme' : 'Ubah Tema'}
             >
-              <IconSettings className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
+              {isDarkMode ? (
+                <>
+                  <IconSun className="h-[15px] w-[15px] text-amber-500 shrink-0" />
+                  <span className="ml-1 text-[10px] leading-none">{language === 'en' ? 'Light' : 'Terang'}</span>
+                </>
+              ) : (
+                <>
+                  <IconMoon className="h-[15px] w-[15px] text-indigo-500 shrink-0" />
+                  <span className="ml-1 text-[10px] leading-none">{language === 'en' ? 'Dark' : 'Gelap'}</span>
+                </>
+              )}
             </button>
-          )}
-        </div>
-      )}
+          </div>
+        ) : (
+          /* Collapsed state row stack */
+          <div className="flex flex-col items-center gap-2.5">
+            {role === 'admin' && (
+              <button
+                onClick={() => {
+                  setActiveView('settings');
+                  onToggle(); // expand sidebar if collapsed to see settings list
+                }}
+                className={`flex items-center justify-center w-full aspect-square rounded-lg transition-all duration-200 relative group cursor-pointer ${
+                  activeView === 'settings' || ['admin-pricing', 'admin-models', 'admin-gateways'].includes(activeDashboardTab || '')
+                    ? 'text-indigo-700 bg-indigo-50/70'
+                    : 'text-slate-400 hover:bg-slate-100/80 hover:text-slate-900'
+                }`}
+                title={language === 'en' ? 'Settings' : 'Pengaturan'}
+              >
+                <IconSettings className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
+              </button>
+            )}
+
+            {/* Language toggle (collapsed) */}
+            <button
+              onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
+              className="flex items-center justify-center w-full aspect-square rounded-lg bg-transparent text-slate-400 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 relative group"
+              title={language === 'en' ? 'Switch to Indonesian' : 'Ubah ke Bahasa Indonesia'}
+            >
+              <IconLanguage className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
+            </button>
+
+            {/* Dark Mode toggle (collapsed) */}
+            <button
+              onClick={onToggleDarkMode}
+              className="flex items-center justify-center w-full aspect-square rounded-lg bg-transparent text-slate-400 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 relative group"
+              title={language === 'en' ? 'Toggle Theme' : 'Ubah Tema'}
+            >
+              {isDarkMode ? (
+                <IconSun className="h-5 w-5 text-amber-500 transition-transform duration-200 group-hover:scale-105" />
+              ) : (
+                <IconMoon className="h-5 w-5 text-indigo-500 transition-transform duration-200 group-hover:scale-105" />
+              )}
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* User profile + logout at the bottom */}
       <div className="border-t border-slate-200/60 p-3">

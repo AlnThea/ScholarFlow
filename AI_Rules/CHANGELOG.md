@@ -217,6 +217,8 @@
 - Developed a highly modular and reusable React component `DocumentSettingsModal` in `document-settings-modal.tsx` to enable editing an existing document's search parameters, impact factor limit, external/library sources, collection limits, and citation styles.
 - Added a premium settings gear icon (⚙️) on the header next to the document title input in `editor-layout.tsx` to trigger the settings modal.
 - Integrated the settings modal state and callback in `scholar-editor.tsx`, which dynamically saves the updated configuration to Supabase and updates the editor state in real-time.
+- Relocated the Change Language and Dark/Light Mode toggle buttons from the top toolbar (`editor-layout.tsx`) to the bottom footer of the sidebar (`minimal-sidebar.tsx`) to make the header cleaner.
+- Designed the settings/language/theme controls in the expanded sidebar to align side-by-side: three buttons for admin role (Settings, Lang, Theme) and two buttons for standard users (Lang, Theme), collapsing into a vertical stack in the collapsed sidebar state.
 - Verified TypeScript compilation successfully.
 
 

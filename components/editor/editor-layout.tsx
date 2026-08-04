@@ -1002,6 +1002,8 @@ export function EditorLayout({
         onSelectAdminTab={handleSetDashboardTab}
         activeDashboardTab={activeDashboardTab}
         className={isAnyModalOpen ? 'select-none pointer-events-none' : ''}
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={toggleDarkMode}
       />
 
       {/* If no document is selected, render the Dashboard View */}
@@ -1723,8 +1725,8 @@ export function EditorLayout({
         /* Main content area */
         <div className="flex-1 flex flex-col h-screen overflow-hidden">
           {/* Navbar 1 – Document title and actions */}
-          <header className="flex items-center justify-between border-b border-slate-100 bg-white/95 px-6 py-3 lg:sticky lg:top-0 z-10 backdrop-blur">
-            <div className="flex items-center gap-3">
+          <header className="flex items-center justify-between border-b border-slate-100 bg-white/95 px-6 py-3 lg:sticky lg:top-0 z-10 backdrop-blur whitespace-nowrap">
+            <div className="w-full flex items-center gap-3">
               {!isSidebarExpanded && (
                 <button
                   type="button"
@@ -1741,7 +1743,7 @@ export function EditorLayout({
                 placeholder="Untitled Document"
                 value={currentDocument?.title || ''}
                 onChange={(e) => onRenameDocument(e.target.value)}
-                className="border-b border-transparent focus:border-indigo-400 text-base font-semibold text-slate-800 outline-none bg-transparent px-1 py-0.5 transition"
+                className="w-full border-b border-transparent focus:border-indigo-400 text-base font-semibold text-slate-800 outline-none bg-transparent px-1 py-0.5 transition"
               />
 
             </div>
@@ -1791,32 +1793,6 @@ export function EditorLayout({
                 {language === 'en' ? 'Pricing' : 'Langganan'}
               </button>
 
-              <button
-                onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
-                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition shadow-sm cursor-pointer"
-                title={language === 'en' ? 'Switch to Indonesian' : 'Ubah ke Bahasa Indonesia'}
-              >
-                <IconLanguage className="h-4 w-4 text-slate-400" />
-                <span>{language === 'en' ? '🇺🇸 EN' : '🇮🇩 ID'}</span>
-              </button>
-
-              <button
-                onClick={toggleDarkMode}
-                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition shadow-sm cursor-pointer"
-                title={language === 'en' ? 'Toggle Dark/Light Mode' : 'Toggle Mode Gelap/Terang'}
-              >
-                {isDarkMode ? (
-                  <>
-                    <IconSun className="h-4 w-4 text-amber-500" />
-                    <span>{language === 'en' ? 'Light' : 'Terang'}</span>
-                  </>
-                ) : (
-                  <>
-                    <IconMoon className="h-4 w-4 text-indigo-500" />
-                    <span>{language === 'en' ? 'Dark' : 'Gelap'}</span>
-                  </>
-                )}
-              </button>
 
               <button
                 onClick={() => setShowRightSidebar(prev => !prev)}

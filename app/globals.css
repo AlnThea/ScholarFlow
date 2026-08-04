@@ -178,3 +178,61 @@ body {
   white-space: pre-wrap !important;
   word-wrap: break-word !important;
 }
+
+/* Dark Mode overrides for static Tailwind classes */
+.dark .bg-white,
+.dark .bg-white\/95,
+.dark .bg-white\/98 {
+  background-color: hsl(var(--panel)) !important;
+}
+.dark .bg-slate-50,
+.dark .bg-slate-50\/50,
+.dark .bg-slate-50\/40 {
+  background-color: hsl(var(--surface)) !important;
+}
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-slate-200\/50,
+.dark .border-slate-200\/60,
+.dark .border-slate-200\/80 {
+  border-color: hsl(var(--line)) !important;
+}
+.dark .text-slate-800,
+.dark .text-slate-700,
+.dark .text-slate-900 {
+  color: hsl(var(--text)) !important;
+}
+.dark .text-slate-600,
+.dark .text-slate-500 {
+  color: hsl(var(--muted)) !important;
+}
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-100\/80:hover,
+.dark .hover\:bg-slate-100:hover {
+  background-color: hsl(var(--surface)) !important;
+}
+.dark input[type="text"],
+.dark input[type="number"],
+.dark select,
+.dark textarea {
+  background-color: hsl(var(--surface)) !important;
+  color: hsl(var(--text)) !important;
+  border-color: hsl(var(--line)) !important;
+}
+
+/* Dark mode support for EditorJS elements */
+.dark .ce-paragraph,
+.dark .ce-header,
+.dark .cdx-list__item,
+.dark .ce-code__textarea,
+.dark .tc-cell {
+  color: hsl(var(--text)) !important;
+}
+.dark .ce-code__textarea {
+  background-color: hsl(var(--surface)) !important;
+  border-color: hsl(var(--line)) !important;
+}
+.dark .tc-row,
+.dark .tc-cell {
+  border-color: hsl(var(--line)) !important;
+}
