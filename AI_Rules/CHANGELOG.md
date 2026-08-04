@@ -214,6 +214,9 @@
 - Removed the redundant "Create New" (Buat Baru) button from the main sidebar "Workspace" group (in both expanded and collapsed states), keeping document creation centralized inside the "My Documents" panel.
 - Redesigned the "Create New Document" action inside the "My Documents" panel from a solid blue button container to a clean, transparent, and grouped list-style menu item matching other sidebar elements, separated visually by a clean bottom border line.
 - Limited the displayed "Independent Documents" list in the sidebar to 15 items to prevent vertical clutter, adding a dynamic translation-supported counter label (e.g., "+ 3 draf lagi") when more documents exist.
+- Developed a highly modular and reusable React component `DocumentSettingsModal` in `document-settings-modal.tsx` to enable editing an existing document's search parameters, impact factor limit, external/library sources, collection limits, and citation styles.
+- Added a premium settings gear icon (⚙️) on the header next to the document title input in `editor-layout.tsx` to trigger the settings modal.
+- Integrated the settings modal state and callback in `scholar-editor.tsx`, which dynamically saves the updated configuration to Supabase and updates the editor state in real-time.
 - Verified TypeScript compilation successfully.
 
 

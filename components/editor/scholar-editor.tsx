@@ -30,6 +30,7 @@ import {
   type AiHistoryEntry,
 } from '@/lib/editor/ai-history';
 import { DocumentSetupModal } from './document-setup-modal';
+import { DocumentSettingsModal } from './document-settings-modal';
 import {
   serializeBibliographyText,
   formatBibliographyCandidate,
@@ -219,6 +220,7 @@ export function ScholarEditor() {
   const [synthesizedText, setSynthesizedText] = useState<string | null>(null);
   const [synthesizeError, setSynthesizeError] = useState<string | null>(null);
   const [synthesizeDisclaimer, setSynthesizeDisclaimer] = useState<string | null>(null);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchAIModels().then(data => {
@@ -735,6 +737,15 @@ export function ScholarEditor() {
     setCurrentDocument(updatedDoc);
     
     triggerDebouncedSave(currentDocument.id, currentDocument.title, currentDocument.content, updatedSettings);
+  }, [currentDocument, triggerDebouncedSave]);
+
+  const handleChangeDocumentSettings = useCallback((newSettings: DocumentSettings) => {
+    if (!currentDocument) return;
+    
+    const updatedDoc = { ...currentDocument, settings: newSettings };
+    setCurrentDocument(updatedDoc);
+    
+    triggerDebouncedSave(currentDocument.id, currentDocument.title, currentDocument.content, newSettings);
   }, [currentDocument, triggerDebouncedSave]);
 
   useEffect(() => {
@@ -1466,6 +1477,7 @@ export function ScholarEditor() {
         onDeleteDocument={handleDeleteDocument}
         onRenameDocument={handleRenameDocument}
         onContentChange={handleContentChange}
+        onOpenSettings={() => setIsSettingsModalOpen(true)}
         onStatsChange={(stats: any) => {
           setEditorJsStats(stats);
           if (stats.activeReferenceIds) {
@@ -1678,6 +1690,15 @@ export function ScholarEditor() {
         documents={documents}
         activePlanId={activePlanId}
       />
+      {currentDocument && (
+        <DocumentSettingsModal
+          isOpen={isSettingsModalOpen}
+          onClose={() => setIsSettingsModalOpen(false)}
+          settings={currentDocument.settings}
+          onSave={handleChangeDocumentSettings}
+          activePlanId={activePlanId}
+        />
+      )}
     </>
   );
 }
