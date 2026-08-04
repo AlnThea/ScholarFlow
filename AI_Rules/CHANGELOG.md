@@ -204,3 +204,16 @@
 - Filtered out editor-inserted bibliography blocks (`Daftar Pustaka / References` header and its subsequent block) in the Word exporters (`generateWordHtml` and `generateWordMhtml`) to eliminate duplicate bibliography entries in the exported Word document.
 - Verified and type-checked compiling parameters (`npx tsc --noEmit`) successfully.
 
+## v0.1.9
+- Redesigned the admin settings sidebar view in `minimal-sidebar.tsx` from card-based layouts to clean, grouped, and standard list-style menu items.
+- Grouped admin settings into "AI & System" (Kelola Model AI) and "Billing & Monetization" (Kelola Paket Harga, Saluran Pembayaran) categories.
+- Redesigned the main menu navigation items (Dashboard, Create New, My Documents, Library, Account & Billing, Help) in `minimal-sidebar.tsx` to match the settings list layout with descriptive subtitles and grouped structures.
+- Redesigned the "My Documents" (Dokumen Saya) sidebar panel view in `minimal-sidebar.tsx` with high-fidelity search bars, rounded-card project folder structures, custom project type badges (thesis, independent, skripsi), and premium file tree list styling.
+- Linked "My Documents" click action (in both expanded and collapsed sidebar states) to close the active document editor and switch the dashboard tab to the user documents page, keeping navigation fluid and unified.
+- Flattened the project folder styling in the sidebar list by removing the outer card-based background and borders, matching the clean minimalist design of Notion.
+- Removed the redundant "Create New" (Buat Baru) button from the main sidebar "Workspace" group (in both expanded and collapsed states), keeping document creation centralized inside the "My Documents" panel.
+- Redesigned the "Create New Document" action inside the "My Documents" panel from a solid blue button container to a clean, transparent, and grouped list-style menu item matching other sidebar elements, separated visually by a clean bottom border line.
+- Limited the displayed "Independent Documents" list in the sidebar to 15 items to prevent vertical clutter, adding a dynamic translation-supported counter label (e.g., "+ 3 draf lagi") when more documents exist.
+- Verified TypeScript compilation successfully.
+
+

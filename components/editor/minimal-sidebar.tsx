@@ -391,7 +391,7 @@ export function MinimalSidebar({
 
           {/* Search bar */}
           <div className="px-3 pt-3 pb-2">
-            <div className="relative flex items-center bg-slate-200/40 hover:bg-slate-200/60 rounded-lg px-2.5 py-1.5 transition duration-150">
+            <div className="relative flex items-center bg-white border border-slate-200/80 rounded-lg px-2.5 py-1.5 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-50/50 transition-all duration-200">
               <svg className="h-3.5 w-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -401,14 +401,14 @@ export function MinimalSidebar({
                 placeholder={language === 'en' ? 'Search drafts...' : 'Cari draf...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="ml-2 w-full bg-transparent text-xs text-slate-700 placeholder-slate-400 outline-none border-none p-0"
+                className="ml-2 w-full bg-transparent text-xs text-slate-700 placeholder-slate-400 outline-none border-none p-0 focus:ring-0"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="text-slate-400 hover:text-slate-600 p-0.5"
+                  className="text-slate-400 hover:text-slate-600 p-0.5 transition cursor-pointer"
                 >
-                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                   </svg>
@@ -418,13 +418,20 @@ export function MinimalSidebar({
           </div>
 
           {/* Create Button */}
-          <div className="px-3 py-1">
+          <div className="px-2 py-1 border-b border-slate-100/80 pb-2.5 mb-1">
             <button
               onClick={onCreateDocument}
-              className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition hover:shadow duration-150 cursor-pointer"
+              className="flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left text-slate-650 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 group"
             >
-              <IconFilePlus className="h-3.5 w-3.5" />
-              {language === 'en' ? 'Create New Document' : 'Buat Dokumen Baru'}
+              <IconFilePlus className="h-[18px] w-[18px] mt-0.5 text-slate-405 flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs font-bold text-slate-700 group-hover:text-slate-950">
+                  {language === 'en' ? 'Create New Document' : 'Buat Dokumen Baru'}
+                </span>
+                <span className="text-[8px] text-slate-400 leading-tight font-medium mt-0.5">
+                  {language === 'en' ? 'Start a new academic manuscript' : 'Mulai draf manuskrip baru'}
+                </span>
+              </div>
             </button>
           </div>
 
@@ -438,47 +445,54 @@ export function MinimalSidebar({
                   const hasActiveDoc = proj.docs.some(d => d.id === currentDocumentId);
                   
                   return (
-                    <div key={proj.id} className="flex flex-col gap-0.5 border border-slate-100/50 rounded-xl p-1.5 bg-slate-50/20">
+                    <div key={proj.id} className="flex flex-col gap-0.5 px-1 py-0.5">
                       {/* Project Header Row */}
                       <button
                         type="button"
                         onClick={() => setExpandedProjects(prev => ({ ...prev, [proj.id]: !isExpandedProject }))}
-                        className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition text-xs font-bold ${
-                          hasActiveDoc ? 'text-indigo-700 bg-indigo-50/30' : 'text-slate-700 hover:bg-slate-100/50'
+                        className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition duration-200 text-xs font-bold group cursor-pointer ${
+                          hasActiveDoc ? 'text-indigo-700 bg-indigo-50/20' : 'text-slate-700 hover:bg-slate-50'
                         }`}
                       >
                         <div className="flex items-center gap-2 truncate">
                           {isExpandedProject ? (
-                            <IconFolderOpen className="h-4 w-4 text-indigo-500 shrink-0" />
+                            <IconFolderOpen className="h-4 w-4 text-indigo-500 shrink-0 transition-transform group-hover:scale-105" />
                           ) : (
-                            <IconFolder className="h-4 w-4 text-slate-400 shrink-0" />
+                            <IconFolder className="h-4 w-4 text-slate-400 shrink-0 transition-transform group-hover:scale-105" />
                           )}
                           <span className="truncate">{proj.name}</span>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 capitalize shrink-0">
+                          <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase border shrink-0 ${
+                            proj.type.toLowerCase() === 'thesis' || proj.type.toLowerCase() === 'skripsi'
+                              ? 'bg-violet-50 text-violet-700 border-violet-100/50'
+                              : proj.type.toLowerCase() === 'independent' || proj.type.toLowerCase() === 'mandiri'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-100/50'
+                              : 'bg-slate-100 text-slate-600 border-slate-200/50'
+                          }`}>
                             {proj.type}
                           </span>
                         </div>
-                        <IconChevronDown className={`h-3 w-3 text-slate-400 transition-transform ${isExpandedProject ? 'rotate-180' : ''}`} />
+                        <IconChevronDown className={`h-3 w-3 text-slate-400 transition-transform duration-200 ${isExpandedProject ? 'rotate-180 text-indigo-500' : ''}`} />
                       </button>
 
                       {/* Project Sub Documents */}
                       {isExpandedProject && (
-                        <div className="flex flex-col gap-0.5 pl-4 border-l border-slate-100 ml-3.5 mt-0.5 animate-slide-in-top">
+                        <div className="flex flex-col gap-0.5 pl-3 border-l border-slate-100 ml-3.5 mt-1 animate-slide-in-top">
                           {proj.docs.map((doc) => (
                             <div
                               key={doc.id}
-                              className={`group flex items-center justify-between rounded-lg px-2 py-1 text-xs transition duration-150 ${
+                              className={`group flex items-center justify-between rounded-lg px-2.5 py-2 text-xs transition duration-200 ${
                                 doc.id === currentDocumentId
-                                  ? 'text-indigo-700 bg-indigo-50/70 font-semibold'
-                                  : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+                                  ? 'text-indigo-700 bg-indigo-50/70 font-semibold border-l-2 border-indigo-600 rounded-l-none'
+                                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                               }`}
                             >
                               <button
                                 onClick={() => onSelectDocument?.(doc.id)}
-                                className="flex-1 text-left truncate mr-2 font-medium"
+                                className="flex-1 flex items-center gap-2 text-left truncate mr-2 font-medium cursor-pointer"
                                 title={doc.title}
                               >
-                                📄 {doc.settings?.projectPart || doc.title}
+                                <IconFile className={`h-3.5 w-3.5 shrink-0 ${doc.id === currentDocumentId ? 'text-indigo-600' : 'text-slate-400'}`} />
+                                <span className="truncate">{doc.settings?.projectPart || doc.title}</span>
                               </button>
                               {onDeleteDocument && (
                                 <button
@@ -488,7 +502,7 @@ export function MinimalSidebar({
                                       onDeleteDocument(doc.id);
                                     }
                                   }}
-                                  className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-red-50 hover:text-red-600 text-slate-400 transition cursor-pointer"
+                                  className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 hover:text-red-600 text-slate-400 transition-all duration-200 cursor-pointer"
                                   title={language === 'en' ? 'Delete Document' : 'Hapus Dokumen'}
                                 >
                                   <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -508,49 +522,59 @@ export function MinimalSidebar({
                 {/* 2. Independent / Single Documents */}
                 {groupedDocs.independent.length > 0 && (
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-3 py-2">
                       {language === 'en' ? 'Independent Documents' : 'Dokumen Mandiri'}
                     </span>
-                    {groupedDocs.independent.map((doc) => (
-                      <div
-                        key={doc.id}
-                        className={`group flex items-center justify-between rounded-lg px-2.5 py-2 text-xs transition duration-150 ${
-                          doc.id === currentDocumentId
-                            ? 'text-indigo-700 bg-indigo-50/70 font-semibold border-l-2 border-indigo-600 rounded-l-none'
-                            : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
-                        }`}
-                      >
-                        <button
-                          onClick={() => onSelectDocument?.(doc.id)}
-                          className="flex-1 text-left truncate mr-2 font-medium"
-                          title={doc.title}
+                    <div className="flex flex-col gap-1 px-1">
+                      {groupedDocs.independent.slice(0, 15).map((doc) => (
+                        <div
+                          key={doc.id}
+                          className={`group flex items-center justify-between rounded-lg px-2.5 py-2 text-xs transition duration-200 ${
+                            doc.id === currentDocumentId
+                              ? 'text-indigo-700 bg-indigo-50/70 font-semibold border-l-2 border-indigo-600 rounded-l-none'
+                              : 'text-slate-650 hover:bg-slate-50 hover:text-slate-900'
+                          }`}
                         >
-                          📄 {doc.title}
-                        </button>
-                        {onDeleteDocument && (
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (confirm(language === 'en' ? `Delete document "${doc.title}"?` : `Hapus dokumen "${doc.title}"?`)) {
-                                onDeleteDocument(doc.id);
-                              }
-                            }}
-                            className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-red-50 hover:text-red-600 text-slate-400 transition cursor-pointer"
-                            title={language === 'en' ? 'Delete Document' : 'Hapus Dokumen'}
+                            onClick={() => onSelectDocument?.(doc.id)}
+                            className="flex-1 flex items-center gap-2 text-left truncate mr-2 font-medium cursor-pointer"
+                            title={doc.title}
                           >
-                            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="3 6 5 6 21 6"></polyline>
-                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
+                            <IconFile className={`h-3.5 w-3.5 shrink-0 ${doc.id === currentDocumentId ? 'text-indigo-600' : 'text-slate-400'}`} />
+                            <span className="truncate">{doc.title}</span>
                           </button>
-                        )}
-                      </div>
-                    ))}
+                          {onDeleteDocument && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm(language === 'en' ? `Delete document "${doc.title}"?` : `Hapus dokumen "${doc.title}"?`)) {
+                                  onDeleteDocument(doc.id);
+                                }
+                              }}
+                              className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 hover:text-red-600 text-slate-400 transition-all duration-200 cursor-pointer"
+                              title={language === 'en' ? 'Delete Document' : 'Hapus Dokumen'}
+                            >
+                              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      {groupedDocs.independent.length > 15 && (
+                        <div className="text-center py-2 text-[10px] font-semibold text-slate-400/80">
+                          {language === 'en' 
+                            ? `+ ${groupedDocs.independent.length - 15} more drafts (use search)` 
+                            : `+ ${groupedDocs.independent.length - 15} draf lagi (gunakan pencarian)`}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="text-center py-6 text-xs text-slate-400">
+              <div className="text-center py-8 text-xs font-medium text-slate-400/80">
                 {language === 'en' ? 'Documents not found' : 'Dokumen tidak ditemukan'}
               </div>
             )}
@@ -719,94 +743,140 @@ export function MinimalSidebar({
           <div className="flex-1 mt-2">
             {isEffectiveExpanded ? (
               /* Expanded state layout */
-              <nav className="flex flex-col gap-1">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400/90 px-4 pt-4 pb-1">
-                  {language === 'en' ? 'Main Menu' : 'Menu Utama'}
-                </div>
-                <div className="flex flex-col gap-1 px-2">
-                  {/* Dashboard */}
-                  <button
-                    className={`flex items-center w-full px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group cursor-pointer ${
-                      !currentDocumentId && activeDashboardTab === 'user'
-                        ? 'text-indigo-700 bg-indigo-50/70 font-semibold'
-                        : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
-                    }`}
-                    onClick={() => {
-                      onSelectDocument?.('');
-                      onSelectAdminTab?.('user');
-                      setActiveView('main');
-                    }}
-                  >
-                    <IconLayoutDashboard className="h-[18px] w-[18px] text-inherit flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
-                    <span className="ml-2.5 whitespace-nowrap overflow-hidden text-ellipsis">
-                      {language === 'en' ? 'Dashboard' : 'Dasbor'}
-                    </span>
-                  </button>
+              <nav className="flex flex-col gap-4">
+                {/* Group 1: Workspace */}
+                <div className="flex flex-col gap-1">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400/90 px-3 pb-1">
+                    {language === 'en' ? 'Workspace' : 'Ruang Kerja'}
+                  </div>
+                  <div className="flex flex-col gap-1 px-1">
+                    {/* Dashboard */}
+                    <button
+                      className={`flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left transition-all duration-200 group cursor-pointer ${
+                        !currentDocumentId && activeDashboardTab === 'user'
+                          ? 'text-indigo-700 bg-indigo-50/70 font-semibold'
+                          : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+                      }`}
+                      onClick={() => {
+                        onSelectDocument?.('');
+                        onSelectAdminTab?.('user');
+                        setActiveView('main');
+                      }}
+                    >
+                      <IconLayoutDashboard className={`h-[18px] w-[18px] mt-0.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                        !currentDocumentId && activeDashboardTab === 'user' ? 'text-indigo-600' : 'text-slate-400'
+                      }`} />
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-bold">
+                          {language === 'en' ? 'Dashboard' : 'Dasbor'}
+                        </span>
+                        <span className="text-[8px] text-slate-400 leading-tight font-medium mt-0.5">
+                          {language === 'en' ? 'Overview of your papers & stats' : 'Ringkasan artikel & statistik Anda'}
+                        </span>
+                      </div>
+                    </button>
 
-                  {/* New Document */}
-                  <button
-                    className="flex items-center w-full px-3 py-2 rounded-lg text-sm font-medium text-slate-600 bg-transparent hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 group"
-                    onClick={onCreateDocument}
-                  >
-                    <IconFilePlus className="h-[18px] w-[18px] text-inherit flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
-                    <span className="ml-2.5 whitespace-nowrap overflow-hidden text-ellipsis">
-                      {language === 'en' ? 'Create New' : 'Buat Baru'}
-                    </span>
-                  </button>
-
-                  {/* Documents list sub-menu trigger */}
-                   <button
-                    className="flex items-center w-full px-3 py-2 rounded-lg text-sm font-medium text-slate-650 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 group"
-                    onClick={() => setActiveView('documents')}
-                  >
-                    <IconFile className="h-[18px] w-[18px] text-inherit flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
-                    <span className="ml-2.5 whitespace-nowrap overflow-hidden text-ellipsis">
-                      {language === 'en' ? 'My Documents' : 'Dokumen Saya'}
-                    </span>
-                    <IconChevronRight className="ml-auto h-3.5 w-3.5 text-slate-400" />
-                  </button>
-
-                  {/* Library */}
-                  <button 
-                    className="flex items-center w-full px-3 py-2 rounded-lg text-sm font-medium text-slate-650 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 group"
-                    onClick={() => setActiveView('library')}
-                  >
-                    <IconBook className="h-[18px] w-[18px] text-inherit flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
-                    <span className="ml-2.5 whitespace-nowrap overflow-hidden text-ellipsis">
-                      {language === 'en' ? 'Library' : 'Perpustakaan'}
-                    </span>
-                    <IconChevronRight className="ml-auto h-3.5 w-3.5 text-slate-400" />
-                  </button>
-
-                  {/* Akun & Billing */}
-                  <button
-                    className={`flex items-center w-full px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 group cursor-pointer ${
-                      !currentDocumentId && activeDashboardTab === 'billing'
-                        ? 'text-indigo-700 bg-indigo-50/70 font-semibold'
-                        : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
-                    }`}
-                    onClick={() => {
-                      onSelectDocument?.('');
-                      onSelectAdminTab?.('billing');
-                      setActiveView('main');
-                    }}
-                  >
-                    <IconCreditCard className="h-[18px] w-[18px] text-inherit flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
-                    <span className="ml-2.5 whitespace-nowrap overflow-hidden text-ellipsis">
-                      {language === 'en' ? 'Account & Billing' : 'Akun & Billing'}
-                    </span>
-                  </button>
+                    {/* Documents list sub-menu trigger */}
+                    <button
+                      className="flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left text-slate-650 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 group"
+                      onClick={() => {
+                        onSelectDocument?.(''); // exit editor to dashboard
+                        onSelectAdminTab?.('user'); // switch dashboard tab to user documents list
+                        setActiveView('documents'); // show documents sidebar
+                      }}
+                    >
+                      <IconFile className="h-[18px] w-[18px] mt-0.5 text-slate-400 flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span className="text-xs font-bold">
+                          {language === 'en' ? 'My Documents' : 'Dokumen Saya'}
+                        </span>
+                        <span className="text-[8px] text-slate-400 leading-tight font-medium mt-0.5">
+                          {language === 'en' ? 'Manage your saved drafts & writings' : 'Kelola draf & tulisan tersimpan'}
+                        </span>
+                      </div>
+                      <IconChevronRight className="ml-auto h-3.5 w-3.5 text-slate-400 self-center flex-shrink-0" />
+                    </button>
+                  </div>
                 </div>
 
-                {/* Help Group */}
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400/90 px-4 pt-4 pb-1">
-                  Help
+                {/* Group 2: Sources & References */}
+                <div className="flex flex-col gap-1">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400/90 px-3 pb-1">
+                    {language === 'en' ? 'Sources & References' : 'Sumber & Pustaka'}
+                  </div>
+                  <div className="flex flex-col gap-1 px-1">
+                    {/* Library */}
+                    <button 
+                      className="flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left text-slate-650 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 group"
+                      onClick={() => setActiveView('library')}
+                    >
+                      <IconBook className="h-[18px] w-[18px] mt-0.5 text-slate-400 flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span className="text-xs font-bold">
+                          {language === 'en' ? 'Library' : 'Perpustakaan'}
+                        </span>
+                        <span className="text-[8px] text-slate-400 leading-tight font-medium mt-0.5">
+                          {language === 'en' ? 'Manage cited papers & sources' : 'Kelola jurnal sitasi & sumber'}
+                        </span>
+                      </div>
+                      <IconChevronRight className="ml-auto h-3.5 w-3.5 text-slate-400 self-center flex-shrink-0" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1 px-2">
-                  <button className="flex items-center w-full px-3 py-2 rounded-lg text-sm font-medium text-slate-600 bg-transparent hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 group">
-                    <IconHelpCircle className="h-[18px] w-[18px] text-inherit flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
-                    <span className="ml-2.5 whitespace-nowrap overflow-hidden text-ellipsis">Help</span>
-                  </button>
+
+                {/* Group 3: Account & Settings */}
+                <div className="flex flex-col gap-1">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400/90 px-3 pb-1">
+                    {language === 'en' ? 'Account & Settings' : 'Akun & Pengaturan'}
+                  </div>
+                  <div className="flex flex-col gap-1 px-1">
+                    {/* Akun & Billing */}
+                    <button
+                      className={`flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left transition-all duration-200 group cursor-pointer ${
+                        !currentDocumentId && activeDashboardTab === 'billing'
+                          ? 'text-indigo-700 bg-indigo-50/70 font-semibold'
+                          : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+                      }`}
+                      onClick={() => {
+                        onSelectDocument?.('');
+                        onSelectAdminTab?.('billing');
+                        setActiveView('main');
+                      }}
+                    >
+                      <IconCreditCard className={`h-[18px] w-[18px] mt-0.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                        !currentDocumentId && activeDashboardTab === 'billing' ? 'text-indigo-600' : 'text-slate-400'
+                      }`} />
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-bold">
+                          {language === 'en' ? 'Account & Billing' : 'Akun & Billing'}
+                        </span>
+                        <span className="text-[8px] text-slate-400 leading-tight font-medium mt-0.5">
+                          {language === 'en' ? 'Subscription plans & payments' : 'Paket langganan & pembayaran'}
+                        </span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Group 4: Support */}
+                <div className="flex flex-col gap-1">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400/90 px-3 pb-1">
+                    {language === 'en' ? 'Support' : 'Bantuan'}
+                  </div>
+                  <div className="flex flex-col gap-1 px-1">
+                    {/* Help */}
+                    <button className="flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left text-slate-600 bg-transparent hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 group">
+                      <IconHelpCircle className="h-[18px] w-[18px] mt-0.5 text-slate-400 flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-bold">
+                          {language === 'en' ? 'Help' : 'Bantuan'}
+                        </span>
+                        <span className="text-[8px] text-slate-400 leading-tight font-medium mt-0.5">
+                          {language === 'en' ? 'Guides & documentation' : 'Panduan & bantuan'}
+                        </span>
+                      </div>
+                    </button>
+                  </div>
                 </div>
               </nav>
             ) : (
@@ -830,22 +900,19 @@ export function MinimalSidebar({
                   <IconLayoutDashboard className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
                 </button>
 
-                {/* New Document Button (collapsed) */}
-                <button
-                  className="flex items-center justify-center w-full aspect-square rounded-lg bg-transparent text-slate-400 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 relative group"
-                  title={language === 'en' ? 'Create New' : 'Buat Baru'}
-                  aria-label={language === 'en' ? 'Create New' : 'Buat Baru'}
-                  onClick={onCreateDocument}
-                >
-                  <IconFilePlus className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
-                </button>
+
 
                 {/* Documents Button (collapsed) */}
                 <button
                   className="flex items-center justify-center w-full aspect-square rounded-lg bg-transparent text-slate-400 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 relative group"
                   title={language === 'en' ? 'My Documents' : 'Dokumen Saya'}
                   aria-label={language === 'en' ? 'My Documents' : 'Dokumen Saya'}
-                  onClick={() => setActiveView('documents')}
+                  onClick={() => {
+                    onSelectDocument?.('');
+                    onSelectAdminTab?.('user');
+                    setActiveView('documents');
+                    onToggle(); // expand sidebar if collapsed to see documents list
+                  }}
                 >
                   <IconFile className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
                 </button>
@@ -915,79 +982,96 @@ export function MinimalSidebar({
           </div>
 
           {/* Settings list */}
-          <div className="flex-1 overflow-y-auto min-h-0 px-3 py-4 flex flex-col gap-2">
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-2">
-              {language === 'en' ? 'Admin Settings Menu' : 'Menu Pengaturan Admin'}
-            </span>
+          <div className="flex-1 overflow-y-auto min-h-0 px-2 py-4 flex flex-col gap-4">
             
-            <button
-              onClick={() => {
-                onSelectDocument?.(''); // exit editor to dashboard
-                onSelectAdminTab?.('admin-pricing'); // switch dashboard tab to admin-pricing
-              }}
-              className={`flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-all duration-200 border bg-white hover:border-indigo-200 hover:shadow-sm ${
-                activeDashboardTab === 'admin-pricing'
-                  ? 'text-indigo-700 border-indigo-200 shadow-sm'
-                  : 'text-slate-600 border-slate-200/80 hover:text-slate-950'
-              }`}
-            >
-              <IconCreditCard className="h-4 w-4 text-indigo-500 flex-shrink-0" />
-              <div className="flex flex-col text-left">
-                <span className="font-bold text-slate-700">
-                  {language === 'en' ? 'Manage Pricing Plans' : 'Kelola Paket Harga'}
-                </span>
-                <span className="text-[8px] text-slate-400 leading-tight font-medium">
-                  {language === 'en' ? 'Edit subscription details & prices' : 'Ubah detail & harga paket langganan'}
-                </span>
-              </div>
-            </button>
+            {/* Group 1: AI & System */}
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-1">
+                {language === 'en' ? 'AI & System' : 'AI & Sistem'}
+              </span>
+              
+              <button
+                onClick={() => {
+                  onSelectDocument?.(''); // exit editor to dashboard
+                  onSelectAdminTab?.('admin-models'); // switch dashboard tab to admin-models
+                }}
+                className={`flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left cursor-pointer transition-all duration-200 group ${
+                  activeDashboardTab === 'admin-models'
+                    ? 'text-indigo-700 bg-indigo-50/70 font-semibold'
+                    : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+                }`}
+              >
+                <IconSparkles className={`h-[18px] w-[18px] mt-0.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                  activeDashboardTab === 'admin-models' ? 'text-indigo-600' : 'text-slate-400'
+                }`} />
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs font-bold">
+                    {language === 'en' ? 'Manage AI Models' : 'Kelola Model AI'}
+                  </span>
+                  <span className="text-[8px] text-slate-400 leading-tight font-medium mt-0.5">
+                    {language === 'en' ? 'Enable/disable LLM models' : 'Aktifkan/nonaktifkan model LLM'}
+                  </span>
+                </div>
+              </button>
+            </div>
 
-            <button
-              onClick={() => {
-                onSelectDocument?.(''); // exit editor to dashboard
-                onSelectAdminTab?.('admin-models'); // switch dashboard tab to admin-models
-              }}
-              className={`flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-all duration-200 border bg-white hover:border-indigo-200 hover:shadow-sm ${
-                activeDashboardTab === 'admin-models'
-                  ? 'text-indigo-700 border-indigo-200 shadow-sm'
-                  : 'text-slate-600 border-slate-200/80 hover:text-slate-955'
-              }`}
-            >
-              <IconSparkles className="h-4 w-4 text-indigo-500 flex-shrink-0" />
-              <div className="flex flex-col text-left">
-                <span className="font-bold text-slate-700">
-                  {language === 'en' ? 'Manage AI Models' : 'Kelola Model AI'}
-                </span>
-                <span className="text-[8px] text-slate-400 leading-tight font-medium">
-                  {language === 'en' ? 'Enable/disable LLM models' : 'Aktifkan/nonaktifkan model LLM'}
-                </span>
-              </div>
-            </button>
+            {/* Group 2: Billing & Finance */}
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-1">
+                {language === 'en' ? 'Billing & Monetization' : 'Billing & Monetisasi'}
+              </span>
+              
+              <button
+                onClick={() => {
+                  onSelectDocument?.(''); // exit editor to dashboard
+                  onSelectAdminTab?.('admin-pricing'); // switch dashboard tab to admin-pricing
+                }}
+                className={`flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left cursor-pointer transition-all duration-200 group ${
+                  activeDashboardTab === 'admin-pricing'
+                    ? 'text-indigo-700 bg-indigo-50/70 font-semibold'
+                    : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+                }`}
+              >
+                <IconCreditCard className={`h-[18px] w-[18px] mt-0.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                  activeDashboardTab === 'admin-pricing' ? 'text-indigo-600' : 'text-slate-400'
+                }`} />
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs font-bold">
+                    {language === 'en' ? 'Manage Pricing Plans' : 'Kelola Paket Harga'}
+                  </span>
+                  <span className="text-[8px] text-slate-400 leading-tight font-medium mt-0.5">
+                    {language === 'en' ? 'Edit subscription details & prices' : 'Ubah detail & harga paket langganan'}
+                  </span>
+                </div>
+              </button>
 
-            <button
-              onClick={() => {
-                onSelectDocument?.(''); // exit editor to dashboard
-                onSelectAdminTab?.('admin-gateways'); // switch dashboard tab to admin-gateways
-              }}
-              className={`flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-all duration-200 border bg-white hover:border-indigo-200 hover:shadow-sm ${
-                activeDashboardTab === 'admin-gateways'
-                  ? 'text-indigo-700 border-indigo-200 shadow-sm'
-                  : 'text-slate-650 border-slate-200/80 hover:text-slate-900'
-              }`}
-            >
-              <svg className="h-4 w-4 text-indigo-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="2" y="5" width="20" height="14" rx="2" />
-                <line x1="2" y1="10" x2="22" y2="10" />
-              </svg>
-              <div className="flex flex-col text-left">
-                <span className="font-bold text-slate-700">
-                  {language === 'en' ? 'Payment Gateways' : 'Saluran Pembayaran'}
-                </span>
-                <span className="text-[8px] text-slate-400 leading-tight font-medium">
-                  {language === 'en' ? 'Configure Stripe & Midtrans gateways' : 'Atur Stripe & Midtrans gateway'}
-                </span>
-              </div>
-            </button>
+              <button
+                onClick={() => {
+                  onSelectDocument?.(''); // exit editor to dashboard
+                  onSelectAdminTab?.('admin-gateways'); // switch dashboard tab to admin-gateways
+                }}
+                className={`flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left cursor-pointer transition-all duration-200 group ${
+                  activeDashboardTab === 'admin-gateways'
+                    ? 'text-indigo-700 bg-indigo-50/70 font-semibold'
+                    : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+                }`}
+              >
+                <svg className={`h-[18px] w-[18px] mt-0.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                  activeDashboardTab === 'admin-gateways' ? 'text-indigo-600' : 'text-slate-400'
+                }`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="2" y="5" width="20" height="14" rx="2" />
+                  <line x1="2" y1="10" x2="22" y2="10" />
+                </svg>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs font-bold">
+                    {language === 'en' ? 'Payment Gateways' : 'Saluran Pembayaran'}
+                  </span>
+                  <span className="text-[8px] text-slate-400 leading-tight font-medium mt-0.5">
+                    {language === 'en' ? 'Configure Stripe & Midtrans gateways' : 'Atur Stripe & Midtrans gateway'}
+                  </span>
+                </div>
+              </button>
+            </div>
           </div>
         </>
       )}
