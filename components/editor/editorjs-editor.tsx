@@ -195,7 +195,7 @@ export interface EditorJsMethods {
   undo: () => void;
   redo: () => void;
   setBlockType: (type: string) => void;
-  toggleInlineFormat: (format: string) => void;
+  toggleInlineFormat: (format: string, color?: string) => void;
   setBlockAlignment: (align: string) => void;
   insertCitation: (label?: string, referenceId?: string) => void;
   insertImage: (url: string) => void;
@@ -625,7 +625,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         console.error('ScholarFlow setBlockType error:', err);
       }
     },
-    toggleInlineFormat: (format: string) => {
+    toggleInlineFormat: (format: string, color?: string) => {
       const toggleTag = (tagName: string, className?: string) => {
         const selection = window.getSelection();
         if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
@@ -693,7 +693,90 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
       } else if (format === 'subscript') {
         toggleTag('sub');
       } else if (format === 'highlight') {
-        toggleTag('mark', 'bg-yellow-200/80 px-1 py-0.5 rounded');
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
+        
+        const range = selection.getRangeAt(0);
+        
+        const getColorClass = (colorKey?: string) => {
+          switch (colorKey) {
+            case 'green':
+              return 'bg-green-200/80 text-green-900 px-1 py-0.5 rounded';
+            case 'blue':
+              return 'bg-sky-200/80 text-sky-900 px-1 py-0.5 rounded';
+            case 'pink':
+              return 'bg-pink-200/80 text-pink-900 px-1 py-0.5 rounded';
+            case 'purple':
+              return 'bg-purple-200/80 text-purple-950 px-1 py-0.5 rounded';
+            case 'yellow':
+            default:
+              return 'bg-yellow-200/80 text-yellow-900 px-1 py-0.5 rounded';
+          }
+        };
+
+        // Find closest parent that matches the holder container or tag
+        let parent = range.commonAncestorContainer as HTMLElement | null;
+        if (parent && parent.nodeType === Node.TEXT_NODE) {
+          parent = parent.parentElement;
+        }
+        
+        let existingMark: HTMLElement | null = null;
+        let node = parent;
+        while (node && node.id !== holderId && node.tagName !== 'DIV') {
+          if (node.tagName === 'MARK') {
+            existingMark = node;
+            break;
+          }
+          node = node.parentElement;
+        }
+
+        // Also check if selection contains a MARK tag
+        if (!existingMark) {
+          try {
+            const container = range.commonAncestorContainer;
+            const parentEl = container.nodeType === Node.TEXT_NODE ? container.parentElement : container as HTMLElement;
+            if (parentEl) {
+              const markTags = parentEl.getElementsByTagName('mark');
+              for (let i = 0; i < markTags.length; i++) {
+                if (selection.containsNode(markTags[i], true)) {
+                  existingMark = markTags[i];
+                  break;
+                }
+              }
+            }
+          } catch (e) {}
+        }
+
+        if (existingMark) {
+          if (color === 'clear') {
+            // Unwrap: replace mark tag with its children
+            const fragment = document.createDocumentFragment();
+            while (existingMark.firstChild) {
+              fragment.appendChild(existingMark.firstChild);
+            }
+            existingMark.parentNode?.replaceChild(fragment, existingMark);
+          } else {
+            // Update class name with new color
+            existingMark.className = getColorClass(color);
+          }
+        } else if (color !== 'clear') {
+          // Wrap selection in a new MARK tag
+          const element = document.createElement('mark');
+          element.className = getColorClass(color);
+          try {
+            const fragment = range.extractContents();
+            element.appendChild(fragment);
+            range.insertNode(element);
+            
+            // Re-select wrapped element
+            const newRange = document.createRange();
+            newRange.selectNodeContents(element);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+          } catch (e) {
+            console.warn('Failed to wrap selection with mark:', e);
+          }
+        }
       } else if (format === 'code') {
         toggleTag('code', 'bg-slate-100 dark:bg-slate-800 text-rose-600 px-1 py-0.5 rounded font-mono text-xs');
       } else if (format === 'link') {

@@ -25,9 +25,14 @@ Enhance document export to Microsoft Word with correct media embedding.
 19. [Completed] Upgrade selection-link matching logic to check anchorNode, focusNode, and range contents for robust active toolbar highlighting.
 20. [Completed] Upgrade existingLink matching logic inside toggleInlineFormat to support anchorNode, focusNode, and range fragment matching, enabling the "Edit Link URL" modal to correctly open when clicking Link buttons.
 21. [Completed] Fix Link Modal button visibility by correcting Tailwind background and text color class names.
+22. [Completed] Implement non-nesting highlighting logic with multi-color support and unhighlighting.
+23. [Completed] Add highlight active state tracking to the editor toolbar buttons.
+24. [Completed] Develop a floating round-card color picker popover for selecting highlight colors.
+25. [Completed] Map text highlights to inline background-color styled span tags for Word export.
+26. [Completed] Restyle highlight color choices from circles into proper square blocks.
 
 ## Current Task
-Corrected CSS color classes inside the custom React Link Modal to restore button visibility.
+Converted mark tags to styled span tags with inline background-color during export to ensure highlight visibility in MS Word.
 
 ## Next Tasks
 - Add detailed user guides for localizing custom templates.

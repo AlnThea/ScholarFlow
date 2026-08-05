@@ -764,6 +764,25 @@ export function EditorLayout({
     setLinkUrlInput('');
   };
 
+  const [showHighlightPopover, setShowHighlightPopover] = useState(false);
+  const [highlightPopoverRect, setHighlightPopoverRect] = useState<DOMRect | null>(null);
+  const [highlightTriggerSource, setHighlightTriggerSource] = useState<'toolbar' | 'bubble' | null>(null);
+
+  const handleHighlightButtonClick = (e: React.MouseEvent<HTMLButtonElement>, source: 'toolbar' | 'bubble') => {
+    e.preventDefault();
+    const rect = e.currentTarget.getBoundingClientRect();
+    setHighlightPopoverRect(rect);
+    setHighlightTriggerSource(source);
+    setShowHighlightPopover(prev => !prev);
+  };
+
+  const handleApplyHighlight = (color: string) => {
+    editorJsRef.current?.toggleInlineFormat('highlight', color);
+    setShowHighlightPopover(false);
+    setHighlightPopoverRect(null);
+    setHighlightTriggerSource(null);
+  };
+
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [selectedPlanForModal, setSelectedPlanForModal] = useState<PricingPlan | null>(null);
   const [modalPlanState, setModalPlanState] = useState<Omit<PricingPlan, 'updated_at'>>({
@@ -895,6 +914,7 @@ export function EditorLayout({
     superscript: false,
     subscript: false,
     link: false,
+    highlight: false,
   });
   const [currentFontSize, setCurrentFontSize] = useState<string>('');
 
@@ -932,6 +952,7 @@ export function EditorLayout({
     // Selection change handler to sync toolbar states and show bubble menu
     const handleSelectionChange = () => {
       let hasLink = false;
+      let hasHighlight = false;
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
         const editorContainer = document.getElementById('editorjs-holder');
@@ -946,13 +967,16 @@ export function EditorLayout({
         while (node && editorContainer && editorContainer.contains(node)) {
           if (node.tagName === 'A') {
             hasLink = true;
-            break;
           }
+          if (node.tagName === 'MARK') {
+            hasHighlight = true;
+          }
+          if (hasLink && hasHighlight) break;
           node = node.parentElement;
         }
 
-        // 2. Check focusNode parent if anchorNode didn't find a link
-        if (!hasLink) {
+        // 2. Check focusNode parent if anchorNode didn't find both
+        if (!hasLink || !hasHighlight) {
           let focusParent = selection.focusNode
             ? (selection.focusNode.nodeType === Node.TEXT_NODE 
                 ? selection.focusNode.parentElement 
@@ -962,21 +986,27 @@ export function EditorLayout({
           while (node && editorContainer && editorContainer.contains(node)) {
             if (node.tagName === 'A') {
               hasLink = true;
-              break;
             }
+            if (node.tagName === 'MARK') {
+              hasHighlight = true;
+            }
+            if (hasLink && hasHighlight) break;
             node = node.parentElement;
           }
         }
 
-        // 3. Check if selection range spans across/encloses an A tag
-        if (!hasLink) {
+        // 3. Check if selection range spans across/encloses an A or MARK tag
+        if (!hasLink || !hasHighlight) {
           try {
             const range = selection.getRangeAt(0);
             const fragment = range.cloneContents();
             const tempDiv = document.createElement('div');
             tempDiv.appendChild(fragment);
-            if (tempDiv.querySelector('a')) {
+            if (!hasLink && tempDiv.querySelector('a')) {
               hasLink = true;
+            }
+            if (!hasHighlight && tempDiv.querySelector('mark')) {
+              hasHighlight = true;
             }
           } catch (e) {
             // ignore range extraction issues
@@ -994,6 +1024,7 @@ export function EditorLayout({
         superscript: document.queryCommandState('superscript'),
         subscript: document.queryCommandState('subscript'),
         link: hasLink,
+        highlight: hasHighlight,
       });
 
       // 2. Display custom bubble menu if text selection is active inside EditorJS
@@ -2031,10 +2062,10 @@ export function EditorLayout({
               <IconLink className="h-4 w-4" />
             </button>
             <button
-              className="p-1.5 rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition"
+              className={getBtnClass(activeFormats.highlight)}
               title="Highlight text"
               onMouseDown={(e) => e.preventDefault()}
-              onClick={() => editorJsRef.current?.toggleInlineFormat('highlight')}
+              onClick={(e) => handleHighlightButtonClick(e, 'toolbar')}
             >
               <IconHighlight className="h-4 w-4" />
             </button>
@@ -2321,6 +2352,7 @@ export function EditorLayout({
                     <button className={getBtnClass(activeFormats.strikethrough)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('strikethrough')} title="Strikethrough"><IconStrikethrough className="h-3.5 w-3.5" /></button>
                     <button className={getBtnClass(activeFormats.code)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('code')} title="Code"><IconCode className="h-3.5 w-3.5" /></button>
                     <button className={getBtnClass(activeFormats.link)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('link')} title="Link"><IconLink className="h-3.5 w-3.5" /></button>
+                    <button className={getBtnClass(activeFormats.highlight)} onMouseDown={e => e.preventDefault()} onClick={(e) => handleHighlightButtonClick(e, 'bubble')} title="Highlight text"><IconHighlight className="h-3.5 w-3.5" /></button>
                   </div>
 
                   {/* AI Configuration Section Header */}
@@ -3046,6 +3078,62 @@ export function EditorLayout({
           </div>
         </div>,
         document.body
+      )}
+      {mounted && showHighlightPopover && highlightPopoverRect && typeof window !== 'undefined' && createPortal(
+        <>
+          <div 
+            className="fixed inset-0 z-[9998]" 
+            onClick={() => {
+              setShowHighlightPopover(false);
+              setHighlightPopoverRect(null);
+              setHighlightTriggerSource(null);
+            }} 
+          />
+          <div
+            className="fixed z-[9999] bg-white border border-slate-200/80 rounded-xl p-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.08)] flex items-center gap-1.5 animate-scale-in"
+            style={{
+              top: `${highlightPopoverRect.bottom + window.scrollY + 6}px`,
+              left: `${Math.max(10, highlightPopoverRect.left + window.scrollX - 60)}px`,
+            }}
+          >
+            <button
+              onClick={() => handleApplyHighlight('yellow')}
+              className="w-6 h-6 rounded bg-yellow-200 border border-yellow-350 hover:scale-105 active:scale-95 transition cursor-pointer"
+              title={language === 'en' ? 'Yellow' : 'Kuning'}
+            />
+            <button
+              onClick={() => handleApplyHighlight('green')}
+              className="w-6 h-6 rounded bg-green-200 border border-green-300 hover:scale-105 active:scale-95 transition cursor-pointer"
+              title={language === 'en' ? 'Green' : 'Hijau'}
+            />
+            <button
+              onClick={() => handleApplyHighlight('blue')}
+              className="w-6 h-6 rounded bg-sky-200 border border-sky-300 hover:scale-105 active:scale-95 transition cursor-pointer"
+              title={language === 'en' ? 'Blue' : 'Biru'}
+            />
+            <button
+              onClick={() => handleApplyHighlight('pink')}
+              className="w-6 h-6 rounded bg-pink-200 border border-pink-300 hover:scale-105 active:scale-95 transition cursor-pointer"
+              title={language === 'en' ? 'Pink' : 'Merah Muda'}
+            />
+            <button
+              onClick={() => handleApplyHighlight('purple')}
+              className="w-6 h-6 rounded bg-purple-200 border border-purple-300 hover:scale-105 active:scale-95 transition cursor-pointer"
+              title={language === 'en' ? 'Purple' : 'Ungu'}
+            />
+            <div className="w-px h-4 bg-slate-200 mx-0.5" />
+            <button
+              onClick={() => handleApplyHighlight('clear')}
+              className="p-1.5 rounded text-red-500 hover:bg-red-50 hover:text-red-600 transition cursor-pointer flex items-center justify-center"
+              title={language === 'en' ? 'Clear Highlight' : 'Hapus Sorotan'}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </>
+        , document.body
       )}
       {mounted && isPlanModalOpen && typeof window !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">

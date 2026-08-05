@@ -232,6 +232,12 @@
 - Upgraded the selection-link matching logic to check selection's `anchorNode` parent, `focusNode` parent, and selection range fragment content, ensuring robust visual active highlights when highlighting partial or complete hyperlink text.
 - Upgraded the `existingLink` detection logic inside the editor's `toggleInlineFormat('link')` method using the same robust three-layer selection checks, ensuring the link modal is correctly opened in "Edit Link URL" mode with pre-filled URLs when clicking the Link toolbar button.
 - Fixed an issue where the Link Modal confirmation button and remove button were invisible by correcting invalid Tailwind color classes (`bg-indigo-650` and `text-red-650` to standard `bg-indigo-600` and `text-red-600`).
+- Developed a customizable text highlighting engine supporting multiple colors (Yellow, Green, Blue, Pink, Purple) and unlinking/clearing highlight formatting directly.
+- Refactored `toggleInlineFormat('highlight')` in `components/editor/editorjs-editor.tsx` to detect existing `<mark>` element wraps using the robust three-layer check, updating the highlight color class name on the element itself rather than nesting tags or shrinking fonts.
+- Implemented active formatting state tracking for `<mark>` tags in `handleSelectionChange`, causing both the top toolbar and bubble selection menu highlight buttons to light up as active.
+- Added a floating portal-based highlight color palette picker in `components/editor/editor-layout.tsx` that appears below the clicked button when triggering highlight, displaying color selection pills and a trash can button to clear highlighting.
+- Fixed highlight color picker popover styling by replacing invalid Tailwind size/shape classes (`w-5.5 h-5.5 rounded-full`) with properly sized, square-tiled boxes (`w-6 h-6 rounded`) to restore visibility and align with the user's design preference.
+- Mapped text highlights in the MS Word export templates (`processTextHtml` and `processTextHtmlMhtml` in `lib/editor/citation-export-word.ts`) to inline CSS styled `<span>` tags (`style="background-color: ..."`), converting highlight classes (yellow, green, blue, pink, purple) to standard hex color codes. This replaces the `<mark>` tag which is ignored by Microsoft Word's HTML importer, ensuring highlighting is correctly displayed inside Microsoft Word.
 - Verified TypeScript compilation successfully.
 
 

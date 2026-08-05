@@ -44,6 +44,31 @@ function processTextHtml(html: string): string {
       span.parentNode?.replaceChild(imgNode, span);
     });
     
+    const markElements = tempDiv.querySelectorAll('mark');
+    markElements.forEach((mark) => {
+      let bgColor = '#fef08a'; // default yellow
+      const className = mark.className || '';
+      if (className.includes('bg-green-200')) {
+        bgColor = '#bbf7d0';
+      } else if (className.includes('bg-sky-200')) {
+        bgColor = '#bae6fd';
+      } else if (className.includes('bg-pink-200')) {
+        bgColor = '#fbcfe8';
+      } else if (className.includes('bg-purple-200')) {
+        bgColor = '#e9d5ff';
+      }
+      
+      const spanEl = document.createElement('span');
+      spanEl.setAttribute('style', `background-color: ${bgColor};`);
+      
+      // Transfer children
+      while (mark.firstChild) {
+        spanEl.appendChild(mark.firstChild);
+      }
+      
+      mark.parentNode?.replaceChild(spanEl, mark);
+    });
+
     return tempDiv.innerHTML;
   } catch (e) {
     return html;
@@ -595,6 +620,31 @@ export async function generateWordMhtml(
           span.parentNode?.replaceChild(imgNode, span);
         }
       }
+      const markElements = tempDiv.querySelectorAll('mark');
+      for (const mark of Array.from(markElements)) {
+        let bgColor = '#fef08a'; // default yellow
+        const className = mark.className || '';
+        if (className.includes('bg-green-200')) {
+          bgColor = '#bbf7d0';
+        } else if (className.includes('bg-sky-200')) {
+          bgColor = '#bae6fd';
+        } else if (className.includes('bg-pink-200')) {
+          bgColor = '#fbcfe8';
+        } else if (className.includes('bg-purple-200')) {
+          bgColor = '#e9d5ff';
+        }
+        
+        const spanEl = document.createElement('span');
+        spanEl.setAttribute('style', `background-color: ${bgColor};`);
+        
+        // Transfer children
+        while (mark.firstChild) {
+          spanEl.appendChild(mark.firstChild);
+        }
+        
+        mark.parentNode?.replaceChild(spanEl, mark);
+      }
+
       return tempDiv.innerHTML;
     } catch (e) {
       return html;
