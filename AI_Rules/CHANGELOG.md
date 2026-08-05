@@ -221,4 +221,17 @@
 - Designed the settings/language/theme controls in the expanded sidebar to align side-by-side: three buttons for admin role (Settings, Lang, Theme) and two buttons for standard users (Lang, Theme), collapsing into a vertical stack in the collapsed sidebar state.
 - Verified TypeScript compilation successfully.
 
+## v0.2.0
+- Replaced the browser native `prompt()` editing modal for inline equations (triggered when clicking on `.sf-inline-math` elements in the editor canvas) with the custom, premium React modal portal (`isMathModalOpen`).
+- Implemented an `onEditInlineEquation` callback prop in `EditorJsEditor` and connected it to parent states in `editor-layout.tsx` to handle editing context, allowing users to edit LaTeX formulas and save changes dynamically.
+- Configured dynamic modal header titles ("Edit Rumus Matematika (LaTeX)" vs "Sisipkan Rumus Matematika (LaTeX)") and submit button text ("Simpan Perubahan" vs "Sisipkan Rumus") depending on whether an editing session is active.
+- Replaced the browser native `prompt('Enter link URL')` (triggered when applying formatting link to selected text) with a custom React portal modal (`isLinkModalOpen`).
+- Added an `onInsertLinkRequest` callback prop in `EditorJsEditor` and connected it to parent states in `editor-layout.tsx` to manage link insertion workflows, ensuring editor range selection and focus are correctly restored.
+- Enabled editing and unlinking of existing hyperlink elements using the same custom React link modal portal. If an existing link is selected, the modal is populated with its current URL, and a "Hapus Tautan" (Remove Link) button is shown in the modal's footer to allow unlinking the highlighted text directly.
+- Integrated selection formatting checks in `handleSelectionChange` to detect if the current cursor selection wraps or is inside a hyperlink, enabling the top toolbar and floating bubble toolbar link buttons to automatically highlight as active.
+- Upgraded the selection-link matching logic to check selection's `anchorNode` parent, `focusNode` parent, and selection range fragment content, ensuring robust visual active highlights when highlighting partial or complete hyperlink text.
+- Upgraded the `existingLink` detection logic inside the editor's `toggleInlineFormat('link')` method using the same robust three-layer selection checks, ensuring the link modal is correctly opened in "Edit Link URL" mode with pre-filled URLs when clicking the Link toolbar button.
+- Fixed an issue where the Link Modal confirmation button and remove button were invisible by correcting invalid Tailwind color classes (`bg-indigo-650` and `text-red-650` to standard `bg-indigo-600` and `text-red-600`).
+- Verified TypeScript compilation successfully.
+
 

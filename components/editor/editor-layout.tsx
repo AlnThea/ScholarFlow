@@ -722,13 +722,46 @@ export function EditorLayout({
 
   const [isMathModalOpen, setIsMathModalOpen] = useState(false);
   const [mathFormulaInput, setMathFormulaInput] = useState('');
+  const [editingMathCallback, setEditingMathCallback] = useState<{ save: (formula: string) => void } | null>(null);
 
   const handleInsertMathConfirm = () => {
     if (mathFormulaInput.trim()) {
-      editorJsRef.current?.insertInlineEquation(mathFormulaInput.trim());
+      if (editingMathCallback) {
+        editingMathCallback.save(mathFormulaInput.trim());
+        setEditingMathCallback(null);
+      } else {
+        editorJsRef.current?.insertInlineEquation(mathFormulaInput.trim());
+      }
       setIsMathModalOpen(false);
       setMathFormulaInput('');
     }
+  };
+
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [linkUrlInput, setLinkUrlInput] = useState('');
+  const [insertLinkCallback, setInsertLinkCallback] = useState<{ 
+    save: (url: string) => void;
+    unlink?: () => void;
+  } | null>(null);
+
+  const handleInsertLinkConfirm = () => {
+    if (linkUrlInput.trim()) {
+      if (insertLinkCallback) {
+        insertLinkCallback.save(linkUrlInput.trim());
+        setInsertLinkCallback(null);
+      }
+      setIsLinkModalOpen(false);
+      setLinkUrlInput('');
+    }
+  };
+
+  const handleUnlinkConfirm = () => {
+    if (insertLinkCallback?.unlink) {
+      insertLinkCallback.unlink();
+      setInsertLinkCallback(null);
+    }
+    setIsLinkModalOpen(false);
+    setLinkUrlInput('');
   };
 
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
@@ -861,6 +894,7 @@ export function EditorLayout({
     code: false,
     superscript: false,
     subscript: false,
+    link: false,
   });
   const [currentFontSize, setCurrentFontSize] = useState<string>('');
 
@@ -897,6 +931,59 @@ export function EditorLayout({
 
     // Selection change handler to sync toolbar states and show bubble menu
     const handleSelectionChange = () => {
+      let hasLink = false;
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const editorContainer = document.getElementById('editorjs-holder');
+        
+        // 1. Check anchorNode parent
+        let anchorParent = selection.anchorNode
+          ? (selection.anchorNode.nodeType === Node.TEXT_NODE 
+              ? selection.anchorNode.parentElement 
+              : selection.anchorNode as HTMLElement)
+          : null;
+        let node = anchorParent;
+        while (node && editorContainer && editorContainer.contains(node)) {
+          if (node.tagName === 'A') {
+            hasLink = true;
+            break;
+          }
+          node = node.parentElement;
+        }
+
+        // 2. Check focusNode parent if anchorNode didn't find a link
+        if (!hasLink) {
+          let focusParent = selection.focusNode
+            ? (selection.focusNode.nodeType === Node.TEXT_NODE 
+                ? selection.focusNode.parentElement 
+                : selection.focusNode as HTMLElement)
+            : null;
+          node = focusParent;
+          while (node && editorContainer && editorContainer.contains(node)) {
+            if (node.tagName === 'A') {
+              hasLink = true;
+              break;
+            }
+            node = node.parentElement;
+          }
+        }
+
+        // 3. Check if selection range spans across/encloses an A tag
+        if (!hasLink) {
+          try {
+            const range = selection.getRangeAt(0);
+            const fragment = range.cloneContents();
+            const tempDiv = document.createElement('div');
+            tempDiv.appendChild(fragment);
+            if (tempDiv.querySelector('a')) {
+              hasLink = true;
+            }
+          } catch (e) {
+            // ignore range extraction issues
+          }
+        }
+      }
+
       // 1. Sync format active states
       setActiveFormats({
         bold: document.queryCommandState('bold'),
@@ -906,10 +993,10 @@ export function EditorLayout({
         code: document.queryCommandState('insertHTML'),
         superscript: document.queryCommandState('superscript'),
         subscript: document.queryCommandState('subscript'),
+        link: hasLink,
       });
 
       // 2. Display custom bubble menu if text selection is active inside EditorJS
-      const selection = window.getSelection();
 
       // Sync active font size state
       if (selection && selection.anchorNode) {
@@ -1936,7 +2023,7 @@ export function EditorLayout({
               <IconSubscript className="h-4 w-4" />
             </button>
             <button
-              className="p-1.5 rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition"
+              className={getBtnClass(activeFormats.link)}
               title="Insert Link"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => editorJsRef.current?.toggleInlineFormat('link')}
@@ -2233,7 +2320,7 @@ export function EditorLayout({
                     <button className={getBtnClass(activeFormats.underline)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('underline')} title="Underline"><IconUnderline className="h-3.5 w-3.5" /></button>
                     <button className={getBtnClass(activeFormats.strikethrough)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('strikethrough')} title="Strikethrough"><IconStrikethrough className="h-3.5 w-3.5" /></button>
                     <button className={getBtnClass(activeFormats.code)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('code')} title="Code"><IconCode className="h-3.5 w-3.5" /></button>
-                    <button className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition" onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('link')} title="Link"><IconLink className="h-3.5 w-3.5" /></button>
+                    <button className={getBtnClass(activeFormats.link)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('link')} title="Link"><IconLink className="h-3.5 w-3.5" /></button>
                   </div>
 
                   {/* AI Configuration Section Header */}
@@ -2637,6 +2724,16 @@ export function EditorLayout({
                   editorJsRef.current?.cancelCitationSearch();
                   setShowBubbleMenu(false);
                 }}
+                onEditInlineEquation={(formula, onSave) => {
+                  setMathFormulaInput(formula);
+                  setEditingMathCallback({ save: onSave });
+                  setIsMathModalOpen(true);
+                }}
+                onInsertLinkRequest={(defaultUrl, onSave, onUnlink) => {
+                  setLinkUrlInput(defaultUrl);
+                  setInsertLinkCallback({ save: onSave, unlink: onUnlink });
+                  setIsLinkModalOpen(true);
+                }}
               />
             </main>
 
@@ -2808,10 +2905,14 @@ export function EditorLayout({
           <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-2xl w-full max-w-md flex flex-col gap-5 animate-scale-in text-slate-800">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-sm font-extrabold text-slate-800">
-                Sisipkan Rumus Matematika (LaTeX)
+                {editingMathCallback ? 'Edit Rumus Matematika (LaTeX)' : 'Sisipkan Rumus Matematika (LaTeX)'}
               </h3>
               <button
-                onClick={() => setIsMathModalOpen(false)}
+                onClick={() => {
+                  setIsMathModalOpen(false);
+                  setEditingMathCallback(null);
+                  setMathFormulaInput('');
+                }}
                 className="p-1 rounded-md text-slate-400 hover:bg-slate-100/80 hover:text-slate-650 transition cursor-pointer"
               >
                 <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -2844,7 +2945,11 @@ export function EditorLayout({
 
             <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
               <button
-                onClick={() => setIsMathModalOpen(false)}
+                onClick={() => {
+                  setIsMathModalOpen(false);
+                  setEditingMathCallback(null);
+                  setMathFormulaInput('');
+                }}
                 className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-100 transition cursor-pointer"
               >
                 Batal
@@ -2854,7 +2959,88 @@ export function EditorLayout({
                 disabled={!mathFormulaInput.trim()}
                 className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
               >
-                Sisipkan Rumus
+                {editingMathCallback ? 'Simpan Perubahan' : 'Sisipkan Rumus'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+      {mounted && isLinkModalOpen && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in font-sans">
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-2xl w-full max-w-md flex flex-col gap-5 animate-scale-in text-slate-800">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-extrabold text-slate-800">
+                {insertLinkCallback?.unlink
+                  ? (language === 'en' ? 'Edit Link URL' : 'Ubah Tautan URL')
+                  : (language === 'en' ? 'Insert Link URL' : 'Sisipkan Tautan URL')}
+              </h3>
+              <button
+                onClick={() => {
+                  setIsLinkModalOpen(false);
+                  setInsertLinkCallback(null);
+                  setLinkUrlInput('');
+                }}
+                className="p-1 rounded-md text-slate-400 hover:bg-slate-100/80 hover:text-slate-650 transition cursor-pointer"
+              >
+                <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <p className="text-xs text-slate-500 leading-relaxed">
+                {language === 'en' 
+                  ? 'Enter the URL destination for the selected text (e.g. https://example.com).'
+                  : 'Masukkan alamat URL tujuan untuk teks yang dipilih (misal: https://example.com).'}
+              </p>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">URL Tautan</label>
+                <input
+                  type="text"
+                  placeholder="https://example.com"
+                  value={linkUrlInput}
+                  onChange={(e) => setLinkUrlInput(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleInsertLinkConfirm();
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+              {insertLinkCallback?.unlink && (
+                <button
+                  type="button"
+                  onClick={handleUnlinkConfirm}
+                  className="mr-auto px-3.5 py-1.5 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 transition cursor-pointer"
+                >
+                  {language === 'en' ? 'Remove Link' : 'Hapus Tautan'}
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  setIsLinkModalOpen(false);
+                  setInsertLinkCallback(null);
+                  setLinkUrlInput('');
+                }}
+                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-100 transition cursor-pointer"
+              >
+                {language === 'en' ? 'Cancel' : 'Batal'}
+              </button>
+              <button
+                onClick={handleInsertLinkConfirm}
+                disabled={!linkUrlInput.trim()}
+                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
+              >
+                {insertLinkCallback?.unlink
+                  ? (language === 'en' ? 'Save Changes' : 'Simpan Perubahan')
+                  : (language === 'en' ? 'Insert Link' : 'Sisipkan Tautan')}
               </button>
             </div>
           </div>

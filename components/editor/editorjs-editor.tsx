@@ -223,6 +223,8 @@ interface EditorJsEditorProps {
   onContentChange?: (content: any) => void;
   onCitationSearchChange?: (query: string, rect: DOMRect) => void;
   onCitationSearchCancel?: () => void;
+  onEditInlineEquation?: (formula: string, onSave: (newFormula: string) => void) => void;
+  onInsertLinkRequest?: (defaultUrl: string, onSave: (url: string) => void, onUnlink?: () => void) => void;
 }
 
 export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>(({ 
@@ -233,7 +235,9 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
   onCiteClick,
   onContentChange,
   onCitationSearchChange,
-  onCitationSearchCancel
+  onCitationSearchCancel,
+  onEditInlineEquation,
+  onInsertLinkRequest
 }, ref) => {
   const editorRef = useRef<EditorJS | null>(null);
   const undoRef = useRef<any>(null);
@@ -244,6 +248,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
   const activeBlockIndexRef = useRef<number>(0);
   const lastSelectionRangeRef = useRef<Range | null>(null);
   const lastHighlightedRangeRef = useRef<Range | null>(null);
+  const savedLinkRangeRef = useRef<Range | null>(null);
   // Tracks index of bibliography header block (-1 = not yet inserted)
   const bibliographyBlockIndexRef = useRef<number>(-1);
 
@@ -695,12 +700,15 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         const selection = window.getSelection();
         if (!selection || selection.isCollapsed) return;
         const range = selection.getRangeAt(0);
-        let parent = range.commonAncestorContainer as HTMLElement | null;
-        if (parent && parent.nodeType === Node.TEXT_NODE) {
-          parent = parent.parentElement;
-        }
         let existingLink: HTMLAnchorElement | null = null;
-        let node = parent;
+        
+        // 1. Check if anchorNode is inside an A tag
+        let anchorParent = selection.anchorNode
+          ? (selection.anchorNode.nodeType === Node.TEXT_NODE 
+              ? selection.anchorNode.parentElement 
+              : selection.anchorNode as HTMLElement)
+          : null;
+        let node = anchorParent;
         while (node && node.id !== holderId && node.tagName !== 'DIV') {
           if (node.tagName === 'A') {
             existingLink = node as HTMLAnchorElement;
@@ -708,27 +716,135 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           }
           node = node.parentElement;
         }
-        if (existingLink) {
-          // Remove link
-          const fragment = document.createDocumentFragment();
-          while (existingLink.firstChild) {
-            fragment.appendChild(existingLink.firstChild);
+
+        // 2. Check if focusNode is inside an A tag if anchorNode didn't find one
+        if (!existingLink) {
+          let focusParent = selection.focusNode
+            ? (selection.focusNode.nodeType === Node.TEXT_NODE 
+                ? selection.focusNode.parentElement 
+                : selection.focusNode as HTMLElement)
+            : null;
+          node = focusParent;
+          while (node && node.id !== holderId && node.tagName !== 'DIV') {
+            if (node.tagName === 'A') {
+              existingLink = node as HTMLAnchorElement;
+              break;
+            }
+            node = node.parentElement;
           }
-          existingLink.parentNode?.replaceChild(fragment, existingLink);
+        }
+
+        // 3. Check if selection contains an A tag
+        if (!existingLink) {
+          try {
+            const container = range.commonAncestorContainer;
+            const parentEl = container.nodeType === Node.TEXT_NODE ? container.parentElement : container as HTMLElement;
+            if (parentEl) {
+              const aTags = parentEl.getElementsByTagName('a');
+              for (let i = 0; i < aTags.length; i++) {
+                if (selection.containsNode(aTags[i], true)) {
+                  existingLink = aTags[i];
+                  break;
+                }
+              }
+            }
+          } catch (e) {
+            // ignore selection containsNode issue
+          }
+        }
+        if (existingLink) {
+          const linkEl = existingLink;
+          
+          const handleUpdateLink = (url: string) => {
+            if (url.trim() === '') {
+              handleUnlink();
+            } else {
+              linkEl.href = url;
+              calculateLiveStats();
+              if (onContentChange && editorRef.current) {
+                saveCleanContent().then(content => {
+                  if (content) onContentChange(content);
+                }).catch(console.error);
+              }
+            }
+          };
+
+          const handleUnlink = () => {
+            const fragment = document.createDocumentFragment();
+            while (linkEl.firstChild) {
+              fragment.appendChild(linkEl.firstChild);
+            }
+            linkEl.parentNode?.replaceChild(fragment, linkEl);
+            calculateLiveStats();
+            if (onContentChange && editorRef.current) {
+              saveCleanContent().then(content => {
+                if (content) onContentChange(content);
+              }).catch(console.error);
+            }
+          };
+
+          if (onInsertLinkRequest) {
+            onInsertLinkRequest(linkEl.getAttribute('href') || '', handleUpdateLink, handleUnlink);
+          } else {
+            const url = prompt('Edit link URL:', linkEl.getAttribute('href') || '');
+            if (url !== null) {
+              handleUpdateLink(url);
+            }
+          }
         } else {
-          const url = prompt('Enter link URL:');
-          if (url) {
+          // Save range so we can insert the link later
+          savedLinkRangeRef.current = range.cloneRange();
+          
+          const handleSaveLink = (url: string) => {
+            const savedRange = savedLinkRangeRef.current;
+            if (!savedRange) return;
+            
             const a = document.createElement('a');
             a.href = url;
             a.target = '_blank';
             a.rel = 'noopener noreferrer';
             a.className = 'text-indigo-650 underline';
+            
             try {
-              const fragment = range.extractContents();
+              // Restore focus to editor block first
+              const contentEditable = savedRange.commonAncestorContainer.nodeType === Node.TEXT_NODE
+                ? savedRange.commonAncestorContainer.parentElement
+                : savedRange.commonAncestorContainer as HTMLElement;
+              const blockEl = contentEditable?.closest('[contenteditable="true"]') as HTMLElement | null;
+              if (blockEl) {
+                blockEl.focus();
+              }
+              
+              const sel = window.getSelection();
+              if (sel) {
+                sel.removeAllRanges();
+                sel.addRange(savedRange);
+              }
+              
+              const fragment = savedRange.extractContents();
               a.appendChild(fragment);
-              range.insertNode(a);
+              savedRange.insertNode(a);
+              
+              // Trigger save
+              calculateLiveStats();
+              if (onContentChange && editorRef.current) {
+                saveCleanContent().then(content => {
+                  if (content) onContentChange(content);
+                }).catch(console.error);
+              }
             } catch (e) {
               console.warn('Failed to wrap selection with link:', e);
+            }
+            
+            savedLinkRangeRef.current = null;
+          };
+
+          if (onInsertLinkRequest) {
+            onInsertLinkRequest('', handleSaveLink);
+          } else {
+            const url = prompt('Enter link URL:');
+            if (url) {
+              handleSaveLink(url);
             }
           }
         }
@@ -1329,8 +1445,8 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           const mathSpan = target.closest('.sf-inline-math') as HTMLElement | null;
           if (mathSpan) {
             const currentFormula = mathSpan.getAttribute('data-formula') || '';
-            const newFormula = prompt('Edit LaTeX formula:', currentFormula);
-            if (newFormula !== null) {
+            
+            const handleSaveFormula = (newFormula: string) => {
               if (newFormula.trim() === '') {
                 mathSpan.remove();
               } else {
@@ -1345,6 +1461,15 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
                 saveCleanContent().then(content => {
                   if (content) onContentChange(content);
                 }).catch(console.error);
+              }
+            };
+
+            if (onEditInlineEquation) {
+              onEditInlineEquation(currentFormula, handleSaveFormula);
+            } else {
+              const newFormula = prompt('Edit LaTeX formula:', currentFormula);
+              if (newFormula !== null) {
+                handleSaveFormula(newFormula);
               }
             }
             return;

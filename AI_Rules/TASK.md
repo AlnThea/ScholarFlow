@@ -18,9 +18,16 @@ Enhance document export to Microsoft Word with correct media embedding.
 12. [Completed] Remove the redundant Create New button from the main navigation, centralizing it inside the My Documents view.
 13. [Completed] Redesign the Create New Document action in the documents panel to match the clean menu-list style.
 14. [Completed] Limit the displayed list of Independent Documents to 15 items in the sidebar panel to prevent vertical clutter.
+15. [Completed] Replace the native browser prompt when editing inline equations with the same custom React math modal.
+16. [Completed] Replace the native browser prompt when inserting hyperlinks with a custom React link modal portal.
+17. [Completed] Enable editing and unlinking of existing hyperlink elements inside the custom React link modal.
+18. [Completed] Implement active state tracking for hyperlink formats and highlight the Link toolbar buttons when the text selection is inside an anchor element.
+19. [Completed] Upgrade selection-link matching logic to check anchorNode, focusNode, and range contents for robust active toolbar highlighting.
+20. [Completed] Upgrade existingLink matching logic inside toggleInlineFormat to support anchorNode, focusNode, and range fragment matching, enabling the "Edit Link URL" modal to correctly open when clicking Link buttons.
+21. [Completed] Fix Link Modal button visibility by correcting Tailwind background and text color class names.
 
 ## Current Task
-Limited the displayed list of Independent Documents in the sidebar view to the 15 most recently updated items and added dynamic counter indicators.
+Corrected CSS color classes inside the custom React Link Modal to restore button visibility.
 
 ## Next Tasks
 - Add detailed user guides for localizing custom templates.
