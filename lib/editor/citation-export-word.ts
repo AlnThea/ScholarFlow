@@ -2,6 +2,7 @@
 // Utilitas untuk mengekspor dokumen draf EditorJS menjadi berkas MS Word (.doc) dengan pemformatan akademis
 
 interface EditorBlock {
+  id?: string;
   type: string;
   data: {
     text?: string;
@@ -268,6 +269,16 @@ export function generateWordHtml(
     </html>
   `;
 
+  const ALIGNMENT_KEY = 'scholarflow.editorjs.alignments.v1';
+  let alignments: Record<string, string> = {};
+  if (typeof window !== 'undefined') {
+    try {
+      alignments = JSON.parse(localStorage.getItem(ALIGNMENT_KEY) || '{}');
+    } catch (e) {
+      console.error('Failed to parse alignments from localStorage:', e);
+    }
+  }
+
   let bodyContent = `<h1>${title}</h1>`;
 
   // Filter out editor-inserted bibliography blocks to prevent duplicates
@@ -286,7 +297,11 @@ export function generateWordHtml(
     switch (block.type) {
       case 'header': {
         const level = block.data.level || 2;
-        bodyContent += `<h${level}>${processTextHtml(block.data.text || '')}</h${level}>`;
+        let alignStyle = '';
+        if (block.id && alignments[block.id]) {
+          alignStyle = ` style="text-align: ${alignments[block.id]};"`;
+        }
+        bodyContent += `<h${level}${alignStyle}>${processTextHtml(block.data.text || '')}</h${level}>`;
         break;
       }
       case 'list': {
@@ -372,7 +387,11 @@ export function generateWordHtml(
       }
       case 'paragraph':
       default: {
-        bodyContent += `<p>${processTextHtml(block.data.text || '')}</p>`;
+        let alignStyle = '';
+        if (block.id && alignments[block.id]) {
+          alignStyle = ` style="text-align: ${alignments[block.id]};"`;
+        }
+        bodyContent += `<p${alignStyle}>${processTextHtml(block.data.text || '')}</p>`;
         break;
       }
     }
@@ -568,6 +587,16 @@ export async function generateWordMhtml(
     </html>
   `;
 
+  const ALIGNMENT_KEY = 'scholarflow.editorjs.alignments.v1';
+  let alignments: Record<string, string> = {};
+  if (typeof window !== 'undefined') {
+    try {
+      alignments = JSON.parse(localStorage.getItem(ALIGNMENT_KEY) || '{}');
+    } catch (e) {
+      console.error('Failed to parse alignments from localStorage:', e);
+    }
+  }
+
   let bodyContent = `<h1>${title}</h1>`;
   
   const attachedImages: Array<{
@@ -667,7 +696,11 @@ export async function generateWordMhtml(
     switch (block.type) {
       case 'header': {
         const level = block.data.level || 2;
-        bodyContent += `<h${level}>${await processTextHtmlMhtml(block.data.text || '')}</h${level}>`;
+        let alignStyle = '';
+        if (block.id && alignments[block.id]) {
+          alignStyle = ` style="text-align: ${alignments[block.id]};"`;
+        }
+        bodyContent += `<h${level}${alignStyle}>${await processTextHtmlMhtml(block.data.text || '')}</h${level}>`;
         break;
       }
       case 'list': {
@@ -814,7 +847,11 @@ export async function generateWordMhtml(
       }
       case 'paragraph':
       default: {
-        bodyContent += `<p>${await processTextHtmlMhtml(block.data.text || '')}</p>`;
+        let alignStyle = '';
+        if (block.id && alignments[block.id]) {
+          alignStyle = ` style="text-align: ${alignments[block.id]};"`;
+        }
+        bodyContent += `<p${alignStyle}>${await processTextHtmlMhtml(block.data.text || '')}</p>`;
         break;
       }
     }

@@ -238,6 +238,7 @@
 - Added a floating portal-based highlight color palette picker in `components/editor/editor-layout.tsx` that appears below the clicked button when triggering highlight, displaying color selection pills and a trash can button to clear highlighting.
 - Fixed highlight color picker popover styling by replacing invalid Tailwind size/shape classes (`w-5.5 h-5.5 rounded-full`) with properly sized, square-tiled boxes (`w-6 h-6 rounded`) to restore visibility and align with the user's design preference.
 - Mapped text highlights in the MS Word export templates (`processTextHtml` and `processTextHtmlMhtml` in `lib/editor/citation-export-word.ts`) to inline CSS styled `<span>` tags (`style="background-color: ..."`), converting highlight classes (yellow, green, blue, pink, purple) to standard hex color codes. This replaces the `<mark>` tag which is ignored by Microsoft Word's HTML importer, ensuring highlighting is correctly displayed inside Microsoft Word.
+- Integrated paragraph and header text alignment support in MS Word exports (`generateWordHtml` and `generateWordMhtml` in `lib/editor/citation-export-word.ts`) by reading active block alignments from local storage and rendering them as inline CSS styles (`style="text-align: ..."`), ensuring alignment settings are preserved in Word.
 - Verified TypeScript compilation successfully.
 
 
