@@ -65,7 +65,7 @@ import type { BibliographyEntry } from '@/lib/editor/bibliography';
 import type { DocumentListItem, DocumentEntry } from '@/lib/api/documents';
 import { PricingModal } from './pricing-modal';
 import { ShareDocumentModal } from './share-document-modal';
-import { exportToWordFile } from '@/lib/editor/citation-export-word';
+import { exportToWordFile, exportToPdfFile } from '@/lib/editor/citation-export-word';
 import { useAuth } from '@/components/auth/auth-provider';
 import { fetchPricingPlans, updatePricingPlan, createPricingPlan, deletePricingPlan, type PricingPlan } from '@/lib/api/pricing';
 import { fetchPaymentGateways, updatePaymentGatewayStatus, type PaymentGateway } from '@/lib/api/payment-gateways';
@@ -764,7 +764,29 @@ export function EditorLayout({
     setLinkUrlInput('');
   };
 
+const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className={props.className}
+    viewBox="0 0 24 24"
+    strokeWidth="2"
+    stroke="currentColor"
+    fill="none"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+    <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+    <path d="M5 12v-7a2 2 0 0 1 2 -2h7l5 5v4" />
+    <path d="M5 18h1.5a1.5 1.5 0 0 0 0 -3h-1.5v6" />
+    <path d="M17 18h-3v-3h3" />
+    <path d="M14 18h3" />
+    <path d="M10 15v6h1a2 2 0 0 0 2 -2v-2a2 2 0 0 0 -2 -2h-1z" />
+  </svg>
+);
+
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   const [showHighlightPopover, setShowHighlightPopover] = useState(false);
   const [highlightPopoverRect, setHighlightPopoverRect] = useState<DOMRect | null>(null);
@@ -1871,32 +1893,26 @@ export function EditorLayout({
               <button
                 disabled={isExporting}
                 onClick={async () => {
-                  if (role !== 'admin' && activePlanId === 'free') {
-                    alert(language === 'en'
-                      ? "🔒 Microsoft Word (.doc) Export feature is exclusive to Pro Writer plans. Please upgrade your account."
-                      : "🔒 Fitur Ekspor Microsoft Word (.doc) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda."
-                    );
-                  } else {
-                    setIsExporting(true);
-                    try {
-                      const title = currentDocument?.title || 'Untitled Document';
-                      const docContent = currentDocument?.content;
-                      let bList: any[] = [];
-                      if (docContent) {
-                        try {
-                          const parsed = typeof docContent === 'string' ? JSON.parse(docContent) : docContent;
-                          bList = parsed.blocks || [];
-                        } catch (e) {
-                          console.error(e);
-                        }
+                  setIsExporting(true);
+                  try {
+                    const title = currentDocument?.title || 'Untitled Document';
+                    const docContent = currentDocument?.content;
+                    let bList: any[] = [];
+                    if (docContent) {
+                      try {
+                        const parsed = typeof docContent === 'string' ? JSON.parse(docContent) : docContent;
+                        bList = parsed.blocks || [];
+                      } catch (e) {
+                        console.error(e);
                       }
-                      const bibs = bibliographyEntries.map(e => e.formatted);
-                      await exportToWordFile(title, bList, bibs, language);
-                    } catch (err) {
-                      console.error('Export failed:', err);
-                    } finally {
-                      setIsExporting(false);
                     }
+                    const isPro = activePlanId !== 'free';
+                    const bibs = isPro ? bibliographyEntries.map(e => e.formatted) : [];
+                    await exportToWordFile(title, bList, bibs, language, isPro);
+                  } catch (err) {
+                    console.error('Export failed:', err);
+                  } finally {
+                    setIsExporting(false);
                   }
                 }}
                 className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 disabled:opacity-70 disabled:cursor-not-allowed transition shadow-sm cursor-pointer"
@@ -1909,6 +1925,43 @@ export function EditorLayout({
                 {isExporting 
                   ? (language === 'en' ? 'Exporting...' : 'Mengekspor...') 
                   : (language === 'en' ? 'Export Word' : 'Ekspor Word')}
+              </button>
+
+              <button
+                disabled={isExportingPdf}
+                onClick={async () => {
+                  setIsExportingPdf(true);
+                  try {
+                    const title = currentDocument?.title || 'Untitled Document';
+                    const docContent = currentDocument?.content;
+                    let bList: any[] = [];
+                    if (docContent) {
+                      try {
+                        const parsed = typeof docContent === 'string' ? JSON.parse(docContent) : docContent;
+                        bList = parsed.blocks || [];
+                      } catch (e) {
+                        console.error(e);
+                      }
+                    }
+                    const isPro = activePlanId !== 'free';
+                    const bibs = isPro ? bibliographyEntries.map(e => e.formatted) : [];
+                    await exportToPdfFile(title, bList, bibs, language, isPro);
+                  } catch (err) {
+                    console.error('Export PDF failed:', err);
+                  } finally {
+                    setIsExportingPdf(false);
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 disabled:opacity-70 disabled:cursor-not-allowed transition shadow-sm cursor-pointer"
+              >
+                {isExportingPdf ? (
+                  <IconLoader className="h-4 w-4 text-indigo-500 animate-spin" />
+                ) : (
+                  <IconFilePdf className="h-4 w-4 text-slate-400" />
+                )}
+                {isExportingPdf 
+                  ? (language === 'en' ? 'Exporting...' : 'Mengekspor...') 
+                  : (language === 'en' ? 'Export PDF' : 'Ekspor PDF')}
               </button>
 
               <button

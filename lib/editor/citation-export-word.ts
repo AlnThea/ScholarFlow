@@ -148,7 +148,8 @@ export function generateWordHtml(
   title: string,
   blocks: EditorBlock[],
   bibliography: string[],
-  language: 'en' | 'id' = 'en'
+  language: 'en' | 'id' = 'en',
+  isPro: boolean = true
 ): string {
   // Styles spec khusus Microsoft Word (mso-styles) untuk kertas A4, margin 1 inci, dan font Times New Roman 12pt
   const htmlHeader = `
@@ -176,6 +177,8 @@ export function generateWordHtml(
           font-size: 12pt;
           line-height: 2.0; /* Double spacing standard akademis */
           color: #000000;
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
         }
         h1, h2, h3, h4 {
           font-family: 'Times New Roman', Times, serif;
@@ -285,10 +288,32 @@ export function generateWordHtml(
   const cleanedBlocks: EditorBlock[] = [];
   for (let i = 0; i < blocks.length; i++) {
     const block = blocks[i];
-    if (block.type === 'header' && block.data?.text === 'Daftar Pustaka / References') {
-      i++; // Skip the next block (which is the bibliography content)
+    
+    // Strip HTML tags to check header text content cleanly (case-insensitive)
+    const cleanText = (block.data?.text || '').replace(/<[^>]*>/g, '').toLowerCase().trim();
+    const isBibHeader = block.type === 'header' && cleanText.length < 50 && (
+      cleanText.includes('daftar pustaka') || 
+      cleanText.includes('references')
+    );
+    
+    if (isBibHeader) {
+      if (!isPro) {
+        // Discard references section entirely for free plan
+        break;
+      }
+      i++; // Skip the next block (which is the bibliography content block)
       continue;
     }
+    
+    // Also explicitly skip any paragraphs containing bibliography classes
+    const textStr = block.data?.text || '';
+    if (block.type === 'paragraph' && (
+      textStr.includes('sf-bibliography-blur') ||
+      textStr.includes('sf-premium-banner-container')
+    )) {
+      continue;
+    }
+    
     cleanedBlocks.push(block);
   }
 
@@ -466,7 +491,8 @@ export async function generateWordMhtml(
   title: string,
   blocks: EditorBlock[],
   bibliography: string[],
-  language: 'en' | 'id' = 'en'
+  language: 'en' | 'id' = 'en',
+  isPro: boolean = true
 ): Promise<string> {
   // Styles spec khusus Microsoft Word (mso-styles) untuk kertas A4, margin 1 inci, dan font Times New Roman 12pt
   const htmlHeader = `
@@ -494,6 +520,8 @@ export async function generateWordMhtml(
           font-size: 12pt;
           line-height: 2.0; /* Double spacing standard akademis */
           color: #000000;
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
         }
         h1, h2, h3, h4 {
           font-family: 'Times New Roman', Times, serif;
@@ -684,10 +712,32 @@ export async function generateWordMhtml(
   const cleanedBlocks: EditorBlock[] = [];
   for (let i = 0; i < blocks.length; i++) {
     const block = blocks[i];
-    if (block.type === 'header' && block.data?.text === 'Daftar Pustaka / References') {
-      i++; // Skip the next block (which is the bibliography content)
+    
+    // Strip HTML tags to check header text content cleanly (case-insensitive)
+    const cleanText = (block.data?.text || '').replace(/<[^>]*>/g, '').toLowerCase().trim();
+    const isBibHeader = block.type === 'header' && cleanText.length < 50 && (
+      cleanText.includes('daftar pustaka') || 
+      cleanText.includes('references')
+    );
+    
+    if (isBibHeader) {
+      if (!isPro) {
+        // Discard references section entirely for free plan
+        break;
+      }
+      i++; // Skip the next block (which is the bibliography content block)
       continue;
     }
+    
+    // Also explicitly skip any paragraphs containing bibliography classes
+    const textStr = block.data?.text || '';
+    if (block.type === 'paragraph' && (
+      textStr.includes('sf-bibliography-blur') ||
+      textStr.includes('sf-premium-banner-container')
+    )) {
+      continue;
+    }
+    
     cleanedBlocks.push(block);
   }
 
@@ -902,10 +952,11 @@ export async function exportToWordFile(
   title: string,
   blocks: EditorBlock[],
   bibliography: string[],
-  language: 'en' | 'id' = 'en'
+  language: 'en' | 'id' = 'en',
+  isPro: boolean = true
 ): Promise<void> {
   try {
-    const mhtmlContent = await generateWordMhtml(title, blocks, bibliography, language);
+    const mhtmlContent = await generateWordMhtml(title, blocks, bibliography, language, isPro);
     
     // Gunakan Blob dengan mimetype application/msword untuk kompatibilitas Word (.doc)
     const blob = new Blob(['\ufeff' + mhtmlContent], {
@@ -928,5 +979,63 @@ export async function exportToWordFile(
     URL.revokeObjectURL(url);
   } catch (error) {
     console.error('Failed to export document to Word:', error);
+  }
+}
+
+/**
+ * Memicu cetak/ekspor dokumen ke PDF menggunakan print iframe
+ */
+export async function exportToPdfFile(
+  title: string,
+  blocks: EditorBlock[],
+  bibliography: string[],
+  language: 'en' | 'id' = 'en',
+  isPro: boolean = true
+): Promise<void> {
+  try {
+    // Generate clean Word-style HTML
+    const htmlContent = generateWordHtml(title, blocks, bibliography, language, isPro);
+    
+    // Create an iframe
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+    
+    const doc = iframe.contentWindow?.document || iframe.contentDocument;
+    if (!doc) {
+      throw new Error('Could not access iframe document');
+    }
+    
+    doc.open();
+    doc.write(htmlContent);
+    doc.close();
+    
+    // Wait for images to load
+    const images = Array.from(doc.getElementsByTagName('img'));
+    const loadPromises = images.map((img) => {
+      if (img.complete) return Promise.resolve();
+      return new Promise<void>((resolve) => {
+        img.onload = () => resolve();
+        img.onerror = () => resolve(); // continue printing even if an image fails
+      });
+    });
+    
+    await Promise.all(loadPromises);
+    
+    // Trigger print
+    iframe.contentWindow?.focus();
+    iframe.contentWindow?.print();
+    
+    // Cleanup after a short delay to let the print dialog open
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 1000);
+  } catch (error) {
+    console.error('Failed to export document to PDF:', error);
   }
 }

@@ -32,9 +32,15 @@ Enhance document export to Microsoft Word with correct media embedding.
 26. [Completed] Restyle highlight color choices from circles into proper square blocks.
 27. [Completed] Implement text alignment mapping support during MS Word exports.
 28. [Completed] Add a loading spinner indicator during MS Word exports.
+29. [Completed] Implement high-fidelity client-side PDF export with dynamic print iframe.
+30. [Completed] Condition bibliography/reference list inclusion during Word and PDF exports based on the user's plan.
+31. [Completed] Refactor bibliography filtering in exports to strip HTML formatting and drop Free tier warning banners.
+32. [Completed] Remove admin role bypass from Word/PDF export restrictions to allow testing plan limits.
+33. [Completed] Implement case-insensitive keyword checks and early loop breaking for robust bibliography exclusion in Free plan.
+34. [Completed] Remove warning popup confirmations for direct, seamless exports on both free and pro tiers.
 
 ## Current Task
-Implemented isExporting loading state, disabled button triggers, and spinner animation during MS Word exports.
+Removed warning confirm popups from export actions, enabling seamless downloads with automatic references omission for Free users.
 
 ## Next Tasks
 - Add detailed user guides for localizing custom templates.
