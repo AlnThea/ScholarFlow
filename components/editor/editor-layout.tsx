@@ -764,6 +764,8 @@ export function EditorLayout({
     setLinkUrlInput('');
   };
 
+  const [isExporting, setIsExporting] = useState(false);
+
   const [showHighlightPopover, setShowHighlightPopover] = useState(false);
   const [highlightPopoverRect, setHighlightPopoverRect] = useState<DOMRect | null>(null);
   const [highlightTriggerSource, setHighlightTriggerSource] = useState<'toolbar' | 'bubble' | null>(null);
@@ -1867,32 +1869,46 @@ export function EditorLayout({
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => {
+                disabled={isExporting}
+                onClick={async () => {
                   if (role !== 'admin' && activePlanId === 'free') {
                     alert(language === 'en'
                       ? "🔒 Microsoft Word (.doc) Export feature is exclusive to Pro Writer plans. Please upgrade your account."
                       : "🔒 Fitur Ekspor Microsoft Word (.doc) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda."
                     );
                   } else {
-                    const title = currentDocument?.title || 'Untitled Document';
-                    const docContent = currentDocument?.content;
-                    let bList: any[] = [];
-                    if (docContent) {
-                      try {
-                        const parsed = typeof docContent === 'string' ? JSON.parse(docContent) : docContent;
-                        bList = parsed.blocks || [];
-                      } catch (e) {
-                        console.error(e);
+                    setIsExporting(true);
+                    try {
+                      const title = currentDocument?.title || 'Untitled Document';
+                      const docContent = currentDocument?.content;
+                      let bList: any[] = [];
+                      if (docContent) {
+                        try {
+                          const parsed = typeof docContent === 'string' ? JSON.parse(docContent) : docContent;
+                          bList = parsed.blocks || [];
+                        } catch (e) {
+                          console.error(e);
+                        }
                       }
+                      const bibs = bibliographyEntries.map(e => e.formatted);
+                      await exportToWordFile(title, bList, bibs, language);
+                    } catch (err) {
+                      console.error('Export failed:', err);
+                    } finally {
+                      setIsExporting(false);
                     }
-                    const bibs = bibliographyEntries.map(e => e.formatted);
-                    exportToWordFile(title, bList, bibs, language);
                   }
                 }}
-                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition shadow-sm cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 disabled:opacity-70 disabled:cursor-not-allowed transition shadow-sm cursor-pointer"
               >
-                <IconFileWord className="h-4 w-4 text-slate-400" />
-                {language === 'en' ? 'Export Word' : 'Ekspor Word'}
+                {isExporting ? (
+                  <IconLoader className="h-4 w-4 text-indigo-500 animate-spin" />
+                ) : (
+                  <IconFileWord className="h-4 w-4 text-slate-400" />
+                )}
+                {isExporting 
+                  ? (language === 'en' ? 'Exporting...' : 'Mengekspor...') 
+                  : (language === 'en' ? 'Export Word' : 'Ekspor Word')}
               </button>
 
               <button

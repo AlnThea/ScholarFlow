@@ -31,9 +31,10 @@ Enhance document export to Microsoft Word with correct media embedding.
 25. [Completed] Map text highlights to inline background-color styled span tags for Word export.
 26. [Completed] Restyle highlight color choices from circles into proper square blocks.
 27. [Completed] Implement text alignment mapping support during MS Word exports.
+28. [Completed] Add a loading spinner indicator during MS Word exports.
 
 ## Current Task
-Integrated paragraph and header alignment retrieval and mapping to inline text-align styles in MS Word document exports.
+Implemented isExporting loading state, disabled button triggers, and spinner animation during MS Word exports.
 
 ## Next Tasks
 - Add detailed user guides for localizing custom templates.
