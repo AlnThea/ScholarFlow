@@ -245,4 +245,16 @@
 - Upgraded the bibliography block cleanup logic in `generateWordHtml` and `generateWordMhtml` (`lib/editor/citation-export-word.ts`) to be extremely robust: it strips HTML tags and normalizes to lowercase before checking header keywords (case-insensitive checking), and strictly breaks early to discard the header and all subsequent blocks from the exported file if `isPro` is false, ensuring complete reference omission.
 - Verified TypeScript compilation successfully.
 
-
+## v0.2.1
+- Consolidated the separate "Export Word" and "Export PDF" buttons in the editor header layout into a single, clean "Export" dropdown button.
+- Designed the dropdown to toggle via `showExportDropdown` state, featuring an backdrop click-away handler to auto-close the menu.
+- Displayed Microsoft Word (.docx) and PDF Document (.pdf) options inside the dropdown with clean icons, retaining all loading states, plan limit checks, and export functions.
+- Relocated bibliography export formats (TXT, JSON, BibTeX, RIS) from the Research Assistant Library sidebar into the Header "Export" dropdown menu, dividing them cleanly under "Document" and "Bibliography" sections.
+- Removed the old "Bibliography export" card from `editor-sidebar.tsx` to declutter the right panel.
+- Replaced browser's native `alert()` warnings for Free tier bibliography export limits with a custom React portal modal `isExportUpgradeModalOpen`, complete with a plan pricing redirection flow.
+- Created a database SQL migration `20260805000001_add_sharing_policies.sql` to implement public read/write RLS policies for shared manuscripts.
+- Added `shareActive` and `sharePermission` settings, and added `fetchSharedDocument` and `updateSharedDocument` to `lib/api/documents.ts`.
+- Integrated the settings updates directly with the toggle and dropdown options inside `components/editor/share-document-modal.tsx`.
+- Created a new dynamic route page `/shared/[id]` featuring read-only viewer mode, co-editor collaborative mode (with debounced cloud saving), and dynamic formatting of the reference library bibliography list.
+- Added dynamic readOnly toggling support and shortcut restrictions to `components/editor/editorjs-editor.tsx`.
+- Verified TypeScript compilation and production build successfully.

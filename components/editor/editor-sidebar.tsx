@@ -557,51 +557,6 @@ export function EditorSidebar({
                       Verified bibliography entries will appear here after citations are inserted.
                     </div>
                   )}
-
-                  <div className="rounded-lg border border-line bg-white p-3 shadow-sm">
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <h3 className="text-sm font-semibold text-text">Bibliography export</h3>
-                      <span className="text-xs text-muted">{bibliographyEntries.length} items</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={onExportBibliographyText}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-panel px-2.5 py-2 text-xs font-medium text-slate-700 transition hover:border-accent/30 hover:bg-accentSoft/70"
-                        title="Export as Plain Text (.txt)"
-                      >
-                        <IconDownload className="h-3.5 w-3.5 text-slate-400" />
-                        TXT
-                      </button>
-                      <button
-                        type="button"
-                        onClick={onExportBibliographyJson}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-panel px-2.5 py-2 text-xs font-medium text-slate-700 transition hover:border-accent/30 hover:bg-accentSoft/70"
-                        title="Export as JSON (.json)"
-                      >
-                        <IconDownload className="h-3.5 w-3.5 text-slate-400" />
-                        JSON
-                      </button>
-                      <button
-                        type="button"
-                        onClick={onExportBibliographyBibtex}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-panel px-2.5 py-2 text-xs font-medium text-slate-700 transition hover:border-accent/30 hover:bg-accentSoft/70"
-                        title="Export as BibTeX (.bib) for LaTeX/Zotero"
-                      >
-                        <IconDownload className="h-3.5 w-3.5 text-indigo-500" />
-                        BibTeX
-                      </button>
-                      <button
-                        type="button"
-                        onClick={onExportBibliographyRis}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-panel px-2.5 py-2 text-xs font-medium text-slate-700 transition hover:border-accent/30 hover:bg-accentSoft/70"
-                        title="Export as RIS (.ris) for Mendeley/Zotero"
-                      >
-                        <IconDownload className="h-3.5 w-3.5 text-indigo-500" />
-                        RIS
-                      </button>
-                    </div>
-                  </div>
                 </div>
               </div>
           ) : workspaceTab === 'writing' ? (

@@ -1524,6 +1524,7 @@ export function ScholarEditor() {
         onDeleteAiHistoryEntry={deleteAiHistoryEntry}
         onClearAiHistory={clearAiHistory}
         isApplied={isApplied}
+        onSaveSettings={handleChangeDocumentSettings}
       />
 
       {/* Citation Details Modal */}

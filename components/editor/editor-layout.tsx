@@ -50,6 +50,10 @@ import {
   IconFolder,
   IconFolderOpen,
   IconChevronDown,
+  IconDownload,
+  IconFileText,
+  IconBraces,
+  IconDatabase,
   IconSun,
   IconMoon,
   IconX,
@@ -170,6 +174,7 @@ type EditorLayoutProps = {
   onClearAiHistory: () => void;
   isApplied: boolean;
   onOpenSettings?: () => void;
+  onSaveSettings?: (settings: any) => void;
 };
 
 function findMostRelevantSentence(abstract: string | null | undefined, query: string): string {
@@ -288,7 +293,8 @@ export function EditorLayout({
   onDeleteAiHistoryEntry,
   onClearAiHistory,
   isApplied,
-  onOpenSettings
+  onOpenSettings,
+  onSaveSettings
 }: EditorLayoutProps) {
   const { language, setLanguage, t } = useLanguage();
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
@@ -787,6 +793,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
 
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [showExportDropdown, setShowExportDropdown] = useState(false);
 
   const [showHighlightPopover, setShowHighlightPopover] = useState(false);
   const [highlightPopoverRect, setHighlightPopoverRect] = useState<DOMRect | null>(null);
@@ -808,6 +815,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
   };
 
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [isExportUpgradeModalOpen, setIsExportUpgradeModalOpen] = useState(false);
   const [selectedPlanForModal, setSelectedPlanForModal] = useState<PricingPlan | null>(null);
   const [modalPlanState, setModalPlanState] = useState<Omit<PricingPlan, 'updated_at'>>({
     id: '',
@@ -1867,7 +1875,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
         /* Main content area */
         <div className="flex-1 flex flex-col h-screen overflow-hidden">
           {/* Navbar 1 – Document title and actions */}
-          <header className="flex items-center justify-between border-b border-slate-100 bg-white/95 px-6 py-3 lg:sticky lg:top-0 z-10 backdrop-blur whitespace-nowrap">
+          <header className="flex items-center justify-between border-b border-slate-100 bg-white/95 px-6 py-3 lg:sticky lg:top-0 z-30 backdrop-blur whitespace-nowrap">
             <div className="w-full flex items-center gap-3">
               {!isSidebarExpanded && (
                 <button
@@ -1890,118 +1898,230 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
 
             </div>
             <div className="flex items-center gap-2">
-              <button
-                disabled={isExporting}
-                onClick={async () => {
-                  setIsExporting(true);
-                  try {
-                    const title = currentDocument?.title || 'Untitled Document';
-                    const docContent = currentDocument?.content;
-                    let bList: any[] = [];
-                    if (docContent) {
-                      try {
-                        const parsed = typeof docContent === 'string' ? JSON.parse(docContent) : docContent;
-                        bList = parsed.blocks || [];
-                      } catch (e) {
-                        console.error(e);
-                      }
-                    }
-                    const isPro = activePlanId !== 'free';
-                    const bibs = isPro ? bibliographyEntries.map(e => e.formatted) : [];
-                    await exportToWordFile(title, bList, bibs, language, isPro);
-                  } catch (err) {
-                    console.error('Export failed:', err);
-                  } finally {
-                    setIsExporting(false);
-                  }
-                }}
-                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 disabled:opacity-70 disabled:cursor-not-allowed transition shadow-sm cursor-pointer"
-              >
-                {isExporting ? (
-                  <IconLoader className="h-4 w-4 text-indigo-500 animate-spin" />
-                ) : (
-                  <IconFileWord className="h-4 w-4 text-slate-400" />
-                )}
-                {isExporting 
-                  ? (language === 'en' ? 'Exporting...' : 'Mengekspor...') 
-                  : (language === 'en' ? 'Export Word' : 'Ekspor Word')}
-              </button>
+              <div className="flex items-center gap-0.5 bg-slate-100/80 p-0.5 rounded-lg border border-slate-200/50">
+                {/* Export Dropdown */}
+                <div className="relative">
+                  <button
+                    disabled={isExporting || isExportingPdf}
+                    onClick={() => setShowExportDropdown(prev => !prev)}
+                    className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-slate-650 hover:bg-white hover:text-slate-800 disabled:opacity-70 disabled:cursor-not-allowed transition cursor-pointer"
+                  >
+                    {isExporting || isExportingPdf ? (
+                      <IconLoader className="h-3.5 w-3.5 text-indigo-500 animate-spin" />
+                    ) : (
+                      <IconDownload className="h-3.5 w-3.5 text-slate-500" />
+                    )}
+                    {isExporting || isExportingPdf ? (
+                      language === 'en' ? 'Exporting...' : 'Mengekspor...'
+                    ) : (
+                      language === 'en' ? 'Export' : 'Ekspor'
+                    )}
+                    <IconChevronDown className="h-3 w-3 text-slate-400" />
+                  </button>
 
-              <button
-                disabled={isExportingPdf}
-                onClick={async () => {
-                  setIsExportingPdf(true);
-                  try {
-                    const title = currentDocument?.title || 'Untitled Document';
-                    const docContent = currentDocument?.content;
-                    let bList: any[] = [];
-                    if (docContent) {
-                      try {
-                        const parsed = typeof docContent === 'string' ? JSON.parse(docContent) : docContent;
-                        bList = parsed.blocks || [];
-                      } catch (e) {
-                        console.error(e);
-                      }
-                    }
-                    const isPro = activePlanId !== 'free';
-                    const bibs = isPro ? bibliographyEntries.map(e => e.formatted) : [];
-                    await exportToPdfFile(title, bList, bibs, language, isPro);
-                  } catch (err) {
-                    console.error('Export PDF failed:', err);
-                  } finally {
-                    setIsExportingPdf(false);
-                  }
-                }}
-                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 disabled:opacity-70 disabled:cursor-not-allowed transition shadow-sm cursor-pointer"
-              >
-                {isExportingPdf ? (
-                  <IconLoader className="h-4 w-4 text-indigo-500 animate-spin" />
-                ) : (
-                  <IconFilePdf className="h-4 w-4 text-slate-400" />
-                )}
-                {isExportingPdf 
-                  ? (language === 'en' ? 'Exporting...' : 'Mengekspor...') 
-                  : (language === 'en' ? 'Export PDF' : 'Ekspor PDF')}
-              </button>
+                  {showExportDropdown && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setShowExportDropdown(false)} />
+                      <div className="absolute right-0 mt-2 w-56 rounded-lg border border-slate-200/80 bg-white py-1 shadow-[0_10px_35px_rgba(0,0,0,0.08)] z-50 animate-scale-in">
+                        {/* Document Exporters */}
+                        <div className="px-3 py-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                          {language === 'en' ? 'Document' : 'Dokumen'}
+                        </div>
+                        <button
+                          onClick={async () => {
+                            setShowExportDropdown(false);
+                            setIsExporting(true);
+                            try {
+                              const title = currentDocument?.title || 'Untitled Document';
+                              const docContent = currentDocument?.content;
+                              let bList: any[] = [];
+                              if (docContent) {
+                                try {
+                                  const parsed = typeof docContent === 'string' ? JSON.parse(docContent) : docContent;
+                                  bList = parsed.blocks || [];
+                                } catch (e) {
+                                  console.error(e);
+                                }
+                              }
+                              const isPro = activePlanId !== 'free';
+                              const bibs = isPro ? bibliographyEntries.map(e => e.formatted) : [];
+                              await exportToWordFile(title, bList, bibs, language, isPro);
+                            } catch (err) {
+                              console.error('Export failed:', err);
+                            } finally {
+                              setIsExporting(false);
+                            }
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-650 hover:bg-slate-50 transition cursor-pointer"
+                        >
+                          <IconFileWord className="h-4 w-4 text-blue-500 shrink-0" />
+                          <span>Microsoft Word (.docx)</span>
+                        </button>
+                        <button
+                          onClick={async () => {
+                            setShowExportDropdown(false);
+                            setIsExportingPdf(true);
+                            try {
+                              const title = currentDocument?.title || 'Untitled Document';
+                              const docContent = currentDocument?.content;
+                              let bList: any[] = [];
+                              if (docContent) {
+                                try {
+                                  const parsed = typeof docContent === 'string' ? JSON.parse(docContent) : docContent;
+                                  bList = parsed.blocks || [];
+                                } catch (e) {
+                                  console.error(e);
+                                }
+                              }
+                              const isPro = activePlanId !== 'free';
+                              const bibs = isPro ? bibliographyEntries.map(e => e.formatted) : [];
+                              await exportToPdfFile(title, bList, bibs, language, isPro);
+                            } catch (err) {
+                              console.error('Export PDF failed:', err);
+                            } finally {
+                              setIsExportingPdf(false);
+                            }
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-650 hover:bg-slate-50 transition cursor-pointer"
+                        >
+                          <IconFilePdf className="h-4 w-4 text-red-500 shrink-0" />
+                          <span>PDF Document (.pdf)</span>
+                        </button>
 
-              <button
-                onClick={() => setIsShareOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition shadow-sm cursor-pointer"
-              >
-                <IconShare className="h-4 w-4 text-slate-400" />
-                {language === 'en' ? 'Share' : 'Bagikan'}
-              </button>
+                        {/* Divider */}
+                        <div className="h-px bg-slate-100 my-1" />
 
-              <button
-                onClick={() => setIsPricingOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition shadow-sm cursor-pointer"
-              >
-                <IconCreditCard className="h-4 w-4 text-slate-400" />
-                {language === 'en' ? 'Pricing' : 'Langganan'}
-              </button>
+                        {/* Bibliography Exporters */}
+                        <div className="px-3 py-1.5 flex items-center justify-between">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                            {language === 'en' ? 'Bibliography' : 'Daftar Pustaka'}
+                          </span>
+                          <span className="text-[9px] bg-slate-100 text-slate-500 font-semibold px-1.5 py-0.2 rounded-full shrink-0">
+                            {bibliographyEntries.length}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setShowExportDropdown(false);
+                            if (activePlanId === 'free') {
+                              setIsExportUpgradeModalOpen(true);
+                            } else {
+                              onExportBibliographyText();
+                            }
+                          }}
+                          disabled={bibliographyEntries.length === 0}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-650 hover:bg-slate-50 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <IconFileText className="h-4 w-4 text-slate-500 shrink-0" />
+                          <span>Plain Text (.txt)</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowExportDropdown(false);
+                            if (activePlanId === 'free') {
+                              setIsExportUpgradeModalOpen(true);
+                            } else {
+                              onExportBibliographyJson();
+                            }
+                          }}
+                          disabled={bibliographyEntries.length === 0}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-650 hover:bg-slate-50 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <IconBraces className="h-4 w-4 text-amber-500 shrink-0" />
+                          <span>JSON Format (.json)</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowExportDropdown(false);
+                            if (activePlanId === 'free') {
+                              setIsExportUpgradeModalOpen(true);
+                            } else {
+                              onExportBibliographyBibtex();
+                            }
+                          }}
+                          disabled={bibliographyEntries.length === 0}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-650 hover:bg-slate-50 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <IconBook className="h-4 w-4 text-indigo-500 shrink-0" />
+                          <span>BibTeX Format (.bib)</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowExportDropdown(false);
+                            if (activePlanId === 'free') {
+                              setIsExportUpgradeModalOpen(true);
+                            } else {
+                              onExportBibliographyRis();
+                            }
+                          }}
+                          disabled={bibliographyEntries.length === 0}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-650 hover:bg-slate-50 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <IconDatabase className="h-4 w-4 text-emerald-500 shrink-0" />
+                          <span>RIS Format (.ris)</span>
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
 
+                {/* Divider */}
+                <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
 
-              <button
-                onClick={() => setShowRightSidebar(prev => !prev)}
-                className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold transition shadow-sm cursor-pointer ${showRightSidebar
-                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
-                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                  }`}
-                title={language === 'en' ? 'Toggle Research Assistant Panel' : 'Toggle Bilah Asisten Riset'}
-              >
-                <IconLayoutSidebarRightCollapse className={`h-4 w-4 ${showRightSidebar ? 'text-indigo-600' : 'text-slate-400'}`} />
-                {language === 'en' ? 'Research Assistant' : 'Asisten Riset'}
-              </button>
-              {currentDocument && onOpenSettings && (
+                {/* Share Button */}
                 <button
-                  type="button"
-                  onClick={onOpenSettings}
-                  className="p-1 rounded-md hover:bg-slate-100/80 transition text-slate-400 hover:text-slate-700 cursor-pointer flex items-center justify-center shrink-0"
-                  title={language === 'en' ? 'Document & Research Settings' : 'Pengaturan Dokumen & Riset'}
+                  onClick={() => setIsShareOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-slate-650 hover:bg-white hover:text-slate-800 transition cursor-pointer"
                 >
-                  <IconSettings className="h-4.5 w-4.5" />
+                  <IconShare className="h-3.5 w-3.5 text-slate-500" />
+                  {language === 'en' ? 'Share' : 'Bagikan'}
                 </button>
-              )}
+
+                {/* Divider */}
+                <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
+
+                {/* Pricing Button */}
+                <button
+                  onClick={() => setIsPricingOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-slate-650 hover:bg-white hover:text-slate-800 transition cursor-pointer"
+                >
+                  <IconCreditCard className="h-3.5 w-3.5 text-slate-500" />
+                  {language === 'en' ? 'Pricing' : 'Langganan'}
+                </button>
+
+                {/* Divider */}
+                <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
+
+                {/* Research Assistant Button */}
+                <button
+                  onClick={() => setShowRightSidebar(prev => !prev)}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
+                    showRightSidebar
+                      ? 'bg-white text-indigo-750 shadow-sm font-bold'
+                      : 'text-slate-650 hover:bg-white hover:text-slate-800'
+                  }`}
+                  title={language === 'en' ? 'Toggle Research Assistant Panel' : 'Toggle Bilah Asisten Riset'}
+                >
+                  <IconLayoutSidebarRightCollapse className={`h-3.5 w-3.5 ${showRightSidebar ? 'text-indigo-650' : 'text-slate-500'}`} />
+                  {language === 'en' ? 'Research Assistant' : 'Asisten Riset'}
+                </button>
+
+                {/* Settings Button */}
+                {currentDocument && onOpenSettings && (
+                  <>
+                    {/* Divider */}
+                    <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
+                    <button
+                      type="button"
+                      onClick={onOpenSettings}
+                      className="p-1.5 rounded-md hover:bg-white text-slate-500 hover:text-slate-800 transition cursor-pointer flex items-center justify-center shrink-0"
+                      title={language === 'en' ? 'Document & Research Settings' : 'Pengaturan Dokumen & Riset'}
+                    >
+                      <IconSettings className="h-4 w-4" />
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </header>
 
@@ -2942,7 +3062,59 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
         onClose={() => setIsShareOpen(false)}
         documentId={currentDocument?.id}
         documentTitle={currentDocument?.title}
+        settings={currentDocument?.settings}
+        onSaveSettings={onSaveSettings}
       />
+      {mounted && isExportUpgradeModalOpen && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in font-sans">
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-2xl w-full max-w-md flex flex-col gap-5 animate-scale-in text-slate-800">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-extrabold text-slate-800 flex items-center gap-2">
+                <span>🔒</span>
+                {language === 'en' ? 'Pro Feature Locked' : 'Fitur Pro Terkunci'}
+              </h3>
+              <button
+                onClick={() => setIsExportUpgradeModalOpen(false)}
+                className="p-1 rounded-md text-slate-400 hover:bg-slate-100/80 hover:text-slate-650 transition cursor-pointer"
+              >
+                <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-center py-4 bg-indigo-50/50 rounded-xl border border-indigo-100/40 text-indigo-600">
+                <IconDatabase className="h-12 w-12" />
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed text-center">
+                {language === 'en'
+                  ? 'Bibliography Export (.bib, .ris, .txt, .json) is exclusive to Pro Writer plans. Upgrade now to seamlessly export your references for Mendeley, Zotero, or LaTeX.'
+                  : 'Fitur Ekspor Daftar Pustaka (.bib, .ris, .txt, .json) khusus untuk pengguna paket Pro Writer. Upgrade akun Anda untuk mengekspor referensi secara instan untuk Mendeley, Zotero, atau LaTeX.'}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+              <button
+                onClick={() => setIsExportUpgradeModalOpen(false)}
+                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-50 transition cursor-pointer"
+              >
+                {language === 'en' ? 'Close' : 'Tutup'}
+              </button>
+              <button
+                onClick={() => {
+                  setIsExportUpgradeModalOpen(false);
+                  setIsPricingOpen(true);
+                }}
+                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition cursor-pointer shadow-sm shadow-indigo-200"
+              >
+                {language === 'en' ? 'See Pricing / Upgrade' : 'Lihat Paket & Upgrade'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
       {mounted && isImageModalOpen && typeof window !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in font-sans">
           <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-2xl w-full max-w-md flex flex-col gap-5 animate-scale-in text-slate-800">

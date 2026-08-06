@@ -38,9 +38,13 @@ Enhance document export to Microsoft Word with correct media embedding.
 32. [Completed] Remove admin role bypass from Word/PDF export restrictions to allow testing plan limits.
 33. [Completed] Implement case-insensitive keyword checks and early loop breaking for robust bibliography exclusion in Free plan.
 34. [Completed] Remove warning popup confirmations for direct, seamless exports on both free and pro tiers.
+35. [Completed] Group Word and PDF export actions into a single consolidated 'Export' dropdown button in the header layout.
+36. [Completed] Relocate bibliography export options from the Library sidebar to the main Header Export dropdown menu.
+37. [Completed] Replace native browser alerts with a custom premium React portal modal for the Free tier bibliography export upgrade lock.
+38. [Completed] Implement public document sharing and collaboration with Read-Only and Co-Editor modes at `/shared/[id]` route.
 
 ## Current Task
-Removed warning confirm popups from export actions, enabling seamless downloads with automatic references omission for Free users.
+Implemented public document sharing and collaboration with Read-Only and Co-Editor modes.
 
 ## Next Tasks
 - Add detailed user guides for localizing custom templates.

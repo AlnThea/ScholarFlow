@@ -1,36 +1,76 @@
 // components/editor/share-document-modal.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IconX, IconCopy, IconCheck, IconShare, IconLock, IconWorld } from '@tabler/icons-react';
 import { useLanguage } from '../i18n/language-context';
+import { DocumentSettings } from '@/lib/api/documents';
 
 interface ShareDocumentModalProps {
   isOpen: boolean;
   onClose: () => void;
   documentId?: string;
   documentTitle?: string;
+  settings?: DocumentSettings;
+  onSaveSettings?: (newSettings: Partial<DocumentSettings>) => void;
 }
 
 export function ShareDocumentModal({
   isOpen,
   onClose,
   documentId,
-  documentTitle
+  documentTitle,
+  settings,
+  onSaveSettings
 }: ShareDocumentModalProps) {
   const { language } = useLanguage();
-  const [isLinkActive, setIsLinkActive] = useState(true);
+  const [isLinkActive, setIsLinkActive] = useState(false);
   const [copied, setCopied] = useState(false);
   const [permission, setPermission] = useState<'view' | 'edit'>('view');
+  const [origin, setOrigin] = useState('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setOrigin(window.location.origin);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsLinkActive(settings?.shareActive ?? false);
+      setPermission(settings?.sharePermission ?? 'view');
+    }
+  }, [isOpen, settings]);
 
   if (!isOpen) return null;
 
-  const shareUrl = `https://scholarflow.app/shared/doc-${documentId || 'untitled'}`;
+  const shareUrl = `${origin || 'https://scholarflow.app'}/shared/doc-${documentId || 'untitled'}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(shareUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleToggleLinkActive = () => {
+    const nextActive = !isLinkActive;
+    setIsLinkActive(nextActive);
+    if (onSaveSettings) {
+      onSaveSettings({
+        ...settings,
+        shareActive: nextActive
+      });
+    }
+  };
+
+  const handlePermissionChange = (newPerm: 'view' | 'edit') => {
+    setPermission(newPerm);
+    if (onSaveSettings) {
+      onSaveSettings({
+        ...settings,
+        sharePermission: newPerm
+      });
+    }
   };
 
   return (
@@ -88,7 +128,7 @@ export function ShareDocumentModal({
 
             <button
               type="button"
-              onClick={() => setIsLinkActive(!isLinkActive)}
+              onClick={handleToggleLinkActive}
               className={`relative inline-flex h-5 w-9 items-center rounded-full transition cursor-pointer ${
                 isLinkActive ? 'bg-indigo-600' : 'bg-slate-300'
               }`}
@@ -111,7 +151,7 @@ export function ShareDocumentModal({
                 </label>
                 <select
                   value={permission}
-                  onChange={(e) => setPermission(e.target.value as any)}
+                  onChange={(e) => handlePermissionChange(e.target.value as 'view' | 'edit')}
                   className="border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 bg-white outline-none focus:border-indigo-500 transition"
                 >
                   <option value="view">{language === 'en' ? 'Read-only access' : 'Dapat membaca saja (Read-only)'}</option>

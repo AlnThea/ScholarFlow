@@ -21,6 +21,8 @@ export type DocumentSettings = {
   projectType?: 'skripsi' | 'jurnal' | 'makalah' | 'independent';
   projectPart?: string;
   templateId?: 'empty' | 'ieee' | 'skripsi' | 'apa' | 'report';
+  shareActive?: boolean;
+  sharePermission?: 'view' | 'edit';
 };
 
 export type DocumentEntry = {
@@ -161,3 +163,45 @@ export async function deleteDocument(docId: string, userId: string): Promise<{ s
 
   return { success: true };
 }
+
+/**
+ * Fetch a shared document detail by ID (RLS will check if it is active for public access)
+ */
+export async function fetchSharedDocument(docId: string): Promise<DocumentEntry | null> {
+  const { data, error } = await supabase
+    .from('documents')
+    .select('id, title, content, settings, user_id, created_at, updated_at')
+    .eq('id', docId)
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error('Error fetching shared document:', error);
+    return null;
+  }
+
+  return data as DocumentEntry;
+}
+
+/**
+ * Update a shared document content/title (RLS will check if co-editor permission is enabled)
+ */
+export async function updateSharedDocument(
+  docId: string,
+  updates: { title?: string; content?: any; settings?: Partial<DocumentSettings> }
+): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('documents')
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', docId);
+
+  if (error) {
+    console.error('Error updating shared document:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+

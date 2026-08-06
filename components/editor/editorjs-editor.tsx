@@ -216,9 +216,10 @@ export interface EditorJsMethods {
 
 interface EditorJsEditorProps {
   initialContent?: any;
+  readOnly?: boolean;
   onBlockTypeChange?: (type: string) => void;
   onAlignmentChange?: (align: string) => void;
-  onStatsChange?: (stats: { wordCount: number; characterCount: number; citationCount: number }) => void;
+  onStatsChange?: (stats: { wordCount: number; characterCount: number; citationCount: number; activeReferenceIds?: string[] }) => void;
   onCiteClick?: (refId: string, label: string, citedSentence: string) => void;
   onContentChange?: (content: any) => void;
   onCitationSearchChange?: (query: string, rect: DOMRect) => void;
@@ -229,6 +230,7 @@ interface EditorJsEditorProps {
 
 export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>(({ 
   initialContent,
+  readOnly = false,
   onBlockTypeChange, 
   onAlignmentChange,
   onStatsChange,
@@ -1395,7 +1397,8 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
 
           const editor = new EditorJS({
             holder: holderId,
-            autofocus: true,
+            autofocus: !readOnly,
+            readOnly: readOnly,
             tools: {
               header: Header,
               list: List,
@@ -1517,6 +1520,16 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
     };
   }, []);
 
+  useEffect(() => {
+    if (editorRef.current && isReady) {
+      try {
+        editorRef.current.readOnly.toggle(readOnly);
+      } catch (e) {
+        console.warn('Failed to toggle readOnly state:', e);
+      }
+    }
+  }, [readOnly, isReady]);
+
   return (
     <div className="sf-editor flex flex-col min-h-full bg-white p-6 md:p-10 pb-32 max-w-3xl mx-auto rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.02)] border border-slate-100">
       <div 
@@ -1526,7 +1539,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           
           // Handle inline math editing on click
           const mathSpan = target.closest('.sf-inline-math') as HTMLElement | null;
-          if (mathSpan) {
+          if (mathSpan && !readOnly) {
             const currentFormula = mathSpan.getAttribute('data-formula') || '';
             
             const handleSaveFormula = (newFormula: string) => {
@@ -1576,6 +1589,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           }
         }}
         onKeyDown={(e) => {
+          if (readOnly) return;
           // Keyboard shortcut for inline math (Ctrl+Shift+M or Alt+M)
           if ((e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'm') || (e.altKey && e.key.toLowerCase() === 'm')) {
             e.preventDefault();
@@ -1598,6 +1612,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           }
         }}
         onKeyUp={(e) => {
+          if (readOnly) return;
           syncActiveBlockType();
           calculateLiveStats();
 
