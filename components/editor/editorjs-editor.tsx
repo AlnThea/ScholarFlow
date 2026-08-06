@@ -234,6 +234,19 @@ function scrambleHtmlText(html: string): string {
       result += char;
     } else if (insideTag) {
       result += char;
+    } else if (char === '&') {
+      // Check if this is an HTML entity (e.g. &nbsp;, &amp;, &lt;, &gt;)
+      const semiIndex = html.indexOf(';', i);
+      if (semiIndex > i && semiIndex - i < 10) {
+        const entityContent = html.substring(i + 1, semiIndex);
+        if (/^[a-zA-Z0-9#]+$/.test(entityContent)) {
+          // It is a valid HTML entity, skip scrambling it
+          result += html.substring(i, semiIndex + 1);
+          i = semiIndex; // advance index to the semicolon
+          continue;
+        }
+      }
+      result += char;
     } else {
       if (/[a-zA-Z]/.test(char)) {
         result += char === char.toUpperCase() ? 'X' : 'x';
@@ -306,7 +319,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
       for (let i = 0; i < count; i++) {
         const block = editorRef.current.blocks.getBlockByIndex(i);
         if (block && alignments[block.id]) {
-          const contentEditable = block.holder.querySelector('[contenteditable="true"]') as HTMLElement;
+          const contentEditable = block.holder.querySelector('[contenteditable="true"], [contenteditable="false"], .ce-paragraph, .ce-header, .cdx-block') as HTMLElement;
           if (contentEditable) {
             contentEditable.style.textAlign = alignments[block.id];
           }
@@ -1326,19 +1339,16 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           })
           .join('<br><br>');
 
+        editorRef.current.blocks.insert(
+          'paragraph',
+          { text: biblioHtml },
+          undefined,
+          insertAt + 1,
+          true,
+        );
+
         if (isFreeTier) {
-          // Wrapped in a height-limited container with linear gradient fade overlay (resembling a white paper covering text)
-          // The inner content is blurred to prevent reading the first line, while the outer container cuts it off
-          const blurredHtml = `
-            <div class="sf-bibliography-fade-container" style="position: relative; max-height: 55px; overflow: hidden; user-select: none; pointer-events: none; margin-top: 15px; line-height: 1.6;">
-              <div class="sf-bibliography-blur" style="filter: blur(3px); opacity: 0.35;">
-                ${biblioHtml}
-              </div>
-              <div class="sf-fade-overlay" style="position: absolute; bottom: 0; left: 0; right: 0; height: 45px; background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%); pointer-events: none;"></div>
-            </div>
-          `;
-          
-          // Premium lock card
+          // Premium lock card paragraph block
           const bannerHtml = `
             <div class="sf-premium-banner-container" contenteditable="false" style="margin-top: 15px; user-select: none;">
               <div style="background-color: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 15px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
@@ -1357,16 +1367,47 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
               </div>
             </div>
           `;
-          biblioHtml = blurredHtml + bannerHtml;
-        }
+          
+          editorRef.current.blocks.insert(
+            'paragraph',
+            { text: bannerHtml },
+            undefined,
+            insertAt + 2,
+            true,
+          );
 
-        editorRef.current.blocks.insert(
-          'paragraph',
-          { text: biblioHtml },
-          undefined,
-          insertAt + 1,
-          true,
-        );
+          // Apply DOM classes directly to bypass paragraph tool sanitize stripping
+          setTimeout(() => {
+            try {
+              const holder = document.getElementById(holderId);
+              if (!holder) return;
+              const ceBlocks = Array.from(holder.querySelectorAll('.ce-block'));
+              const headerIdx = ceBlocks.findIndex(blockEl => {
+                const header = blockEl.querySelector('h2, .ce-header');
+                return header && header.textContent?.trim() === 'Daftar Pustaka / References';
+              });
+              if (headerIdx >= 0 && headerIdx + 1 < ceBlocks.length) {
+                const contentBlockEl = ceBlocks[headerIdx + 1];
+                const paragraphEl = contentBlockEl.querySelector('.ce-paragraph, [contenteditable]') as HTMLElement | null;
+                if (paragraphEl) {
+                  paragraphEl.classList.add('sf-bibliography-fade-container', 'sf-bibliography-blur');
+                  
+                  // Append the fade overlay if not present
+                  let overlay = paragraphEl.querySelector('.sf-fade-overlay');
+                  if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.className = 'sf-fade-overlay';
+                    overlay.setAttribute('contenteditable', 'false');
+                    paragraphEl.style.position = 'relative';
+                    paragraphEl.appendChild(overlay);
+                  }
+                }
+              }
+            } catch (err) {
+              console.warn('Error applying bibliography blur class:', err);
+            }
+          }, 100);
+        }
 
         calculateLiveStats();
         if (wasReadOnly) {
@@ -1458,6 +1499,37 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
             autofocus: !readOnly,
             readOnly: readOnly,
             tools: {
+              paragraph: {
+                sanitize: {
+                  div: {
+                    class: true,
+                    style: true,
+                    contenteditable: true,
+                  },
+                  span: {
+                    class: true,
+                    style: true,
+                  },
+                  br: true,
+                  a: {
+                    href: true,
+                    target: true,
+                    rel: true,
+                  },
+                  b: true,
+                  i: true,
+                  u: true,
+                  strong: true,
+                  em: true,
+                  code: true,
+                  mark: true,
+                  cite: {
+                    class: true,
+                    'data-citation': true,
+                    'data-ref-id': true,
+                  }
+                }
+              },
               header: Header,
               list: List,
               image: {

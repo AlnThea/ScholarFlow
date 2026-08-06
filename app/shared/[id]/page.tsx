@@ -10,6 +10,7 @@ import { formatBibliographyCandidate } from '@/lib/editor/bibliography';
 import { searchCitations, type CitationCandidate } from '@/lib/api/citations';
 import { improveWriting } from '@/lib/api/ai';
 import { EditorJsEditor } from '@/components/editor/editorjs-editor';
+import { PricingModal } from '@/components/editor/pricing-modal';
 import {
   IconLock,
   IconBook,
@@ -64,6 +65,7 @@ export default function SharedDocumentPage() {
   const [activeReferenceIds, setActiveReferenceIds] = useState<string[]>([]);
   const [citationLibrary, setCitationLibrary] = useState<Record<string, CitationCandidate>>({});
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'offline'>('saved');
+  const [isPricingOpen, setIsPricingOpen] = useState(false);
 
   // Toolbar & Format states
   const [currentBlockType, setCurrentBlockType] = useState<string>('paragraph');
@@ -577,12 +579,28 @@ export default function SharedDocumentPage() {
       label: e.label,
       formatted: e.formatted
     }));
+
+    if (activeReferenceIds.length > 0 && entries.length === 0) {
+      return;
+    }
+
     const isFree = ownerPlanSetting === 'free';
     const timer = setTimeout(() => {
       editorJsRef.current?.upsertBibliography(entries, isFree);
     }, 100);
     return () => clearTimeout(timer);
-  }, [bibliographyEntries, styleSetting, localeSetting, ownerPlanSetting]);
+  }, [bibliographyEntries, styleSetting, localeSetting, ownerPlanSetting, activeReferenceIds]);
+
+  // Trigger pricing modal from locked bibliography banner click
+  useEffect(() => {
+    const handleTriggerPricing = () => {
+      setIsPricingOpen(true);
+    };
+    window.addEventListener('sf-trigger-pricing', handleTriggerPricing);
+    return () => {
+      window.removeEventListener('sf-trigger-pricing', handleTriggerPricing);
+    };
+  }, []);
 
   // Sync format states in Co-Editor mode
   useEffect(() => {
@@ -2029,6 +2047,11 @@ export default function SharedDocumentPage() {
           , window.document.body
         );
       })()}
+
+      <PricingModal
+        isOpen={isPricingOpen}
+        onClose={() => setIsPricingOpen(false)}
+      />
     </div>
   );
 }
