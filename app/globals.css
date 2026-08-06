@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
 :root {
   --surface: 220 30% 98%;
   --panel: 0 0% 100%;
@@ -54,7 +55,7 @@ body {
   color: hsl(var(--text));
 }
 
-.sf-editor .ProseMirror > * + * {
+.sf-editor .ProseMirror>*+* {
   margin-top: 0.9rem;
 }
 
@@ -152,7 +153,7 @@ body {
   box-shadow: none;
 }
 
-.tippy-box[data-theme~='scholarflow-bubble'] > .tippy-content {
+.tippy-box[data-theme~='scholarflow-bubble']>.tippy-content {
   padding: 0;
 }
 
@@ -167,8 +168,10 @@ body {
 
 /* Hide scrollbar for IE, Edge and Firefox */
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 /* Custom Code block textarea auto-grow styling */
@@ -185,11 +188,13 @@ body {
 .dark .bg-white\/98 {
   background-color: hsl(var(--panel)) !important;
 }
+
 .dark .bg-slate-50,
 .dark .bg-slate-50\/50,
 .dark .bg-slate-50\/40 {
   background-color: hsl(var(--surface)) !important;
 }
+
 .dark .border-slate-100,
 .dark .border-slate-200,
 .dark .border-slate-200\/50,
@@ -197,20 +202,24 @@ body {
 .dark .border-slate-200\/80 {
   border-color: hsl(var(--line)) !important;
 }
+
 .dark .text-slate-800,
 .dark .text-slate-700,
 .dark .text-slate-900 {
   color: hsl(var(--text)) !important;
 }
+
 .dark .text-slate-600,
 .dark .text-slate-500 {
   color: hsl(var(--muted)) !important;
 }
+
 .dark .hover\:bg-slate-50:hover,
 .dark .hover\:bg-slate-100\/80:hover,
 .dark .hover\:bg-slate-100:hover {
   background-color: hsl(var(--surface)) !important;
 }
+
 .dark input[type="text"],
 .dark input[type="number"],
 .dark select,
@@ -228,11 +237,40 @@ body {
 .dark .tc-cell {
   color: hsl(var(--text)) !important;
 }
+
 .dark .ce-code__textarea {
   background-color: hsl(var(--surface)) !important;
   border-color: hsl(var(--line)) !important;
 }
+
 .dark .tc-row,
 .dark .tc-cell {
   border-color: hsl(var(--line)) !important;
+}
+
+/* Custom premium scrollbar styling globally */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  /* slate-300 */
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+  /* slate-400 */
+}
+
+/* Firefox scrollbar compatibility */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
 }

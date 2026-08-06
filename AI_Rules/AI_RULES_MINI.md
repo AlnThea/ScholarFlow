@@ -43,6 +43,9 @@ TASKS.md should:
 
 Always keep project documentation synchronized with implementation.
 
+Development & Build Rules:
+- Do NOT run `npm run build` unless absolutely necessary, because the user is running `npm run dev` and building may conflict or consume excessive resources.
+
 # Stack
 
 Frontend:

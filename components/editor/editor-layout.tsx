@@ -2381,7 +2381,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
           {/* LaTeX Math Helper Panel */}
           {isMathHelperOpen && (
             <div
-              className={`fixed ${showRightSidebar ? (isRightSidebarExpanded ? 'right-[380px]' : 'right-20') : 'right-4'} top-40 w-80 bg-white/95 border border-slate-200/80 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] z-40 p-4 flex flex-col gap-3 max-h-[60vh] overflow-y-auto animate-fade-in`}
+              className={`fixed ${showRightSidebar ? (isRightSidebarExpanded ? 'right-[380px]' : 'right-20') : 'right-4'} top-40 w-80 bg-white/95 border border-slate-200/80 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] z-40 p-4 flex flex-col gap-3 h-[500px] max-h-[60vh] animate-fade-in`}
             >
               {/* Math Helper Toast notification inside the helper panel */}
               {mathToast && (
@@ -2458,64 +2458,66 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500">
-                <div className="col-span-2 text-[9px] bg-slate-50/50 p-2 rounded border border-slate-100 leading-normal mb-1">
-                  {language === 'en' ? (
-                    <>📌 <strong className="text-slate-600">Info:</strong> If the formula input box is active, clicking a formula will insert it directly. Otherwise, it will be copied to clipboard.</>
+              <div className="overflow-y-auto flex-1 pr-1">
+                <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500">
+                  <div className="col-span-2 text-[9px] bg-slate-50/50 p-2 rounded border border-slate-100 leading-normal mb-1">
+                    {language === 'en' ? (
+                      <>📌 <strong className="text-slate-600">Info:</strong> If the formula input box is active, clicking a formula will insert it directly. Otherwise, it will be copied to clipboard.</>
+                    ) : (
+                      <>📌 <strong className="text-slate-600">Info:</strong> Jika kotak input rumus aktif, mengklik rumus akan langsung menyisipkannya. Jika tidak, rumus disalin ke clipboard.</>
+                    )}
+                  </div>
+                  {filteredMathHelperItems.length === 0 ? (
+                    <div className="col-span-2 text-center py-6 text-slate-400 italic">
+                      {language === 'en' ? 'No matching symbols.' : 'Tidak ada simbol yang cocok.'}
+                    </div>
                   ) : (
-                    <>📌 <strong className="text-slate-600">Info:</strong> Jika kotak input rumus aktif, mengklik rumus akan langsung menyisipkannya. Jika tidak, rumus disalin ke clipboard.</>
+                    filteredMathHelperItems.map((item) => (
+                      <button
+                        key={item.code}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()} // Prevents losing editor focus
+                        onClick={async () => {
+                          const activeEl = document.activeElement as HTMLElement | null;
+                          const isMathTextarea = activeEl &&
+                            activeEl.tagName === 'TEXTAREA' &&
+                            (activeEl as HTMLTextAreaElement).placeholder?.includes('LaTeX formula');
+
+                          if (isMathTextarea) {
+                            const txtEl = activeEl as HTMLTextAreaElement;
+                            const start = txtEl.selectionStart;
+                            const end = txtEl.selectionEnd;
+                            const textVal = txtEl.value;
+                            txtEl.value = textVal.substring(0, start) + item.code + textVal.substring(end);
+                            txtEl.selectionStart = txtEl.selectionEnd = start + item.code.length;
+                            txtEl.dispatchEvent(new InputEvent('input', { bubbles: true }));
+
+                            setMathToast(language === 'en' ? 'Inserted!' : 'Disisipkan!');
+                            setTimeout(() => setMathToast(null), 2000);
+                          } else {
+                            try {
+                              await navigator.clipboard.writeText(item.code);
+                              setMathToast(language === 'en' ? 'Copied!' : 'Disalin!');
+                              setTimeout(() => setMathToast(null), 2000);
+                            } catch (err) {
+                              console.error('Failed to copy text:', err);
+                            }
+                          }
+                        }}
+                        className={`p-2.5 rounded border border-slate-200/80 hover:border-indigo-300 bg-white hover:bg-indigo-50/40 text-left transition cursor-pointer flex items-center justify-between gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:shadow-sm ${item.isLong ? 'col-span-2' : 'col-span-1'}`}
+                        title={item.code}
+                      >
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="font-semibold text-slate-750 text-[10px]">{item.label}</span>
+                          <span className="font-mono text-[8.5px] text-slate-400 truncate w-full mt-0.5">{item.code}</span>
+                        </div>
+                        <div className="flex-shrink-0 bg-slate-50 border border-slate-100/70 rounded px-1.5 py-1 min-h-[26px] flex items-center justify-center min-w-[36px]">
+                          <KatexPreview formula={item.code} />
+                        </div>
+                      </button>
+                    ))
                   )}
                 </div>
-                {filteredMathHelperItems.length === 0 ? (
-                  <div className="col-span-2 text-center py-6 text-slate-400 italic">
-                    {language === 'en' ? 'No matching symbols.' : 'Tidak ada simbol yang cocok.'}
-                  </div>
-                ) : (
-                  filteredMathHelperItems.map((item) => (
-                    <button
-                      key={item.code}
-                      type="button"
-                      onMouseDown={(e) => e.preventDefault()} // Prevents losing editor focus
-                      onClick={async () => {
-                        const activeEl = document.activeElement as HTMLElement | null;
-                        const isMathTextarea = activeEl &&
-                          activeEl.tagName === 'TEXTAREA' &&
-                          (activeEl as HTMLTextAreaElement).placeholder?.includes('LaTeX formula');
-
-                        if (isMathTextarea) {
-                          const txtEl = activeEl as HTMLTextAreaElement;
-                          const start = txtEl.selectionStart;
-                          const end = txtEl.selectionEnd;
-                          const textVal = txtEl.value;
-                          txtEl.value = textVal.substring(0, start) + item.code + textVal.substring(end);
-                          txtEl.selectionStart = txtEl.selectionEnd = start + item.code.length;
-                          txtEl.dispatchEvent(new InputEvent('input', { bubbles: true }));
-
-                          setMathToast(language === 'en' ? 'Inserted!' : 'Disisipkan!');
-                          setTimeout(() => setMathToast(null), 2000);
-                        } else {
-                          try {
-                            await navigator.clipboard.writeText(item.code);
-                            setMathToast(language === 'en' ? 'Copied!' : 'Disalin!');
-                            setTimeout(() => setMathToast(null), 2000);
-                          } catch (err) {
-                            console.error('Failed to copy text:', err);
-                          }
-                        }
-                      }}
-                      className={`p-2.5 rounded border border-slate-200/80 hover:border-indigo-300 bg-white hover:bg-indigo-50/40 text-left transition cursor-pointer flex items-center justify-between gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:shadow-sm ${item.isLong ? 'col-span-2' : 'col-span-1'}`}
-                      title={item.code}
-                    >
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <span className="font-semibold text-slate-750 text-[10px]">{item.label}</span>
-                        <span className="font-mono text-[8.5px] text-slate-400 truncate w-full mt-0.5">{item.code}</span>
-                      </div>
-                      <div className="flex-shrink-0 bg-slate-50 border border-slate-100/70 rounded px-1.5 py-1 min-h-[26px] flex items-center justify-center min-w-[36px]">
-                        <KatexPreview formula={item.code} />
-                      </div>
-                    </button>
-                  ))
-                )}
               </div>
             </div>
           )}

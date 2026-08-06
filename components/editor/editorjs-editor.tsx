@@ -14,6 +14,10 @@ class MathBlockTool {
     };
   }
 
+  static get isReadOnlySupported() {
+    return true;
+  }
+
   data: { formula: string };
   api: any;
   readOnly: boolean;
@@ -109,6 +113,7 @@ class MathBlockTool {
 // Hidden background sanitizer tools to whitelist inline math and citation attributes in Editor.js Paragraph block
 class InlineMathSanitizerTool {
   static get isInline() { return true; }
+  static get isReadOnlySupported() { return true; }
   static get sanitize() {
     return {
       span: {
@@ -125,6 +130,7 @@ class InlineMathSanitizerTool {
 
 class CitationSanitizerTool {
   static get isInline() { return true; }
+  static get isReadOnlySupported() { return true; }
   static get sanitize() {
     return {
       cite: {
@@ -141,6 +147,7 @@ class CitationSanitizerTool {
 
 class CustomFormatsSanitizerTool {
   static get isInline() { return true; }
+  static get isReadOnlySupported() { return true; }
   static get sanitize() {
     return {
       u: {},
@@ -212,6 +219,32 @@ export interface EditorJsMethods {
   insertCitationSearch: () => void;
   insertCitationAtSearch: (label: string, referenceId: string) => void;
   cancelCitationSearch: () => void;
+}
+
+function scrambleHtmlText(html: string): string {
+  let insideTag = false;
+  let result = '';
+  for (let i = 0; i < html.length; i++) {
+    const char = html[i];
+    if (char === '<') {
+      insideTag = true;
+      result += char;
+    } else if (char === '>') {
+      insideTag = false;
+      result += char;
+    } else if (insideTag) {
+      result += char;
+    } else {
+      if (/[a-zA-Z]/.test(char)) {
+        result += char === char.toUpperCase() ? 'X' : 'x';
+      } else if (/[0-9]/.test(char)) {
+        result += '0';
+      } else {
+        result += char;
+      }
+    }
+  }
+  return result;
 }
 
 interface EditorJsEditorProps {
@@ -1222,11 +1255,15 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
       editorRef.current.blocks.insert('paragraph', { text }, undefined, count, true);
       calculateLiveStats();
     },
-    upsertBibliography: (entries: Array<{ label: string; formatted: string }>, isFreeTier: boolean = false) => {
+    upsertBibliography: async (entries: Array<{ label: string; formatted: string }>, isFreeTier: boolean = false) => {
       if (!editorRef.current || !editorRef.current.blocks) return;
       
+      const wasReadOnly = editorRef.current.readOnly.isEnabled;
       try {
         isRenderingRef.current = true;
+        if (wasReadOnly) {
+          await editorRef.current.readOnly.toggle(false);
+        }
 
         // Helper to find the bibliography header block index dynamically in the DOM
         const findBibliographyBlockIndex = (): number => {
@@ -1263,6 +1300,9 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
 
         if (entries.length === 0) {
           calculateLiveStats();
+          if (wasReadOnly) {
+            await editorRef.current.readOnly.toggle(true);
+          }
           return;
         }
 
@@ -1280,16 +1320,27 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
 
         // Build labeled list as HTML paragraph
         let biblioHtml = entries
-          .map(e => `[${e.label}] ${e.formatted}`)
+          .map(e => {
+            const formatted = isFreeTier ? scrambleHtmlText(e.formatted) : e.formatted;
+            return `[${e.label}] ${formatted}`;
+          })
           .join('<br><br>');
 
         if (isFreeTier) {
-          // Wrapped in a blurred div
-          const blurredHtml = `<div class="sf-bibliography-blur" style="filter: blur(3px); opacity: 0.25; user-select: none; pointer-events: none; margin-top: 15px;">${biblioHtml}</div>`;
+          // Wrapped in a height-limited container with linear gradient fade overlay (resembling a white paper covering text)
+          // The inner content is blurred to prevent reading the first line, while the outer container cuts it off
+          const blurredHtml = `
+            <div class="sf-bibliography-fade-container" style="position: relative; max-height: 55px; overflow: hidden; user-select: none; pointer-events: none; margin-top: 15px; line-height: 1.6;">
+              <div class="sf-bibliography-blur" style="filter: blur(3px); opacity: 0.35;">
+                ${biblioHtml}
+              </div>
+              <div class="sf-fade-overlay" style="position: absolute; bottom: 0; left: 0; right: 0; height: 45px; background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%); pointer-events: none;"></div>
+            </div>
+          `;
           
           // Premium lock card
           const bannerHtml = `
-            <div class="sf-premium-banner-container" contenteditable="false" style="margin-bottom: 20px; user-select: none;">
+            <div class="sf-premium-banner-container" contenteditable="false" style="margin-top: 15px; user-select: none;">
               <div style="background-color: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 15px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                   <div style="background-color: #6366f1; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; font-size: 14px;">
@@ -1306,7 +1357,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
               </div>
             </div>
           `;
-          biblioHtml = bannerHtml + blurredHtml;
+          biblioHtml = blurredHtml + bannerHtml;
         }
 
         editorRef.current.blocks.insert(
@@ -1318,9 +1369,15 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         );
 
         calculateLiveStats();
+        if (wasReadOnly) {
+          await editorRef.current.readOnly.toggle(true);
+        }
+      } catch (err) {
+        console.error('Error upserting bibliography:', err);
       } finally {
         setTimeout(() => {
           isRenderingRef.current = false;
+          adjustAllCodeTextareaHeights();
         }, 150);
       }
     },
@@ -1336,6 +1393,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
               renderAllInlineMath();
               setTimeout(() => {
                 isRenderingRef.current = false;
+                adjustAllCodeTextareaHeights();
               }, 150);
             })
             .catch((e) => {
@@ -1523,9 +1581,14 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
   useEffect(() => {
     if (editorRef.current && isReady) {
       try {
-        editorRef.current.readOnly.toggle(readOnly);
+        editorRef.current.readOnly.toggle(readOnly).then(() => {
+          adjustAllCodeTextareaHeights();
+        });
       } catch (e) {
         console.warn('Failed to toggle readOnly state:', e);
+        setTimeout(() => {
+          adjustAllCodeTextareaHeights();
+        }, 150);
       }
     }
   }, [readOnly, isReady]);

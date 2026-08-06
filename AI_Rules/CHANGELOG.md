@@ -261,7 +261,27 @@
   1. Implementing a stringified content comparison check using a `lastSavedContentRef` reference in the `handleContentChange` callback.
   2. Implementing an array content comparison logic in `onStatsChange` (`prev.every(...)`) to prevent unnecessary React state updates from new array reference instantiations.
   3. Isolating the bibliography `useEffect` dependency array to depend on primitive configuration settings (`styleSetting`, `localeSetting`, `ownerPlanSetting`) rather than the entire document object.
-- Configured the editor-integrated bibliography on the shared page to check the document owner's subscription tier: if the owner is on a Free plan, the bibliography is rendered blurred and locked; if they are on Pro, the references are fully readable.
+- Configured the editor-integrated bibliography on the shared page to check the document owner's subscription tier: if the owner is on a Free plan, the bibliography is rendered locked under a premium fade-out mask; if they are on Pro, the references are fully readable.
+- Implemented a premium visual lock using a height-limited container (`max-height: 55px`, `overflow: hidden`) enclosing a blurred inner text wrapper (`filter: blur(3px); opacity: 0.35`) and an absolute white linear-gradient overlay in `components/editor/editorjs-editor.tsx`. This shows a teaser of only the first line of the first citation (which is fully blurred and unreadable), with subsequent lines and citations fading smoothly into a solid white paper background, while keeping the full list visible to Pro users.
+- Added pre-sanitization of initial document content in `app/shared/[id]/page.tsx` on mount to filter out legacy inline CSS blur filters and replace them with the combined blurred + fade-out container layout, preventing any initial flash of unblurred text on legacy shared files.
+- Upgraded `upsertBibliography` in `components/editor/editorjs-editor.tsx` to run asynchronously: if the editor is in readOnly mode, it temporarily toggles read-only off to enable block API insertions and deletes, and then locks it back to true, allowing guest readers in read-only mode to load blurred, masked preview blocks correctly.
+- Implemented a secure text-scrambler `scrambleHtmlText` helper inside `components/editor/editorjs-editor.tsx`. Under Free plans, the actual text values of the references are replaced with scrambled characters (e.g. `Xxxxx, X. (0000)`) in the DOM. This patches a vulnerability where users could bypass the CSS blur by highlighting, copying, and pasting the text.
 - Removed the redundant static bibliography list at the bottom of the shared page, ensuring the canvas matches the exact visual style of the main editor.
 - Added dynamic readOnly toggling support and shortcut restrictions to `components/editor/editorjs-editor.tsx`.
 - Verified TypeScript compilation and production build successfully.
+
+## v0.2.2
+- Fixed Shared Collaborator Page ReferenceError:
+  - Resolved `ReferenceError: Cannot access 'language' before initialization` in `app/shared/[id]/page.tsx` by moving the `language` variable declaration to the top of the `SharedDocumentPage` component function body, before any hooks or useMemo blocks reference it.
+  - Resolved `IconTable is not defined` compile error on the shared page by importing `IconTable` from `@tabler/icons-react` at the top of the file.
+- Enabled Complete Collaborative Toolbar and Portal Parity:
+  - Aligned inline math confirmation handler `handleInsertMathConfirm` on the shared collaborator page to support inserting new inline LaTeX equations directly at the cursor position (calling `editorJsRef.current?.insertInlineEquation`) when not editing an existing formula.
+  - Implemented the complete interactive formatting and AI Assistant selection Bubble Menu (activated via text highlighting and right-click context menu event listeners) inside the shared collaborator page (`app/shared/[id]/page.tsx`).
+  - Integrated AI model selection, tone customization selectors, and Assistant actions ("Polish with AI" and "Paraphrase Sentence") in the collaborator bubble menu.
+  - Added a responsive side-by-side AI text comparison modal ("Teks Asli" vs "Hasil Perbaikan AI") for Co-Editors to review, edit, and apply AI suggestions directly to the text canvas.
+- Improved LaTeX Math Helper Panel Usability:
+  - Made the LaTeX Math Helper header, search inputs, and category tabs sticky by removing `overflow-y-auto` from the outer panel and wrapping only the math items grid in a flex-1 scrolling container.
+  - Applied the identical sticky layout enhancements to the Math Helper panel in both the collaborator shared view (`app/shared/[id]/page.tsx`) and the owner's editor dashboard (`components/editor/editor-layout.tsx`).
+- Standardized Global Custom Scrollbar Styling:
+  - Unified scrollbar styling across all devices and web rendering engines by adding global CSS scrollbar selectors to `app/globals.css`.
+  - Configured a premium, ultra-thin width of `4px` with fully rounded tracks and slate color overlays to match the application's clean academic minimalist aesthetics.
