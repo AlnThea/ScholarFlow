@@ -31,6 +31,7 @@ export default function SharedDocumentPage() {
 
   const editorJsRef = useRef<any>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSavedContentRef = useRef<string>('');
 
   // Fetch document details and citation library on mount
   useEffect(() => {
@@ -52,6 +53,7 @@ export default function SharedDocumentPage() {
         } else {
           setDocument(docDetail);
           setCitationLibrary(libData);
+          lastSavedContentRef.current = JSON.stringify(docDetail.content || { blocks: [] });
         }
       } catch (err) {
         console.error('Failed to load shared document:', err);
@@ -92,6 +94,14 @@ export default function SharedDocumentPage() {
 
   const handleContentChange = useCallback((newContent: any) => {
     if (!document) return;
+
+    // Compare content structures to avoid infinite loop or redundant saves
+    const contentString = JSON.stringify(newContent || { blocks: [] });
+    if (contentString === lastSavedContentRef.current) {
+      return;
+    }
+
+    lastSavedContentRef.current = contentString;
     setDocument((prev) => prev ? { ...prev, content: newContent } : null);
     triggerDebouncedSave(document.title, newContent);
   }, [document, triggerDebouncedSave]);
@@ -122,17 +132,23 @@ export default function SharedDocumentPage() {
       .filter(Boolean) as Array<{ referenceId: string; label: string; formatted: string }>;
   }, [citationLibrary, activeReferenceIds, document?.settings?.citationStyle, document?.settings?.citationLocale]);
 
-  // Rerender bibliography block inside editor
+  // Rerender bibliography block inside editor (locked if owner's plan is free)
+  const styleSetting = document?.settings?.citationStyle;
+  const localeSetting = document?.settings?.citationLocale;
+  const ownerPlanSetting = document?.ownerPlan;
+
   useEffect(() => {
+    if (!document) return;
     const entries = bibliographyEntries.map((e) => ({
       label: e.label,
       formatted: e.formatted
     }));
+    const isFree = ownerPlanSetting === 'free';
     const timer = setTimeout(() => {
-      editorJsRef.current?.upsertBibliography(entries, false);
+      editorJsRef.current?.upsertBibliography(entries, isFree);
     }, 100);
     return () => clearTimeout(timer);
-  }, [bibliographyEntries]);
+  }, [bibliographyEntries, styleSetting, localeSetting, ownerPlanSetting]);
 
   // Render Loading Screen
   if (loading) {
@@ -245,7 +261,7 @@ export default function SharedDocumentPage() {
       </header>
 
       {/* Editor Main Content Area */}
-      <main className="pt-20 px-4 md:px-6">
+      <main className="pt-20 px-4 md:px-6 pb-24">
         <div className="max-w-3xl mx-auto bg-white border border-slate-200/80 rounded-2xl shadow-sm min-h-[60vh] overflow-hidden my-6">
           
           {/* Header metadata layout for public reader */}
@@ -269,29 +285,18 @@ export default function SharedDocumentPage() {
               onStatsChange={(stats) => {
                 // Read active reference IDs reported in real-time
                 if (stats.activeReferenceIds) {
-                  setActiveReferenceIds(stats.activeReferenceIds as any);
+                  const newIds = stats.activeReferenceIds;
+                  setActiveReferenceIds((prev) => {
+                    const isSame =
+                      prev.length === newIds.length &&
+                      prev.every((id, idx) => id === newIds[idx]);
+                    return isSame ? prev : newIds;
+                  });
                 }
               }}
             />
           </div>
         </div>
-
-        {/* Formatted References Block */}
-        {bibliographyEntries.length > 0 && (
-          <div className="max-w-3xl mx-auto mt-8 mb-24 bg-white border border-slate-200/80 rounded-2xl shadow-sm p-6 md:p-10">
-            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-3 mb-4">
-              {language === 'id' ? 'Daftar Pustaka' : 'Bibliography'}
-            </h2>
-            <ol className="list-decimal list-inside space-y-3.5 text-xs text-slate-650 leading-relaxed font-serif">
-              {bibliographyEntries.map((entry) => (
-                <li key={entry.referenceId} className="pl-1">
-                  <span className="font-semibold text-slate-700 mr-1.5 font-sans">[{entry.label}]</span>
-                  <span dangerouslySetInnerHTML={{ __html: entry.formatted }} />
-                </li>
-              ))}
-            </ol>
-          </div>
-        )}
       </main>
     </div>
   );

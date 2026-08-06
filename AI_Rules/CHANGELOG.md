@@ -252,9 +252,16 @@
 - Relocated bibliography export formats (TXT, JSON, BibTeX, RIS) from the Research Assistant Library sidebar into the Header "Export" dropdown menu, dividing them cleanly under "Document" and "Bibliography" sections.
 - Removed the old "Bibliography export" card from `editor-sidebar.tsx` to declutter the right panel.
 - Replaced browser's native `alert()` warnings for Free tier bibliography export limits with a custom React portal modal `isExportUpgradeModalOpen`, complete with a plan pricing redirection flow.
-- Created a database SQL migration `20260805000001_add_sharing_policies.sql` to implement public read/write RLS policies for shared manuscripts.
-- Added `shareActive` and `sharePermission` settings, and added `fetchSharedDocument` and `updateSharedDocument` to `lib/api/documents.ts`.
+- Created a database SQL migration `20260805000001_add_sharing_policies.sql` to implement public read/write RLS policies for shared manuscripts and public read access on `profiles` (for owner subscription checks).
+- Created a secure Next.js server-side API route handler at `app/api/shared-document/route.ts` that uses the Supabase Service Role client to bypass client-side RLS limits for guest reads and updates.
+- Redirected client-side `fetchSharedDocument` and `updateSharedDocument` in `lib/api/documents.ts` to call the `/api/shared-document` server API, resolving RLS access denied exceptions when Account B or anonymous users load documents owned by Account A.
 - Integrated the settings updates directly with the toggle and dropdown options inside `components/editor/share-document-modal.tsx`.
 - Created a new dynamic route page `/shared/[id]` featuring read-only viewer mode, co-editor collaborative mode (with debounced cloud saving), and dynamic formatting of the reference library bibliography list.
+- Resolved an infinite update loop on the shared page by:
+  1. Implementing a stringified content comparison check using a `lastSavedContentRef` reference in the `handleContentChange` callback.
+  2. Implementing an array content comparison logic in `onStatsChange` (`prev.every(...)`) to prevent unnecessary React state updates from new array reference instantiations.
+  3. Isolating the bibliography `useEffect` dependency array to depend on primitive configuration settings (`styleSetting`, `localeSetting`, `ownerPlanSetting`) rather than the entire document object.
+- Configured the editor-integrated bibliography on the shared page to check the document owner's subscription tier: if the owner is on a Free plan, the bibliography is rendered blurred and locked; if they are on Pro, the references are fully readable.
+- Removed the redundant static bibliography list at the bottom of the shared page, ensuring the canvas matches the exact visual style of the main editor.
 - Added dynamic readOnly toggling support and shortcut restrictions to `components/editor/editorjs-editor.tsx`.
 - Verified TypeScript compilation and production build successfully.

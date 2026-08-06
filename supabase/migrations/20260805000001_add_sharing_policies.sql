@@ -29,3 +29,11 @@ drop policy if exists "Authenticated users can read citation library" on public.
 create policy "Anyone can read citation library"
   on public.citation_library for select
   using (true);
+
+-- 4. Public Read Policy for profiles (required to check the owner's subscription plan on shared pages)
+drop policy if exists "Users can read own profile" on public.profiles;
+
+create policy "Anyone can read profiles"
+  on public.profiles for select
+  using (true);
+
