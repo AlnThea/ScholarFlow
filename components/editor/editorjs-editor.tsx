@@ -1304,6 +1304,13 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
             }
           }
 
+          if (foundIdx + 2 < total) {
+            const nextNextBlock = editorRef.current.blocks.getBlockByIndex(foundIdx + 2);
+            if (nextNextBlock && nextNextBlock.holder.querySelector('.sf-premium-banner-container')) {
+              editorRef.current.blocks.delete(foundIdx + 2);
+            }
+          }
+
           if (foundIdx + 1 < total) {
             editorRef.current.blocks.delete(foundIdx + 1); // delete content block
           }
