@@ -242,13 +242,24 @@ export function ScholarEditor() {
     }
 
     debounceTimeoutRef.current = setTimeout(async () => {
+      let alignments = {};
+      try {
+        alignments = JSON.parse(localStorage.getItem('scholarflow.editorjs.alignments.v1') || '{}');
+      } catch (e) {
+        console.warn('Failed to parse alignments from localStorage:', e);
+      }
+
+      const activeSettings = settingsToSave || currentDocument?.settings || {};
+      const finalSettings = {
+        ...activeSettings,
+        alignments
+      };
+
       const updates: any = {
         title: titleToSave,
-        content: contentToSave
+        content: contentToSave,
+        settings: finalSettings
       };
-      if (settingsToSave) {
-        updates.settings = settingsToSave;
-      }
       try {
         const res = await updateDocument(docId, user.id, updates);
         if (res.success) {
@@ -274,7 +285,7 @@ export function ScholarEditor() {
         setSaveStatus('Disimpan Lokal (Offline)');
       }
     }, 1500);
-  }, [user]);
+  }, [user, language, currentDocument]);
 
   useEffect(() => {
     const docId = params?.id as string | undefined;
@@ -296,6 +307,9 @@ export function ScholarEditor() {
                   settings: offlineData.settings || detail.settings,
                 };
                 setCurrentDocument(merged);
+                if (merged.settings?.alignments) {
+                  localStorage.setItem('scholarflow.editorjs.alignments.v1', JSON.stringify(merged.settings.alignments));
+                }
                 lastSavedContentRef.current = JSON.stringify(merged.content || { blocks: [] });
                 setSaveStatus('Menggunakan Cadangan Offline');
                 
@@ -309,6 +323,9 @@ export function ScholarEditor() {
               }
             }
             setCurrentDocument(detail);
+            if (detail.settings?.alignments) {
+              localStorage.setItem('scholarflow.editorjs.alignments.v1', JSON.stringify(detail.settings.alignments));
+            }
             lastSavedContentRef.current = JSON.stringify(detail.content || { blocks: [] });
           }
         }).catch(err => {
@@ -329,6 +346,9 @@ export function ScholarEditor() {
                 updated_at: new Date().toISOString()
               };
               setCurrentDocument(fallbackDoc);
+              if (fallbackDoc.settings?.alignments) {
+                localStorage.setItem('scholarflow.editorjs.alignments.v1', JSON.stringify(fallbackDoc.settings.alignments));
+              }
               lastSavedContentRef.current = JSON.stringify(fallbackDoc.content || { blocks: [] });
               setSaveStatus(language === 'en' ? 'Sync Failed (Offline)' : 'Gagal Sinkronisasi (Offline)');
             } catch (e) {
@@ -664,7 +684,7 @@ export function ScholarEditor() {
       prev.map((doc) => (doc.id === currentDocument.id ? { ...doc, title } : doc))
     );
 
-    triggerDebouncedSave(currentDocument.id, title, currentDocument.content);
+    triggerDebouncedSave(currentDocument.id, title, currentDocument.content, currentDocument.settings);
   }, [currentDocument, user, triggerDebouncedSave]);
 
   const handleContentChange = useCallback((content: any) => {
@@ -689,7 +709,7 @@ export function ScholarEditor() {
     }
 
     lastSavedContentRef.current = contentString;
-    triggerDebouncedSave(currentDocument.id, currentDocument.title, content);
+    triggerDebouncedSave(currentDocument.id, currentDocument.title, content, currentDocument.settings);
   }, [currentDocument, user, triggerDebouncedSave, isApplied, contentBeforeApply]);
 
   const folders = useMemo(() => {
@@ -1478,6 +1498,24 @@ export function ScholarEditor() {
         onRenameDocument={handleRenameDocument}
         onContentChange={handleContentChange}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
+        onAlignmentChange={(align) => {
+          if (!currentDocument) return;
+          try {
+            const alignments = JSON.parse(localStorage.getItem('scholarflow.editorjs.alignments.v1') || '{}');
+            const updatedSettings = {
+              ...currentDocument.settings,
+              alignments
+            };
+            const updatedDoc = {
+              ...currentDocument,
+              settings: updatedSettings
+            };
+            setCurrentDocument(updatedDoc);
+            triggerDebouncedSave(currentDocument.id, currentDocument.title, currentDocument.content, updatedSettings);
+          } catch (e) {
+            console.error('Error saving alignment change:', e);
+          }
+        }}
         onStatsChange={(stats: any) => {
           setEditorJsStats(stats);
           if (stats.activeReferenceIds) {

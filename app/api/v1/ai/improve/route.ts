@@ -28,8 +28,6 @@ function buildPrompt(text: string, tone: string, language: string = 'en'): strin
       break;
   }
 
-  const langText = language === 'en' ? 'English' : 'Indonesian';
-
   return (
     'You are an expert academic editor. Rewrite the selected text according to the following instructions:\n' +
     `- Target Tone: ${tone.toUpperCase()}\n` +
@@ -37,7 +35,7 @@ function buildPrompt(text: string, tone: string, language: string = 'en'): strin
     'Requirements:\n' +
     '- Keep the original meaning and core arguments.\n' +
     '- Do not add external citations, facts, statistics, or unbacked claims.\n' +
-    `- Write the rewritten text in ${langText}.\n` +
+    '- Write the rewritten text in the exact same language as the input text (e.g. if the input text is in Indonesian, rewrite the text in Indonesian; if the input text is in English, rewrite in English).\n' +
     '- Return ONLY the rewritten text. Do NOT wrap it in quotes, markdown block, or write any greeting/explanation.\n\n' +
     `Text to rewrite:\n${text}`
   );

@@ -285,3 +285,13 @@
 - Standardized Global Custom Scrollbar Styling:
   - Unified scrollbar styling across all devices and web rendering engines by adding global CSS scrollbar selectors to `app/globals.css`.
   - Configured a premium, ultra-thin width of `4px` with fully rounded tracks and slate color overlays to match the application's clean academic minimalist aesthetics.
+- Enabled Smart Auto-Language Detection for AI Writing Assistant:
+  - Updated the prompt construction logic in `/api/v1/ai/improve` endpoint (`app/api/v1/ai/improve/route.ts`) to instruct the LLM to automatically detect and write in the exact same language as the input text (preserving Indonesian or English natively), rather than strictly overriding it based on document citation settings.
+- Integrated Citation Details Modal in Shared Document Page:
+  - Bound `onCiteClick` handler to `<EditorJsEditor />` inside `app/shared/[id]/page.tsx` to handle inline citation node click events.
+  - Implemented the dynamic React portal modal `activeModalCitation` at the bottom of the shared page view, using `findMostRelevantSentence` and `HighlightedAbstract` helper components to show the matching abstract snippet and highlighted journal details (supporting both read-only and co-editor modes).
+- Resolved Collaborative Document Text Alignment Loss:
+  - Transitioned the EditorJS text alignment styling (Left, Center, Right, Justify) from transient local-only storage to cloud-synchronized document settings.
+  - Implemented automatic database synchronization in `components/editor/scholar-editor.tsx` and `app/shared/[id]/page.tsx` that writes the active block alignments map directly to the `settings.alignments` JSONB column on save.
+  - Configured mount loaders to automatically read `settings.alignments` from cloud-loaded document details and populate the client-side `localStorage` cache (`scholarflow.editorjs.alignments.v1`) on startup, ensuring paragraph layouts render identically for collaborators, guest readers, and owners alike.
+  - Resolved an auto-save race condition on both the owner's editor and collaborator page by refactoring `triggerDebouncedSave` to read alignments directly from `localStorage` at the execution instant. This ensures concurrent DOM content saves do not overwrite settings alignment payloads, securing consistent formatting across page refreshes and exports (Word/PDF).

@@ -277,6 +277,9 @@ export default function SharedDocumentPage() {
     }
   };
 
+  // Citation details modal state
+  const [activeModalCitation, setActiveModalCitation] = useState<{ refId: string; label: string; citedSentence: string } | null>(null);
+
   // Math Helper States
   const [isMathHelperOpen, setIsMathHelperOpen] = useState(false);
   const [mathSearchQuery, setMathSearchQuery] = useState('');
@@ -463,6 +466,9 @@ export default function SharedDocumentPage() {
             });
           }
           setDocument(docDetail);
+          if (docDetail.settings?.alignments) {
+            localStorage.setItem('scholarflow.editorjs.alignments.v1', JSON.stringify(docDetail.settings.alignments));
+          }
           setCitationLibrary(libData);
           lastSavedContentRef.current = JSON.stringify(docDetail.content || { blocks: [] });
         }
@@ -478,7 +484,7 @@ export default function SharedDocumentPage() {
   }, [docId]);
 
   // Save document handler for Co-Editor mode
-  const triggerDebouncedSave = useCallback((titleToSave: string, contentToSave: any) => {
+  const triggerDebouncedSave = useCallback((titleToSave: string, contentToSave: any, settingsToSave?: any) => {
     setSaveStatus('saving');
 
     if (debounceTimeoutRef.current) {
@@ -486,11 +492,26 @@ export default function SharedDocumentPage() {
     }
 
     debounceTimeoutRef.current = setTimeout(async () => {
+      let alignments = {};
       try {
-        const res = await updateSharedDocument(docId, {
+        alignments = JSON.parse(localStorage.getItem('scholarflow.editorjs.alignments.v1') || '{}');
+      } catch (e) {
+        console.warn('Failed to parse alignments from localStorage:', e);
+      }
+
+      const activeSettings = settingsToSave || document?.settings || {};
+      const finalSettings = {
+        ...activeSettings,
+        alignments
+      };
+
+      try {
+        const updates: any = {
           title: titleToSave,
-          content: contentToSave
-        });
+          content: contentToSave,
+          settings: finalSettings
+        };
+        const res = await updateSharedDocument(docId, updates);
         if (res.success) {
           setSaveStatus('saved');
         } else {
@@ -501,7 +522,7 @@ export default function SharedDocumentPage() {
         setSaveStatus('offline');
       }
     }, 1500);
-  }, [docId]);
+  }, [docId, document]);
 
   const handleContentChange = useCallback((newContent: any) => {
     if (!document) return;
@@ -514,14 +535,14 @@ export default function SharedDocumentPage() {
 
     lastSavedContentRef.current = contentString;
     setDocument((prev) => prev ? { ...prev, content: newContent } : null);
-    triggerDebouncedSave(document.title, newContent);
+    triggerDebouncedSave(document.title, newContent, document.settings);
   }, [document, triggerDebouncedSave]);
 
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (!document) return;
     const newTitle = e.target.value;
     setDocument((prev) => prev ? { ...prev, title: newTitle } : null);
-    triggerDebouncedSave(newTitle, document.content);
+    triggerDebouncedSave(newTitle, document.content, document.settings);
   }, [document, triggerDebouncedSave]);
 
   // Compute references based on active IDs reported by the editor
@@ -1067,7 +1088,21 @@ export default function SharedDocumentPage() {
               readOnly={!isCoEditor}
               onContentChange={isCoEditor ? handleContentChange : undefined}
               onBlockTypeChange={setCurrentBlockType}
-              onAlignmentChange={setCurrentAlignment}
+              onAlignmentChange={(align) => {
+                setCurrentAlignment(align);
+                if (!isCoEditor || !document) return;
+                try {
+                  const alignments = JSON.parse(localStorage.getItem('scholarflow.editorjs.alignments.v1') || '{}');
+                  const updatedSettings = {
+                    ...document.settings,
+                    alignments
+                  };
+                  setDocument((prev) => prev ? { ...prev, settings: updatedSettings } : null);
+                  triggerDebouncedSave(document.title, document.content, updatedSettings);
+                } catch (e) {
+                  console.error('Error saving alignment change:', e);
+                }
+              }}
               onCitationSearchChange={(query, rect) => {
                 setBubbleMenuRect(rect);
                 setBubbleMode('citation');
@@ -1091,6 +1126,9 @@ export default function SharedDocumentPage() {
                 setMathFormulaInput(formula);
                 setEditingMathCallback(() => onSave);
                 setIsMathModalOpen(true);
+              }}
+              onCiteClick={(refId, label, citedSentence) => {
+                setActiveModalCitation({ refId, label, citedSentence });
               }}
               onStatsChange={(stats) => {
                 // Read active reference IDs reported in real-time
@@ -1882,6 +1920,181 @@ export default function SharedDocumentPage() {
         </div>
         , window.document.body
       )}
+
+      {/* Citation Details Modal */}
+      {activeModalCitation && typeof window !== 'undefined' && (() => {
+        const candidate = citationLibrary[activeModalCitation.refId];
+        const citedSentence = activeModalCitation.citedSentence;
+        return createPortal(
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 font-sans text-slate-800">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-xl w-full max-h-[85vh] overflow-hidden flex flex-col transform transition-all scale-100">
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    {language === 'id' ? 'Detail Sitasi Jurnal' : 'Journal Citation Details'}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveModalCitation(null)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-650 hover:bg-slate-50 transition cursor-pointer"
+                  aria-label="Tutup"
+                >
+                  <IconX className="h-4.5 w-4.5" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-5">
+                {candidate ? (
+                  <>
+                    {/* Title */}
+                    <div className="flex flex-col gap-1 text-left">
+                      <h4 className="text-base font-bold text-slate-800 leading-snug">
+                        {candidate.title}
+                      </h4>
+                      <p className="text-xs font-semibold text-slate-500 mt-1">
+                        {candidate.authors.join(', ')}
+                      </p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        {candidate.journal ? `${candidate.journal} · ` : ''}{candidate.year || 'N/A'} · Source: {candidate.source}
+                      </p>
+                    </div>
+
+                    {/* Cited claim in the editor */}
+                    {citedSentence && (
+                      <div className="bg-slate-50 border-l-4 border-indigo-500 p-4 rounded-r-xl text-slate-600 text-left">
+                        <span className="block text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-1.5 flex items-center gap-1">
+                          <IconQuote className="h-3 w-3" />
+                          {language === 'id' ? 'Klaim/Pernyataan Anda:' : 'Your Claim/Statement:'}
+                        </span>
+                        <p className="italic font-semibold text-xs text-slate-600">"{citedSentence}"</p>
+                      </div>
+                    )}
+
+                    {/* Matched text in Journal */}
+                    <div className="flex flex-col gap-2 text-left">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        {language === 'id' ? 'Kutipan Terkait dari Jurnal (Matching Snippet):' : 'Matching Snippet from Journal:'}
+                      </span>
+                      <div className="p-4 rounded-xl bg-indigo-50/50 border border-indigo-100/85 text-xs leading-relaxed text-indigo-950 font-medium italic min-h-[4rem] flex items-center justify-center">
+                        "{findMostRelevantSentence(candidate.abstract, citedSentence || '')}"
+                      </div>
+                    </div>
+
+                    {/* Full Abstract with Highlight */}
+                    {candidate.abstract && (
+                      <div className="flex flex-col gap-2 text-left">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          {language === 'id' ? 'Abstrak Lengkap Jurnal:' : 'Full Journal Abstract:'}
+                        </span>
+                        <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/30">
+                          <HighlightedAbstract abstract={candidate.abstract} query={citedSentence || ''} />
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="py-8 text-center text-slate-400 text-xs italic">
+                    {language === 'id' ? 'Informasi detail sitasi tidak ditemukan di pustaka lokal.' : 'Citation detail information was not found in local library.'}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveModalCitation(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-150 transition cursor-pointer"
+                >
+                  {language === 'id' ? 'Tutup' : 'Close'}
+                </button>
+                {candidate?.url && (
+                  <a
+                    href={candidate.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition cursor-pointer shadow-sm shadow-indigo-100 flex items-center gap-1"
+                  >
+                    <span>View Source</span>
+                    <IconExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+          , window.document.body
+        );
+      })()}
     </div>
+  );
+}
+
+function findMostRelevantSentence(abstract: string | null | undefined, query: string): string {
+  if (!abstract) return "Abstrak tidak tersedia.";
+  
+  const cleanedAbstract = abstract.replace(/(?<=[.!?])(?=[A-Za-z])/g, " ");
+  const sentences = cleanedAbstract.split(/(?<=[.!?])\s+/);
+  if (sentences.length <= 1) return cleanedAbstract;
+  
+  const queryWords = new Set(query.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+  if (queryWords.size === 0) return sentences[0];
+  
+  let bestSentence = sentences[0];
+  let maxOverlap = -1;
+  for (const sentence of sentences) {
+    const sentenceWords = new Set(sentence.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+    let overlap = 0;
+    for (const word of sentenceWords) {
+      if (queryWords.has(word)) overlap++;
+    }
+    if (overlap > maxOverlap) {
+      maxOverlap = overlap;
+      bestSentence = sentence;
+    }
+  }
+  return bestSentence;
+}
+
+function HighlightedAbstract({ abstract, query }: { abstract: string | null | undefined; query: string }) {
+  if (!abstract) return <p className="text-slate-400 italic text-xs">Abstrak tidak tersedia.</p>;
+  
+  const cleanedAbstract = abstract.replace(/(?<=[.!?])(?=[A-Za-z])/g, " ");
+  const sentences = cleanedAbstract.split(/(?<=[.!?])\s+/);
+  if (sentences.length <= 1) {
+    return <p className="text-slate-650 leading-relaxed text-xs">{cleanedAbstract}</p>;
+  }
+  
+  const queryWords = new Set(query.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+  let bestIndex = 0;
+  let maxOverlap = -1;
+  sentences.forEach((sentence, idx) => {
+    const sentenceWords = new Set(sentence.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+    let overlap = 0;
+    for (const word of sentenceWords) {
+      if (queryWords.has(word)) overlap++;
+    }
+    if (overlap > maxOverlap) {
+      maxOverlap = overlap;
+      bestIndex = idx;
+    }
+  });
+  
+  return (
+    <p className="text-slate-600 leading-relaxed text-xs text-left">
+      {sentences.map((sentence, idx) => {
+        if (idx === bestIndex) {
+          return (
+            <mark key={idx} className="bg-indigo-50 text-indigo-950 font-semibold px-1 rounded border-b border-indigo-200">
+              {sentence}{' '}
+            </mark>
+          );
+        }
+        return <span key={idx}>{sentence} </span>;
+      })}
+    </p>
   );
 }
