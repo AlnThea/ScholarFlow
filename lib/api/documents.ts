@@ -23,6 +23,7 @@ export type DocumentSettings = {
   templateId?: 'empty' | 'ieee' | 'skripsi' | 'apa' | 'report';
   shareActive?: boolean;
   sharePermission?: 'view' | 'edit';
+  alignments?: Record<string, string>;
 };
 
 export type DocumentEntry = {

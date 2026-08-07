@@ -31,6 +31,8 @@ import {
 } from '@/lib/editor/ai-history';
 import { DocumentSetupModal } from './document-setup-modal';
 import { DocumentSettingsModal } from './document-settings-modal';
+import { PricingModal } from './pricing-modal';
+import { LimitWarningModal } from './limit-warning-modal';
 import {
   serializeBibliographyText,
   formatBibliographyCandidate,
@@ -38,6 +40,8 @@ import {
 import {
   serializeCitationCandidatesText,
 } from '@/lib/editor/citation-export';
+import { getTemplateBlocks } from '@/lib/templates';
+import { IconLoader2, IconSparkles, IconCheck, IconAlertCircle, IconInfoCircle } from '@tabler/icons-react';
 
 const STORAGE_KEY = 'scholarflow.editor.content.v1';
 const CITATION_LIBRARY_KEY = 'scholarflow.editor.citation-library.v1';
@@ -193,6 +197,7 @@ export function ScholarEditor() {
   // Document system state
   const [documents, setDocuments] = useState<DocumentListItem[]>([]);
   const [currentDocument, setCurrentDocument] = useState<DocumentEntry | null>(null);
+  const [isDocLoading, setIsDocLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string>(language === 'en' ? 'Saved to Cloud' : 'Tersimpan ke Cloud');
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -221,6 +226,18 @@ export function ScholarEditor() {
   const [synthesizeError, setSynthesizeError] = useState<string | null>(null);
   const [synthesizeDisclaimer, setSynthesizeDisclaimer] = useState<string | null>(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isPricingOpen, setIsPricingOpen] = useState(false);
+  const [warningMessage, setWarningMessage] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const showToast = useCallback((text: string, type: 'success' | 'error' | 'info' = 'success') => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    setToastMessage({ text, type });
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastMessage(null);
+    }, 3000);
+  }, []);
 
   useEffect(() => {
     fetchAIModels().then(data => {
@@ -292,6 +309,7 @@ export function ScholarEditor() {
     
     if (docId) {
       if (currentDocument?.id !== docId) {
+        setIsDocLoading(true);
         fetchDocumentById(docId, user?.id || '').then(detail => {
           if (detail) {
             // Check for newer offline backup in localStorage
@@ -355,14 +373,19 @@ export function ScholarEditor() {
               console.error('Failed to parse offline backup on failure fallback:', e);
             }
           }
+        }).finally(() => {
+          setIsDocLoading(false);
         });
+      } else {
+        setIsDocLoading(false);
       }
     } else {
       if (currentDocument) {
         setCurrentDocument(null);
       }
+      setIsDocLoading(false);
     }
-  }, [user?.id, params?.id, currentDocument?.id, triggerDebouncedSave]);
+  }, [user?.id, params?.id, currentDocument?.id, triggerDebouncedSave, language]);
 
   const handleUpdateAIModel = useCallback(async (id: string, updates: Partial<AIModel>) => {
     try {
@@ -555,84 +578,21 @@ export function ScholarEditor() {
       router.push('/dashboard');
       return;
     }
+    if (id === currentDocument?.id) {
+      return;
+    }
+    setIsDocLoading(true);
     router.push(`/editor/${id}`);
-  }, [router]);
+  }, [router, currentDocument]);
 
   const handleCreateDocument = useCallback(async (
     title: string = 'Untitled Document', 
     settings: Partial<DocumentSettings> = {}
   ) => {
     if (!user?.id) return;
-    let initialBlocks: any[] = [
-      {
-        id: "header-" + Math.random().toString(36).substring(2, 9),
-        type: "header",
-        data: {
-          text: title,
-          level: 2
-        }
-      },
-      {
-        id: "para-" + Math.random().toString(36).substring(2, 9),
-        type: "paragraph",
-        data: {
-          text: language === 'en' ? "Start writing your academic journal draft here..." : "Mulai menulis draf jurnal akademik Anda di sini..."
-        }
-      }
-    ];
+    const initialBlocks = getTemplateBlocks(settings.templateId, language, title);
 
-    if (settings.templateId === 'skripsi') {
-      initialBlocks = [
-        { id: "h-1", type: "header", data: { text: language === 'en' ? "Chapter 1: Introduction" : "Bab 1: Pendahuluan", level: 2 } },
-        { id: "p-1", type: "paragraph", data: { text: language === 'en' ? "[Write research background, problem formulation, objectives, and benefits of your research here...]" : "[Tulis latar belakang penelitian, rumusan masalah, tujuan, dan manfaat riset Anda di sini...]" } },
-        { id: "h-2", type: "header", data: { text: language === 'en' ? "Chapter 2: Literature Review" : "Bab 2: Tinjauan Pustaka", level: 2 } },
-        { id: "p-2", type: "paragraph", data: { text: language === 'en' ? "[Write literature study, basic theory, and framework of your reference research here...]" : "[Tulis studi literatur, teori dasar, dan kerangka penelitian rujukan Anda di sini...]" } },
-        { id: "h-3", type: "header", data: { text: language === 'en' ? "Chapter 3: Research Methodology" : "Bab 3: Metode Penelitian", level: 2 } },
-        { id: "p-3", type: "paragraph", data: { text: language === 'en' ? "[Write system design, data collection, and analysis procedures here...]" : "[Tulis rancangan sistem, pengumpulan data, dan prosedur analisis di sini...]" } },
-        { id: "h-4", type: "header", data: { text: language === 'en' ? "Chapter 4: Results and Discussion" : "Bab 4: Hasil dan Pembahasan", level: 2 } },
-        { id: "p-4", type: "paragraph", data: { text: language === 'en' ? "[Present experimental data, charts, and detailed discussion of research findings here...]" : "[Tampilkan data eksperimen, grafik, serta pembahasan mendalam atas temuan riset di sini...]" } },
-        { id: "h-5", type: "header", data: { text: language === 'en' ? "Chapter 5: Conclusion" : "Bab 5: Penutup", level: 2 } },
-        { id: "p-5", type: "paragraph", data: { text: language === 'en' ? "[Write final conclusions and recommendations for future research here...]" : "[Tulis kesimpulan akhir dan saran pengembangan riset ke depan di sini...]" } }
-      ];
-    } else if (settings.templateId === 'ieee') {
-      initialBlocks = [
-        { id: "h-ieee-0", type: "header", data: { text: "Abstract", level: 2 } },
-        { id: "p-ieee-0", type: "paragraph", data: { text: "[Write a concise abstract summarizing your research objective, methodology, key findings, and conclusions here...]" } },
-        { id: "h-ieee-1", type: "header", data: { text: "I. Introduction", level: 2 } },
-        { id: "p-ieee-1", type: "paragraph", data: { text: "[Introduce the research domain, problem statement, existing works, and your contributions here...]" } },
-        { id: "h-ieee-2", type: "header", data: { text: "II. Proposed Methodology", level: 2 } },
-        { id: "p-ieee-2", type: "paragraph", data: { text: "[Detail your proposed system design, architecture, formulas, or algorithms here...]" } },
-        { id: "h-ieee-3", type: "header", data: { text: "III. Experimental Evaluation & Results", level: 2 } },
-        { id: "p-ieee-3", type: "paragraph", data: { text: "[Present dataset specifications, training configurations, performance plots, and discussions here...]" } },
-        { id: "h-ieee-4", type: "header", data: { text: "IV. Conclusion", level: 2 } },
-        { id: "p-ieee-4", type: "paragraph", data: { text: "[Summarize findings, highlight paper limitations, and future outlooks here...]" } }
-      ];
-    } else if (settings.templateId === 'apa') {
-      initialBlocks = [
-        { id: "h-apa-0", type: "header", data: { text: "Abstract", level: 2 } },
-        { id: "p-apa-0", type: "paragraph", data: { text: "[Abstract draft matching APA 7th edition formatting guidelines...]" } },
-        { id: "h-apa-1", type: "header", data: { text: "Introduction", level: 2 } },
-        { id: "p-apa-1", type: "paragraph", data: { text: "[Detail background information, theoretical foundations, and specific hypotheses...]" } },
-        { id: "h-apa-2", type: "header", data: { text: "Method", level: 2 } },
-        { id: "p-apa-2", type: "paragraph", data: { text: "[Specify participants, apparatus/materials, and exact experimental procedures...]" } },
-        { id: "h-apa-3", type: "header", data: { text: "Results", level: 2 } },
-        { id: "p-apa-3", type: "paragraph", data: { text: "[Present statistical analyses, ANOVA tables, or data indices here...]" } },
-        { id: "h-apa-4", type: "header", data: { text: "Discussion", level: 2 } },
-        { id: "p-apa-4", type: "paragraph", data: { text: "[Interpret findings in relation to initial hypotheses, acknowledge limitations...]" } }
-      ];
-    } else if (settings.templateId === 'report') {
-      initialBlocks = [
-        { id: "h-rep-1", type: "header", data: { text: language === 'en' ? "Executive Summary" : "Ringkasan Eksekutif", level: 2 } },
-        { id: "p-rep-1", type: "paragraph", data: { text: language === 'en' ? "[Concise summary of key points of the research report...]" : "[Rangkuman ringkas poin-poin utama laporan riset...]" } },
-        { id: "h-rep-2", type: "header", data: { text: language === 'en' ? "Background & Problem" : "Latar Belakang & Masalah", level: 2 } },
-        { id: "p-rep-2", type: "paragraph", data: { text: language === 'en' ? "[Description of case background, issues raised, and urgency of the research report...]" : "[Deskripsi latar belakang kasus, isu yang diangkat, dan urgensi laporan riset...]" } },
-        { id: "h-rep-3", type: "header", data: { text: language === 'en' ? "Data Analysis & Findings" : "Analisis Data & Temuan", level: 2 } },
-        { id: "p-rep-3", type: "paragraph", data: { text: language === 'en' ? "[In-depth discussion of field facts and quantitative/qualitative analysis results...]" : "[Pembahasan mendalam atas fakta-fakta lapangan dan hasil analisis kuantitatif/kualitatif...]" } },
-        { id: "h-rep-4", type: "header", data: { text: language === 'en' ? "Recommendations & Solutions" : "Rekomendasi & Solusi", level: 2 } },
-        { id: "p-rep-4", type: "paragraph", data: { text: language === 'en' ? "[Strategic recommendations and proposed problem-solving solutions...]" : "[Rekomendasi strategis dan solusi pemecahan masalah yang diusulkan...]" } }
-      ];
-    }
-
+    setIsDocLoading(true);
     try {
       const newDoc = await createDocument(user.id, title, {
         time: Date.now(),
@@ -645,15 +605,19 @@ export function ScholarEditor() {
         setCurrentDocument(newDoc);
         setIsSetupModalOpen(false);
         router.push(`/editor/${newDoc.id}`);
+      } else {
+        setIsDocLoading(false);
       }
     } catch (err) {
       console.error('Error creating document:', err);
+      setIsDocLoading(false);
     }
-  }, [user]);
+  }, [user, language]);
 
   const handleDeleteDocument = useCallback(async (id: string) => {
     if (!user?.id) return;
     try {
+      const docTitle = documents.find(d => d.id === id)?.title || '';
       const res = await deleteDocument(id, user.id);
       if (res.success) {
         const updatedList = documents.filter((doc) => doc.id !== id);
@@ -669,11 +633,30 @@ export function ScholarEditor() {
             setCurrentDocument(null);
           }
         }
+        showToast(
+          language === 'en' 
+            ? `Document "${docTitle}" has been deleted.` 
+            : `Dokumen "${docTitle}" berhasil dihapus.`,
+          'success'
+        );
+      } else {
+        showToast(
+          language === 'en' 
+            ? 'Failed to delete document.' 
+            : 'Gagal menghapus dokumen.',
+          'error'
+        );
       }
     } catch (err) {
       console.error('Error deleting document:', err);
+      showToast(
+        language === 'en' 
+          ? 'Error occurred while deleting document.' 
+          : 'Terjadi kesalahan saat menghapus dokumen.',
+        'error'
+      );
     }
-  }, [user, documents, currentDocument]);
+  }, [user, documents, currentDocument, language, showToast]);
 
   const handleRenameDocument = useCallback((title: string) => {
     if (!currentDocument || !user?.id) return;
@@ -1025,7 +1008,7 @@ export function ScholarEditor() {
 
   const exportBibliographyText = useCallback(() => {
     if (activePlanId === 'free') {
-      alert("🔒 Fitur Ekspor Daftar Pustaka (.bib, .ris, .txt, .json) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing.");
+      setWarningMessage("🔒 Fitur Ekspor Daftar Pustaka (.bib, .ris, .txt, .json) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing.");
       return;
     }
     downloadFile(
@@ -1037,7 +1020,7 @@ export function ScholarEditor() {
 
   const exportBibliographyJson = useCallback(() => {
     if (activePlanId === 'free') {
-      alert("🔒 Fitur Ekspor Daftar Pustaka (.bib, .ris, .txt, .json) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing.");
+      setWarningMessage("🔒 Fitur Ekspor Daftar Pustaka (.bib, .ris, .txt, .json) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing.");
       return;
     }
     downloadFile(
@@ -1049,7 +1032,7 @@ export function ScholarEditor() {
 
   const exportBibliographyBibtex = useCallback(() => {
     if (activePlanId === 'free') {
-      alert("🔒 Fitur Ekspor Daftar Pustaka (.bib, .ris, .txt, .json) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing.");
+      setWarningMessage("🔒 Fitur Ekspor Daftar Pustaka (.bib, .ris, .txt, .json) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing.");
       return;
     }
     const uniqueActiveIds = Array.from(new Set(activeReferenceIds));
@@ -1079,7 +1062,7 @@ export function ScholarEditor() {
 
   const exportBibliographyRis = useCallback(() => {
     if (activePlanId === 'free') {
-      alert("🔒 Fitur Ekspor Daftar Pustaka (.bib, .ris, .txt, .json) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing.");
+      setWarningMessage("🔒 Fitur Ekspor Daftar Pustaka (.bib, .ris, .txt, .json) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing.");
       return;
     }
     const uniqueActiveIds = Array.from(new Set(activeReferenceIds));
@@ -1498,7 +1481,7 @@ export function ScholarEditor() {
         onRenameDocument={handleRenameDocument}
         onContentChange={handleContentChange}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
-        onAlignmentChange={(align) => {
+        onAlignmentChange={(align: string) => {
           if (!currentDocument) return;
           try {
             const alignments = JSON.parse(localStorage.getItem('scholarflow.editorjs.alignments.v1') || '{}');
@@ -1728,6 +1711,7 @@ export function ScholarEditor() {
         onSubmit={handleCreateDocument}
         documents={documents}
         activePlanId={activePlanId}
+        onUpgrade={() => setIsPricingOpen(true)}
       />
       {currentDocument && (
         <DocumentSettingsModal
@@ -1737,6 +1721,63 @@ export function ScholarEditor() {
           onSave={handleChangeDocumentSettings}
           activePlanId={activePlanId}
         />
+      )}
+
+      <PricingModal
+        isOpen={isPricingOpen}
+        onClose={() => setIsPricingOpen(false)}
+      />
+
+      <LimitWarningModal
+        isOpen={!!warningMessage}
+        onClose={() => setWarningMessage(null)}
+        onUpgrade={() => setIsPricingOpen(true)}
+        message={warningMessage || ''}
+      />
+
+      {isDocLoading && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/35 backdrop-blur-md transition-all duration-300 animate-fade-in">
+          <div className="bg-white border border-slate-100/80 p-7 rounded-2xl shadow-2xl flex flex-col items-center gap-4 max-w-[240px] text-center">
+            <div className="relative flex items-center justify-center h-12 w-12">
+              <div className="absolute inset-0 rounded-full border-4 border-indigo-50" />
+              <div className="absolute inset-0 rounded-full border-4 border-t-indigo-600 animate-spin" />
+              <IconSparkles className="h-5 w-5 text-indigo-600 animate-pulse" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-bold text-slate-800">
+                {language === 'en' ? 'Processing Document...' : 'Memproses Dokumen...'}
+              </span>
+              <span className="text-[10px] text-slate-400 leading-normal">
+                {language === 'en' ? 'Preparing your academic workspace' : 'Menyiapkan ruang kerja akademik Anda'}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-5 right-5 z-[10200] flex items-center gap-3 bg-white/95 border border-slate-100 p-4 rounded-xl shadow-xl animate-slide-up max-w-sm font-sans">
+          <div className={`p-2 rounded-lg ${
+            toastMessage.type === 'success' ? 'bg-emerald-50 text-emerald-600' :
+            toastMessage.type === 'error' ? 'bg-red-50 text-red-600' :
+            'bg-blue-50 text-blue-600'
+          }`}>
+            {toastMessage.type === 'success' && <IconCheck className="h-4.5 w-4.5" />}
+            {toastMessage.type === 'error' && <IconAlertCircle className="h-4.5 w-4.5" />}
+            {toastMessage.type === 'info' && <IconInfoCircle className="h-4.5 w-4.5" />}
+          </div>
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <span className="text-[11px] font-bold text-slate-800">
+              {toastMessage.type === 'success' ? (language === 'en' ? 'Success' : 'Berhasil') :
+               toastMessage.type === 'error' ? (language === 'en' ? 'Error' : 'Gagal') :
+               (language === 'en' ? 'Info' : 'Informasi')}
+            </span>
+            <p className="text-[10px] text-slate-500 font-medium leading-tight truncate max-w-[200px]">
+              {toastMessage.text}
+            </p>
+          </div>
+        </div>
       )}
     </>
   );

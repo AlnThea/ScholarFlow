@@ -1536,7 +1536,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
                     'data-ref-id': true,
                   }
                 }
-              },
+              } as any,
               header: Header,
               list: List,
               image: {

@@ -305,3 +305,17 @@
   - Explicitly registered a `paragraph` tool override in `new EditorJS` inside `components/editor/editorjs-editor.tsx` with a custom `sanitize` profile. This whitelists `div` and `span` tags along with their `class`, `style`, and `contenteditable` attributes, forcing EditorJS to permanently preserve the premium bibliography blur layout.
   - Integrated the `PricingModal` component into the shared workspace page (`app/shared/[id]/page.tsx`) and configured the `'sf-trigger-pricing'` event listener to toggle `isPricingOpen` to `true`, allowing guest readers and co-editors to view pricing packages inside a modal dialog without being redirected to login.
   - Refactored the bibliography block deletion loop inside `upsertBibliography` to check for and delete the premium banner block at `foundIdx + 2` if it exists, preventing card duplication on database auto-saves.
+
+## v0.2.3
+- Redesigned the Writing Templates Selector inside the document setup modal with high-fidelity visual cards, accent backgrounds, categories filter pills (All, Academic, Journals, General), and real-time search filtering.
+- Implemented realistic multi-paragraph academic template documents (in both English and Indonesian) for Skripsi, IEEE journals, APA journals, and reports, pre-populating them with scientific topics (Sentiment Analysis using Deep Learning, Thesis Management Systems, etc.) to serve as instant writing drafts.
+- Added an Outline Preview panel inside the setup modal to display an interactive stepper outline (e.g. Chapter 1 to Chapter 5) when selecting a writing template.
+- Implemented a premium glassmorphism loading overlay with a spinning loading indicator and a pulsing sparkles logo showing "Processing Document..." during document creation, retrieval, and switching.
+- Created a modular and reusable React component `ConfirmModal` (`components/editor/confirm-modal.tsx`) and `LimitWarningModal` (`components/editor/limit-warning-modal.tsx`) using React Portals (`createPortal` under `document.body`) to prevent CSS Stacking Context layering bugs and ensure modals cover the sticky top navbar.
+- Replaced basic browser `alert()` windows for free-tier folder/project limit caps and bibliography exports with the premium `LimitWarningModal` redirecting to the pricing modal.
+- Replaced the browser native `confirm()` prompts for deleting documents with the styled danger-red `ConfirmModal` in the sidebar panel.
+- Implemented a premium auto-dismissing Toast Notification system (`toastMessage`) at the bottom right corner with slide-up animations to confirm document deletions.
+- Disabled the delete document icon for the currently active/selected document in the sidebar with disabled buttons, opacity-20 fades, and descriptive helper tooltips ("Dokumen aktif tidak dapat dihapus").
+- Added a click-navigation guard to ignore document selection in the sidebar and prevent reloading screen overlays if the clicked document is already selected and active.
+- Verified TypeScript compilation (`npx tsc --noEmit`) successfully with exit code 0.
+

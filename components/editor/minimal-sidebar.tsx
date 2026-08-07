@@ -29,6 +29,7 @@ import { useRouter } from 'next/navigation';
 import { fetchCitationLibrary, deleteCitationFromLibrary, saveCitationToLibrary } from '@/lib/api/citation-library';
 import type { CitationCandidate } from '@/lib/api/citations';
 import type { DocumentListItem } from '@/lib/api/documents';
+import { ConfirmModal } from './confirm-modal';
 
 /**
  * Minimal sidebar that shows the application logo and a collapse/expand control.
@@ -90,6 +91,7 @@ export function MinimalSidebar({
   const [isUploadingPdf, setIsUploadingPdf] = React.useState(false);
   const [uploadStatus, setUploadStatus] = React.useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [uploadError, setUploadError] = React.useState<string | null>(null);
+  const [documentToDelete, setDocumentToDelete] = React.useState<{ id: string; title: string } | null>(null);
 
   React.useEffect(() => {
     if (activeView === 'library') {
@@ -494,8 +496,10 @@ export function MinimalSidebar({
                               }`}
                             >
                               <button
-                                onClick={() => onSelectDocument?.(doc.id)}
-                                className="flex-1 flex items-center gap-2 text-left truncate mr-2 font-medium cursor-pointer"
+                                onClick={() => doc.id !== currentDocumentId && onSelectDocument?.(doc.id)}
+                                className={`flex-1 flex items-center gap-2 text-left truncate mr-2 font-medium ${
+                                  doc.id === currentDocumentId ? 'cursor-default' : 'cursor-pointer'
+                                }`}
                                 title={doc.title}
                               >
                                 <IconFile className={`h-3.5 w-3.5 shrink-0 ${doc.id === currentDocumentId ? 'text-indigo-600' : 'text-slate-400'}`} />
@@ -505,12 +509,21 @@ export function MinimalSidebar({
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (confirm(language === 'en' ? `Delete document "${doc.title}"?` : `Hapus dokumen "${doc.title}"?`)) {
-                                      onDeleteDocument(doc.id);
+                                    if (doc.id !== currentDocumentId) {
+                                      setDocumentToDelete({ id: doc.id, title: doc.title });
                                     }
                                   }}
-                                  className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 hover:text-red-600 text-slate-400 transition-all duration-200 cursor-pointer"
-                                  title={language === 'en' ? 'Delete Document' : 'Hapus Dokumen'}
+                                  disabled={doc.id === currentDocumentId}
+                                  className={`p-1 rounded transition-all duration-200 ${
+                                    doc.id === currentDocumentId
+                                      ? 'opacity-20 cursor-not-allowed text-slate-300'
+                                      : 'opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 text-slate-400 cursor-pointer'
+                                  }`}
+                                  title={
+                                    doc.id === currentDocumentId
+                                      ? (language === 'en' ? 'Active document cannot be deleted' : 'Dokumen aktif tidak dapat dihapus')
+                                      : (language === 'en' ? 'Delete Document' : 'Hapus Dokumen')
+                                  }
                                 >
                                   <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <polyline points="3 6 5 6 21 6"></polyline>
@@ -543,8 +556,10 @@ export function MinimalSidebar({
                           }`}
                         >
                           <button
-                            onClick={() => onSelectDocument?.(doc.id)}
-                            className="flex-1 flex items-center gap-2 text-left truncate mr-2 font-medium cursor-pointer"
+                            onClick={() => doc.id !== currentDocumentId && onSelectDocument?.(doc.id)}
+                            className={`flex-1 flex items-center gap-2 text-left truncate mr-2 font-medium ${
+                              doc.id === currentDocumentId ? 'cursor-default' : 'cursor-pointer'
+                            }`}
                             title={doc.title}
                           >
                             <IconFile className={`h-3.5 w-3.5 shrink-0 ${doc.id === currentDocumentId ? 'text-indigo-600' : 'text-slate-400'}`} />
@@ -554,12 +569,21 @@ export function MinimalSidebar({
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (confirm(language === 'en' ? `Delete document "${doc.title}"?` : `Hapus dokumen "${doc.title}"?`)) {
-                                  onDeleteDocument(doc.id);
+                                if (doc.id !== currentDocumentId) {
+                                  setDocumentToDelete({ id: doc.id, title: doc.title });
                                 }
                               }}
-                              className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 hover:text-red-600 text-slate-400 transition-all duration-200 cursor-pointer"
-                              title={language === 'en' ? 'Delete Document' : 'Hapus Dokumen'}
+                              disabled={doc.id === currentDocumentId}
+                              className={`p-1 rounded transition-all duration-200 ${
+                                doc.id === currentDocumentId
+                                  ? 'opacity-20 cursor-not-allowed text-slate-300'
+                                  : 'opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 text-slate-400 cursor-pointer'
+                              }`}
+                              title={
+                                doc.id === currentDocumentId
+                                  ? (language === 'en' ? 'Active document cannot be deleted' : 'Dokumen aktif tidak dapat dihapus')
+                                  : (language === 'en' ? 'Delete Document' : 'Hapus Dokumen')
+                              }
                             >
                               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="3 6 5 6 21 6"></polyline>
@@ -1238,6 +1262,25 @@ export function MinimalSidebar({
           </div>
         )}
       </div>
+      {/* Document Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!documentToDelete}
+        onClose={() => setDocumentToDelete(null)}
+        onConfirm={() => {
+          if (documentToDelete && onDeleteDocument) {
+            onDeleteDocument(documentToDelete.id);
+          }
+        }}
+        title={language === 'en' ? 'Delete Document' : 'Hapus Dokumen'}
+        message={
+          language === 'en'
+            ? `Are you sure you want to permanently delete document "${documentToDelete?.title}"? This action cannot be undone.`
+            : `Apakah Anda yakin ingin menghapus dokumen "${documentToDelete?.title}" secara permanen? Tindakan ini tidak dapat dibatalkan.`
+        }
+        confirmText={language === 'en' ? 'Delete' : 'Hapus'}
+        cancelText={language === 'en' ? 'Cancel' : 'Batal'}
+        type="danger"
+      />
     </aside>
   );
 }

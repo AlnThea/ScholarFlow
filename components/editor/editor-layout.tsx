@@ -175,6 +175,7 @@ type EditorLayoutProps = {
   isApplied: boolean;
   onOpenSettings?: () => void;
   onSaveSettings?: (settings: any) => void;
+  onAlignmentChange?: (align: string) => void;
 };
 
 function findMostRelevantSentence(abstract: string | null | undefined, query: string): string {
@@ -294,7 +295,8 @@ export function EditorLayout({
   onClearAiHistory,
   isApplied,
   onOpenSettings,
-  onSaveSettings
+  onSaveSettings,
+  onAlignmentChange
 }: EditorLayoutProps) {
   const { language, setLanguage, t } = useLanguage();
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
@@ -2932,7 +2934,10 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                 ref={editorJsRef}
                 initialContent={currentDocument?.content}
                 onBlockTypeChange={setCurrentBlockType}
-                onAlignmentChange={setCurrentAlignment}
+                onAlignmentChange={(align) => {
+                  setCurrentAlignment(align);
+                  onAlignmentChange?.(align);
+                }}
                 onStatsChange={onStatsChange}
                 onCiteClick={onCiteClick}
                 onContentChange={onContentChange}
