@@ -47,6 +47,7 @@ import { IconLoader2, IconSparkles, IconCheck, IconAlertCircle, IconInfoCircle, 
 import {
   fetchComments,
   fetchNotifications,
+  createNotification,
   resolveComment,
   markNotificationAsRead,
   markAllNotificationsAsRead,
@@ -1827,11 +1828,34 @@ export function ScholarEditor() {
 
           updateSuggestionStatus(currentDocument.id, id, 'accepted').then(() => {
             fetchSuggestions(currentDocument.id).then(setSuggestions);
+            if (sug && sug.user_id && sug.user_id !== user?.id) {
+              const myName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Pemilik Dokumen';
+              createNotification(
+                currentDocument.id,
+                sug.user_id,
+                myName,
+                language === 'en'
+                  ? `accepted your suggestion: "${(sug.suggested_text || sug.selected_text).slice(0, 30)}${(sug.suggested_text || sug.selected_text).length > 30 ? '...' : ''}"`
+                  : `menerima usulan Anda: "${(sug.suggested_text || sug.selected_text).slice(0, 30)}${(sug.suggested_text || sug.selected_text).length > 30 ? '...' : ''}"`
+              );
+            }
           });
         }}
         onRejectSuggestion={(id) => {
           if (!currentDocument?.id) return;
+          const sug = suggestions.find(s => s.id === id);
           editorJsRef.current?.rejectSuggestion?.(id);
+          if (sug && sug.user_id && sug.user_id !== user?.id) {
+            const myName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Pemilik Dokumen';
+            createNotification(
+              currentDocument.id,
+              sug.user_id,
+              myName,
+              language === 'en'
+                ? `rejected your suggestion: "${(sug.suggested_text || sug.selected_text).slice(0, 30)}${(sug.suggested_text || sug.selected_text).length > 30 ? '...' : ''}"`
+                : `menolak usulan Anda: "${(sug.suggested_text || sug.selected_text).slice(0, 30)}${(sug.suggested_text || sug.selected_text).length > 30 ? '...' : ''}"`
+            );
+          }
           updateSuggestionStatus(currentDocument.id, id, 'rejected').then(() => {
             fetchSuggestions(currentDocument.id).then(setSuggestions);
           });

@@ -397,4 +397,9 @@
   - Added role-based access control for suggestion actions: the creator of a suggestion now sees a `⏳ Pending Review by Owner / ⏳ Menunggu Peninjauan` indicator on their own cards, while the recipient (Owner / Co-Editor) sees the interactive `✕ Reject / Tolak` and `✓ Accept / Terima` buttons.
   - Added full Internationalization (i18n) support across suggestions sidebar tabs, card status badges, action buttons, selection context menus (`💡 Suggestions` / `💡 Usulan`, `Deleted:` / `Dihapus:`, `Replacement:` / `Pengganti:`), and the floating signal banner (`Latest document revision has been accepted! [ 🔄 Update Editor ]` vs `Revisi usulan dokumen terbaru telah diterima! [ 🔄 Perbarui Editor ]`).
   - Restricted `💡 Suggest Change (Track Changes)` option in selection context bubble menus (`editor-layout.tsx` & `page.tsx`) to display **only when Mode Sugesti (Suggesting Mode)** is active (`editorMode === 'suggest'`), hiding it cleanly when in Direct Edit Mode (`editorMode === 'edit'`).
+- Real-Time Notification Bell 🔔 Integration for Track Changes Suggestions:
+  - Integrated `createNotification` calls across Owner (`components/editor/scholar-editor.tsx`, `components/editor/editor-layout.tsx`) and Co-Editor (`app/shared/[id]/page.tsx`) views.
+  - Submitting a new suggestion automatically triggers a bell notification and red badge for the document recipient (`[Author] proposed a suggestion: "..."` / `[Author] mengusulkan perubahan: "..."`).
+  - Accepting or rejecting a suggestion automatically sends real-time bell feedback to the suggestion author (`[User] accepted your suggestion: "..."` / `[User] rejected your suggestion: "..."`).
+  - Clicking any suggestion notification in the bell dropdown automatically focuses the sidebar on the **💡 Suggestions** tab.
 

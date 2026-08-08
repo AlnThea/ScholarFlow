@@ -1629,7 +1629,21 @@ export default function SharedDocumentPage() {
                             <>
                               <button
                                 type="button"
-                                onClick={() => updateSuggestionStatus(docId, sug.id, 'rejected').then(() => fetchSuggestions(docId).then(setSuggestions))}
+                                onClick={() => {
+                                  if (sug && document?.user_id) {
+                                    const recipientId = (sug.user_id && sug.user_id !== user?.id) ? sug.user_id : document.user_id;
+                                    const myName = profile?.full_name || user?.email?.split('@')[0] || 'Co-Editor';
+                                    createNotification(
+                                      docId,
+                                      recipientId,
+                                      myName,
+                                      language === 'en'
+                                        ? `rejected the suggestion: "${(sug.suggested_text || sug.selected_text || sug.new_text || sug.old_text || '').slice(0, 30)}..."`
+                                        : `menolak usulan: "${(sug.suggested_text || sug.selected_text || sug.new_text || sug.old_text || '').slice(0, 30)}..."`
+                                    );
+                                  }
+                                  updateSuggestionStatus(docId, sug.id, 'rejected').then(() => fetchSuggestions(docId).then(setSuggestions));
+                                }}
                                 className="px-3 py-1.5 text-[10px] font-bold text-rose-700 hover:text-white bg-rose-50 hover:bg-rose-600 transition rounded-xl border border-rose-200 cursor-pointer"
                               >
                                 ✕ {language === 'id' ? 'Tolak' : 'Reject'}
@@ -1679,6 +1693,18 @@ export default function SharedDocumentPage() {
                                     } catch (e) {
                                       console.error('Failed smart suggestion replacement:', e);
                                     }
+                                  }
+                                  if (sug && document?.user_id) {
+                                    const recipientId = (sug.user_id && sug.user_id !== user?.id) ? sug.user_id : document.user_id;
+                                    const myName = profile?.full_name || user?.email?.split('@')[0] || 'Co-Editor';
+                                    createNotification(
+                                      docId,
+                                      recipientId,
+                                      myName,
+                                      language === 'en'
+                                        ? `accepted the suggestion: "${(sug.suggested_text || sug.selected_text || sug.new_text || sug.old_text || '').slice(0, 30)}..."`
+                                        : `menerima usulan: "${(sug.suggested_text || sug.selected_text || sug.new_text || sug.old_text || '').slice(0, 30)}..."`
+                                    );
                                   }
                                   updateSuggestionStatus(docId, sug.id, 'accepted').then(() => fetchSuggestions(docId).then(setSuggestions));
                                 }}
@@ -2937,6 +2963,16 @@ export default function SharedDocumentPage() {
                   editorJsRef.current?.addSuggestionMark?.(sugId, selectedTextForSuggestion, newTextForSuggestion, authorName);
                   addSuggestion(docId, selectedTextForSuggestion, newTextForSuggestion, authorName, sugId, user?.id).then(() => {
                     fetchSuggestions(docId).then(setSuggestions);
+                    if (document?.user_id) {
+                      createNotification(
+                        docId,
+                        document.user_id,
+                        authorName,
+                        language === 'en'
+                          ? `proposed a suggestion: "${(newTextForSuggestion || selectedTextForSuggestion).slice(0, 30)}${(newTextForSuggestion || selectedTextForSuggestion).length > 30 ? '...' : ''}"`
+                          : `mengusulkan perubahan: "${(newTextForSuggestion || selectedTextForSuggestion).slice(0, 30)}${(newTextForSuggestion || selectedTextForSuggestion).length > 30 ? '...' : ''}"`
+                      );
+                    }
                   });
                   setIsSuggestionModalOpen(false);
                 }}

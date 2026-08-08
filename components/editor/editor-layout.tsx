@@ -76,7 +76,7 @@ import { useAuth } from '@/components/auth/auth-provider';
 import { fetchPricingPlans, updatePricingPlan, createPricingPlan, deletePricingPlan, type PricingPlan } from '@/lib/api/pricing';
 import { fetchPaymentGateways, updatePaymentGatewayStatus, type PaymentGateway } from '@/lib/api/payment-gateways';
 import { type AIModel, createAIModel, deleteAIModel } from '@/lib/api/ai-models';
-import { type DocumentNotification } from '@/lib/api/comments';
+import { createNotification, type DocumentNotification } from '@/lib/api/comments';
 import { type UserPresence } from '@/lib/api/presence';
 
 type SwitchProps = {
@@ -3945,6 +3945,18 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                   editorJsRef.current?.addSuggestionMark?.(sugId, selectedTextForSuggestion, newTextForSuggestion, authorName);
                   if (currentDocument?.id) {
                     addSuggestion(currentDocument.id, selectedTextForSuggestion, newTextForSuggestion, authorName, sugId, user?.id);
+                    if (activeUsers && activeUsers.length > 0) {
+                      activeUsers.filter(u => u.user_id && u.user_id !== user?.id).forEach(coUser => {
+                        createNotification(
+                          currentDocument.id,
+                          coUser.user_id,
+                          authorName,
+                          language === 'en'
+                            ? `proposed a suggestion: "${(newTextForSuggestion || selectedTextForSuggestion).slice(0, 30)}${(newTextForSuggestion || selectedTextForSuggestion).length > 30 ? '...' : ''}"`
+                            : `mengusulkan perubahan: "${(newTextForSuggestion || selectedTextForSuggestion).slice(0, 30)}${(newTextForSuggestion || selectedTextForSuggestion).length > 30 ? '...' : ''}"`
+                        );
+                      });
+                    }
                   }
                   setIsSuggestionModalOpen(false);
                 }}
