@@ -56,9 +56,15 @@ export async function addSuggestion(
     });
     if (res.ok) {
       const data = await res.json();
-      if (data.suggestion) {
+      if (data.suggestions) {
+        localMemorySuggestions.set(docId, data.suggestions);
+        return data.suggestion;
+      } else if (data.suggestion) {
         const list = localMemorySuggestions.get(docId) || [];
-        list.unshift(data.suggestion);
+        const exists = list.some(s => s.id === data.suggestion.id);
+        if (!exists) {
+          list.unshift(data.suggestion);
+        }
         localMemorySuggestions.set(docId, list);
         return data.suggestion;
       }

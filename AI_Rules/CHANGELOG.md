@@ -402,4 +402,9 @@
   - Submitting a new suggestion automatically triggers a bell notification and red badge for the document recipient (`[Author] proposed a suggestion: "..."` / `[Author] mengusulkan perubahan: "..."`).
   - Accepting or rejecting a suggestion automatically sends real-time bell feedback to the suggestion author (`[User] accepted your suggestion: "..."` / `[User] rejected your suggestion: "..."`).
   - Clicking any suggestion notification in the bell dropdown automatically focuses the sidebar on the **💡 Suggestions** tab.
+- Supabase PostgreSQL Database Persistence for Track Changes Suggestions:
+  - Created official SQL migration file `supabase/migrations/20260808000001_create_suggestions_table.sql` defining `document_suggestions` table with row-level security (RLS) policies and indexes for `document_id` and `status`.
+  - Integrated Supabase client query methods (`select`, `insert`, `update`) inside `app/api/v1/suggestions/route.ts` with fallback to in-memory map for local development.
+  - Enhanced `lib/api/suggestions.ts` `addSuggestion` to merge and maintain full suggestion arrays without losing previously submitted pending suggestions.
+
 
