@@ -87,6 +87,10 @@ type SidebarProps = {
   onDeleteAiHistoryEntry: (id: string) => void;
   onClearAiHistory: () => void;
   isApplied: boolean;
+  comments?: any[];
+  onResolveComment?: (id: string) => void;
+  onCommentClick?: (comment: any) => void;
+  activeTab?: 'library' | 'writing' | 'document' | 'comments';
 };
 
 function PanelRow({
@@ -196,10 +200,22 @@ export function EditorSidebar({
   aiHistory,
   onDeleteAiHistoryEntry,
   onClearAiHistory,
-  isApplied
+  isApplied,
+  comments = [],
+  onResolveComment,
+  onCommentClick,
+  activeTab
 }: SidebarProps) {
   const { language, t } = useLanguage();
-  const [workspaceTab, setWorkspaceTab] = useState<'library' | 'writing' | 'document'>('library');
+  const [workspaceTab, setWorkspaceTab] = useState<'library' | 'writing' | 'document' | 'comments'>('library');
+
+  // Sync tab from props if changed
+  useEffect(() => {
+    if (activeTab) {
+      setWorkspaceTab(activeTab);
+    }
+  }, [activeTab]);
+
   const [query, setQuery] = useState('');
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   
@@ -351,11 +367,12 @@ export function EditorSidebar({
 
         {isExpanded && (
           <div className="px-4 pt-4">
-            <div className="grid grid-cols-3 gap-1 rounded-md border border-line bg-panel p-1 text-xs font-medium text-muted">
+            <div className={`grid ${comments ? 'grid-cols-4' : 'grid-cols-3'} gap-1 rounded-md border border-line bg-panel p-1 text-xs font-medium text-muted`}>
               {[
                 { id: 'library', label: 'Library' },
                 { id: 'writing', label: 'Writing' },
                 { id: 'document', label: 'Document' },
+                ...(comments ? [{ id: 'comments', label: language === 'en' ? 'Comments' : 'Komentar' }] : [])
               ].map((item) => (
                 <button
                   key={item.id}
@@ -687,7 +704,7 @@ export function EditorSidebar({
                 ) : null}
               </section>
             </div>
-          ) : (
+          ) : workspaceTab === 'document' ? (
             <div className="space-y-3">
               <section className="rounded-lg border border-line bg-white p-3 shadow-sm">
                 <div className="mb-3 flex items-center gap-2">
@@ -917,6 +934,74 @@ export function EditorSidebar({
                 </div>
               </section>
             </div>
+          ) : workspaceTab === 'comments' ? (
+            <div className="space-y-4 animate-fade-in font-sans text-slate-800">
+              <div className="flex flex-col gap-1 text-left">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                  {language === 'en' ? 'Document Comments' : 'Komentar Dokumen'}
+                </span>
+                <p className="text-[11px] text-slate-500 leading-normal font-medium">
+                  {language === 'en'
+                    ? 'Review feedback left by co-editors and collaborators.'
+                    : 'Tinjau masukan yang diberikan oleh co-editor dan kolaborator.'}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 max-h-[calc(100vh-320px)] overflow-y-auto pr-1">
+                {comments.filter(c => !c.resolved).length === 0 ? (
+                  <div className="text-center py-12 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-xs text-slate-400 font-medium italic">
+                    {language === 'en' ? 'No active comments' : 'Tidak ada komentar aktif'}
+                  </div>
+                ) : (
+                  comments.filter(c => !c.resolved).map((c) => (
+                    <div
+                      key={c.id}
+                      onClick={() => onCommentClick?.(c)}
+                      className="border border-slate-200 hover:border-indigo-300 bg-slate-50/20 hover:bg-indigo-50/5 transition rounded-xl p-3 flex flex-col gap-2 text-left cursor-pointer shadow-sm shadow-slate-100/10"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-extrabold text-slate-800 truncate max-w-[130px]">
+                          {c.author_name}
+                        </span>
+                        <span className="text-[8px] text-slate-400">
+                          {new Date(c.created_at).toLocaleTimeString(language === 'en' ? 'en-US' : 'id-ID', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+
+                      {c.selected_text && (
+                        <div className="bg-slate-100/60 border-l-2 border-slate-350 px-2 py-1 rounded text-[9px] text-slate-550 italic truncate">
+                          "{c.selected_text}"
+                        </div>
+                      )}
+
+                      <p className="text-xs text-slate-700 leading-normal font-medium whitespace-pre-line">
+                        {c.comment_text}
+                      </p>
+
+                      <div className="flex justify-end pt-1 border-t border-slate-100 mt-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onResolveComment) {
+                              onResolveComment(c.id);
+                            }
+                          }}
+                          className="px-2.5 py-1 text-[9px] font-extrabold text-indigo-650 hover:text-white bg-indigo-55/80 hover:bg-indigo-650 transition rounded-lg border border-transparent shadow-sm shadow-indigo-100/10 cursor-pointer"
+                        >
+                          Resolve
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="text-xs text-slate-400 italic">Error Tab</div>
           )}
         </div>
       </div>

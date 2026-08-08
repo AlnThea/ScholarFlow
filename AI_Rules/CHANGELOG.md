@@ -319,3 +319,21 @@
 - Added a click-navigation guard to ignore document selection in the sidebar and prevent reloading screen overlays if the clicked document is already selected and active.
 - Verified TypeScript compilation (`npx tsc --noEmit`) successfully with exit code 0.
 
+## v0.2.4
+- Added Co-Editor Commenting and Owner Notification Bell Features:
+  - Created a database SQL migration `20260807000001_create_comments_and_notifications.sql` defining `document_comments` and `document_notifications` tables with indexes and secure Row Level Security (RLS) policies allowing public guest edit access.
+  - Implemented the comments helper API module `lib/api/comments.ts` to fetch, insert, resolve comments and mark notifications as read.
+  - Added a premium interactive floating bubble context menu option to add comments on selected editor text for Co-Editors on the shared collaborator page (`app/shared/[id]/page.tsx`).
+  - Added a responsive Comments Sidebar list panel on both the owner's editor dashboard (`components/editor/editor-sidebar.tsx`) and the collaborator's shared page (`app/shared/[id]/page.tsx`).
+  - Implemented an automated background polling mechanism (executing every 5 seconds) to fetch and sync comments and notifications dynamically.
+  - Integrated a premium glassmorphic Notification Bell icon (`IconBell`) inside the main editor header layout (`components/editor/editor-layout.tsx`) displaying the count of unread notifications in a red badge.
+  - Added a smooth scroll-to-block alignment and temporary background-pulse blink highlight effect inside the editor canvas when clicking comments or notification links.
+  - Resolved a text selection collapse bug by updating `handleSelectionChange` to ignore focus switches when editing comments.
+  - Added a real-time feedback toast notification loop on the shared collaborator page to alert guests instantly when the owner resolves their comments.
+  - Resolved RLS insert violations on anonymous notification creations by executing pure inserts without select-returning requests.
+  - Resolved temporal dead zone lexical reference compile errors by reorganizing Next.js hooks at the top of the component file.
+  - Fixed horizontal overflow scrollbars inside the notification bell dropdown list by adding responsive `whitespace-normal` and `break-words` text wrapping.
+  - Added dynamic name autofill attributes inside the shared page comments input, binding to active authentication credentials.
+  - Created SQL migration `20260807000002_add_notification_select_policy.sql` to explicitly add select permissions on shared document notifications.
+
+

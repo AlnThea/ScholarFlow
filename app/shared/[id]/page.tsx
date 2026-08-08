@@ -5,12 +5,14 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom';
 import { useParams } from 'next/navigation';
 import { fetchSharedDocument, updateSharedDocument, type DocumentEntry } from '@/lib/api/documents';
+import { fetchComments, addComment, createNotification } from '@/lib/api/comments';
 import { fetchCitationLibrary } from '@/lib/api/citation-library';
 import { formatBibliographyCandidate } from '@/lib/editor/bibliography';
 import { searchCitations, type CitationCandidate } from '@/lib/api/citations';
 import { improveWriting } from '@/lib/api/ai';
 import { EditorJsEditor } from '@/components/editor/editorjs-editor';
 import { PricingModal } from '@/components/editor/pricing-modal';
+import { useAuth } from '@/components/auth/auth-provider';
 import {
   IconLock,
   IconBook,
@@ -43,10 +45,15 @@ import {
   IconX,
   IconQuote,
   IconSparkles,
-  IconLanguage
+  IconLanguage,
+  IconMessage,
+  IconTrash,
+  IconAlertCircle,
+  IconInfoCircle
 } from '@tabler/icons-react';
 
 export default function SharedDocumentPage() {
+  const { user, profile } = useAuth();
   const params = useParams();
   const rawId = params?.id as string | undefined;
   
@@ -168,13 +175,40 @@ export default function SharedDocumentPage() {
   // Bubble Menu States
   const [bubbleMenuRect, setBubbleMenuRect] = useState<DOMRect | null>(null);
   const [showBubbleMenu, setShowBubbleMenu] = useState(false);
-  const [bubbleMode, setBubbleMode] = useState<'format' | 'citation'>('format');
+  const [bubbleMode, setBubbleMode] = useState<'format' | 'citation' | 'comment'>('format');
   const [bubbleSearchQuery, setBubbleSearchQuery] = useState('');
   const [isSearchingCitations, setIsSearchingCitations] = useState(false);
   const [citationResults, setCitationResults] = useState<CitationCandidate[]>([]);
   const [citationError, setCitationError] = useState<string | null>(null);
 
-  const bubbleModeRef = useRef(bubbleMode);
+  // Comments States
+  const [comments, setComments] = useState<any[]>([]);
+  const [showCommentsSidebar, setShowCommentsSidebar] = useState(false);
+  const [newCommentText, setNewCommentText] = useState('');
+  const [newCommentAuthor, setNewCommentAuthor] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+
+  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const showToast = useCallback((text: string, type: 'success' | 'error' | 'info' = 'success') => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    setToastMessage({ text, type });
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastMessage(null);
+    }, 4000);
+  }, []);
+
+  // Initialize comment author name from user profile
+  useEffect(() => {
+    if (profile?.full_name) {
+      setNewCommentAuthor(profile.full_name);
+    } else if (user?.email) {
+      setNewCommentAuthor(user.email.split('@')[0]);
+    }
+  }, [user, profile]);
+
+  const bubbleModeRef = useRef<any>(bubbleMode);
   useEffect(() => {
     bubbleModeRef.current = bubbleMode;
   }, [bubbleMode]);
@@ -432,9 +466,10 @@ export default function SharedDocumentPage() {
 
     const loadData = async () => {
       try {
-        const [docDetail, libData] = await Promise.all([
+        const [docDetail, libData, commentsData] = await Promise.all([
           fetchSharedDocument(docId),
-          fetchCitationLibrary().catch(() => ({}))
+          fetchCitationLibrary().catch(() => ({})),
+          fetchComments(docId).catch(() => [])
         ]);
 
         if (!docDetail) {
@@ -468,6 +503,7 @@ export default function SharedDocumentPage() {
             });
           }
           setDocument(docDetail);
+          setComments(commentsData);
           if (docDetail.settings?.alignments) {
             localStorage.setItem('scholarflow.editorjs.alignments.v1', JSON.stringify(docDetail.settings.alignments));
           }
@@ -484,6 +520,34 @@ export default function SharedDocumentPage() {
 
     loadData();
   }, [docId]);
+
+  // Poll comments every 5 seconds
+  useEffect(() => {
+    if (!docId) return;
+    const interval = setInterval(async () => {
+      try {
+        const newComms = await fetchComments(docId);
+        setComments(prev => {
+          // Check if any previously unresolved comment is now resolved
+          prev.forEach(oldComm => {
+            const newComm = newComms.find(c => c.id === oldComm.id);
+            if (oldComm && !oldComm.resolved && newComm && newComm.resolved) {
+              showToast(
+                language === 'id'
+                  ? `Komentar "${oldComm.comment_text.slice(0, 25)}${oldComm.comment_text.length > 25 ? '...' : ''}" telah selesai ditinjau oleh pemilik!`
+                  : `Comment "${oldComm.comment_text.slice(0, 25)}${oldComm.comment_text.length > 25 ? '...' : ''}" was resolved by the owner!`,
+                'info'
+              );
+            }
+          });
+          return newComms;
+        });
+      } catch (e) {
+        console.error('Error polling comments:', e);
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [docId, showToast, language]);
 
   // Save document handler for Co-Editor mode
   const triggerDebouncedSave = useCallback((titleToSave: string, contentToSave: any, settingsToSave?: any) => {
@@ -614,7 +678,7 @@ export default function SharedDocumentPage() {
         const text = selection.toString().trim();
         
         if (!text || selection.isCollapsed) {
-          if (bubbleModeRef.current !== 'citation') {
+          if (bubbleModeRef.current !== 'citation' && bubbleModeRef.current !== 'comment') {
             setShowBubbleMenu(false);
             setSelectedText('');
           }
@@ -625,7 +689,7 @@ export default function SharedDocumentPage() {
             setBubbleMenuRect(range.getBoundingClientRect());
             setSelectedText(text);
           } else {
-            if (bubbleModeRef.current !== 'citation') {
+            if (bubbleModeRef.current !== 'citation' && bubbleModeRef.current !== 'comment') {
               setShowBubbleMenu(false);
               setSelectedText('');
             }
@@ -781,6 +845,24 @@ export default function SharedDocumentPage() {
 
         {/* Access badge and save indicator */}
         <div className="flex items-center gap-3">
+          {/* Toggle Comments Button */}
+          <button
+            onClick={() => setShowCommentsSidebar(prev => !prev)}
+            className={`p-1.5 rounded-lg border transition cursor-pointer relative ${
+              showCommentsSidebar
+                ? 'border-indigo-650 bg-indigo-50 text-indigo-700'
+                : 'border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-800'
+            }`}
+            title={language === 'id' ? 'Tampilkan Komentar' : 'Show Comments'}
+          >
+            <IconMessage className="h-4 w-4" />
+            {comments.filter(c => !c.resolved).length > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-indigo-600 text-[8px] font-bold text-white shadow-sm shadow-indigo-100 animate-pulse">
+                {comments.filter(c => !c.resolved).length}
+              </span>
+            )}
+          </button>
+
           {isCoEditor ? (
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-semibold text-slate-400">
@@ -1068,9 +1150,10 @@ export default function SharedDocumentPage() {
       )}
 
       {/* Editor Main Content Area */}
-      <main 
-        className={`px-4 md:px-6 pb-24 ${isCoEditor ? 'pt-32' : 'pt-20'}`}
-        onContextMenu={(e) => {
+      <div className="flex max-w-7xl mx-auto items-start gap-6 w-full px-4 md:px-6">
+        <main 
+          className={`flex-1 min-w-0 pb-24 ${isCoEditor ? 'pt-32' : 'pt-20'}`}
+          onContextMenu={(e) => {
           if (!isCoEditor) return;
           const selection = window.getSelection();
           if (selection && !selection.isCollapsed && selection.toString().trim()) {
@@ -1164,6 +1247,86 @@ export default function SharedDocumentPage() {
           </div>
         </div>
       </main>
+
+      {/* Comments Sidebar Panel */}
+      {showCommentsSidebar && (
+        <aside className={`w-80 shrink-0 bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sticky ${isCoEditor ? 'top-32' : 'top-20'} max-h-[calc(100vh-160px)] overflow-y-auto flex flex-col gap-4 font-sans text-slate-800 animate-slide-in`}>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+            <h3 className="text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
+              <span>💬</span>
+              {language === 'id' ? 'Komentar Aktif' : 'Active Comments'}
+            </h3>
+            <button
+              onClick={() => setShowCommentsSidebar(false)}
+              className="text-[10px] text-slate-400 hover:text-slate-700 transition cursor-pointer font-bold"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-3 flex-1 overflow-y-auto max-h-[500px] pr-1">
+            {comments.filter(c => !c.resolved).length === 0 ? (
+              <div className="text-center py-10 text-xs text-slate-400 italic">
+                {language === 'id' ? 'Tidak ada komentar aktif' : 'No active comments'}
+              </div>
+            ) : (
+              comments.filter(c => !c.resolved).map((c) => (
+                <div
+                  key={c.id}
+                  onClick={() => {
+                    if (c.block_id) {
+                      const blockEl = window.document.querySelector(`[data-id="${c.block_id}"]`);
+                      if (blockEl) {
+                        blockEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        blockEl.classList.add('bg-indigo-50/50');
+                        setTimeout(() => {
+                          blockEl.classList.remove('bg-indigo-50/50');
+                        }, 2000);
+                      }
+                    }
+                  }}
+                  className="border border-slate-150 hover:border-indigo-200 bg-slate-50/20 hover:bg-indigo-50/5 transition rounded-xl p-3 flex flex-col gap-2 text-left cursor-pointer shadow-sm shadow-slate-100/20"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-extrabold text-slate-800 truncate max-w-[150px]">{c.author_name}</span>
+                    <span className="text-[8px] text-slate-400">
+                      {new Date(c.created_at).toLocaleTimeString(language === 'id' ? 'id-ID' : 'en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+
+                  {c.selected_text && (
+                    <div className="bg-slate-100/50 border-l-2 border-slate-300 px-2 py-1 rounded text-[9px] text-slate-500 italic truncate">
+                      "{c.selected_text}"
+                    </div>
+                  )}
+
+                  <p className="text-xs text-slate-700 leading-normal font-medium whitespace-pre-line">
+                    {c.comment_text}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </aside>
+      )}
+    </div>
+
+    {/* Toast notification */}
+    {toastMessage && (
+      <div className={`fixed bottom-5 right-5 z-[9999] px-4 py-2.5 rounded-xl border shadow-lg flex items-center gap-2 animate-fade-in font-sans text-xs font-semibold ${
+        toastMessage.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
+        toastMessage.type === 'error' ? 'bg-rose-50 border-rose-200 text-rose-800' :
+        'bg-indigo-50 border-indigo-200 text-indigo-800'
+      }`}>
+        {toastMessage.type === 'success' && <IconCheck className="h-4 w-4 shrink-0 text-emerald-600" />}
+        {toastMessage.type === 'error' && <IconAlertCircle className="h-4 w-4 shrink-0 text-rose-600" />}
+        {toastMessage.type === 'info' && <IconInfoCircle className="h-4 w-4 shrink-0 text-indigo-600" />}
+        <span>{toastMessage.text}</span>
+      </div>
+    )}
 
       {/* Render portals for modals & popovers */}
       {mounted && showHighlightPopover && highlightPopoverRect && typeof window !== 'undefined' && createPortal(
@@ -1724,7 +1887,7 @@ export default function SharedDocumentPage() {
 
                   {/* Sitasi Button */}
                   <button
-                    className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-slate-700 hover:bg-slate-50 transition font-semibold cursor-pointer"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-slate-700 hover:bg-slate-50 transition font-semibold cursor-pointer border-b border-slate-100/40"
                     onMouseDown={e => e.preventDefault()}
                     onClick={() => {
                       setBubbleMode('citation');
@@ -1739,6 +1902,26 @@ export default function SharedDocumentPage() {
                       <span className="text-xs text-slate-800">{language === 'en' ? 'Find Citations' : 'Cari Kutipan / Sitasi'}</span>
                       <span className="text-[9px] text-slate-400 font-normal">
                         {language === 'en' ? 'Find scientific journal citations' : 'Temukan sitasi jurnal ilmiah'}
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* Tambah Komentar Button */}
+                  <button
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-slate-700 hover:bg-slate-50 transition font-semibold cursor-pointer"
+                    onMouseDown={e => e.preventDefault()}
+                    onClick={() => {
+                      setBubbleMode('comment');
+                      setNewCommentText('');
+                    }}
+                  >
+                    <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-650 shrink-0">
+                      <IconMessage className="h-4 w-4" />
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="text-xs text-slate-800">{language === 'en' ? 'Add Comment' : 'Tambah Komentar'}</span>
+                      <span className="text-[9px] text-slate-400 font-normal">
+                        {language === 'en' ? 'Leave feedback on selected text' : 'Beri masukan pada teks terpilih'}
                       </span>
                     </div>
                   </button>
@@ -1839,7 +2022,7 @@ export default function SharedDocumentPage() {
                               setShowBubbleMenu(false);
                               setBubbleMode('format');
                             }}
-                            className="inline-flex items-center gap-1 bg-indigo-650 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-[9px] font-bold transition cursor-pointer shadow-sm shadow-indigo-100"
+                            className="inline-flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-[9px] font-bold transition cursor-pointer shadow-sm shadow-indigo-100"
                           >
                             <IconQuote className="h-2.5 w-2.5" />
                             Cite
@@ -1860,6 +2043,148 @@ export default function SharedDocumentPage() {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* ── COMMENT MODE ── */}
+            {bubbleMode === 'comment' && (
+              <div className="flex flex-col p-4 bg-white font-sans text-slate-800">
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition cursor-pointer"
+                      onClick={() => setBubbleMode('format')}
+                    >
+                      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
+                    </button>
+                    <span className="text-xs font-bold text-slate-805">
+                      {language === 'en' ? 'Add Comment' : 'Tambah Komentar'}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition cursor-pointer"
+                    onClick={() => { setShowBubbleMenu(false); setBubbleMode('format'); }}
+                  >
+                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                  </button>
+                </div>
+
+                {/* Selected Text context */}
+                <div className="bg-slate-50 border-l-2 border-indigo-500 px-3 py-1.5 rounded-r-md text-[10px] text-slate-500 italic mb-3 max-h-16 overflow-y-auto leading-relaxed">
+                  "{selectedText}"
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  {/* Name Input for Guest */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                      {language === 'en' ? 'Your Name' : 'Nama Anda'}
+                    </label>
+                    <input
+                      type="text"
+                      placeholder={
+                        profile?.full_name || 
+                        user?.email?.split('@')[0] || 
+                        (language === 'en' ? 'Guest Co-Editor (optional)' : 'Guest Co-Editor (opsional)')
+                      }
+                      value={newCommentAuthor}
+                      onChange={(e) => setNewCommentAuthor(e.target.value)}
+                      className="w-full border border-slate-200/80 rounded-lg px-3 py-1.5 text-xs text-slate-700 outline-none focus:border-indigo-400 transition"
+                    />
+                  </div>
+
+                  {/* Comment Textarea */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                      {language === 'en' ? 'Comment' : 'Komentar'}
+                    </label>
+                    <textarea
+                      rows={3}
+                      placeholder={language === 'en' ? 'Type your comment...' : 'Tulis komentar Anda...'}
+                      value={newCommentText}
+                      onChange={(e) => setNewCommentText(e.target.value)}
+                      className="w-full border border-slate-200/80 rounded-lg px-3 py-2 text-xs text-slate-700 outline-none focus:border-indigo-400 transition resize-none"
+                    />
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="button"
+                    disabled={isSubmittingComment || !newCommentText.trim()}
+                    onClick={async () => {
+                      if (!document || !newCommentText.trim()) return;
+                      setIsSubmittingComment(true);
+                      try {
+                        // Find EditorJS block ID
+                        let blockId: string | null = null;
+                        const selection = window.getSelection();
+                        if (selection && selection.rangeCount > 0) {
+                          let node: Node | null = selection.anchorNode;
+                          while (node && node !== window.document.body) {
+                            if (node instanceof HTMLElement && node.hasAttribute('data-id')) {
+                              blockId = node.getAttribute('data-id');
+                              break;
+                            }
+                            node = node.parentNode;
+                          }
+                        }
+
+                        const author = newCommentAuthor.trim() || 
+                                       profile?.full_name || 
+                                       user?.email?.split('@')[0] || 
+                                       'Guest Co-Editor';
+                        
+                        // 1. Save comment
+                        const added = await addComment(
+                          document.id,
+                          blockId,
+                          selectedText,
+                          newCommentText.trim(),
+                          author
+                        );
+
+                        if (added) {
+                          // Update comments list
+                          setComments(prev => [...prev, added]);
+
+                          // 2. Trigger notification for owner
+                          await createNotification(
+                            document.id,
+                            document.user_id,
+                            author,
+                            language === 'en'
+                              ? `commented on "${selectedText.slice(0, 30)}${selectedText.length > 30 ? '...' : ''}": "${newCommentText.slice(0, 30)}${newCommentText.length > 30 ? '...' : ''}"`
+                              : `mengomentari "${selectedText.slice(0, 30)}${selectedText.length > 30 ? '...' : ''}": "${newCommentText.slice(0, 30)}${newCommentText.length > 30 ? '...' : ''}"`
+                          );
+
+                          // Reset form and close
+                          setNewCommentText('');
+                          setShowBubbleMenu(false);
+                          setBubbleMode('format');
+                        }
+                      } catch (e) {
+                        console.error('Error submitting comment:', e);
+                      } finally {
+                        setIsSubmittingComment(false);
+                      }
+                    }}
+                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1.5 shadow-sm shadow-indigo-150"
+                  >
+                    {isSubmittingComment ? (
+                      <>
+                        <IconLoader className="h-3.5 w-3.5 animate-spin" />
+                        {language === 'en' ? 'Submitting...' : 'Mengirim...'}
+                      </>
+                    ) : (
+                      <>
+                        {language === 'en' ? 'Submit Comment' : 'Kirim Komentar'}
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             )}
           </div>

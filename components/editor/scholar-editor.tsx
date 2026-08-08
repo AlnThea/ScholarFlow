@@ -42,6 +42,15 @@ import {
 } from '@/lib/editor/citation-export';
 import { getTemplateBlocks } from '@/lib/templates';
 import { IconLoader2, IconSparkles, IconCheck, IconAlertCircle, IconInfoCircle } from '@tabler/icons-react';
+import {
+  fetchComments,
+  fetchNotifications,
+  resolveComment,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  type DocumentComment,
+  type DocumentNotification
+} from '@/lib/api/comments';
 
 const STORAGE_KEY = 'scholarflow.editor.content.v1';
 const CITATION_LIBRARY_KEY = 'scholarflow.editor.citation-library.v1';
@@ -184,6 +193,9 @@ function findMostUniqueWord(sentence: string): string {
 export function ScholarEditor() {
   const { language, t } = useLanguage();
   const { user, profile } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useParams();
   const activePlanId = profile?.subscription_plan || 'free';
   const [hydrated, setHydrated] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
@@ -230,6 +242,123 @@ export function ScholarEditor() {
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Comments and Notifications State
+  const [comments, setComments] = useState<DocumentComment[]>([]);
+  const [notifications, setNotifications] = useState<DocumentNotification[]>([]);
+  const [activeSidebarTab, setActiveSidebarTab] = useState<'library' | 'writing' | 'document' | 'comments' | undefined>(undefined);
+
+  // Poll comments and notifications
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const loadCommentsAndNotifications = async () => {
+      try {
+        const notifs = await fetchNotifications(user.id);
+        setNotifications(notifs);
+        if (currentDocument?.id) {
+          const comms = await fetchComments(currentDocument.id);
+          setComments(comms);
+        }
+      } catch (err) {
+        console.error('Error fetching comments/notifications:', err);
+      }
+    };
+    loadCommentsAndNotifications();
+
+    const interval = setInterval(async () => {
+      try {
+        const notifs = await fetchNotifications(user.id);
+        setNotifications(notifs);
+        if (currentDocument?.id) {
+          const comms = await fetchComments(currentDocument.id);
+          setComments(comms);
+        }
+      } catch (err) {
+        console.error('Error polling comments/notifications:', err);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [user?.id, currentDocument?.id]);
+
+  const handleMarkNotificationRead = async (id: string) => {
+    try {
+      const success = await markNotificationAsRead(id);
+      if (success) {
+        setNotifications(prev =>
+          prev.map(n => n.id === id ? { ...n, read: true } : n)
+        );
+      }
+    } catch (err) {
+      console.error('Failed to mark notification read:', err);
+    }
+  };
+
+  const handleMarkAllNotificationsRead = async () => {
+    if (!user?.id) return;
+    try {
+      const success = await markAllNotificationsAsRead(user.id);
+      if (success) {
+        setNotifications(prev =>
+          prev.map(n => ({ ...n, read: true }))
+        );
+      }
+    } catch (err) {
+      console.error('Failed to mark all notifications read:', err);
+    }
+  };
+
+  const handleResolveComment = async (id: string) => {
+    try {
+      const success = await resolveComment(id);
+      if (success) {
+        setComments(prev =>
+          prev.map(c => c.id === id ? { ...c, resolved: true } : c)
+        );
+      }
+    } catch (err) {
+      console.error('Failed to resolve comment:', err);
+    }
+  };
+
+  const handleCommentClick = useCallback((c: DocumentComment) => {
+    if (c.block_id) {
+      const blockEl = window.document.querySelector(`[data-id="${c.block_id}"]`);
+      if (blockEl) {
+        blockEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        blockEl.classList.add('bg-indigo-50/50');
+        setTimeout(() => {
+          blockEl.classList.remove('bg-indigo-50/50');
+        }, 2000);
+      }
+    }
+  }, []);
+
+  const handleNotificationClick = useCallback(async (notif: DocumentNotification) => {
+    if (currentDocument?.id !== notif.document_id) {
+      setIsDocLoading(true);
+      router.push(`/editor/${notif.document_id}`);
+    }
+    
+    setActiveSidebarTab('comments');
+    
+    try {
+      const comms = await fetchComments(notif.document_id);
+      setComments(comms);
+      setTimeout(() => {
+        if (comms.length > 0) {
+          const activeComms = comms.filter(c => !c.resolved);
+          if (activeComms.length > 0) {
+            const lastComm = activeComms[activeComms.length - 1];
+            handleCommentClick(lastComm);
+          }
+        }
+      }, 500);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [currentDocument?.id, router, handleCommentClick]);
   
   const showToast = useCallback((text: string, type: 'success' | 'error' | 'info' = 'success') => {
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
@@ -246,9 +375,6 @@ export function ScholarEditor() {
       console.error("Failed to load AI models:", err);
     });
   }, []);
-  const pathname = usePathname();
-  const router = useRouter();
-  const params = useParams();
 
   const triggerDebouncedSave = useCallback((docId: string, titleToSave: string, contentToSave: any, settingsToSave?: any) => {
     if (!user?.id) return;
@@ -1546,6 +1672,14 @@ export function ScholarEditor() {
         onClearAiHistory={clearAiHistory}
         isApplied={isApplied}
         onSaveSettings={handleChangeDocumentSettings}
+        notifications={notifications}
+        onMarkNotificationRead={handleMarkNotificationRead}
+        onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
+        onNotificationClick={handleNotificationClick}
+        comments={comments}
+        onResolveComment={handleResolveComment}
+        onCommentClick={handleCommentClick}
+        activeSidebarTab={activeSidebarTab}
       />
 
       {/* Citation Details Modal */}
