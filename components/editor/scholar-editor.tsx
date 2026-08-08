@@ -313,6 +313,7 @@ export function ScholarEditor() {
     try {
       const success = await resolveComment(id);
       if (success) {
+        editorJsRef.current?.highlightAndRemoveCommentMark(id);
         setComments(prev =>
           prev.map(c => c.id === id ? { ...c, resolved: true } : c)
         );
@@ -323,6 +324,9 @@ export function ScholarEditor() {
   };
 
   const handleCommentClick = useCallback((c: DocumentComment) => {
+    if (c.id) {
+      editorJsRef.current?.scrollToCommentMark(c.id);
+    }
     if (c.block_id) {
       const blockEl = window.document.querySelector(`[data-id="${c.block_id}"]`);
       if (blockEl) {
@@ -378,13 +382,13 @@ export function ScholarEditor() {
 
   const triggerDebouncedSave = useCallback((docId: string, titleToSave: string, contentToSave: any, settingsToSave?: any) => {
     if (!user?.id) return;
-    setSaveStatus(language === 'en' ? 'Saving...' : 'Menyimpan...');
 
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
 
     debounceTimeoutRef.current = setTimeout(async () => {
+      setSaveStatus(language === 'en' ? 'Saving...' : 'Menyimpan...');
       let alignments = {};
       try {
         alignments = JSON.parse(localStorage.getItem('scholarflow.editorjs.alignments.v1') || '{}');

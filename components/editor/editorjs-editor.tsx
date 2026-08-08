@@ -157,7 +157,10 @@ class CustomFormatsSanitizerTool {
         class: true
       },
       mark: {
-        class: true
+        class: true,
+        style: true,
+        'data-comment-id': true,
+        'data-author': true,
       },
       sup: {},
       sub: {},
@@ -219,6 +222,9 @@ export interface EditorJsMethods {
   insertCitationSearch: () => void;
   insertCitationAtSearch: (label: string, referenceId: string) => void;
   cancelCitationSearch: () => void;
+  addCommentMark: (commentId: string, authorName?: string) => void;
+  highlightAndRemoveCommentMark: (commentId: string) => void;
+  scrollToCommentMark: (commentId: string) => void;
 }
 
 function scrambleHtmlText(html: string): string {
@@ -267,6 +273,7 @@ interface EditorJsEditorProps {
   onAlignmentChange?: (align: string) => void;
   onStatsChange?: (stats: { wordCount: number; characterCount: number; citationCount: number; activeReferenceIds?: string[] }) => void;
   onCiteClick?: (refId: string, label: string, citedSentence: string) => void;
+  onCommentMarkClick?: (commentId: string) => void;
   onContentChange?: (content: any) => void;
   onCitationSearchChange?: (query: string, rect: DOMRect) => void;
   onCitationSearchCancel?: () => void;
@@ -281,6 +288,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
   onAlignmentChange,
   onStatsChange,
   onCiteClick,
+  onCommentMarkClick,
   onContentChange,
   onCitationSearchChange,
   onCitationSearchCancel,
@@ -1456,6 +1464,65 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         pendingContentRef.current = data;
       }
     },
+    addCommentMark: (commentId: string, authorName?: string) => {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0 && !selection.isCollapsed) {
+        const range = selection.getRangeAt(0);
+        const mark = document.createElement('mark');
+        mark.className = 'sf-comment-mark';
+        mark.setAttribute('data-comment-id', commentId);
+        if (authorName) mark.setAttribute('data-author', authorName);
+        try {
+          range.surroundContents(mark);
+        } catch (e) {
+          const fragment = range.extractContents();
+          mark.appendChild(fragment);
+          range.insertNode(mark);
+        }
+
+        if (onContentChange && editorRef.current) {
+          saveCleanContent().then(content => {
+            if (content) onContentChange(content);
+          }).catch(console.error);
+        }
+      }
+    },
+    highlightAndRemoveCommentMark: (commentId: string) => {
+      const holder = document.getElementById(holderId);
+      if (!holder) return;
+      const markEls = holder.querySelectorAll(`mark[data-comment-id="${commentId}"], .sf-comment-mark[data-comment-id="${commentId}"]`);
+      markEls.forEach(markEl => {
+        markEl.classList.add('sf-comment-mark-resolving');
+        setTimeout(() => {
+          const parent = markEl.parentNode;
+          if (parent) {
+            while (markEl.firstChild) {
+              parent.insertBefore(markEl.firstChild, markEl);
+            }
+            parent.removeChild(markEl);
+          }
+          if (onContentChange && editorRef.current) {
+            saveCleanContent().then(content => {
+              if (content) onContentChange(content);
+            }).catch(console.error);
+          }
+        }, 2000);
+      });
+    },
+    scrollToCommentMark: (commentId: string) => {
+      const holder = document.getElementById(holderId);
+      if (!holder) return;
+      const markEl = holder.querySelector(`mark[data-comment-id="${commentId}"], .sf-comment-mark[data-comment-id="${commentId}"]`);
+      if (markEl) {
+        markEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        markEl.classList.remove('sf-comment-mark-active');
+        void (markEl as HTMLElement).offsetWidth;
+        markEl.classList.add('sf-comment-mark-active');
+        setTimeout(() => {
+          markEl.classList.remove('sf-comment-mark-active');
+        }, 3000);
+      }
+    },
   }));
 
     useEffect(() => {
@@ -1529,7 +1596,12 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
                   strong: true,
                   em: true,
                   code: true,
-                  mark: true,
+                  mark: {
+                    class: true,
+                    style: true,
+                    'data-comment-id': true,
+                    'data-author': true,
+                  },
                   cite: {
                     class: true,
                     'data-citation': true,
@@ -1679,6 +1751,15 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         onClick={(e) => {
           const target = e.target as HTMLElement;
           
+          // Handle comment mark click
+          const commentMark = target.closest('mark[data-comment-id], .sf-comment-mark');
+          if (commentMark) {
+            const commentId = commentMark.getAttribute('data-comment-id');
+            if (commentId && onCommentMarkClick) {
+              onCommentMarkClick(commentId);
+            }
+          }
+
           // Handle inline math editing on click
           const mathSpan = target.closest('.sf-inline-math') as HTMLElement | null;
           if (mathSpan && !readOnly) {

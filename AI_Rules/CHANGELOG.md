@@ -336,4 +336,25 @@
   - Added dynamic name autofill attributes inside the shared page comments input, binding to active authentication credentials.
   - Created SQL migration `20260807000002_add_notification_select_policy.sql` to explicitly add select permissions on shared document notifications.
 
+## v0.2.5
+- Implemented Inline Comment Highlight & Resolved Comments History System:
+  - Added custom CSS styles `sf-comment-mark` in `app/globals.css` with a soft yellow amber background (`#FEF08A`), gold bottom border (`#EAB308`), pointer cursor, and custom keyframe animations `@keyframes sf-comment-pulse` (indigo pulse) and `@keyframes sf-comment-resolve-flash` (green emerald flash transition).
+  - Updated EditorJS sanitizer profiles in `CustomFormatsSanitizerTool` and `paragraph` tool config in `components/editor/editorjs-editor.tsx` to whitelist `mark` tags with `class`, `style`, `data-comment-id`, and `data-author` attributes, preventing loss of inline comment marks on save.
+  - Expanded `EditorJsMethods` interface with imperative helpers:
+    - `addCommentMark(commentId, authorName)`: Wraps highlighted selection in `<mark class="sf-comment-mark" data-comment-id="...">`.
+    - `highlightAndRemoveCommentMark(commentId)`: Triggers a 2-second soft green emerald transition animation on the marked canvas text before unwrapping the `<mark>` tag back to regular text without altering written content.
+    - `scrollToCommentMark(commentId)`: Scrolls the editor canvas smoothly to the marked text and applies a temporary indigo pulse highlight.
+  - Bound `.sf-comment-mark` click events on the editor canvas container to trigger `onCommentMarkClick`, opening and selecting the corresponding comment card in the sidebar.
+- Added Active vs Resolved Comments Sub-Tab Filter:
+  - Redesigned the comments sidebar panel in `components/editor/editor-sidebar.tsx` with sub-tab toggles: **Aktif** (Active) and **Selesai** (Resolved) displaying active and resolved comment counts.
+  - Configured resolved comments to be archived under the **Selesai** sub-tab with a green `✓ Selesai` badge, keeping the canvas clean while preserving complete comment history.
+- Enhanced Bubble Context Menu Positioning & Mouse Pointer Accuracy:
+  - Fixed an off-screen menu positioning bug in `app/shared/[id]/page.tsx` caused by adding `window.scrollY` and `window.scrollX` to CSS `position: fixed` elements.
+  - Implemented exact mouse pointer positioning (`e.clientX`, `e.clientY`) when right-clicking on highlighted text in both shared collaborator view (`app/shared/[id]/page.tsx`) and owner editor view (`components/editor/editor-layout.tsx`).
+  - Implemented smart viewport bounds calculation (*Anti-Overflow Clamping*): if the selection/right-click occurs near the bottom of the browser viewport, the menu automatically pops up **above** the cursor/selection, clamping `top` and `left` coordinates inside viewport boundaries (`10px` offset) to prevent any off-screen clipping.
+- Fixed Auto-Save Trigger Timing Sensitivity:
+  - Refactored `triggerDebouncedSave` in `app/shared/[id]/page.tsx` and `components/editor/scholar-editor.tsx` to move `setSaveStatus('saving')` inside the debounced `setTimeout` callback.
+  - Prevents cursor movements, clicking, and text highlights from triggering false "Saving..." status badges until an actual content edit occurs and the 1.5-second debounce window completes.
+
+
 

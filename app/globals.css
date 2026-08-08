@@ -300,3 +300,41 @@ body {
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%) !important;
   pointer-events: none !important;
 }
+
+/* Comment Highlight Styling */
+mark.sf-comment-mark, .sf-comment-mark {
+  background-color: #FEF08A !important;
+  border-bottom: 2px solid #EAB308 !important;
+  border-radius: 2px;
+  padding: 1px 3px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+mark.sf-comment-mark:hover, .sf-comment-mark:hover {
+  background-color: #FDE047 !important;
+  border-bottom-color: #CA8A04 !important;
+}
+
+/* Flash pulse animation when clicking a comment */
+@keyframes sf-comment-pulse {
+  0% { background-color: #FEF08A; }
+  50% { background-color: #818CF8; border-bottom-color: #4F46E5; color: #FFFFFF; }
+  100% { background-color: #FEF08A; }
+}
+
+.sf-comment-mark-active {
+  animation: sf-comment-pulse 1.5s ease-in-out infinite;
+}
+
+/* Flash green transition when resolved */
+@keyframes sf-comment-resolve-flash {
+  0% { background-color: #FEF08A; }
+  30% { background-color: #A7F3D0; border-bottom-color: #059669; color: #065F46; }
+  70% { background-color: #D1FAE5; border-bottom-color: #10B981; }
+  100% { background-color: transparent; border-bottom-color: transparent; }
+}
+
+.sf-comment-mark-resolving {
+  animation: sf-comment-resolve-flash 2s forwards;
+}

@@ -2632,11 +2632,41 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
           {showBubbleMenu && bubbleMenuRect && (
             <div
               className="fixed z-50 bg-white border border-slate-200/80 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.1)] flex flex-col transition-all duration-150 backdrop-blur-sm overflow-hidden"
-              style={{
-                top: `${bubbleMenuRect.bottom + 10}px`,
-                left: `${Math.max(10, bubbleMenuRect.left + bubbleMenuRect.width / 2 - (bubbleMode === 'citation' ? 240 : 155))}px`,
-                width: bubbleMode === 'citation' ? '480px' : '310px',
-              }}
+              style={(() => {
+                const isCitation = bubbleMode === 'citation';
+                const menuWidth = isCitation ? 480 : 310;
+                const menuHeight = isCitation ? 390 : 310;
+                const winH = typeof window !== 'undefined' ? window.innerHeight : 800;
+                const winW = typeof window !== 'undefined' ? window.innerWidth : 1200;
+
+                const anchorY = bubbleMenuRect.bottom > 0 ? bubbleMenuRect.bottom : bubbleMenuRect.top;
+                const anchorX = bubbleMenuRect.left > 0 ? bubbleMenuRect.left : bubbleMenuRect.right;
+
+                // Determine vertical position: pop UP if pointer is near bottom of viewport
+                const shouldPopUp = (anchorY + menuHeight + 15 > winH) && (anchorY > menuHeight);
+                let topPos = shouldPopUp
+                  ? anchorY - menuHeight - 10
+                  : anchorY + 10;
+
+                // Clamp inside viewport [10, winH - menuHeight - 10]
+                topPos = Math.max(10, Math.min(winH - menuHeight - 10, topPos));
+
+                // Clamp left position inside viewport [10, winW - menuWidth - 10]
+                let leftPos = bubbleMenuRect.width > 0 
+                  ? bubbleMenuRect.left + bubbleMenuRect.width / 2 - menuWidth / 2 
+                  : anchorX;
+
+                if (leftPos + menuWidth > winW - 10) {
+                  leftPos = winW - menuWidth - 10;
+                }
+                leftPos = Math.max(10, leftPos);
+
+                return {
+                  top: `${topPos}px`,
+                  left: `${leftPos}px`,
+                  width: `${menuWidth}px`,
+                };
+              })()}
             >
               {/* ── FORMAT MODE ── */}
               {bubbleMode === 'format' && (
@@ -3024,10 +3054,13 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                 const selection = window.getSelection();
                 if (selection && !selection.isCollapsed && selection.toString().trim()) {
                   const holder = document.getElementById('editorjs-holder');
-                  if (holder && holder.contains(selection.anchorNode)) {
+                  const anchorEl = selection.anchorNode?.nodeType === Node.TEXT_NODE
+                    ? selection.anchorNode.parentElement
+                    : (selection.anchorNode as HTMLElement);
+
+                  if (holder && anchorEl && holder.contains(anchorEl)) {
                     e.preventDefault();
-                    const range = selection.getRangeAt(0);
-                    setBubbleMenuRect(range.getBoundingClientRect());
+                    setBubbleMenuRect(new DOMRect(e.clientX, e.clientY, 0, 0));
                     setBubbleMode('format');
                     setShowBubbleMenu(true);
                   }
@@ -3044,6 +3077,10 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                 }}
                 onStatsChange={onStatsChange}
                 onCiteClick={onCiteClick}
+                onCommentMarkClick={(commentId) => {
+                  setShowRightSidebar(true);
+                  setIsRightSidebarExpanded(true);
+                }}
                 onContentChange={onContentChange}
                 onCitationSearchChange={(query, rect) => {
                   setBubbleMenuRect(rect);

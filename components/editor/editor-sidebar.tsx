@@ -208,6 +208,7 @@ export function EditorSidebar({
 }: SidebarProps) {
   const { language, t } = useLanguage();
   const [workspaceTab, setWorkspaceTab] = useState<'library' | 'writing' | 'document' | 'comments'>('library');
+  const [commentFilterTab, setCommentFilterTab] = useState<'active' | 'resolved'>('active');
 
   // Sync tab from props if changed
   useEffect(() => {
@@ -947,56 +948,128 @@ export function EditorSidebar({
                 </p>
               </div>
 
-              <div className="flex flex-col gap-3 max-h-[calc(100vh-320px)] overflow-y-auto pr-1">
-                {comments.filter(c => !c.resolved).length === 0 ? (
-                  <div className="text-center py-12 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-xs text-slate-400 font-medium italic">
-                    {language === 'en' ? 'No active comments' : 'Tidak ada komentar aktif'}
-                  </div>
-                ) : (
-                  comments.filter(c => !c.resolved).map((c) => (
-                    <div
-                      key={c.id}
-                      onClick={() => onCommentClick?.(c)}
-                      className="border border-slate-200 hover:border-indigo-300 bg-slate-50/20 hover:bg-indigo-50/5 transition rounded-xl p-3 flex flex-col gap-2 text-left cursor-pointer shadow-sm shadow-slate-100/10"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-extrabold text-slate-800 truncate max-w-[130px]">
-                          {c.author_name}
-                        </span>
-                        <span className="text-[8px] text-slate-400">
-                          {new Date(c.created_at).toLocaleTimeString(language === 'en' ? 'en-US' : 'id-ID', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </span>
-                      </div>
+              {/* Active vs Resolved Sub-tabs */}
+              <div className="flex items-center gap-1.5 p-1 bg-slate-100/70 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setCommentFilterTab('active')}
+                  className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                    commentFilterTab === 'active'
+                      ? 'bg-white text-indigo-700 shadow-sm border border-slate-200/60'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <span>{language === 'en' ? 'Active' : 'Aktif'}</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${
+                    commentFilterTab === 'active' ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-200/60 text-slate-600'
+                  }`}>
+                    {comments.filter(c => !c.resolved).length}
+                  </span>
+                </button>
 
-                      {c.selected_text && (
-                        <div className="bg-slate-100/60 border-l-2 border-slate-350 px-2 py-1 rounded text-[9px] text-slate-550 italic truncate">
-                          "{c.selected_text}"
-                        </div>
-                      )}
+                <button
+                  type="button"
+                  onClick={() => setCommentFilterTab('resolved')}
+                  className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                    commentFilterTab === 'resolved'
+                      ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/60'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <span>{language === 'en' ? 'Resolved' : 'Selesai'}</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${
+                    commentFilterTab === 'resolved' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-200/60 text-slate-600'
+                  }`}>
+                    {comments.filter(c => c.resolved).length}
+                  </span>
+                </button>
+              </div>
 
-                      <p className="text-xs text-slate-700 leading-normal font-medium whitespace-pre-line">
-                        {c.comment_text}
-                      </p>
-
-                      <div className="flex justify-end pt-1 border-t border-slate-100 mt-1">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (onResolveComment) {
-                              onResolveComment(c.id);
-                            }
-                          }}
-                          className="px-2.5 py-1 text-[9px] font-extrabold text-indigo-650 hover:text-white bg-indigo-55/80 hover:bg-indigo-650 transition rounded-lg border border-transparent shadow-sm shadow-indigo-100/10 cursor-pointer"
-                        >
-                          Resolve
-                        </button>
-                      </div>
+              <div className="flex flex-col gap-3 max-h-[calc(100vh-360px)] overflow-y-auto pr-1">
+                {commentFilterTab === 'active' ? (
+                  comments.filter(c => !c.resolved).length === 0 ? (
+                    <div className="text-center py-12 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-xs text-slate-400 font-medium italic">
+                      {language === 'en' ? 'No active comments' : 'Tidak ada komentar aktif'}
                     </div>
-                  ))
+                  ) : (
+                    comments.filter(c => !c.resolved).map((c) => (
+                      <div
+                        key={c.id}
+                        onClick={() => onCommentClick?.(c)}
+                        className="border border-slate-200 hover:border-indigo-300 bg-slate-50/20 hover:bg-indigo-50/5 transition rounded-xl p-3 flex flex-col gap-2 text-left cursor-pointer shadow-sm shadow-slate-100/10"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-extrabold text-slate-800 truncate max-w-[130px]">
+                            {c.author_name}
+                          </span>
+                          <span className="text-[8px] text-slate-400">
+                            {new Date(c.created_at).toLocaleTimeString(language === 'en' ? 'en-US' : 'id-ID', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+
+                        {c.selected_text && (
+                          <div className="bg-slate-100/60 border-l-2 border-indigo-400 px-2 py-1 rounded text-[9px] text-slate-600 italic truncate">
+                            "{c.selected_text}"
+                          </div>
+                        )}
+
+                        <p className="text-xs text-slate-700 leading-normal font-medium whitespace-pre-line">
+                          {c.comment_text}
+                        </p>
+
+                        <div className="flex justify-end pt-1 border-t border-slate-100 mt-1">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (onResolveComment) {
+                                onResolveComment(c.id);
+                              }
+                            }}
+                            className="px-2.5 py-1 text-[9px] font-extrabold text-indigo-600 hover:text-white bg-indigo-50 hover:bg-indigo-600 transition rounded-lg border border-indigo-100 shadow-sm cursor-pointer"
+                          >
+                            Resolve
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )
+                ) : (
+                  comments.filter(c => c.resolved).length === 0 ? (
+                    <div className="text-center py-12 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-xs text-slate-400 font-medium italic">
+                      {language === 'en' ? 'No resolved comments' : 'Belum ada komentar selesai'}
+                    </div>
+                  ) : (
+                    comments.filter(c => c.resolved).map((c) => (
+                      <div
+                        key={c.id}
+                        onClick={() => onCommentClick?.(c)}
+                        className="border border-slate-200/80 hover:border-emerald-300 bg-emerald-50/10 hover:bg-emerald-50/20 transition rounded-xl p-3 flex flex-col gap-2 text-left cursor-pointer shadow-sm"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-extrabold text-slate-800 truncate max-w-[120px]">
+                            {c.author_name}
+                          </span>
+                          <span className="text-[8px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 flex items-center gap-1">
+                            ✓ {language === 'en' ? 'Resolved' : 'Selesai'}
+                          </span>
+                        </div>
+
+                        {c.selected_text && (
+                          <div className="bg-emerald-50/50 border-l-2 border-emerald-400 px-2 py-1 rounded text-[9px] text-emerald-800 italic truncate">
+                            "{c.selected_text}"
+                          </div>
+                        )}
+
+                        <p className="text-xs text-slate-600 leading-normal font-medium whitespace-pre-line">
+                          {c.comment_text}
+                        </p>
+                      </div>
+                    ))
+                  )
                 )}
               </div>
             </div>

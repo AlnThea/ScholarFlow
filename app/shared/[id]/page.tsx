@@ -538,6 +538,7 @@ export default function SharedDocumentPage() {
                   : `Comment "${oldComm.comment_text.slice(0, 25)}${oldComm.comment_text.length > 25 ? '...' : ''}" was resolved by the owner!`,
                 'info'
               );
+              editorJsRef.current?.highlightAndRemoveCommentMark(oldComm.id);
             }
           });
           return newComms;
@@ -551,13 +552,12 @@ export default function SharedDocumentPage() {
 
   // Save document handler for Co-Editor mode
   const triggerDebouncedSave = useCallback((titleToSave: string, contentToSave: any, settingsToSave?: any) => {
-    setSaveStatus('saving');
-
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
 
     debounceTimeoutRef.current = setTimeout(async () => {
+      setSaveStatus('saving');
       let alignments = {};
       try {
         alignments = JSON.parse(localStorage.getItem('scholarflow.editorjs.alignments.v1') || '{}');
@@ -1154,19 +1154,22 @@ export default function SharedDocumentPage() {
         <main 
           className={`flex-1 min-w-0 pb-24 ${isCoEditor ? 'pt-32' : 'pt-20'}`}
           onContextMenu={(e) => {
-          if (!isCoEditor) return;
-          const selection = window.getSelection();
-          if (selection && !selection.isCollapsed && selection.toString().trim()) {
-            const holder = window.document.getElementById('editorjs-holder');
-            if (holder && holder.contains(selection.anchorNode)) {
-              e.preventDefault();
-              const range = selection.getRangeAt(0);
-              setBubbleMenuRect(range.getBoundingClientRect());
-              setBubbleMode('format');
-              setShowBubbleMenu(true);
+            if (!isCoEditor) return;
+            const selection = window.getSelection();
+            if (selection && !selection.isCollapsed && selection.toString().trim()) {
+              const holder = window.document.getElementById('editorjs-holder');
+              const anchorEl = selection.anchorNode?.nodeType === Node.TEXT_NODE
+                ? selection.anchorNode.parentElement
+                : (selection.anchorNode as HTMLElement);
+
+              if (holder && anchorEl && holder.contains(anchorEl)) {
+                e.preventDefault();
+                setBubbleMenuRect(new DOMRect(e.clientX, e.clientY, 0, 0));
+                setBubbleMode('format');
+                setShowBubbleMenu(true);
+              }
             }
-          }
-        }}
+          }}
       >
         <div className="max-w-3xl mx-auto bg-white border border-slate-200/80 rounded-2xl shadow-sm min-h-[60vh] overflow-hidden my-6">
           
@@ -1187,6 +1190,9 @@ export default function SharedDocumentPage() {
               ref={editorJsRef}
               initialContent={document.content}
               readOnly={!isCoEditor}
+              onCommentMarkClick={(commentId) => {
+                setShowCommentsSidebar(true);
+              }}
               onContentChange={isCoEditor ? handleContentChange : undefined}
               onBlockTypeChange={setCurrentBlockType}
               onAlignmentChange={(align) => {
@@ -1754,11 +1760,41 @@ export default function SharedDocumentPage() {
           />
           <div
             className="fixed z-[9998] bg-white border border-slate-200/80 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.15)] flex flex-col transition-all duration-150 backdrop-blur-sm overflow-hidden text-slate-800"
-            style={{
-              top: `${bubbleMenuRect.bottom + window.scrollY + 10}px`,
-              left: `${Math.max(10, bubbleMenuRect.left + window.scrollX + bubbleMenuRect.width / 2 - (bubbleMode === 'citation' ? 240 : 155))}px`,
-              width: bubbleMode === 'citation' ? '480px' : '310px',
-            }}
+            style={(() => {
+              const isCitation = bubbleMode === 'citation';
+              const menuWidth = isCitation ? 480 : 310;
+              const menuHeight = isCitation ? 390 : 310;
+              const winH = typeof window !== 'undefined' ? window.innerHeight : 800;
+              const winW = typeof window !== 'undefined' ? window.innerWidth : 1200;
+
+              const anchorY = bubbleMenuRect.bottom > 0 ? bubbleMenuRect.bottom : bubbleMenuRect.top;
+              const anchorX = bubbleMenuRect.left > 0 ? bubbleMenuRect.left : bubbleMenuRect.right;
+
+              // Determine vertical position: pop UP if pointer is near bottom of viewport
+              const shouldPopUp = (anchorY + menuHeight + 15 > winH) && (anchorY > menuHeight);
+              let topPos = shouldPopUp
+                ? anchorY - menuHeight - 10
+                : anchorY + 10;
+
+              // Clamp inside viewport [10, winH - menuHeight - 10]
+              topPos = Math.max(10, Math.min(winH - menuHeight - 10, topPos));
+
+              // Clamp left position inside viewport [10, winW - menuWidth - 10]
+              let leftPos = bubbleMenuRect.width > 0 
+                ? bubbleMenuRect.left + bubbleMenuRect.width / 2 - menuWidth / 2 
+                : anchorX;
+
+              if (leftPos + menuWidth > winW - 10) {
+                leftPos = winW - menuWidth - 10;
+              }
+              leftPos = Math.max(10, leftPos);
+
+              return {
+                top: `${topPos}px`,
+                left: `${leftPos}px`,
+                width: `${menuWidth}px`,
+              };
+            })()}
           >
             {/* ── FORMAT MODE ── */}
             {bubbleMode === 'format' && (
@@ -2147,6 +2183,9 @@ export default function SharedDocumentPage() {
                         );
 
                         if (added) {
+                          // Add inline comment mark highlight on editor canvas
+                          editorJsRef.current?.addCommentMark(added.id, author);
+
                           // Update comments list
                           setComments(prev => [...prev, added]);
 
