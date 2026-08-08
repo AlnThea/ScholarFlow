@@ -395,6 +395,6 @@
 - Suggestion Card Rendering, Role-Based Accept/Reject Access Control & i18n Polish:
   - Fixed missing author name, deleted text, and replacement text rendering in the **💡 Usulan / Suggestions** right sidebar tab by adding field fallback resolution (`author_name || author`, `selected_text || old_text`, `suggested_text || new_text`).
   - Added role-based access control for suggestion actions: the creator of a suggestion now sees a `⏳ Pending Review by Owner / ⏳ Menunggu Peninjauan` indicator on their own cards, while the recipient (Owner / Co-Editor) sees the interactive `✕ Reject / Tolak` and `✓ Accept / Terima` buttons.
-  - Added full Internationalization (i18n) support across suggestions sidebar tabs, card status badges, action buttons, and selection context menus (`💡 Suggestions` / `💡 Usulan`, `Deleted:` / `Dihapus:`, `Replacement:` / `Pengganti:`).
+  - Added full Internationalization (i18n) support across suggestions sidebar tabs, card status badges, action buttons, selection context menus (`💡 Suggestions` / `💡 Usulan`, `Deleted:` / `Dihapus:`, `Replacement:` / `Pengganti:`), and the floating signal banner (`Latest document revision has been accepted! [ 🔄 Update Editor ]` vs `Revisi usulan dokumen terbaru telah diterima! [ 🔄 Perbarui Editor ]`).
   - Restricted `💡 Suggest Change (Track Changes)` option in selection context bubble menus (`editor-layout.tsx` & `page.tsx`) to display **only when Mode Sugesti (Suggesting Mode)** is active (`editorMode === 'suggest'`), hiding it cleanly when in Direct Edit Mode (`editorMode === 'edit'`).
 
