@@ -282,6 +282,16 @@ export function ScholarEditor() {
     return () => clearInterval(interval);
   }, [user?.id, currentDocument?.id]);
 
+  // Auto-sync comment highlights onto editor canvas whenever comments update
+  useEffect(() => {
+    if (comments && comments.length > 0) {
+      const timer = setTimeout(() => {
+        editorJsRef.current?.syncCommentMarks?.(comments);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [comments]);
+
   const handleMarkNotificationRead = async (id: string) => {
     try {
       const success = await markNotificationAsRead(id);

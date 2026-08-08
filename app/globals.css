@@ -302,25 +302,30 @@ body {
 }
 
 /* Comment Highlight Styling */
-mark.sf-comment-mark, .sf-comment-mark {
+mark[data-comment-id], mark.sf-comment-mark, .sf-comment-mark {
   background-color: #FEF08A !important;
+  color: #78350F !important;
   border-bottom: 2px solid #EAB308 !important;
-  border-radius: 2px;
-  padding: 1px 3px;
+  border-radius: 3px;
+  padding: 1px 4px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  font-weight: 500;
+  display: inline;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-mark.sf-comment-mark:hover, .sf-comment-mark:hover {
-  background-color: #FDE047 !important;
-  border-bottom-color: #CA8A04 !important;
+mark[data-comment-id]:hover, mark.sf-comment-mark:hover, .sf-comment-mark:hover {
+  background-color: #FACC15 !important;
+  color: #451A03 !important;
+  border-bottom-color: #D97706 !important;
+  box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.4), 0 2px 4px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* Flash pulse animation when clicking a comment */
 @keyframes sf-comment-pulse {
-  0% { background-color: #FEF08A; }
-  50% { background-color: #818CF8; border-bottom-color: #4F46E5; color: #FFFFFF; }
-  100% { background-color: #FEF08A; }
+  0% { background-color: #FEF08A; color: #78350F; }
+  50% { background-color: #6366F1; border-bottom-color: #4338CA; color: #FFFFFF; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.4); }
+  100% { background-color: #FEF08A; color: #78350F; }
 }
 
 .sf-comment-mark-active {
@@ -329,10 +334,10 @@ mark.sf-comment-mark:hover, .sf-comment-mark:hover {
 
 /* Flash green transition when resolved */
 @keyframes sf-comment-resolve-flash {
-  0% { background-color: #FEF08A; }
-  30% { background-color: #A7F3D0; border-bottom-color: #059669; color: #065F46; }
-  70% { background-color: #D1FAE5; border-bottom-color: #10B981; }
-  100% { background-color: transparent; border-bottom-color: transparent; }
+  0% { background-color: #FEF08A; color: #78350F; }
+  30% { background-color: #A7F3D0; border-bottom-color: #059669; color: #065F46; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3); }
+  70% { background-color: #D1FAE5; border-bottom-color: #10B981; color: #065F46; }
+  100% { background-color: transparent; border-bottom-color: transparent; color: inherit; box-shadow: none; }
 }
 
 .sf-comment-mark-resolving {

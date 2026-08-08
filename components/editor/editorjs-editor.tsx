@@ -161,6 +161,7 @@ class CustomFormatsSanitizerTool {
         style: true,
         'data-comment-id': true,
         'data-author': true,
+        title: true,
       },
       sup: {},
       sub: {},
@@ -225,6 +226,7 @@ export interface EditorJsMethods {
   addCommentMark: (commentId: string, authorName?: string) => void;
   highlightAndRemoveCommentMark: (commentId: string) => void;
   scrollToCommentMark: (commentId: string) => void;
+  syncCommentMarks?: (comments: Array<{ id: string; selected_text?: string; author?: string; block_id?: string; resolved?: boolean }>) => void;
 }
 
 function scrambleHtmlText(html: string): string {
@@ -1472,6 +1474,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         mark.className = 'sf-comment-mark';
         mark.setAttribute('data-comment-id', commentId);
         if (authorName) mark.setAttribute('data-author', authorName);
+        mark.setAttribute('title', authorName ? `Komentar oleh ${authorName} (Klik untuk lihat)` : 'Klik untuk lihat komentar');
         try {
           range.surroundContents(mark);
         } catch (e) {
@@ -1522,6 +1525,92 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           markEl.classList.remove('sf-comment-mark-active');
         }, 3000);
       }
+    },
+    syncCommentMarks: (comments: Array<{ id: string; selected_text?: string; author?: string; block_id?: string; resolved?: boolean }>) => {
+      const holder = document.getElementById(holderId);
+      if (!holder || !comments || !Array.isArray(comments) || comments.length === 0) return;
+
+      const activeComments = comments.filter(c => !c.resolved && c.selected_text && c.selected_text.trim().length > 0);
+
+      activeComments.forEach(c => {
+        const commentId = c.id;
+        const targetText = c.selected_text!.trim();
+        const existingMark = holder.querySelector(`mark[data-comment-id="${commentId}"], .sf-comment-mark[data-comment-id="${commentId}"]`);
+        
+        if (existingMark) return;
+
+        const searchScope = c.block_id 
+          ? (holder.querySelector(`[data-id="${c.block_id}"]`) || holder)
+          : holder;
+
+        let applied = false;
+
+        const treeWalker = document.createTreeWalker(searchScope, NodeFilter.SHOW_TEXT, null);
+        let currentNode = treeWalker.nextNode();
+
+        while (currentNode) {
+          const parentEl = currentNode.parentNode as HTMLElement | null;
+          if (parentEl && !parentEl.closest('mark[data-comment-id]')) {
+            const nodeText = currentNode.nodeValue || '';
+            const matchIndex = nodeText.indexOf(targetText);
+            if (matchIndex !== -1) {
+              try {
+                const range = document.createRange();
+                range.setStart(currentNode, matchIndex);
+                range.setEnd(currentNode, matchIndex + targetText.length);
+
+                const mark = document.createElement('mark');
+                mark.className = 'sf-comment-mark';
+                mark.setAttribute('data-comment-id', commentId);
+                if (c.author) mark.setAttribute('data-author', c.author);
+                mark.setAttribute('title', c.author ? `Komentar oleh ${c.author} (Klik untuk lihat)` : 'Klik untuk lihat komentar');
+
+                range.surroundContents(mark);
+                applied = true;
+                break;
+              } catch (e) {
+                try {
+                  const range = document.createRange();
+                  range.setStart(currentNode, matchIndex);
+                  range.setEnd(currentNode, matchIndex + targetText.length);
+                  const fragment = range.extractContents();
+                  const mark = document.createElement('mark');
+                  mark.className = 'sf-comment-mark';
+                  mark.setAttribute('data-comment-id', commentId);
+                  if (c.author) mark.setAttribute('data-author', c.author);
+                  mark.setAttribute('title', c.author ? `Komentar oleh ${c.author} (Klik untuk lihat)` : 'Klik untuk lihat komentar');
+                  mark.appendChild(fragment);
+                  range.insertNode(mark);
+                  applied = true;
+                  break;
+                } catch (err) {
+                  console.warn('Failed to wrap selection for comment:', err);
+                }
+              }
+            }
+          }
+          currentNode = treeWalker.nextNode();
+        }
+
+        if (!applied) {
+          const blocks = searchScope.querySelectorAll('.ce-block__content, .cdx-block, [contenteditable="true"]');
+          const targetBlocks = blocks.length > 0 ? Array.from(blocks) : [searchScope];
+          
+          for (const blockEl of targetBlocks) {
+            const html = blockEl.innerHTML;
+            if (html && html.includes(targetText) && !html.includes(`data-comment-id="${commentId}"`)) {
+              const authorAttr = c.author ? ` data-author="${c.author.replace(/"/g, '&quot;')}"` : '';
+              const titleAttr = ` title="${(c.author ? `Komentar oleh ${c.author} (Klik untuk lihat)` : 'Klik untuk lihat komentar').replace(/"/g, '&quot;')}"`;
+              blockEl.innerHTML = html.replace(
+                targetText,
+                `<mark class="sf-comment-mark" data-comment-id="${commentId}"${authorAttr}${titleAttr}>${targetText}</mark>`
+              );
+              applied = true;
+              break;
+            }
+          }
+        }
+      });
     },
   }));
 
@@ -1601,6 +1690,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
                     style: true,
                     'data-comment-id': true,
                     'data-author': true,
+                    title: true,
                   },
                   cite: {
                     class: true,

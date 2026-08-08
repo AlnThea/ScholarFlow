@@ -184,6 +184,7 @@ export default function SharedDocumentPage() {
   // Comments States
   const [comments, setComments] = useState<any[]>([]);
   const [showCommentsSidebar, setShowCommentsSidebar] = useState(false);
+  const [commentSubTab, setCommentSubTab] = useState<'active' | 'resolved'>('active');
   const [newCommentText, setNewCommentText] = useState('');
   const [newCommentAuthor, setNewCommentAuthor] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -549,6 +550,16 @@ export default function SharedDocumentPage() {
     }, 5000);
     return () => clearInterval(interval);
   }, [docId, showToast, language]);
+
+  // Auto-sync comment highlights onto editor canvas whenever comments update
+  useEffect(() => {
+    if (comments && comments.length > 0) {
+      const timer = setTimeout(() => {
+        editorJsRef.current?.syncCommentMarks?.(comments);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [comments]);
 
   // Save document handler for Co-Editor mode
   const triggerDebouncedSave = useCallback((titleToSave: string, contentToSave: any, settingsToSave?: any) => {
@@ -1254,66 +1265,170 @@ export default function SharedDocumentPage() {
         </div>
       </main>
 
-      {/* Comments Sidebar Panel */}
+      {/* Right Comments Sidebar Panel for Co-Editor (Full Height Browser Edge) */}
       {showCommentsSidebar && (
-        <aside className={`w-80 shrink-0 bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sticky ${isCoEditor ? 'top-32' : 'top-20'} max-h-[calc(100vh-160px)] overflow-y-auto flex flex-col gap-4 font-sans text-slate-800 animate-slide-in`}>
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-            <h3 className="text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
-              <span>💬</span>
-              {language === 'id' ? 'Komentar Aktif' : 'Active Comments'}
-            </h3>
+        <aside className="fixed top-0 right-0 h-screen w-80 md:w-96 bg-white border-l border-slate-200 z-[99] shadow-2xl flex flex-col font-sans text-slate-800 transition-all duration-300 animate-slide-in">
+          
+          {/* Sidebar Header */}
+          <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
+                <IconMessage className="h-4 w-4" />
+              </div>
+              <div>
+                <h3 className="text-xs font-bold text-slate-900 leading-none">
+                  {language === 'id' ? 'Komentar Dokumen' : 'Document Comments'}
+                </h3>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  {language === 'id' ? 'Diskusi & Masukan Co-Editor' : 'Co-Editor Feedback & Discussion'}
+                </p>
+              </div>
+            </div>
             <button
               onClick={() => setShowCommentsSidebar(false)}
-              className="text-[10px] text-slate-400 hover:text-slate-700 transition cursor-pointer font-bold"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+              title={language === 'id' ? 'Tutup Sidebar' : 'Close Sidebar'}
             >
-              ✕
+              <IconX className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="flex flex-col gap-3 flex-1 overflow-y-auto max-h-[500px] pr-1">
-            {comments.filter(c => !c.resolved).length === 0 ? (
-              <div className="text-center py-10 text-xs text-slate-400 italic">
-                {language === 'id' ? 'Tidak ada komentar aktif' : 'No active comments'}
-              </div>
-            ) : (
-              comments.filter(c => !c.resolved).map((c) => (
-                <div
-                  key={c.id}
-                  onClick={() => {
-                    if (c.block_id) {
-                      const blockEl = window.document.querySelector(`[data-id="${c.block_id}"]`);
-                      if (blockEl) {
-                        blockEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        blockEl.classList.add('bg-indigo-50/50');
-                        setTimeout(() => {
-                          blockEl.classList.remove('bg-indigo-50/50');
-                        }, 2000);
-                      }
-                    }
-                  }}
-                  className="border border-slate-150 hover:border-indigo-200 bg-slate-50/20 hover:bg-indigo-50/5 transition rounded-xl p-3 flex flex-col gap-2 text-left cursor-pointer shadow-sm shadow-slate-100/20"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-extrabold text-slate-800 truncate max-w-[150px]">{c.author_name}</span>
-                    <span className="text-[8px] text-slate-400">
-                      {new Date(c.created_at).toLocaleTimeString(language === 'id' ? 'id-ID' : 'en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </span>
+          {/* Sub-Tabs: Aktif vs Selesai */}
+          <div className="px-4 pt-3 pb-2 border-b border-slate-100 bg-white">
+            <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100/80 rounded-xl text-xs font-semibold">
+              <button
+                onClick={() => setCommentSubTab('active')}
+                className={`py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                  commentSubTab === 'active'
+                    ? 'bg-white text-indigo-600 shadow-sm font-bold'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <span>{language === 'id' ? 'Aktif' : 'Active'}</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                  commentSubTab === 'active' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'
+                }`}>
+                  {comments.filter(c => !c.resolved).length}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setCommentSubTab('resolved')}
+                className={`py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                  commentSubTab === 'resolved'
+                    ? 'bg-white text-emerald-600 shadow-sm font-bold'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <span>{language === 'id' ? 'Selesai' : 'Resolved'}</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                  commentSubTab === 'resolved' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'
+                }`}>
+                  ✓ {comments.filter(c => c.resolved).length}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* Comments List */}
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3.5 bg-slate-50/30">
+            {commentSubTab === 'active' ? (
+              comments.filter(c => !c.resolved).length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                  <div className="p-3 rounded-2xl bg-indigo-50 text-indigo-400 mb-3">
+                    <IconMessage className="h-6 w-6" />
                   </div>
-
-                  {c.selected_text && (
-                    <div className="bg-slate-100/50 border-l-2 border-slate-300 px-2 py-1 rounded text-[9px] text-slate-500 italic truncate">
-                      "{c.selected_text}"
-                    </div>
-                  )}
-
-                  <p className="text-xs text-slate-700 leading-normal font-medium whitespace-pre-line">
-                    {c.comment_text}
+                  <p className="text-xs font-semibold text-slate-600">
+                    {language === 'id' ? 'Tidak ada komentar aktif' : 'No active comments'}
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-1 max-w-[200px]">
+                    {language === 'id' ? 'Blok teks pada editor untuk menambahkan komentar baru.' : 'Highlight text in the editor to add a new comment.'}
                   </p>
                 </div>
-              ))
+              ) : (
+                comments.filter(c => !c.resolved).map((c) => (
+                  <div
+                    key={c.id}
+                    onClick={() => {
+                      editorJsRef.current?.scrollToCommentMark(c.id);
+                    }}
+                    className="group border border-slate-200/80 hover:border-indigo-300 bg-white hover:bg-indigo-50/20 transition-all duration-200 rounded-2xl p-3.5 flex flex-col gap-2.5 text-left cursor-pointer shadow-sm hover:shadow-md hover:shadow-indigo-500/5 relative overflow-hidden"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="h-6 w-6 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-extrabold flex items-center justify-center shrink-0">
+                          {c.author_name ? c.author_name.charAt(0).toUpperCase() : 'C'}
+                        </div>
+                        <span className="text-xs font-bold text-slate-800 truncate">{c.author_name}</span>
+                      </div>
+                      <span className="text-[9px] text-slate-400 font-medium shrink-0">
+                        {new Date(c.created_at).toLocaleTimeString(language === 'id' ? 'id-ID' : 'en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+
+                    {c.selected_text && (
+                      <div className="bg-amber-50/60 border-l-2 border-amber-400 px-2.5 py-1.5 rounded-r-lg text-[10px] text-amber-900 font-medium italic truncate">
+                        "{c.selected_text}"
+                      </div>
+                    )}
+
+                    <p className="text-xs text-slate-700 leading-relaxed font-medium whitespace-pre-line">
+                      {c.comment_text}
+                    </p>
+
+                    <div className="pt-1 flex items-center justify-between text-[9px] text-indigo-500 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span>{language === 'id' ? 'Klik untuk sorot di canvas' : 'Click to highlight in canvas'} →</span>
+                    </div>
+                  </div>
+                ))
+              )
+            ) : (
+              comments.filter(c => c.resolved).length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                  <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-400 mb-3">
+                    <IconCheck className="h-6 w-6" />
+                  </div>
+                  <p className="text-xs font-semibold text-slate-600">
+                    {language === 'id' ? 'Belum ada komentar selesai' : 'No resolved comments yet'}
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-1 max-w-[200px]">
+                    {language === 'id' ? 'Komentar yang telah diselesaikan oleh pemilik akan tersimpan di sini.' : 'Comments resolved by the owner will be archived here.'}
+                  </p>
+                </div>
+              ) : (
+                comments.filter(c => c.resolved).map((c) => (
+                  <div
+                    key={c.id}
+                    className="border border-slate-200/60 bg-white/70 rounded-2xl p-3.5 flex flex-col gap-2 text-left opacity-80 hover:opacity-100 transition shadow-sm"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-extrabold flex items-center justify-center shrink-0">
+                          {c.author_name ? c.author_name.charAt(0).toUpperCase() : 'C'}
+                        </div>
+                        <span className="text-xs font-bold text-slate-700 truncate">{c.author_name}</span>
+                      </div>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[9px] font-bold border border-emerald-200">
+                        <IconCheck className="h-2.5 w-2.5" />
+                        {language === 'id' ? 'Selesai' : 'Resolved'}
+                      </span>
+                    </div>
+
+                    {c.selected_text && (
+                      <div className="bg-slate-100/70 border-l-2 border-slate-300 px-2.5 py-1 rounded-r-lg text-[10px] text-slate-500 italic truncate">
+                        "{c.selected_text}"
+                      </div>
+                    )}
+
+                    <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line">
+                      {c.comment_text}
+                    </p>
+                  </div>
+                ))
+              )
             )}
           </div>
         </aside>

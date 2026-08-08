@@ -354,7 +354,22 @@
   - Implemented smart viewport bounds calculation (*Anti-Overflow Clamping*): if the selection/right-click occurs near the bottom of the browser viewport, the menu automatically pops up **above** the cursor/selection, clamping `top` and `left` coordinates inside viewport boundaries (`10px` offset) to prevent any off-screen clipping.
 - Fixed Auto-Save Trigger Timing Sensitivity:
   - Refactored `triggerDebouncedSave` in `app/shared/[id]/page.tsx` and `components/editor/scholar-editor.tsx` to move `setSaveStatus('saving')` inside the debounced `setTimeout` callback.
-  - Prevents cursor movements, clicking, and text highlights from triggering false "Saving..." status badges until an actual content edit occurs and the 1.5-second debounce window completes.
+  
+
+## v0.2.6
+- Enhanced Inline Comment Mark Contrast, Hover State & Browser Native Tooltip:
+  - Fixed plain white text rendering inside comment marks by adding explicit dark text color (`color: #78350F !important`) to `mark[data-comment-id], mark.sf-comment-mark, .sf-comment-mark` in `app/globals.css`.
+  - Added dynamic hover styling (`:hover`) with rich golden yellow (`#FACC15`), dark text (`#451A03`), amber border (`#D97706`), and a vibrant glow ring shadow (`box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.4)`).
+  - Added native browser tooltip `title` attribute (`title="Komentar oleh [Nama] (Klik untuk lihat)"`) when creating comment marks, and whitelisted `title` in EditorJS sanitizer configs (`CustomFormatsSanitizerTool` & `paragraph` sanitize rules).
+- Automated Canvas Comment Mark Restoration & DOM TreeWalker Synchronization:
+  - Added `syncCommentMarks` method to `EditorJsMethods` in `components/editor/editorjs-editor.tsx`.
+  - Utilized `document.createTreeWalker` and DOM `Range` API to scan active comments fetched from database (`selected_text`) and automatically wrap unhighlighted canvas text with `<mark class="sf-comment-mark" data-comment-id="..." data-author="...">`.
+  - Integrated auto-sync `useEffect` hooks in both Owner (`components/editor/scholar-editor.tsx`) and Co-Editor (`app/shared/[id]/page.tsx`) views, guaranteeing that canvas text is always highlighted when active comments exist.
+- Redesigned Co-Editor Comments Panel into a Full-Height Fixed Right Sidebar:
+  - Transformed the Co-Editor comments UI in `app/shared/[id]/page.tsx` from a floating card popup into a dedicated **Full-Height Fixed Right Sidebar** (`fixed top-0 right-0 h-screen w-80 md:w-96 bg-white border-l border-slate-200 z-[99] shadow-2xl`).
+  - Configured sidebar to span 100% top-to-bottom (`100vh`) along the right edge of the browser window with smooth slide-in animation.
+  - Added sub-tab navigation (**Aktif** with indigo badge & **Selesai** with green checkmark badge) for Co-Editors.
+  - Enhanced comment cards with author initials avatar badges, amber quote boxes (`"selected text"`), click-to-scroll canvas integration, and hover highlight hints.
 
 
 
