@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
 import { EditorJsEditor, type EditorJsMethods } from './editorjs-editor';
 import { EditorSidebar } from './editor-sidebar';
+import { addSuggestion } from '@/lib/api/suggestions';
 import 'katex/dist/katex.min.css';
 import {
   IconArrowBackUp,
@@ -184,7 +185,10 @@ type EditorLayoutProps = {
   onMarkAllNotificationsRead?: () => void;
   onNotificationClick?: (notif: DocumentNotification) => void;
   comments?: any[];
+  suggestions?: any[];
   activeUsers?: UserPresence[];
+  onAcceptSuggestion?: (id: string) => void;
+  onRejectSuggestion?: (id: string) => void;
   onResolveComment?: (id: string) => void;
   onCommentClick?: (comment: any) => void;
   activeSidebarTab?: 'library' | 'writing' | 'document' | 'comments';
@@ -314,7 +318,10 @@ export function EditorLayout({
   onMarkAllNotificationsRead,
   onNotificationClick,
   comments = [],
+  suggestions = [],
   activeUsers = [],
+  onAcceptSuggestion,
+  onRejectSuggestion,
   onResolveComment,
   onCommentClick,
   activeSidebarTab
@@ -326,6 +333,10 @@ export function EditorLayout({
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
   const [currentBlockType, setCurrentBlockType] = useState('paragraph');
   const [currentAlignment, setCurrentAlignment] = useState('left');
+  const [editorMode, setEditorMode] = useState<'edit' | 'suggest'>('edit');
+  const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
+  const [selectedTextForSuggestion, setSelectedTextForSuggestion] = useState('');
+  const [newTextForSuggestion, setNewTextForSuggestion] = useState('');
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isMathHelperOpen, setIsMathHelperOpen] = useState(false);
@@ -2262,6 +2273,38 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
 
           {/* Navbar 2 – Academic Formatting Toolbar */}
           <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-100 bg-white px-6 py-2.5 lg:sticky lg:top-[57px] z-10 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+            {/* Mode Switcher Toggle (Edit Langsung vs Mode Sugesti) */}
+            <div className="flex items-center rounded-lg bg-slate-100/90 p-0.5 border border-slate-200/80 mr-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setEditorMode('edit')}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
+                  editorMode === 'edit'
+                    ? 'bg-white text-indigo-700 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+                title={language === 'id' ? 'Mode Edit Langsung' : 'Direct Edit Mode'}
+              >
+                <span>✍️</span>
+                <span className="hidden sm:inline">{language === 'id' ? 'Edit Langsung' : 'Direct Edit'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditorMode('suggest')}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
+                  editorMode === 'suggest'
+                    ? 'bg-amber-500 text-white shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+                title={language === 'id' ? 'Mode Sugesti / Track Changes' : 'Suggesting Mode'}
+              >
+                <span>💡</span>
+                <span className="hidden sm:inline">{language === 'id' ? 'Mode Sugesti' : 'Suggesting'}</span>
+              </button>
+            </div>
+
+            <div className="h-5 w-px bg-slate-200 mx-1 hidden sm:block" />
+
             {/* Undo / Redo */}
             <button
               className="p-1.5 rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition"
@@ -2768,6 +2811,33 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
 
                   {/* Actions List */}
                   <div className="flex flex-col">
+                    {/* Usulkan Perubahan (Mode Sugesti / Track Changes) */}
+                    {editorMode === 'suggest' && (
+                      <button
+                        className="w-full flex items-center gap-3 px-3 py-2 text-left text-slate-700 hover:bg-amber-50/60 transition font-semibold cursor-pointer border-b border-slate-100/40"
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={() => {
+                          const sel = window.getSelection();
+                          const selText = sel ? sel.toString().trim() : '';
+                          setSelectedTextForSuggestion(selText);
+                          setNewTextForSuggestion(selText);
+                          setIsSuggestionModalOpen(true);
+                        }}
+                      >
+                        <div className="p-1.5 rounded-lg bg-amber-100 text-amber-700 shrink-0">
+                          <IconSparkles className="h-4 w-4 text-amber-600" />
+                        </div>
+                        <div className="flex flex-col text-left">
+                          <span className="text-xs text-amber-900 font-bold">
+                            💡 {language === 'en' ? 'Suggest Change (Track Changes)' : 'Usulan Perubahan (Track Changes)'}
+                          </span>
+                          <span className="text-[9px] text-amber-700 font-normal">
+                            {language === 'en' ? 'Propose text edit or deletion as suggestion' : 'Usulkan pengubahan atau penghapusan teks'}
+                          </span>
+                        </div>
+                      </button>
+                    )}
+
                     {/* Poles AI Button */}
                     <button
                       className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-slate-700 hover:bg-slate-50 transition font-semibold cursor-pointer border-b border-slate-100/40 disabled:opacity-50 disabled:bg-slate-50/50"
@@ -3193,6 +3263,9 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                 onToggleExpanded={handleToggleRightSidebarExpanded}
                 onClose={() => setShowRightSidebar(false)}
                 comments={comments}
+                suggestions={suggestions}
+                onAcceptSuggestion={onAcceptSuggestion}
+                onRejectSuggestion={onRejectSuggestion}
                 onResolveComment={onResolveComment}
                 onCommentClick={onCommentClick}
                 activeTab={activeSidebarTab}
@@ -3802,6 +3875,87 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
           </div>
         </div>,
         document.body
+      )}
+      {/* Modal Usulan Perubahan (Mode Sugesti / Track Changes) */}
+      {isSuggestionModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-[100] flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 flex flex-col gap-4 font-sans text-slate-800">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-amber-50 text-amber-600 rounded-xl">
+                  <IconSparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    {language === 'id' ? '💡 Usulkan Perubahan Teks' : '💡 Propose Text Suggestion'}
+                  </h3>
+                  <p className="text-[10px] text-slate-400">
+                    {language === 'id' ? 'Mode Track Changes (Dapat diterima / ditolak oleh pemilik)' : 'Track Changes Mode (Can be accepted or rejected)'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSuggestionModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
+              >
+                <IconX className="h-4 w-4" />
+              </button>
+            </div>
+
+            {selectedTextForSuggestion && (
+              <div className="flex flex-col gap-1 p-3 bg-rose-50/60 border border-rose-100 rounded-xl">
+                <span className="text-[9px] font-bold text-rose-700 uppercase tracking-wider">
+                  {language === 'id' ? 'Teks Asli (Dihapus):' : 'Original Text (Deleted):'}
+                </span>
+                <p className="text-xs text-rose-900 line-through font-medium leading-relaxed">
+                  "{selectedTextForSuggestion}"
+                </p>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-700">
+                {language === 'id' ? 'Usulan Teks Baru:' : 'Proposed New Text:'}
+              </label>
+              <textarea
+                value={newTextForSuggestion}
+                onChange={(e) => setNewTextForSuggestion(e.target.value)}
+                placeholder={language === 'id' ? 'Ketik usulan teks baru (biarkan kosong jika mengusulkan penghapusan)...' : 'Type proposed new text...'}
+                className="w-full h-24 text-xs p-3 border border-slate-200 rounded-xl outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-sans text-slate-800"
+              />
+              <span className="text-[9px] text-slate-400 italic">
+                * {language === 'id' ? 'Kosongkan jika hanya ingin mengusulkan penghapusan teks.' : 'Leave blank to propose text deletion.'}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsSuggestionModalOpen(false)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+              >
+                {language === 'id' ? 'Batal' : 'Cancel'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const sugId = `sug-${Date.now()}`;
+                  const authorName = profile?.full_name || user?.email?.split('@')[0] || 'Collaborator';
+                  editorJsRef.current?.addSuggestionMark?.(sugId, selectedTextForSuggestion, newTextForSuggestion, authorName);
+                  if (currentDocument?.id) {
+                    addSuggestion(currentDocument.id, selectedTextForSuggestion, newTextForSuggestion, authorName, sugId, user?.id);
+                  }
+                  setIsSuggestionModalOpen(false);
+                }}
+                className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
+              >
+                <IconCheck className="h-4 w-4" />
+                {language === 'id' ? 'Kirim Usulan' : 'Submit Suggestion'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

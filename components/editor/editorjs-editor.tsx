@@ -240,7 +240,7 @@ export interface EditorJsMethods {
   addCommentMark: (commentId: string, authorName?: string) => void;
   highlightAndRemoveCommentMark: (commentId: string) => void;
   scrollToCommentMark: (commentId: string) => void;
-  syncCommentMarks?: (comments: Array<{ id: string; selected_text?: string; author?: string; block_id?: string; resolved?: boolean }>) => void;
+  syncCommentMarks?: (comments: Array<{ id: string; selected_text?: string | null; author?: string; block_id?: string | null; resolved?: boolean }>) => void;
   addSuggestionMark?: (suggestionId: string, oldText: string, newText: string, authorName?: string) => void;
   acceptSuggestion?: (suggestionId: string) => void;
   rejectSuggestion?: (suggestionId: string) => void;
@@ -1543,7 +1543,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         }, 3000);
       }
     },
-    syncCommentMarks: (comments: Array<{ id: string; selected_text?: string; author?: string; block_id?: string; resolved?: boolean }>) => {
+    syncCommentMarks: (comments: Array<{ id: string; selected_text?: string | null; author?: string; block_id?: string | null; resolved?: boolean }>) => {
       const holder = document.getElementById(holderId);
       if (!holder || !comments || !Array.isArray(comments) || comments.length === 0) return;
 

@@ -8,6 +8,7 @@ import { fetchSharedDocument, updateSharedDocument, type DocumentEntry } from '@
 import { fetchComments, addComment, createNotification } from '@/lib/api/comments';
 import { fetchCitationLibrary } from '@/lib/api/citation-library';
 import { updatePresence, fetchActivePresence, leavePresence, type UserPresence } from '@/lib/api/presence';
+import { fetchSuggestions, addSuggestion, updateSuggestionStatus, DocumentSuggestion } from '@/lib/api/suggestions';
 import { formatBibliographyCandidate } from '@/lib/editor/bibliography';
 import { searchCitations, type CitationCandidate } from '@/lib/api/citations';
 import { improveWriting } from '@/lib/api/ai';
@@ -50,7 +51,8 @@ import {
   IconMessage,
   IconTrash,
   IconAlertCircle,
-  IconInfoCircle
+  IconInfoCircle,
+  IconRefresh
 } from '@tabler/icons-react';
 
 export default function SharedDocumentPage() {
@@ -182,12 +184,16 @@ export default function SharedDocumentPage() {
   const [citationResults, setCitationResults] = useState<CitationCandidate[]>([]);
   const [citationError, setCitationError] = useState<string | null>(null);
 
-  // Comments & Presence States
+  // Comments & Presence & Suggestion States
   const [comments, setComments] = useState<any[]>([]);
   const [activeUsers, setActiveUsers] = useState<UserPresence[]>([]);
+  const [suggestions, setSuggestions] = useState<DocumentSuggestion[]>([]);
   const [showCommentsSidebar, setShowCommentsSidebar] = useState(false);
   const [commentSubTab, setCommentSubTab] = useState<'active' | 'resolved'>('active');
   const [editorMode, setEditorMode] = useState<'edit' | 'suggest'>('edit');
+  const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
+  const [selectedTextForSuggestion, setSelectedTextForSuggestion] = useState('');
+  const [newTextForSuggestion, setNewTextForSuggestion] = useState('');
   const [newCommentText, setNewCommentText] = useState('');
   const [newCommentAuthor, setNewCommentAuthor] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -456,9 +462,30 @@ export default function SharedDocumentPage() {
     }
   };
 
+  const getContentComparisonString = (content: any): string => {
+    if (!content) return JSON.stringify([]);
+    let parsed = content;
+    if (typeof content === 'string') {
+      try {
+        parsed = JSON.parse(content);
+      } catch (e) {
+        return content;
+      }
+    }
+    if (parsed && typeof parsed === 'object' && Array.isArray(parsed.blocks)) {
+      return JSON.stringify(parsed.blocks);
+    }
+    return JSON.stringify(parsed);
+  };
+
   const editorJsRef = useRef<any>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedContentRef = useRef<string>('');
+  const [hasPendingRemoteUpdate, setHasPendingRemoteUpdate] = useState<boolean>(false);
+  const [pendingRemoteContent, setPendingRemoteContent] = useState<any>(null);
+  const processedAcceptedSuggestionsRef = useRef<Set<string>>(new Set());
+  const acceptedLocallyRef = useRef<Set<string>>(new Set());
+  const suggestionsInitializedRef = useRef<boolean>(false);
 
   // Fetch document details and citation library on mount
   useEffect(() => {
@@ -470,14 +497,16 @@ export default function SharedDocumentPage() {
 
     const loadData = async () => {
       try {
-        const [docDetail, libData, commentsData] = await Promise.all([
+        setLoading(true);
+        const [docDetail, libData, commentsData, suggestionsData] = await Promise.all([
           fetchSharedDocument(docId),
           fetchCitationLibrary().catch(() => ({})),
-          fetchComments(docId).catch(() => [])
+          fetchComments(docId).catch(() => []),
+          fetchSuggestions(docId).catch(() => [])
         ]);
 
         if (!docDetail) {
-          setError('Access Denied');
+          setError('Document not found or share link is invalid');
         } else {
           // Pre-sanitize the content to replace old blur styling with our new style to avoid flash of blur
           if (docDetail.content && Array.isArray(docDetail.content.blocks)) {
@@ -508,11 +537,14 @@ export default function SharedDocumentPage() {
           }
           setDocument(docDetail);
           setComments(commentsData);
+          setSuggestions(suggestionsData);
           if (docDetail.settings?.alignments) {
             localStorage.setItem('scholarflow.editorjs.alignments.v1', JSON.stringify(docDetail.settings.alignments));
           }
           setCitationLibrary(libData);
-          lastSavedContentRef.current = JSON.stringify(docDetail.content || { blocks: [] });
+          lastSavedContentRef.current = getContentComparisonString(docDetail.content);
+          suggestionsData.filter((s: DocumentSuggestion) => s.status === 'accepted').forEach((s: DocumentSuggestion) => processedAcceptedSuggestionsRef.current.add(s.id));
+          suggestionsInitializedRef.current = true;
         }
       } catch (err) {
         console.error('Failed to load shared document:', err);
@@ -525,12 +557,29 @@ export default function SharedDocumentPage() {
     loadData();
   }, [docId]);
 
-  // Poll comments every 5 seconds
+  // Poll comments, suggestions, and document content every 5 seconds for live sync
   useEffect(() => {
     if (!docId) return;
     const interval = setInterval(async () => {
       try {
-        const newComms = await fetchComments(docId);
+        const [newComms, newSugs, updatedDoc] = await Promise.all([
+          fetchComments(docId),
+          fetchSuggestions(docId),
+          fetchSharedDocument(docId).catch(() => null)
+        ]);
+
+        const newlyAcceptedRemote = newSugs.find(s =>
+          s.status === 'accepted' &&
+          !processedAcceptedSuggestionsRef.current.has(s.id) &&
+          !acceptedLocallyRef.current.has(s.id)
+        );
+
+        if (newlyAcceptedRemote && updatedDoc && updatedDoc.content) {
+          newSugs.filter(s => s.status === 'accepted').forEach(s => processedAcceptedSuggestionsRef.current.add(s.id));
+          setPendingRemoteContent(updatedDoc.content);
+          setHasPendingRemoteUpdate(true);
+        }
+
         setComments(prev => {
           // Check if any previously unresolved comment is now resolved
           prev.forEach(oldComm => {
@@ -547,8 +596,9 @@ export default function SharedDocumentPage() {
           });
           return newComms;
         });
+        setSuggestions(newSugs);
       } catch (e) {
-        console.error('Error polling comments:', e);
+        console.error('Error polling data:', e);
       }
     }, 5000);
     return () => clearInterval(interval);
@@ -608,7 +658,7 @@ export default function SharedDocumentPage() {
     if (!document) return;
 
     // Compare content structures to avoid infinite loop or redundant saves
-    const contentString = JSON.stringify(newContent || { blocks: [] });
+    const contentString = getContentComparisonString(newContent);
     if (contentString === lastSavedContentRef.current) {
       return;
     }
@@ -955,6 +1005,36 @@ export default function SharedDocumentPage() {
                   </span>
                 )}
               </span>
+              {/* Mode Switcher Toggle (Edit Langsung vs Mode Sugesti) */}
+              <div className="flex items-center rounded-lg bg-slate-100/90 p-0.5 border border-slate-200/80 shrink-0 ml-1">
+                <button
+                  type="button"
+                  onClick={() => setEditorMode('edit')}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
+                    editorMode === 'edit'
+                      ? 'bg-white text-indigo-700 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                  title={language === 'id' ? 'Mode Edit Langsung' : 'Direct Edit Mode'}
+                >
+                  <span>✍️</span>
+                  <span className="hidden sm:inline">{language === 'id' ? 'Edit Langsung' : 'Direct Edit'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditorMode('suggest')}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
+                    editorMode === 'suggest'
+                      ? 'bg-amber-500 text-white shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                  title={language === 'id' ? 'Mode Sugesti / Track Changes' : 'Suggesting Mode'}
+                >
+                  <span>💡</span>
+                  <span className="hidden sm:inline">{language === 'id' ? 'Mode Sugesti' : 'Suggesting'}</span>
+                </button>
+              </div>
+
               <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200/40 rounded-full">
                 <IconWorld className="h-3 w-3" />
                 Co-Editor
@@ -972,6 +1052,38 @@ export default function SharedDocumentPage() {
       {/* Navbar 2 – Academic Formatting Toolbar (Visible in Co-Editor mode only) */}
       {isCoEditor && (
         <div className="fixed top-14 left-0 right-0 z-30 flex flex-wrap items-center gap-1.5 border-b border-slate-200/50 bg-white px-6 py-2 shadow-sm shadow-slate-100/10 min-h-12 overflow-x-auto">
+          {/* Mode Switcher Toggle (Edit Langsung vs Mode Sugesti) */}
+          <div className="flex items-center rounded-lg bg-slate-100/90 p-0.5 border border-slate-200/80 mr-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => setEditorMode('edit')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
+                editorMode === 'edit'
+                  ? 'bg-white text-indigo-700 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+              title={language === 'id' ? 'Mode Edit Langsung' : 'Direct Edit Mode'}
+            >
+              <span>✍️</span>
+              <span className="hidden sm:inline">{language === 'id' ? 'Edit Langsung' : 'Direct Edit'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditorMode('suggest')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
+                editorMode === 'suggest'
+                  ? 'bg-amber-500 text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+              title={language === 'id' ? 'Mode Sugesti / Track Changes' : 'Suggesting Mode'}
+            >
+              <span>💡</span>
+              <span className="hidden sm:inline">{language === 'id' ? 'Mode Sugesti' : 'Suggesting'}</span>
+            </button>
+          </div>
+
+          <div className="h-5 w-px bg-slate-200 mx-1 hidden sm:block" />
+
           {/* Undo / Redo */}
           <button
             className="p-1.5 rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition"
@@ -1353,19 +1465,19 @@ export default function SharedDocumentPage() {
             </button>
           </div>
 
-          {/* Sub-Tabs: Aktif vs Selesai */}
+          {/* Sub-Tabs: Komentar vs Usulan vs Selesai */}
           <div className="px-4 pt-3 pb-2 border-b border-slate-100 bg-white">
-            <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100/80 rounded-xl text-xs font-semibold">
+            <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100/80 rounded-xl text-xs font-semibold">
               <button
                 onClick={() => setCommentSubTab('active')}
-                className={`py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 transition cursor-pointer text-[10px] ${
                   commentSubTab === 'active'
                     ? 'bg-white text-indigo-600 shadow-sm font-bold'
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                <span>{language === 'id' ? 'Aktif' : 'Active'}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                <span>{language === 'id' ? 'Komentar' : 'Comments'}</span>
+                <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${
                   commentSubTab === 'active' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'
                 }`}>
                   {comments.filter(c => !c.resolved).length}
@@ -1373,15 +1485,26 @@ export default function SharedDocumentPage() {
               </button>
 
               <button
+                onClick={() => setCommentSubTab('suggestions' as any)}
+                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 transition cursor-pointer text-[10px] ${
+                  (commentSubTab as string) === 'suggestions'
+                    ? 'bg-white text-amber-700 shadow-sm font-bold'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <span>💡 {language === 'en' ? 'Suggestions' : 'Usulan'}</span>
+              </button>
+
+              <button
                 onClick={() => setCommentSubTab('resolved')}
-                className={`py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 transition cursor-pointer text-[10px] ${
                   commentSubTab === 'resolved'
                     ? 'bg-white text-emerald-600 shadow-sm font-bold'
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
                 <span>{language === 'id' ? 'Selesai' : 'Resolved'}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${
                   commentSubTab === 'resolved' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'
                 }`}>
                   ✓ {comments.filter(c => c.resolved).length}
@@ -1444,6 +1567,132 @@ export default function SharedDocumentPage() {
                     </div>
                   </div>
                 ))
+              )
+            ) : (commentSubTab as string) === 'suggestions' ? (
+              suggestions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 px-4 text-center font-sans">
+                  <div className="p-3 rounded-2xl bg-amber-50 text-amber-500 mb-3">
+                    <IconSparkles className="h-6 w-6" />
+                  </div>
+                  <p className="text-xs font-semibold text-slate-600">
+                    {language === 'id' ? 'Belum ada usulan revisi' : 'No suggestions yet'}
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-1 max-w-[200px]">
+                    {language === 'id' ? 'Aktifkan Mode Sugesti atau blok teks untuk mengusulkan perubahan.' : 'Toggle Suggesting mode to propose edits.'}
+                  </p>
+                </div>
+              ) : (
+                suggestions.map((sug) => {
+                  const authorName = sug.author_name || sug.author || (language === 'id' ? 'Kolaborator' : 'Collaborator');
+                  const deletedText = sug.selected_text || sug.old_text;
+                  const replacementText = sug.suggested_text || sug.new_text;
+                  const currentUserName = user?.user_metadata?.full_name || profile?.full_name || user?.email?.split('@')[0] || '';
+                  const isCreatedByMe = (user?.id && sug.user_id && user.id === sug.user_id) || (sug.author_name && currentUserName && sug.author_name.toLowerCase() === currentUserName.toLowerCase());
+
+                  return (
+                    <div
+                      key={sug.id}
+                      className="border border-amber-200/90 bg-amber-50/20 hover:bg-amber-50/40 transition rounded-2xl p-3.5 flex flex-col gap-2.5 text-left shadow-xs font-sans"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-extrabold text-amber-900 truncate">
+                          💡 {language === 'id' ? 'Usulan oleh' : 'Suggestion by'} {authorName}
+                        </span>
+                        <span className="text-[9px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full border border-amber-200/60">
+                          {sug.status === 'pending'
+                            ? (language === 'id' ? 'Menunggu' : 'Pending')
+                            : sug.status === 'accepted'
+                              ? (language === 'id' ? 'Diterima' : 'Accepted')
+                              : (language === 'id' ? 'Ditolak' : 'Rejected')}
+                        </span>
+                      </div>
+
+                      {deletedText && (
+                        <div className="bg-rose-50 border-l-2 border-rose-400 px-2.5 py-1.5 rounded-r-lg text-[10px] text-rose-900 line-through leading-relaxed">
+                          {language === 'id' ? 'Dihapus:' : 'Deleted:'} "{deletedText}"
+                        </div>
+                      )}
+
+                      {replacementText && (
+                        <div className="bg-emerald-50 border-l-2 border-emerald-400 px-2.5 py-1.5 rounded-r-lg text-[10px] text-emerald-900 font-bold leading-relaxed">
+                          {language === 'id' ? 'Pengganti:' : 'Replacement:'} "{replacementText}"
+                        </div>
+                      )}
+
+                      {sug.status === 'pending' && (
+                        <div className="flex items-center justify-end gap-2 pt-2 border-t border-amber-100 mt-1">
+                          {isCreatedByMe ? (
+                            <span className="text-[10px] text-slate-500 font-medium italic">
+                              ⏳ {language === 'id' ? 'Menunggu Peninjauan Pemilik' : 'Pending Review by Owner'}
+                            </span>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => updateSuggestionStatus(docId, sug.id, 'rejected').then(() => fetchSuggestions(docId).then(setSuggestions))}
+                                className="px-3 py-1.5 text-[10px] font-bold text-rose-700 hover:text-white bg-rose-50 hover:bg-rose-600 transition rounded-xl border border-rose-200 cursor-pointer"
+                              >
+                                ✕ {language === 'id' ? 'Tolak' : 'Reject'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  acceptedLocallyRef.current.add(sug.id);
+                                  processedAcceptedSuggestionsRef.current.add(sug.id);
+                                  editorJsRef.current?.acceptSuggestion?.(sug.id);
+                                  if (sug && document?.content) {
+                                    try {
+                                      let rawContent = typeof document.content === 'string'
+                                        ? JSON.parse(document.content)
+                                        : document.content;
+                                      
+                                      let changed = false;
+                                      if (rawContent && Array.isArray(rawContent.blocks)) {
+                                        rawContent.blocks = rawContent.blocks.map((block: any) => {
+                                          if (block.data && typeof block.data.text === 'string') {
+                                            let text = block.data.text;
+                                            if (text.includes('<del') || text.includes('<ins')) {
+                                              text = text.replace(/<del[^>]*>.*?<\/del>/gi, '').replace(/<ins[^>]*>(.*?)<\/ins>/gi, '$1');
+                                              changed = true;
+                                            }
+                                            const targetText = sug.selected_text ? sug.selected_text.trim() : (sug.old_text ? sug.old_text.trim() : '');
+                                            if (targetText && text.toLowerCase().includes(targetText.toLowerCase())) {
+                                              const regex = new RegExp(targetText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                                              text = text.replace(regex, sug.suggested_text ? sug.suggested_text.trim() : (sug.new_text ? sug.new_text.trim() : ''));
+                                              changed = true;
+                                            }
+                                            block.data.text = text;
+                                          }
+                                          return block;
+                                        });
+                                      }
+
+                                      if (changed) {
+                                        const updatedContentStr = JSON.stringify(rawContent);
+                                        lastSavedContentRef.current = getContentComparisonString(rawContent);
+                                        setDocument(prev => prev ? { ...prev, content: updatedContentStr } : prev);
+                                        updateSharedDocument(docId, { title: document.title || 'Untitled', content: updatedContentStr, settings: document.settings });
+                                        setTimeout(() => {
+                                          editorJsRef.current?.renderContent?.(rawContent);
+                                        }, 100);
+                                      }
+                                    } catch (e) {
+                                      console.error('Failed smart suggestion replacement:', e);
+                                    }
+                                  }
+                                  updateSuggestionStatus(docId, sug.id, 'accepted').then(() => fetchSuggestions(docId).then(setSuggestions));
+                                }}
+                                className="px-3.5 py-1.5 text-[10px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition rounded-xl shadow-xs cursor-pointer"
+                              >
+                                ✓ {language === 'id' ? 'Terima' : 'Accept'}
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
               )
             ) : (
               comments.filter(c => c.resolved).length === 0 ? (
@@ -2117,6 +2366,34 @@ export default function SharedDocumentPage() {
                     </div>
                   </button>
 
+                  {/* Usulkan Perubahan (Mode Sugesti / Track Changes) */}
+                  {editorMode === 'suggest' && (
+                    <button
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-slate-700 hover:bg-amber-50/60 transition font-semibold cursor-pointer border-b border-slate-100/40"
+                      onMouseDown={e => e.preventDefault()}
+                      onClick={() => {
+                        const sel = window.getSelection();
+                        const selText = sel ? sel.toString().trim() : selectedText;
+                        setSelectedTextForSuggestion(selText);
+                        setNewTextForSuggestion(selText);
+                        setIsSuggestionModalOpen(true);
+                        setShowBubbleMenu(false);
+                      }}
+                    >
+                      <div className="p-1.5 rounded-lg bg-amber-100 text-amber-700 shrink-0">
+                        <IconSparkles className="h-4 w-4 text-amber-600" />
+                      </div>
+                      <div className="flex flex-col text-left">
+                        <span className="text-xs text-amber-900 font-bold">
+                          💡 {language === 'en' ? 'Suggest Change (Track Changes)' : 'Usulan Perubahan (Track Changes)'}
+                        </span>
+                        <span className="text-[9px] text-amber-700 font-normal">
+                          {language === 'en' ? 'Propose text edit or deletion' : 'Usulkan pengubahan atau penghapusan teks'}
+                        </span>
+                      </div>
+                    </button>
+                  )}
+
                   {/* Tambah Komentar Button */}
                   <button
                     className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-slate-700 hover:bg-slate-50 transition font-semibold cursor-pointer"
@@ -2591,6 +2868,115 @@ export default function SharedDocumentPage() {
         isOpen={isPricingOpen}
         onClose={() => setIsPricingOpen(false)}
       />
+      {/* Modal Usulan Perubahan (Mode Sugesti / Track Changes) */}
+      {isSuggestionModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-[100] flex items-center justify-center p-4 animate-fade-in font-sans text-slate-800">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 flex flex-col gap-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-amber-50 text-amber-600 rounded-xl">
+                  <IconSparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    {language === 'id' ? '💡 Usulkan Perubahan Teks' : '💡 Propose Text Suggestion'}
+                  </h3>
+                  <p className="text-[10px] text-slate-400">
+                    {language === 'id' ? 'Mode Track Changes (Dapat diterima / ditolak)' : 'Track Changes Mode (Can be accepted or rejected)'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSuggestionModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
+              >
+                <IconX className="h-4 w-4" />
+              </button>
+            </div>
+
+            {selectedTextForSuggestion && (
+              <div className="flex flex-col gap-1 p-3 bg-rose-50/60 border border-rose-100 rounded-xl">
+                <span className="text-[9px] font-bold text-rose-700 uppercase tracking-wider">
+                  {language === 'id' ? 'Teks Asli (Dihapus):' : 'Original Text (Deleted):'}
+                </span>
+                <p className="text-xs text-rose-900 line-through font-medium leading-relaxed">
+                  "{selectedTextForSuggestion}"
+                </p>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-700">
+                {language === 'id' ? 'Usulan Teks Baru:' : 'Proposed New Text:'}
+              </label>
+              <textarea
+                value={newTextForSuggestion}
+                onChange={(e) => setNewTextForSuggestion(e.target.value)}
+                placeholder={language === 'id' ? 'Ketik usulan teks baru (biarkan kosong jika mengusulkan penghapusan)...' : 'Type proposed new text...'}
+                className="w-full h-24 text-xs p-3 border border-slate-200 rounded-xl outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition font-sans text-slate-800"
+              />
+              <span className="text-[9px] text-slate-400 italic">
+                * {language === 'id' ? 'Kosongkan jika hanya ingin mengusulkan penghapusan teks.' : 'Leave blank to propose text deletion.'}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsSuggestionModalOpen(false)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+              >
+                {language === 'id' ? 'Batal' : 'Cancel'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const sugId = `sug-${Date.now()}`;
+                  const authorName = profile?.full_name || user?.email?.split('@')[0] || 'Co-Editor';
+                  editorJsRef.current?.addSuggestionMark?.(sugId, selectedTextForSuggestion, newTextForSuggestion, authorName);
+                  addSuggestion(docId, selectedTextForSuggestion, newTextForSuggestion, authorName, sugId, user?.id).then(() => {
+                    fetchSuggestions(docId).then(setSuggestions);
+                  });
+                  setIsSuggestionModalOpen(false);
+                }}
+                className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
+              >
+                <IconCheck className="h-4 w-4" />
+                {language === 'id' ? 'Kirim Usulan' : 'Submit Suggestion'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Signal Banner for Remote Document Updates */}
+      {hasPendingRemoteUpdate && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 bg-slate-900/95 text-white backdrop-blur-md text-xs font-semibold rounded-full shadow-2xl border border-amber-500/40 animate-pulse transition-all">
+          <span className="flex items-center gap-2 text-amber-400">
+            <IconSparkles className="w-4 h-4 text-amber-400" />
+            <span>Revisi usulan dokumen terbaru telah diterima!</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              if (pendingRemoteContent) {
+                const parsed = typeof pendingRemoteContent === 'string' ? JSON.parse(pendingRemoteContent) : pendingRemoteContent;
+                lastSavedContentRef.current = getContentComparisonString(pendingRemoteContent);
+                setDocument(prev => prev ? { ...prev, content: JSON.stringify(pendingRemoteContent) } : prev);
+                editorJsRef.current?.renderContent?.(parsed);
+                setHasPendingRemoteUpdate(false);
+                setPendingRemoteContent(null);
+                showToast('Canvas editor berhasil diperbarui ke versi terbaru!', 'success');
+              }
+            }}
+            className="px-3.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-full transition shadow-xs cursor-pointer flex items-center gap-1.5"
+          >
+            <IconRefresh className="w-3.5 h-3.5" />
+            Perbarui Editor
+          </button>
+        </div>
+      )}
     </div>
   );
 }

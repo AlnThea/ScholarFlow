@@ -21,7 +21,8 @@ import {
   type DocumentListItem,
   type DocumentSettings
 } from '@/lib/api/documents';
-import { updatePresence, fetchActivePresence, leavePresence, type UserPresence } from '@/lib/api/presence';
+import { fetchActivePresence, updatePresence, leavePresence, type UserPresence } from '@/lib/api/presence';
+import { fetchSuggestions, updateSuggestionStatus, DocumentSuggestion } from '@/lib/api/suggestions';
 import {
   addCitationHistoryEntry,
   type CitationHistoryEntry,
@@ -42,7 +43,7 @@ import {
   serializeCitationCandidatesText,
 } from '@/lib/editor/citation-export';
 import { getTemplateBlocks } from '@/lib/templates';
-import { IconLoader2, IconSparkles, IconCheck, IconAlertCircle, IconInfoCircle } from '@tabler/icons-react';
+import { IconLoader2, IconSparkles, IconCheck, IconAlertCircle, IconInfoCircle, IconRefresh } from '@tabler/icons-react';
 import {
   fetchComments,
   fetchNotifications,
@@ -191,6 +192,22 @@ function findMostUniqueWord(sentence: string): string {
   return bestWord || words[0] || "";
 }
 
+const getContentComparisonString = (content: any): string => {
+  if (!content) return JSON.stringify([]);
+  let parsed = content;
+  if (typeof content === 'string') {
+    try {
+      parsed = JSON.parse(content);
+    } catch (e) {
+      return content;
+    }
+  }
+  if (parsed && typeof parsed === 'object' && Array.isArray(parsed.blocks)) {
+    return JSON.stringify(parsed.blocks);
+  }
+  return JSON.stringify(parsed);
+};
+
 export function ScholarEditor() {
   const { language, t } = useLanguage();
   const { user, profile } = useAuth();
@@ -248,7 +265,13 @@ export function ScholarEditor() {
   const [comments, setComments] = useState<DocumentComment[]>([]);
   const [notifications, setNotifications] = useState<DocumentNotification[]>([]);
   const [activeUsers, setActiveUsers] = useState<UserPresence[]>([]);
+  const [suggestions, setSuggestions] = useState<DocumentSuggestion[]>([]);
   const [activeSidebarTab, setActiveSidebarTab] = useState<'library' | 'writing' | 'document' | 'comments' | undefined>(undefined);
+  const [hasPendingRemoteUpdate, setHasPendingRemoteUpdate] = useState<boolean>(false);
+  const [pendingRemoteContent, setPendingRemoteContent] = useState<any>(null);
+  const processedAcceptedSuggestionsRef = useRef<Set<string>>(new Set());
+  const acceptedLocallyRef = useRef<Set<string>>(new Set());
+  const suggestionsInitializedRef = useRef<boolean>(false);
 
   // Poll comments and notifications
   useEffect(() => {
@@ -273,7 +296,10 @@ export function ScholarEditor() {
         const notifs = await fetchNotifications(user.id);
         setNotifications(notifs);
         if (currentDocument?.id) {
-          const comms = await fetchComments(currentDocument.id);
+          const [comms, docDetail] = await Promise.all([
+            fetchComments(currentDocument.id),
+            fetchDocumentById(currentDocument.id, user.id).catch(() => null)
+          ]);
           setComments(comms);
         }
       } catch (err) {
@@ -293,6 +319,29 @@ export function ScholarEditor() {
       await updatePresence(currentDocument.id, user.id, authorName, 'owner');
       const active = await fetchActivePresence(currentDocument.id);
       setActiveUsers(active);
+      const sugs = await fetchSuggestions(currentDocument.id);
+
+      if (!suggestionsInitializedRef.current) {
+        sugs.filter(s => s.status === 'accepted').forEach(s => processedAcceptedSuggestionsRef.current.add(s.id));
+        suggestionsInitializedRef.current = true;
+      } else {
+        const newlyAcceptedRemote = sugs.find(s =>
+          s.status === 'accepted' &&
+          !processedAcceptedSuggestionsRef.current.has(s.id) &&
+          !acceptedLocallyRef.current.has(s.id)
+        );
+
+        if (newlyAcceptedRemote) {
+          sugs.filter(s => s.status === 'accepted').forEach(s => processedAcceptedSuggestionsRef.current.add(s.id));
+          const docDetail = await fetchDocumentById(currentDocument.id, user.id).catch(() => null);
+          if (docDetail && docDetail.content) {
+            setPendingRemoteContent(docDetail.content);
+            setHasPendingRemoteUpdate(true);
+          }
+        }
+      }
+
+      setSuggestions(sugs);
     };
     updateAndFetch();
 
@@ -503,7 +552,7 @@ export function ScholarEditor() {
                 if (merged.settings?.alignments) {
                   localStorage.setItem('scholarflow.editorjs.alignments.v1', JSON.stringify(merged.settings.alignments));
                 }
-                lastSavedContentRef.current = JSON.stringify(merged.content || { blocks: [] });
+                lastSavedContentRef.current = getContentComparisonString(merged.content);
                 setSaveStatus('Menggunakan Cadangan Offline');
                 
                 // Try to sync to cloud if currently online
@@ -519,7 +568,7 @@ export function ScholarEditor() {
             if (detail.settings?.alignments) {
               localStorage.setItem('scholarflow.editorjs.alignments.v1', JSON.stringify(detail.settings.alignments));
             }
-            lastSavedContentRef.current = JSON.stringify(detail.content || { blocks: [] });
+            lastSavedContentRef.current = getContentComparisonString(detail.content);
           }
         }).catch(err => {
           console.warn('Failed to sync document from URL path:', err);
@@ -542,7 +591,7 @@ export function ScholarEditor() {
               if (fallbackDoc.settings?.alignments) {
                 localStorage.setItem('scholarflow.editorjs.alignments.v1', JSON.stringify(fallbackDoc.settings.alignments));
               }
-              lastSavedContentRef.current = JSON.stringify(fallbackDoc.content || { blocks: [] });
+              lastSavedContentRef.current = getContentComparisonString(fallbackDoc.content);
               setSaveStatus(language === 'en' ? 'Sync Failed (Offline)' : 'Gagal Sinkronisasi (Offline)');
             } catch (e) {
               console.error('Failed to parse offline backup on failure fallback:', e);
@@ -776,7 +825,7 @@ export function ScholarEditor() {
       }, settings);
       if (newDoc) {
         setDocuments((prev) => [newDoc, ...prev]);
-        lastSavedContentRef.current = JSON.stringify(newDoc.content || { blocks: [] });
+        lastSavedContentRef.current = getContentComparisonString(newDoc.content);
         setCurrentDocument(newDoc);
         setIsSetupModalOpen(false);
         router.push(`/editor/${newDoc.id}`);
@@ -861,7 +910,7 @@ export function ScholarEditor() {
     setCurrentDocument(updatedDoc);
 
     // Compare content structures to avoid redundant cloud updates on load or rendering
-    const contentString = JSON.stringify(content || { blocks: [] });
+    const contentString = getContentComparisonString(content);
     if (contentString === lastSavedContentRef.current) {
       return;
     }
@@ -1726,11 +1775,99 @@ export function ScholarEditor() {
         onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
         onNotificationClick={handleNotificationClick}
         comments={comments}
+        suggestions={suggestions}
         activeUsers={activeUsers}
+        onAcceptSuggestion={(id) => {
+          if (!currentDocument?.id) return;
+          acceptedLocallyRef.current.add(id);
+          processedAcceptedSuggestionsRef.current.add(id);
+          const sug = suggestions.find(s => s.id === id);
+          editorJsRef.current?.acceptSuggestion?.(id);
+
+          if (sug && currentDocument.content) {
+            try {
+              let rawContent = typeof currentDocument.content === 'string'
+                ? JSON.parse(currentDocument.content)
+                : currentDocument.content;
+              
+              let changed = false;
+              if (rawContent && Array.isArray(rawContent.blocks)) {
+                rawContent.blocks = rawContent.blocks.map((block: any) => {
+                  if (block.data && typeof block.data.text === 'string') {
+                    let text = block.data.text;
+                    if (text.includes('<del') || text.includes('<ins')) {
+                      text = text.replace(/<del[^>]*>.*?<\/del>/gi, '').replace(/<ins[^>]*>(.*?)<\/ins>/gi, '$1');
+                      changed = true;
+                    }
+                    const targetText = sug.selected_text ? sug.selected_text.trim() : '';
+                    if (targetText && text.toLowerCase().includes(targetText.toLowerCase())) {
+                      const regex = new RegExp(targetText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                      text = text.replace(regex, sug.suggested_text ? sug.suggested_text.trim() : '');
+                      changed = true;
+                    }
+                    block.data.text = text;
+                  }
+                  return block;
+                });
+              }
+
+              if (changed) {
+                const updatedContentStr = JSON.stringify(rawContent);
+                lastSavedContentRef.current = getContentComparisonString(rawContent);
+                setCurrentDocument(prev => prev ? { ...prev, content: updatedContentStr } : prev);
+                triggerDebouncedSave(currentDocument.id, currentDocument.title, updatedContentStr, currentDocument.settings);
+                setTimeout(() => {
+                  editorJsRef.current?.renderContent?.(rawContent);
+                }, 100);
+              }
+            } catch (e) {
+              console.error('Failed smart suggestion replacement:', e);
+            }
+          }
+
+          updateSuggestionStatus(currentDocument.id, id, 'accepted').then(() => {
+            fetchSuggestions(currentDocument.id).then(setSuggestions);
+          });
+        }}
+        onRejectSuggestion={(id) => {
+          if (!currentDocument?.id) return;
+          editorJsRef.current?.rejectSuggestion?.(id);
+          updateSuggestionStatus(currentDocument.id, id, 'rejected').then(() => {
+            fetchSuggestions(currentDocument.id).then(setSuggestions);
+          });
+        }}
         onResolveComment={handleResolveComment}
         onCommentClick={handleCommentClick}
         activeSidebarTab={activeSidebarTab}
       />
+
+      {/* Floating Signal Banner for Remote Document Updates */}
+      {hasPendingRemoteUpdate && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 bg-slate-900/95 text-white backdrop-blur-md text-xs font-semibold rounded-full shadow-2xl border border-amber-500/40 animate-pulse transition-all">
+          <span className="flex items-center gap-2 text-amber-400">
+            <IconSparkles className="w-4 h-4 text-amber-400" />
+            <span>Revisi usulan dokumen terbaru telah diterima!</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              if (pendingRemoteContent) {
+                const parsed = typeof pendingRemoteContent === 'string' ? JSON.parse(pendingRemoteContent) : pendingRemoteContent;
+                lastSavedContentRef.current = getContentComparisonString(pendingRemoteContent);
+                setCurrentDocument(prev => prev ? { ...prev, content: JSON.stringify(pendingRemoteContent) } : prev);
+                editorJsRef.current?.renderContent?.(parsed);
+                setHasPendingRemoteUpdate(false);
+                setPendingRemoteContent(null);
+                showToast('Canvas editor berhasil diperbarui ke versi terbaru!', 'success');
+              }
+            }}
+            className="px-3.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-full transition shadow-xs cursor-pointer flex items-center gap-1.5"
+          >
+            <IconRefresh className="w-3.5 h-3.5" />
+            Perbarui Editor
+          </button>
+        </div>
+      )}
 
       {/* Citation Details Modal */}
       {activeModalCitation && (() => {

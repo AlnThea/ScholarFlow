@@ -379,11 +379,22 @@
     - Co-Editor view displays Document Owner's avatar icon 🟢 with native browser hover tooltip (`[Nama Owner] (Pemilik Dokumen) • Online`).
     - Owner view displays Co-Editors' avatar icons 🟢 with native browser hover tooltip (`[Nama Co-Editor] (Co-Editor) • Online`).
   - Integrated **Instant Leave Beacon** using `navigator.sendBeacon` and `beforeunload` event listeners in both Owner (`scholar-editor.tsx`) and Co-Editor (`page.tsx`) views. When a tab is closed or navigated away, a leave signal is sent instantly (0–1s), immediately clearing the online avatar badge from collaborators' headers.
-- Track Changes / Suggesting Mode (Mode Sugesti) Styling & Sanitizer Infrastructure:
+- Track Changes / Suggesting Mode (Mode Sugesti) UI & Interactive Flow:
   - Added dedicated Track Changes CSS rules in `app/globals.css` for strikethrough red deleted text (`<del class="sf-suggestion-del">`) and emerald green inserted text (`<ins class="sf-suggestion-ins">`).
   - Whitelisted `<del>` and `<ins>` HTML tags along with custom attributes (`class`, `style`, `data-suggestion-id`, `data-author`, `title`) in EditorJS sanitizer configs (`CustomFormatsSanitizerTool` & `paragraph` sanitize rules).
   - Added imperative suggestion methods (`addSuggestionMark`, `acceptSuggestion`, `rejectSuggestion`) to `EditorJsMethods` in `components/editor/editorjs-editor.tsx`.
+  - Added **Mode Switcher Toggle Button** (`✍️ Edit Langsung` vs `💡 Mode Sugesti`) in academic formatting toolbars of both Owner view (`components/editor/editor-layout.tsx`) and Co-Editor view (`app/shared/[id]/page.tsx`).
+  - Added `💡 Usulkan Perubahan (Track Changes)` action in selection context bubble menus, opening a dedicated **Suggestion Modal** to propose text edits or deletions with 1-click submission.
 
 
 
+## v0.2.8
+- Remote Update Floating Banner Stabilization & Event-Driven Accepted Suggestion Sync:
+  - Created `getContentComparisonString` normalization helper in `components/editor/scholar-editor.tsx` and `app/shared/[id]/page.tsx` that extracts JSON block arrays and strips dynamic `time` timestamps generated on `editor.save()`, eliminating false-positive remote update triggers during normal local typing and initial page loads/refreshes.
+  - Refactored 5-second polling live sync to use event-driven accepted suggestion tracking (`processedAcceptedSuggestionsRef` & `acceptedLocallyRef`). The floating signal banner ("✨ Revisi usulan dokumen terbaru telah diterima! [ 🔄 Perbarui Editor ]") now triggers **exclusively** when a new suggestion is accepted remotely by another collaborator, and permanently hides upon clicking **Perbarui Editor** without recurring.
+- Suggestion Card Rendering, Role-Based Accept/Reject Access Control & i18n Polish:
+  - Fixed missing author name, deleted text, and replacement text rendering in the **💡 Usulan / Suggestions** right sidebar tab by adding field fallback resolution (`author_name || author`, `selected_text || old_text`, `suggested_text || new_text`).
+  - Added role-based access control for suggestion actions: the creator of a suggestion now sees a `⏳ Pending Review by Owner / ⏳ Menunggu Peninjauan` indicator on their own cards, while the recipient (Owner / Co-Editor) sees the interactive `✕ Reject / Tolak` and `✓ Accept / Terima` buttons.
+  - Added full Internationalization (i18n) support across suggestions sidebar tabs, card status badges, action buttons, and selection context menus (`💡 Suggestions` / `💡 Usulan`, `Deleted:` / `Dihapus:`, `Replacement:` / `Pengganti:`).
+  - Restricted `💡 Suggest Change (Track Changes)` option in selection context bubble menus (`editor-layout.tsx` & `page.tsx`) to display **only when Mode Sugesti (Suggesting Mode)** is active (`editorMode === 'suggest'`), hiding it cleanly when in Direct Edit Mode (`editorMode === 'edit'`).
 

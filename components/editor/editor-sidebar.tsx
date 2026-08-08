@@ -30,6 +30,7 @@ import type { CitationCandidate } from '@/lib/api/citations';
 import type { BibliographyEntry } from '@/lib/editor/bibliography';
 import type { CitationHistoryEntry } from '@/lib/editor/citation-history';
 import type { AiHistoryEntry } from '@/lib/editor/ai-history';
+import type { DocumentSuggestion } from '@/lib/api/suggestions';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useLanguage } from '../i18n/language-context';
 
@@ -88,6 +89,9 @@ type SidebarProps = {
   onClearAiHistory: () => void;
   isApplied: boolean;
   comments?: any[];
+  suggestions?: DocumentSuggestion[];
+  onAcceptSuggestion?: (id: string) => void;
+  onRejectSuggestion?: (id: string) => void;
   onResolveComment?: (id: string) => void;
   onCommentClick?: (comment: any) => void;
   activeTab?: 'library' | 'writing' | 'document' | 'comments';
@@ -202,13 +206,17 @@ export function EditorSidebar({
   onClearAiHistory,
   isApplied,
   comments = [],
+  suggestions = [],
+  onAcceptSuggestion,
+  onRejectSuggestion,
   onResolveComment,
   onCommentClick,
   activeTab
 }: SidebarProps) {
   const { language, t } = useLanguage();
+  const { user } = useAuth();
   const [workspaceTab, setWorkspaceTab] = useState<'library' | 'writing' | 'document' | 'comments'>('library');
-  const [commentFilterTab, setCommentFilterTab] = useState<'active' | 'resolved'>('active');
+  const [commentFilterTab, setCommentFilterTab] = useState<'active' | 'suggestions' | 'resolved'>('active');
 
   // Sync tab from props if changed
   useEffect(() => {
@@ -948,18 +956,18 @@ export function EditorSidebar({
                 </p>
               </div>
 
-              {/* Active vs Resolved Sub-tabs */}
-              <div className="flex items-center gap-1.5 p-1 bg-slate-100/70 rounded-xl">
+              {/* Active vs Suggestions vs Resolved Sub-tabs */}
+              <div className="flex items-center gap-1 p-1 bg-slate-100/70 rounded-xl">
                 <button
                   type="button"
                   onClick={() => setCommentFilterTab('active')}
-                  className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 py-1.5 px-1.5 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
                     commentFilterTab === 'active'
                       ? 'bg-white text-indigo-700 shadow-sm border border-slate-200/60'
                       : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >
-                  <span>{language === 'en' ? 'Active' : 'Aktif'}</span>
+                  <span>{language === 'en' ? 'Active' : 'Komentar'}</span>
                   <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${
                     commentFilterTab === 'active' ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-200/60 text-slate-600'
                   }`}>
@@ -969,8 +977,20 @@ export function EditorSidebar({
 
                 <button
                   type="button"
+                  onClick={() => setCommentFilterTab('suggestions')}
+                  className={`flex-1 py-1.5 px-1.5 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
+                    commentFilterTab === 'suggestions'
+                      ? 'bg-white text-amber-700 shadow-sm border border-slate-200/60'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  <span>💡 {language === 'en' ? 'Suggestions' : 'Usulan'}</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => setCommentFilterTab('resolved')}
-                  className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 py-1.5 px-1.5 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
                     commentFilterTab === 'resolved'
                       ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/60'
                       : 'text-slate-500 hover:text-slate-800'
@@ -1037,6 +1057,115 @@ export function EditorSidebar({
                       </div>
                     ))
                   )
+                ) : commentFilterTab === 'suggestions' ? (
+                  (() => {
+                    const activeSugList = suggestions && suggestions.length > 0
+                      ? suggestions.filter(s => s.status === 'pending')
+                      : (() => {
+                          const holder = typeof window !== 'undefined' ? window.document.getElementById('editorjs-holder') : null;
+                          const sugList: Array<DocumentSuggestion> = [];
+                          if (holder) {
+                            const map = new Map<string, DocumentSuggestion>();
+                            holder.querySelectorAll('del[data-suggestion-id], .sf-suggestion-del').forEach((del) => {
+                              const sugId = del.getAttribute('data-suggestion-id') || 'sug';
+                              const author = del.getAttribute('data-author') || 'Collaborator';
+                              const oldText = del.textContent || '';
+                              map.set(sugId, { id: sugId, document_id: '', author_name: author, selected_text: oldText, suggested_text: '', status: 'pending', created_at: new Date().toISOString() });
+                            });
+                            holder.querySelectorAll('ins[data-suggestion-id], .sf-suggestion-ins').forEach((ins) => {
+                              const sugId = ins.getAttribute('data-suggestion-id') || 'sug';
+                              const author = ins.getAttribute('data-author') || 'Collaborator';
+                              const newText = ins.textContent || '';
+                              if (map.has(sugId)) {
+                                map.get(sugId)!.suggested_text = newText;
+                              } else {
+                                map.set(sugId, { id: sugId, document_id: '', author_name: author, selected_text: '', suggested_text: newText, status: 'pending', created_at: new Date().toISOString() });
+                              }
+                            });
+                            sugList.push(...Array.from(map.values()));
+                          }
+                          return sugList;
+                        })();
+
+                    if (activeSugList.length === 0) {
+                      return (
+                        <div className="text-center py-12 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-xs text-slate-400 font-medium italic font-sans">
+                          {language === 'en' ? 'No track changes suggestions found' : 'Belum ada usulan revisi aktif pada dokumen'}
+                        </div>
+                      );
+                    }
+
+                    return activeSugList.map((sug) => {
+                      const authorName = sug.author_name || sug.author || (language === 'en' ? 'Collaborator' : 'Kolaborator');
+                      const deletedText = sug.selected_text || sug.old_text;
+                      const replacementText = sug.suggested_text || sug.new_text;
+                      const currentUserName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || '';
+                      const isCreatedByMe = (user?.id && sug.user_id && user.id === sug.user_id) || (sug.author_name && currentUserName && sug.author_name.toLowerCase() === currentUserName.toLowerCase());
+
+                      return (
+                        <div
+                          key={sug.id}
+                          className="border border-amber-200 bg-amber-50/20 hover:bg-amber-50/40 transition rounded-xl p-3 flex flex-col gap-2 text-left shadow-xs font-sans"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-extrabold text-amber-900 truncate">
+                              💡 {language === 'en' ? 'Suggestion by' : 'Usulan oleh'} {authorName}
+                            </span>
+                            <span className="text-[8px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded-full">
+                              {sug.status === 'pending'
+                                ? (language === 'en' ? 'Pending' : 'Menunggu')
+                                : sug.status === 'accepted'
+                                  ? (language === 'en' ? 'Accepted' : 'Diterima')
+                                  : (language === 'en' ? 'Rejected' : 'Ditolak')}
+                            </span>
+                          </div>
+
+                          {deletedText && (
+                            <div className="bg-rose-50 border-l-2 border-rose-400 px-2 py-1 rounded text-[9px] text-rose-800 line-through leading-relaxed">
+                              {language === 'en' ? 'Deleted:' : 'Dihapus:'} "{deletedText}"
+                            </div>
+                          )}
+
+                          {replacementText && (
+                            <div className="bg-emerald-50 border-l-2 border-emerald-400 px-2 py-1 rounded text-[9px] text-emerald-800 font-bold leading-relaxed">
+                              {language === 'en' ? 'Replacement:' : 'Pengganti:'} "{replacementText}"
+                            </div>
+                          )}
+
+                          {sug.status === 'pending' && (
+                            <div className="flex items-center justify-end gap-1.5 pt-1.5 border-t border-amber-100 mt-1">
+                              {isCreatedByMe ? (
+                                <span className="text-[9px] text-slate-500 font-medium italic">
+                                  ⏳ {language === 'en' ? 'Pending Review' : 'Menunggu Peninjauan'}
+                                </span>
+                              ) : (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      onRejectSuggestion?.(sug.id);
+                                    }}
+                                    className="px-2.5 py-1 text-[9px] font-bold text-rose-700 hover:text-white bg-rose-50 hover:bg-rose-600 transition rounded-lg border border-rose-200 cursor-pointer"
+                                  >
+                                    ✕ {language === 'en' ? 'Reject' : 'Tolak'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      onAcceptSuggestion?.(sug.id);
+                                    }}
+                                    className="px-3 py-1 text-[9px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition rounded-lg shadow-xs cursor-pointer"
+                                  >
+                                    ✓ {language === 'en' ? 'Accept' : 'Terima'}
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    });
+                  })()
                 ) : (
                   comments.filter(c => c.resolved).length === 0 ? (
                     <div className="text-center py-12 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-xs text-slate-400 font-medium italic">
