@@ -368,8 +368,22 @@
 - Redesigned Co-Editor Comments Panel into a Full-Height Fixed Right Sidebar:
   - Transformed the Co-Editor comments UI in `app/shared/[id]/page.tsx` from a floating card popup into a dedicated **Full-Height Fixed Right Sidebar** (`fixed top-0 right-0 h-screen w-80 md:w-96 bg-white border-l border-slate-200 z-[99] shadow-2xl`).
   - Configured sidebar to span 100% top-to-bottom (`100vh`) along the right edge of the browser window with smooth slide-in animation.
-  - Added sub-tab navigation (**Aktif** with indigo badge & **Selesai** with green checkmark badge) for Co-Editors.
-  - Enhanced comment cards with author initials avatar badges, amber quote boxes (`"selected text"`), click-to-scroll canvas integration, and hover highlight hints.
+
+
+
+## v0.2.7
+- Real-Time Online Presence Stack & Cross-Browser Synchronization:
+  - Created dedicated Next.js presence API endpoint (`app/api/v1/presence/route.ts`) and client helper module (`lib/api/presence.ts`) supporting 10-second heartbeat pings and 25-second active timeout threshold.
+  - Implemented cross-browser real-time presence sync supporting Chrome, Edge, Firefox, Safari, and mobile browsers.
+  - Integrated sleek **Icon-Only Avatar Stack** with status indicator dot 🟢 in top headers of both Owner view (`components/editor/editor-layout.tsx`) and Co-Editor view (`app/shared/[id]/page.tsx`):
+    - Co-Editor view displays Document Owner's avatar icon 🟢 with native browser hover tooltip (`[Nama Owner] (Pemilik Dokumen) • Online`).
+    - Owner view displays Co-Editors' avatar icons 🟢 with native browser hover tooltip (`[Nama Co-Editor] (Co-Editor) • Online`).
+  - Integrated **Instant Leave Beacon** using `navigator.sendBeacon` and `beforeunload` event listeners in both Owner (`scholar-editor.tsx`) and Co-Editor (`page.tsx`) views. When a tab is closed or navigated away, a leave signal is sent instantly (0–1s), immediately clearing the online avatar badge from collaborators' headers.
+- Track Changes / Suggesting Mode (Mode Sugesti) Styling & Sanitizer Infrastructure:
+  - Added dedicated Track Changes CSS rules in `app/globals.css` for strikethrough red deleted text (`<del class="sf-suggestion-del">`) and emerald green inserted text (`<ins class="sf-suggestion-ins">`).
+  - Whitelisted `<del>` and `<ins>` HTML tags along with custom attributes (`class`, `style`, `data-suggestion-id`, `data-author`, `title`) in EditorJS sanitizer configs (`CustomFormatsSanitizerTool` & `paragraph` sanitize rules).
+  - Added imperative suggestion methods (`addSuggestionMark`, `acceptSuggestion`, `rejectSuggestion`) to `EditorJsMethods` in `components/editor/editorjs-editor.tsx`.
+
 
 
 

@@ -21,6 +21,7 @@ import {
   type DocumentListItem,
   type DocumentSettings
 } from '@/lib/api/documents';
+import { updatePresence, fetchActivePresence, leavePresence, type UserPresence } from '@/lib/api/presence';
 import {
   addCitationHistoryEntry,
   type CitationHistoryEntry,
@@ -246,6 +247,7 @@ export function ScholarEditor() {
   // Comments and Notifications State
   const [comments, setComments] = useState<DocumentComment[]>([]);
   const [notifications, setNotifications] = useState<DocumentNotification[]>([]);
+  const [activeUsers, setActiveUsers] = useState<UserPresence[]>([]);
   const [activeSidebarTab, setActiveSidebarTab] = useState<'library' | 'writing' | 'document' | 'comments' | undefined>(undefined);
 
   // Poll comments and notifications
@@ -281,6 +283,39 @@ export function ScholarEditor() {
 
     return () => clearInterval(interval);
   }, [user?.id, currentDocument?.id]);
+
+  // Presence Heartbeat Effect for Owner
+  useEffect(() => {
+    if (!currentDocument?.id || !user?.id) return;
+    const authorName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Pemilik Dokumen';
+
+    const updateAndFetch = async () => {
+      await updatePresence(currentDocument.id, user.id, authorName, 'owner');
+      const active = await fetchActivePresence(currentDocument.id);
+      setActiveUsers(active);
+    };
+    updateAndFetch();
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === `scholarflow_presence_${currentDocument.id}`) {
+        fetchActivePresence(currentDocument.id).then(setActiveUsers);
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    const handleUnload = () => {
+      leavePresence(currentDocument.id, user.id);
+    };
+    window.addEventListener('beforeunload', handleUnload);
+
+    const interval = setInterval(updateAndFetch, 5000);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('beforeunload', handleUnload);
+      leavePresence(currentDocument.id, user.id);
+    };
+  }, [currentDocument?.id, user?.id, user?.email, user?.user_metadata?.full_name]);
 
   // Auto-sync comment highlights onto editor canvas whenever comments update
   useEffect(() => {
@@ -1691,6 +1726,7 @@ export function ScholarEditor() {
         onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
         onNotificationClick={handleNotificationClick}
         comments={comments}
+        activeUsers={activeUsers}
         onResolveComment={handleResolveComment}
         onCommentClick={handleCommentClick}
         activeSidebarTab={activeSidebarTab}

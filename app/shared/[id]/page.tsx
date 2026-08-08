@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import { fetchSharedDocument, updateSharedDocument, type DocumentEntry } from '@/lib/api/documents';
 import { fetchComments, addComment, createNotification } from '@/lib/api/comments';
 import { fetchCitationLibrary } from '@/lib/api/citation-library';
+import { updatePresence, fetchActivePresence, leavePresence, type UserPresence } from '@/lib/api/presence';
 import { formatBibliographyCandidate } from '@/lib/editor/bibliography';
 import { searchCitations, type CitationCandidate } from '@/lib/api/citations';
 import { improveWriting } from '@/lib/api/ai';
@@ -181,10 +182,12 @@ export default function SharedDocumentPage() {
   const [citationResults, setCitationResults] = useState<CitationCandidate[]>([]);
   const [citationError, setCitationError] = useState<string | null>(null);
 
-  // Comments States
+  // Comments & Presence States
   const [comments, setComments] = useState<any[]>([]);
+  const [activeUsers, setActiveUsers] = useState<UserPresence[]>([]);
   const [showCommentsSidebar, setShowCommentsSidebar] = useState(false);
   const [commentSubTab, setCommentSubTab] = useState<'active' | 'resolved'>('active');
+  const [editorMode, setEditorMode] = useState<'edit' | 'suggest'>('edit');
   const [newCommentText, setNewCommentText] = useState('');
   const [newCommentAuthor, setNewCommentAuthor] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -647,6 +650,40 @@ export default function SharedDocumentPage() {
   const ownerPlanSetting = document?.ownerPlan;
   const isCoEditor = document?.settings?.sharePermission === 'edit';
 
+  // Presence Heartbeat Effect
+  useEffect(() => {
+    if (!docId) return;
+    const authorName = profile?.full_name || user?.email?.split('@')[0] || 'Co-Editor';
+    const userId = user?.id || `co-editor-${docId}`;
+
+    const updateAndFetch = async () => {
+      await updatePresence(docId, userId, authorName, isCoEditor ? 'co-editor' : 'reader');
+      const active = await fetchActivePresence(docId);
+      setActiveUsers(active);
+    };
+    updateAndFetch();
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === `scholarflow_presence_${docId}`) {
+        fetchActivePresence(docId).then(setActiveUsers);
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    const handleUnload = () => {
+      leavePresence(docId, userId);
+    };
+    window.addEventListener('beforeunload', handleUnload);
+
+    const interval = setInterval(updateAndFetch, 5000);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('beforeunload', handleUnload);
+      leavePresence(docId, userId);
+    };
+  }, [docId, user?.id, profile?.full_name, user?.email, isCoEditor]);
+
   useEffect(() => {
     if (!document) return;
 
@@ -873,6 +910,29 @@ export default function SharedDocumentPage() {
               </span>
             )}
           </button>
+
+          {/* Online Active Collaborators Presence (Owner Icon Only with Hover Tooltip for Co-Editor) */}
+          {activeUsers && activeUsers.filter(u => u.user_role === 'owner').length > 0 && (
+            <div className="flex items-center -space-x-1.5 overflow-hidden shrink-0">
+              {activeUsers.filter(u => u.user_role === 'owner').slice(0, 4).map((u) => (
+                <div
+                  key={u.id}
+                  className="relative inline-block cursor-pointer transition-transform hover:scale-110 hover:z-10"
+                  title={`${u.user_name} (Pemilik Dokumen) • Online`}
+                >
+                  <div className="h-6 w-6 rounded-full text-[10px] font-extrabold flex items-center justify-center border-2 border-white text-white bg-indigo-600 shadow-xs">
+                    {u.user_name ? u.user_name.charAt(0).toUpperCase() : 'P'}
+                  </div>
+                  <span className="absolute bottom-0 right-0 block h-2 w-2 rounded-full bg-emerald-500 ring-1.5 ring-white animate-pulse" />
+                </div>
+              ))}
+              {activeUsers.filter(u => u.user_role === 'owner').length > 4 && (
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 border-2 border-white text-[9px] font-bold text-slate-600">
+                  +{activeUsers.filter(u => u.user_role === 'owner').length - 4}
+                </span>
+              )}
+            </div>
+          )}
 
           {isCoEditor ? (
             <div className="flex items-center gap-2">

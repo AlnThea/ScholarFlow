@@ -163,6 +163,20 @@ class CustomFormatsSanitizerTool {
         'data-author': true,
         title: true,
       },
+      del: {
+        class: true,
+        style: true,
+        'data-suggestion-id': true,
+        'data-author': true,
+        title: true,
+      },
+      ins: {
+        class: true,
+        style: true,
+        'data-suggestion-id': true,
+        'data-author': true,
+        title: true,
+      },
       sup: {},
       sub: {},
       b: {},
@@ -227,6 +241,9 @@ export interface EditorJsMethods {
   highlightAndRemoveCommentMark: (commentId: string) => void;
   scrollToCommentMark: (commentId: string) => void;
   syncCommentMarks?: (comments: Array<{ id: string; selected_text?: string; author?: string; block_id?: string; resolved?: boolean }>) => void;
+  addSuggestionMark?: (suggestionId: string, oldText: string, newText: string, authorName?: string) => void;
+  acceptSuggestion?: (suggestionId: string) => void;
+  rejectSuggestion?: (suggestionId: string) => void;
 }
 
 function scrambleHtmlText(html: string): string {
@@ -1612,6 +1629,89 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         }
       });
     },
+    addSuggestionMark: (suggestionId: string, oldText: string, newText: string, authorName?: string) => {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0 && !selection.isCollapsed) {
+        const range = selection.getRangeAt(0);
+        const del = document.createElement('del');
+        del.className = 'sf-suggestion-del';
+        del.setAttribute('data-suggestion-id', suggestionId);
+        if (authorName) del.setAttribute('data-author', authorName);
+        del.setAttribute('title', authorName ? `Teks lama diusulkan dihapus oleh ${authorName}` : 'Teks lama diusulkan dihapus');
+        del.textContent = oldText;
+
+        const ins = document.createElement('ins');
+        ins.className = 'sf-suggestion-ins';
+        ins.setAttribute('data-suggestion-id', suggestionId);
+        if (authorName) ins.setAttribute('data-author', authorName);
+        ins.setAttribute('title', authorName ? `Usulan teks baru oleh ${authorName}` : 'Usulan teks baru');
+        ins.textContent = newText;
+
+        const container = document.createElement('span');
+        container.className = 'sf-suggestion-wrapper';
+        container.appendChild(del);
+        container.appendChild(ins);
+
+        try {
+          range.deleteContents();
+          range.insertNode(container);
+        } catch (e) {
+          console.warn('Failed to insert suggestion mark:', e);
+        }
+
+        if (onContentChange && editorRef.current) {
+          saveCleanContent().then(content => {
+            if (content) onContentChange(content);
+          }).catch(console.error);
+        }
+      }
+    },
+    acceptSuggestion: (suggestionId: string) => {
+      const holder = document.getElementById(holderId);
+      if (!holder) return;
+      const delEl = holder.querySelector(`del[data-suggestion-id="${suggestionId}"], .sf-suggestion-del[data-suggestion-id="${suggestionId}"]`);
+      const insEl = holder.querySelector(`ins[data-suggestion-id="${suggestionId}"], .sf-suggestion-ins[data-suggestion-id="${suggestionId}"]`);
+      
+      if (delEl) delEl.remove();
+      if (insEl) {
+        const parent = insEl.parentNode;
+        if (parent) {
+          while (insEl.firstChild) {
+            parent.insertBefore(insEl.firstChild, insEl);
+          }
+          parent.removeChild(insEl);
+        }
+      }
+
+      if (onContentChange && editorRef.current) {
+        saveCleanContent().then(content => {
+          if (content) onContentChange(content);
+        }).catch(console.error);
+      }
+    },
+    rejectSuggestion: (suggestionId: string) => {
+      const holder = document.getElementById(holderId);
+      if (!holder) return;
+      const delEl = holder.querySelector(`del[data-suggestion-id="${suggestionId}"], .sf-suggestion-del[data-suggestion-id="${suggestionId}"]`);
+      const insEl = holder.querySelector(`ins[data-suggestion-id="${suggestionId}"], .sf-suggestion-ins[data-suggestion-id="${suggestionId}"]`);
+      
+      if (insEl) insEl.remove();
+      if (delEl) {
+        const parent = delEl.parentNode;
+        if (parent) {
+          while (delEl.firstChild) {
+            parent.insertBefore(delEl.firstChild, delEl);
+          }
+          parent.removeChild(delEl);
+        }
+      }
+
+      if (onContentChange && editorRef.current) {
+        saveCleanContent().then(content => {
+          if (content) onContentChange(content);
+        }).catch(console.error);
+      }
+    },
   }));
 
     useEffect(() => {
@@ -1689,6 +1789,20 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
                     class: true,
                     style: true,
                     'data-comment-id': true,
+                    'data-author': true,
+                    title: true,
+                  },
+                  del: {
+                    class: true,
+                    style: true,
+                    'data-suggestion-id': true,
+                    'data-author': true,
+                    title: true,
+                  },
+                  ins: {
+                    class: true,
+                    style: true,
+                    'data-suggestion-id': true,
                     'data-author': true,
                     title: true,
                   },

@@ -76,6 +76,7 @@ import { fetchPricingPlans, updatePricingPlan, createPricingPlan, deletePricingP
 import { fetchPaymentGateways, updatePaymentGatewayStatus, type PaymentGateway } from '@/lib/api/payment-gateways';
 import { type AIModel, createAIModel, deleteAIModel } from '@/lib/api/ai-models';
 import { type DocumentNotification } from '@/lib/api/comments';
+import { type UserPresence } from '@/lib/api/presence';
 
 type SwitchProps = {
   checked: boolean;
@@ -183,6 +184,7 @@ type EditorLayoutProps = {
   onMarkAllNotificationsRead?: () => void;
   onNotificationClick?: (notif: DocumentNotification) => void;
   comments?: any[];
+  activeUsers?: UserPresence[];
   onResolveComment?: (id: string) => void;
   onCommentClick?: (comment: any) => void;
   activeSidebarTab?: 'library' | 'writing' | 'document' | 'comments';
@@ -312,6 +314,7 @@ export function EditorLayout({
   onMarkAllNotificationsRead,
   onNotificationClick,
   comments = [],
+  activeUsers = [],
   onResolveComment,
   onCommentClick,
   activeSidebarTab
@@ -2225,6 +2228,32 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                     >
                       <IconSettings className="h-4 w-4" />
                     </button>
+                  </>
+                )}
+
+                {/* Online Active Collaborators Presence (Co-Editors Icon Only with Hover Tooltip) */}
+                {activeUsers && activeUsers.filter(u => u.user_role !== 'owner').length > 0 && (
+                  <>
+                    <div className="h-4 w-px bg-slate-200/80 mx-1" />
+                    <div className="flex items-center -space-x-1.5 overflow-hidden shrink-0">
+                      {activeUsers.filter(u => u.user_role !== 'owner').slice(0, 4).map((u) => (
+                        <div
+                          key={u.id}
+                          className="relative inline-block cursor-pointer transition-transform hover:scale-110 hover:z-10"
+                          title={`${u.user_name} (Co-Editor) • Online`}
+                        >
+                          <div className="h-6 w-6 rounded-full text-[10px] font-extrabold flex items-center justify-center border-2 border-white text-white bg-emerald-600 shadow-xs">
+                            {u.user_name ? u.user_name.charAt(0).toUpperCase() : 'C'}
+                          </div>
+                          <span className="absolute bottom-0 right-0 block h-2 w-2 rounded-full bg-emerald-500 ring-1.5 ring-white animate-pulse" />
+                        </div>
+                      ))}
+                      {activeUsers.filter(u => u.user_role !== 'owner').length > 4 && (
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 border-2 border-white text-[9px] font-bold text-slate-600">
+                          +{activeUsers.filter(u => u.user_role !== 'owner').length - 4}
+                        </span>
+                      )}
+                    </div>
                   </>
                 )}
               </div>

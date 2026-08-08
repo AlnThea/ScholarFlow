@@ -343,3 +343,26 @@ mark[data-comment-id]:hover, mark.sf-comment-mark:hover, .sf-comment-mark:hover 
 .sf-comment-mark-resolving {
   animation: sf-comment-resolve-flash 2s forwards;
 }
+
+/* Suggestion & Track Changes Styling */
+del.sf-suggestion-del, .sf-suggestion-del {
+  background-color: #FEE2E2 !important;
+  color: #991B1B !important;
+  text-decoration: line-through !important;
+  border-bottom: 2px solid #EF4444 !important;
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+ins.sf-suggestion-ins, .sf-suggestion-ins {
+  background-color: #D1FAE5 !important;
+  color: #065F46 !important;
+  text-decoration: none !important;
+  border-bottom: 2px solid #10B981 !important;
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-weight: 500;
+  cursor: pointer;
+}
