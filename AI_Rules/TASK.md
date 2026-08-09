@@ -1,9 +1,19 @@
 # ScholarFlow Tasks
 
 ## Current Sprint Goal
-Enhance document export to Microsoft Word with correct media embedding.
+Production-Ready Refactoring: Hybrid Sync Engine, Repository Pattern Data Provider Abstraction, Multi-Backend Support (`supabase` vs `express`), Multi-Hosting Adapters, dan Gemini 2.0 Streaming.
 
-## Current Priority
+## Current Task
+Master Task List updated at `doc/PRODUCTION_TASKS.md`. Awaiting prompt for initial EPIC execution (EPIC 1 Data Abstraction Provider vs others).
+
+## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
+- EPIC 1: Database & Backend Abstraction (Repository Pattern: `IDataService`, `SupabaseDataService`, `ExpressDataService`, `DataProvider`)
+- EPIC 2: Multi-Hosting Adapters (Vercel Edge, Cloudflare Pages, VPS/aaPanel Docker)
+- EPIC 3: Hybrid Realtime & Polling Sync Engine (WebSocket vs Polling, Failover 3x, Page Visibility)
+- EPIC 4: AI Engine & Performance Optimization (Gemini 2.0 Streaming SSE, Rate Limiting 15 RPM)
+- EPIC 5: Testing & Production Readiness (Multi-DB Schema/Prisma, Security Audit)
+
+## Do Not Work On Yet
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.
 2. [Completed] Implement dynamic bilingual (i18n) context provider.
 3. [Completed] Localize editor layout, sidebars, and setup modals.

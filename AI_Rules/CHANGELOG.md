@@ -1,5 +1,10 @@
 # ScholarFlow Changelog
 
+## v0.0.3 - Production Roadmap & Architecture Refactoring Setup
+- Created production roadmap & task master checklist at `doc/PRODUCTION_TASKS.md`
+- Defined EPICs for Database Abstraction, Multi-Hosting Adapters, Hybrid Sync Engine, AI Optimization, and Production Testing
+- Updated `PROJECT_MAP.md` to reference `doc/PRODUCTION_TASKS.md`
+
 ## v0.0.1
 - Selected product name: ScholarFlow
 - Defined MVP scope

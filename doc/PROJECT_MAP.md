@@ -86,3 +86,13 @@ Database migration and layout details.
   - [supabase/migrations/20260716000001_create_pricing_plans_table.sql](file:///c:/web/ScholarFlow/supabase/migrations/20260716000001_create_pricing_plans_table.sql) - Creates dynamic pricing plans catalog with seeding.
   - [supabase/migrations/20260716000002_add_subscriptions_to_profiles.sql](file:///c:/web/ScholarFlow/supabase/migrations/20260716000002_add_subscriptions_to_profiles.sql) - Extends profiles table with subscription parameters.
   - [supabase/migrations/20260716000003_create_payment_gateways_table.sql](file:///c:/web/ScholarFlow/supabase/migrations/20260716000003_create_payment_gateways_table.sql) - Dynamic gateway settings toggle.
+
+---
+
+### 5. Documentation & Roadmap (`doc/`)
+- [doc/PRODUCTION_TASKS.md](file:///c:/web/ScholarFlow/doc/PRODUCTION_TASKS.md) - Master task roadmap & production readiness checklist.
+- [doc/API_REFERENCE.md](file:///c:/web/ScholarFlow/doc/API_REFERENCE.md) - Endpoint API documentation.
+- [doc/DATABASE_SCHEMA.md](file:///c:/web/ScholarFlow/doc/DATABASE_SCHEMA.md) - Database schema & RLS policies.
+- [doc/EDITOR_FLOW.md](file:///c:/web/ScholarFlow/doc/EDITOR_FLOW.md) - Editor & citation workflow breakdown.
+- [doc/PROJECT_MAP.md](file:///c:/web/ScholarFlow/doc/PROJECT_MAP.md) - Full project map index.
+
