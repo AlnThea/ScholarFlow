@@ -2251,7 +2251,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                         <div
                           key={u.id}
                           className="relative inline-block cursor-pointer transition-transform hover:scale-110 hover:z-10"
-                          title={`${u.user_name} (Co-Editor) • Online`}
+                          title={u.user_name.toLowerCase().includes('co-editor') ? `${u.user_name} • Online` : `${u.user_name} (Co-Editor) • Online`}
                         >
                           <div className="h-6 w-6 rounded-full text-[10px] font-extrabold flex items-center justify-center border-2 border-white text-white bg-emerald-600 shadow-xs">
                             {u.user_name ? u.user_name.charAt(0).toUpperCase() : 'C'}

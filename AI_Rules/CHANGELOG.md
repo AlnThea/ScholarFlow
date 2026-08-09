@@ -408,3 +408,23 @@
   - Enhanced `lib/api/suggestions.ts` `addSuggestion` to merge and maintain full suggestion arrays without losing previously submitted pending suggestions.
 
 
+
+## v0.2.9
+- Accepted & Rejected Suggestions History (Riwayat Usulan Selesai):
+  - Added sub-filter toggle state (`suggestionSubTab: 'active' | 'history'`) to the suggestions sidebar in both Owner view (`components/editor/editor-sidebar.tsx`) and Co-Editor view (`app/shared/[id]/page.tsx`).
+  - **Active Sub-Tab (💡 Aktif / Active)**: Displays pending track changes suggestions (`status === 'pending'`) with interactive Accept/Reject actions.
+  - **History Sub-Tab (📜 Riwayat / History)**: Displays completed suggestions (`status === 'accepted'` or `status === 'rejected'`).
+  - Restyled History Cards with clear visual status indicators:
+    - **Accepted Suggestions**: Soft green accent background (`bg-emerald-50/30 border-emerald-200`) with green status badge (`✓ Accepted` / `✓ Diterima`).
+    - **Rejected Suggestions**: Soft red accent background (`bg-rose-50/30 border-rose-200`) with red status badge (`✕ Rejected` / `✕ Ditolak`).
+  - Added full bilingual support (i18n) across sub-tab toggles (`Active` / `Aktif`, `History` / `Riwayat`), status badges, and empty states.
+  - Verified API and database integration (`/api/v1/suggestions` and `document_suggestions`) for smooth, real-time status transitions from Active to History.
+  - Added active item notification badge (`comments` + `suggestions`) on the Co-Editor header message icon button (`IconMessage`), automatically displaying a pulsing badge when pending suggestions or active comments are present.
+  - Added User Authentication Status Indicator Badge to the top right header in `app/shared/[id]/page.tsx`:
+    - **Logged In Users**: Displays avatar initial, user name, and green online status dot (`🟢`), showing email on hover.
+    - **Guest / Unauthenticated Users**: Displays amber guest badge (`🟡 Tamu / Guest`) with a direct `[ Masuk / Log In → ]` link for seamless authentication.
+  - Added UUID validation (`isValidUuid`) in `lib/api/comments.ts`, `components/editor/scholar-editor.tsx`, and `app/shared/[id]/page.tsx`:
+    - Safely handles unauthenticated guest users (`co-editor-${docId}` strings) when sending notifications.
+    - Prevents PostgreSQL error code `22P02` (`invalid input syntax for type uuid`) when non-UUID guest user IDs are passed as notification recipients.
+
+

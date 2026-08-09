@@ -104,6 +104,14 @@ export async function fetchNotifications(userId: string): Promise<DocumentNotifi
 }
 
 /**
+ * Check if a string is a valid UUID
+ */
+export const isValidUuid = (id?: string | null): boolean => {
+  if (!id) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+};
+
+/**
  * Create a new notification for a document owner
  */
 export async function createNotification(
@@ -112,6 +120,11 @@ export async function createNotification(
   senderName: string,
   message: string
 ): Promise<any> {
+  if (!recipientId || !isValidUuid(recipientId)) {
+    // Skip notification insert gracefully for non-UUID guest users
+    return { success: false, reason: 'Recipient is not a registered user with valid UUID' };
+  }
+
   const { error } = await supabase
     .from('document_notifications')
     .insert({

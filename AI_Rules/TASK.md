@@ -42,9 +42,10 @@ Enhance document export to Microsoft Word with correct media embedding.
 36. [Completed] Relocate bibliography export options from the Library sidebar to the main Header Export dropdown menu.
 37. [Completed] Replace native browser alerts with a custom premium React portal modal for the Free tier bibliography export upgrade lock.
 38. [Completed] Implement public document sharing and collaboration with Read-Only and Co-Editor modes at `/shared/[id]` route.
+39. [Completed] Implement Accepted & Rejected Suggestions History sub-tabs, card styling, and bilingual (i18n) support in editor sidebars.
 
 ## Current Task
-Implemented public document sharing and collaboration with Read-Only and Co-Editor modes.
+Implemented Accepted & Rejected Suggestions History (Riwayat Usulan Selesai) sub-tabs and card styling across Owner and Co-Editor views.
 
 ## Next Tasks
 - Add detailed user guides for localizing custom templates.

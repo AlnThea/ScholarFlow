@@ -51,6 +51,7 @@ import {
   resolveComment,
   markNotificationAsRead,
   markAllNotificationsAsRead,
+  isValidUuid,
   type DocumentComment,
   type DocumentNotification
 } from '@/lib/api/comments';
@@ -1828,7 +1829,7 @@ export function ScholarEditor() {
 
           updateSuggestionStatus(currentDocument.id, id, 'accepted').then(() => {
             fetchSuggestions(currentDocument.id).then(setSuggestions);
-            if (sug && sug.user_id && sug.user_id !== user?.id) {
+            if (sug && sug.user_id && isValidUuid(sug.user_id) && sug.user_id !== user?.id) {
               const myName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Pemilik Dokumen';
               createNotification(
                 currentDocument.id,
@@ -1845,7 +1846,7 @@ export function ScholarEditor() {
           if (!currentDocument?.id) return;
           const sug = suggestions.find(s => s.id === id);
           editorJsRef.current?.rejectSuggestion?.(id);
-          if (sug && sug.user_id && sug.user_id !== user?.id) {
+          if (sug && sug.user_id && isValidUuid(sug.user_id) && sug.user_id !== user?.id) {
             const myName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Pemilik Dokumen';
             createNotification(
               currentDocument.id,

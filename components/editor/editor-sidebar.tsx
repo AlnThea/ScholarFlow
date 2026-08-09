@@ -217,6 +217,7 @@ export function EditorSidebar({
   const { user } = useAuth();
   const [workspaceTab, setWorkspaceTab] = useState<'library' | 'writing' | 'document' | 'comments'>('library');
   const [commentFilterTab, setCommentFilterTab] = useState<'active' | 'suggestions' | 'resolved'>('active');
+  const [suggestionSubTab, setSuggestionSubTab] = useState<'active' | 'history'>('active');
 
   // Sync tab from props if changed
   useEffect(() => {
@@ -1005,6 +1006,45 @@ export function EditorSidebar({
                 </button>
               </div>
 
+              {/* Sub-Filter Toggle for Suggestions: Active vs History */}
+              {commentFilterTab === 'suggestions' && (
+                <div className="flex items-center gap-1 p-1 bg-slate-100/80 rounded-lg text-[10px] font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setSuggestionSubTab('active')}
+                    className={`flex-1 py-1 px-2 rounded-md transition flex items-center justify-center gap-1 cursor-pointer ${
+                      suggestionSubTab === 'active'
+                        ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60 font-bold'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    <span>💡 {language === 'en' ? 'Active' : 'Aktif'}</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${
+                      suggestionSubTab === 'active' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'bg-slate-200/60 text-slate-600'
+                    }`}>
+                      {suggestions.filter(s => s.status === 'pending').length}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSuggestionSubTab('history')}
+                    className={`flex-1 py-1 px-2 rounded-md transition flex items-center justify-center gap-1 cursor-pointer ${
+                      suggestionSubTab === 'history'
+                        ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60 font-bold'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    <span>📜 {language === 'en' ? 'History' : 'Riwayat'}</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${
+                      suggestionSubTab === 'history' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'bg-slate-200/60 text-slate-600'
+                    }`}>
+                      {suggestions.filter(s => s.status === 'accepted' || s.status === 'rejected').length}
+                    </span>
+                  </button>
+                </div>
+              )}
+
               <div className="flex flex-col gap-3 max-h-[calc(100vh-360px)] overflow-y-auto pr-1">
                 {commentFilterTab === 'active' ? (
                   comments.filter(c => !c.resolved).length === 0 ? (
@@ -1059,8 +1099,8 @@ export function EditorSidebar({
                   )
                 ) : commentFilterTab === 'suggestions' ? (
                   (() => {
-                    const activeSugList = suggestions && suggestions.length > 0
-                      ? suggestions.filter(s => s.status === 'pending')
+                    const allSugList = suggestions && suggestions.length > 0
+                      ? suggestions
                       : (() => {
                           const holder = typeof window !== 'undefined' ? window.document.getElementById('editorjs-holder') : null;
                           const sugList: Array<DocumentSuggestion> = [];
@@ -1087,36 +1127,60 @@ export function EditorSidebar({
                           return sugList;
                         })();
 
-                    if (activeSugList.length === 0) {
+                    const filteredSugList = suggestionSubTab === 'active'
+                      ? allSugList.filter(s => s.status === 'pending')
+                      : allSugList.filter(s => s.status === 'accepted' || s.status === 'rejected');
+
+                    if (filteredSugList.length === 0) {
                       return (
                         <div className="text-center py-12 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-xs text-slate-400 font-medium italic font-sans">
-                          {language === 'en' ? 'No track changes suggestions found' : 'Belum ada usulan revisi aktif pada dokumen'}
+                          {suggestionSubTab === 'active'
+                            ? (language === 'en' ? 'No active track changes suggestions found' : 'Belum ada usulan revisi aktif pada dokumen')
+                            : (language === 'en' ? 'No completed suggestion history' : 'Belum ada riwayat usulan selesai')}
                         </div>
                       );
                     }
 
-                    return activeSugList.map((sug) => {
+                    return filteredSugList.map((sug) => {
                       const authorName = sug.author_name || sug.author || (language === 'en' ? 'Collaborator' : 'Kolaborator');
                       const deletedText = sug.selected_text || sug.old_text;
                       const replacementText = sug.suggested_text || sug.new_text;
                       const currentUserName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || '';
                       const isCreatedByMe = (user?.id && sug.user_id && user.id === sug.user_id) || (sug.author_name && currentUserName && sug.author_name.toLowerCase() === currentUserName.toLowerCase());
 
+                      const isAccepted = sug.status === 'accepted';
+                      const isRejected = sug.status === 'rejected';
+                      const isPending = sug.status === 'pending';
+
+                      const containerStyle = isAccepted
+                        ? 'border border-emerald-200 bg-emerald-50/30 hover:bg-emerald-50/50 transition rounded-xl p-3 flex flex-col gap-2 text-left shadow-xs font-sans'
+                        : isRejected
+                          ? 'border border-rose-200 bg-rose-50/30 hover:bg-rose-50/50 transition rounded-xl p-3 flex flex-col gap-2 text-left shadow-xs font-sans'
+                          : 'border border-amber-200 bg-amber-50/20 hover:bg-amber-50/40 transition rounded-xl p-3 flex flex-col gap-2 text-left shadow-xs font-sans';
+
+                      const badgeStyle = isAccepted
+                        ? 'text-[8px] bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold px-1.5 py-0.5 rounded-full'
+                        : isRejected
+                          ? 'text-[8px] bg-rose-100 text-rose-800 border border-rose-200 font-bold px-1.5 py-0.5 rounded-full'
+                          : 'text-[8px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded-full';
+
+                      const statusBadgeText = isAccepted
+                        ? `✓ ${language === 'en' ? 'Accepted' : 'Diterima'}`
+                        : isRejected
+                          ? `✕ ${language === 'en' ? 'Rejected' : 'Ditolak'}`
+                          : `⏳ ${language === 'en' ? 'Pending' : 'Menunggu'}`;
+
                       return (
                         <div
                           key={sug.id}
-                          className="border border-amber-200 bg-amber-50/20 hover:bg-amber-50/40 transition rounded-xl p-3 flex flex-col gap-2 text-left shadow-xs font-sans"
+                          className={containerStyle}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-extrabold text-amber-900 truncate">
+                            <span className="text-[10px] font-extrabold text-slate-800 truncate">
                               💡 {language === 'en' ? 'Suggestion by' : 'Usulan oleh'} {authorName}
                             </span>
-                            <span className="text-[8px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded-full">
-                              {sug.status === 'pending'
-                                ? (language === 'en' ? 'Pending' : 'Menunggu')
-                                : sug.status === 'accepted'
-                                  ? (language === 'en' ? 'Accepted' : 'Diterima')
-                                  : (language === 'en' ? 'Rejected' : 'Ditolak')}
+                            <span className={badgeStyle}>
+                              {statusBadgeText}
                             </span>
                           </div>
 
@@ -1132,7 +1196,7 @@ export function EditorSidebar({
                             </div>
                           )}
 
-                          {sug.status === 'pending' && (
+                          {isPending && (
                             <div className="flex items-center justify-end gap-1.5 pt-1.5 border-t border-amber-100 mt-1">
                               {isCreatedByMe ? (
                                 <span className="text-[9px] text-slate-500 font-medium italic">

@@ -5,7 +5,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom';
 import { useParams } from 'next/navigation';
 import { fetchSharedDocument, updateSharedDocument, type DocumentEntry } from '@/lib/api/documents';
-import { fetchComments, addComment, createNotification } from '@/lib/api/comments';
+import { fetchComments, addComment, createNotification, isValidUuid } from '@/lib/api/comments';
 import { fetchCitationLibrary } from '@/lib/api/citation-library';
 import { updatePresence, fetchActivePresence, leavePresence, type UserPresence } from '@/lib/api/presence';
 import { fetchSuggestions, addSuggestion, updateSuggestionStatus, DocumentSuggestion } from '@/lib/api/suggestions';
@@ -59,7 +59,7 @@ export default function SharedDocumentPage() {
   const { user, profile } = useAuth();
   const params = useParams();
   const rawId = params?.id as string | undefined;
-  
+
   // Extract document UUID by removing 'doc-' prefix if present
   const docId = useMemo(() => {
     if (!rawId) return '';
@@ -94,11 +94,10 @@ export default function SharedDocumentPage() {
   });
 
   const getBtnClass = (isActive: boolean) => {
-    return `p-1.5 rounded transition ${
-      isActive
+    return `p-1.5 rounded transition ${isActive
         ? 'bg-indigo-50 text-indigo-600 font-semibold'
         : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'
-    }`;
+      }`;
   };
 
   // Custom Modals & Popovers States
@@ -188,6 +187,7 @@ export default function SharedDocumentPage() {
   const [comments, setComments] = useState<any[]>([]);
   const [activeUsers, setActiveUsers] = useState<UserPresence[]>([]);
   const [suggestions, setSuggestions] = useState<DocumentSuggestion[]>([]);
+  const [suggestionSubTab, setSuggestionSubTab] = useState<'active' | 'history'>('active');
   const [showCommentsSidebar, setShowCommentsSidebar] = useState(false);
   const [commentSubTab, setCommentSubTab] = useState<'active' | 'resolved'>('active');
   const [editorMode, setEditorMode] = useState<'edit' | 'suggest'>('edit');
@@ -232,7 +232,7 @@ export default function SharedDocumentPage() {
 
     try {
       const response = await searchCitations(normalizedQuery, 15);
-      
+
       let filtered = response.results;
       if (document?.settings) {
         const settings = document.settings;
@@ -289,12 +289,12 @@ export default function SharedDocumentPage() {
 
     setIsImproving(true);
     setAiError(null);
-    
+
     // Save selection range in editor
     editorJsRef.current?.saveSelectionRange();
 
     try {
-      const toneValue = actionType === 'paraphrase' ? 'academic' : selectedAiTone; 
+      const toneValue = actionType === 'paraphrase' ? 'academic' : selectedAiTone;
       const response = await improveWriting(
         selectedText,
         toneValue,
@@ -520,7 +520,7 @@ export default function SharedDocumentPage() {
                   if (divMatch) {
                     inner = divMatch[1];
                   }
-                  
+
                   // Re-wrap in the new blurred + fade-out visual lock container
                   block.data.text = `
                     <div class="sf-bibliography-fade-container" style="position: relative; max-height: 55px; overflow: hidden; user-select: none; pointer-events: none; margin-top: 15px; line-height: 1.6;">
@@ -703,7 +703,7 @@ export default function SharedDocumentPage() {
   // Presence Heartbeat Effect
   useEffect(() => {
     if (!docId) return;
-    const authorName = profile?.full_name || user?.email?.split('@')[0] || 'Co-Editor';
+    const authorName = profile?.full_name || user?.email?.split('@')[0] || (language === 'id' ? 'Tamu' : 'Guest');
     const userId = user?.id || `co-editor-${docId}`;
 
     const updateAndFetch = async () => {
@@ -772,9 +772,9 @@ export default function SharedDocumentPage() {
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
         const editorContainer = window.document.getElementById('editorjs-holder');
-        
+
         const text = selection.toString().trim();
-        
+
         if (!text || selection.isCollapsed) {
           if (bubbleModeRef.current !== 'citation' && bubbleModeRef.current !== 'comment') {
             setShowBubbleMenu(false);
@@ -799,9 +799,9 @@ export default function SharedDocumentPage() {
         let hasCode = false;
 
         let node = selection.anchorNode
-          ? (selection.anchorNode.nodeType === Node.TEXT_NODE 
-              ? selection.anchorNode.parentElement 
-              : selection.anchorNode as HTMLElement)
+          ? (selection.anchorNode.nodeType === Node.TEXT_NODE
+            ? selection.anchorNode.parentElement
+            : selection.anchorNode as HTMLElement)
           : null;
 
         while (node && editorContainer && editorContainer.contains(node)) {
@@ -821,7 +821,7 @@ export default function SharedDocumentPage() {
             tempDiv.appendChild(fragment);
             if (!hasLink && tempDiv.querySelector('a')) hasLink = true;
             if (!hasHighlight && tempDiv.querySelector('mark')) hasHighlight = true;
-          } catch (e) {}
+          } catch (e) { }
         }
 
         setActiveFormats({
@@ -915,7 +915,7 @@ export default function SharedDocumentPage() {
 
   return (
     <div className="min-h-screen bg-slate-50/50 font-sans text-slate-850">
-      
+
       {/* Navigation Header */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200/50 h-14 flex items-center justify-between px-6 shadow-sm shadow-slate-100/10">
         <div className="flex items-center gap-3">
@@ -943,20 +943,28 @@ export default function SharedDocumentPage() {
 
         {/* Access badge and save indicator */}
         <div className="flex items-center gap-3">
-          {/* Toggle Comments Button */}
+          {/* Toggle Comments & Suggestions Button */}
           <button
-            onClick={() => setShowCommentsSidebar(prev => !prev)}
-            className={`p-1.5 rounded-lg border transition cursor-pointer relative ${
-              showCommentsSidebar
-                ? 'border-indigo-650 bg-indigo-50 text-indigo-700'
-                : 'border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-800'
-            }`}
-            title={language === 'id' ? 'Tampilkan Komentar' : 'Show Comments'}
+            type="button"
+            onClick={() => {
+              setShowCommentsSidebar(prev => {
+                const next = !prev;
+                if (next && suggestions.filter(s => s.status === 'pending').length > 0 && comments.filter(c => !c.resolved).length === 0) {
+                  setCommentSubTab('suggestions' as any);
+                }
+                return next;
+              });
+            }}
+            className={`p-2 rounded-xl border transition cursor-pointer relative ${showCommentsSidebar
+                ? 'border-indigo-650 bg-indigo-50 text-indigo-700 shadow-sm'
+                : 'border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-900'
+              }`}
+            title={language === 'id' ? 'Tampilkan Komentar & Usulan' : 'Show Comments & Suggestions'}
           >
-            <IconMessage className="h-4 w-4" />
-            {comments.filter(c => !c.resolved).length > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-indigo-600 text-[8px] font-bold text-white shadow-sm shadow-indigo-100 animate-pulse">
-                {comments.filter(c => !c.resolved).length}
+            <IconMessage className="h-4.5 w-4.5" />
+            {(comments.filter(c => !c.resolved).length + suggestions.filter(s => s.status === 'pending').length) > 0 && (
+              <span className="absolute -top-2 -right-2 min-w-[20px] h-[20px] px-1 flex items-center justify-center rounded-full bg-rose-500 text-[10px] font-black text-white border-2 border-white shadow-md shadow-rose-500/30 z-10 animate-bounce">
+                {comments.filter(c => !c.resolved).length + suggestions.filter(s => s.status === 'pending').length}
               </span>
             )}
           </button>
@@ -1005,35 +1013,6 @@ export default function SharedDocumentPage() {
                   </span>
                 )}
               </span>
-              {/* Mode Switcher Toggle (Edit Langsung vs Mode Sugesti) */}
-              <div className="flex items-center rounded-lg bg-slate-100/90 p-0.5 border border-slate-200/80 shrink-0 ml-1">
-                <button
-                  type="button"
-                  onClick={() => setEditorMode('edit')}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
-                    editorMode === 'edit'
-                      ? 'bg-white text-indigo-700 shadow-xs'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                  title={language === 'id' ? 'Mode Edit Langsung' : 'Direct Edit Mode'}
-                >
-                  <span>✍️</span>
-                  <span className="hidden sm:inline">{language === 'id' ? 'Edit Langsung' : 'Direct Edit'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditorMode('suggest')}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
-                    editorMode === 'suggest'
-                      ? 'bg-amber-500 text-white shadow-xs'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                  title={language === 'id' ? 'Mode Sugesti / Track Changes' : 'Suggesting Mode'}
-                >
-                  <span>💡</span>
-                  <span className="hidden sm:inline">{language === 'id' ? 'Mode Sugesti' : 'Suggesting'}</span>
-                </button>
-              </div>
 
               <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200/40 rounded-full">
                 <IconWorld className="h-3 w-3" />
@@ -1046,6 +1025,35 @@ export default function SharedDocumentPage() {
               {language === 'id' ? 'Membaca Saja' : 'Read-Only'}
             </span>
           )}
+
+          {/* User Authentication Login Status Indicator Badge */}
+          {user ? (
+            <div
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-slate-700 bg-slate-100/90 border border-slate-200/80 rounded-full shrink-0"
+              title={language === 'id' ? `Login sebagai: ${user.email || profile?.full_name || 'Pengguna'}` : `Logged in as: ${user.email || profile?.full_name || 'User'}`}
+            >
+              <div className="h-4 w-4 rounded-full bg-indigo-600 text-white text-[9px] font-black flex items-center justify-center">
+                {(profile?.full_name || user.email || 'U').charAt(0).toUpperCase()}
+              </div>
+              <span className="max-w-[90px] md:max-w-[120px] truncate">
+                {profile?.full_name || user.email?.split('@')[0] || 'User'}
+              </span>
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" title="Logged In" />
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200/60 rounded-full">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                {language === 'id' ? 'Tamu' : 'Guest'}
+              </span>
+              <a
+                href={`/login?returnUrl=${encodeURIComponent(`/shared/${docId}`)}`}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-indigo-650 hover:text-white bg-indigo-50 hover:bg-indigo-600 border border-indigo-100 hover:border-indigo-600 transition rounded-full shadow-2xs"
+              >
+                {language === 'id' ? 'Masuk' : 'Log In'} →
+              </a>
+            </div>
+          )}
         </div>
       </header>
 
@@ -1057,11 +1065,10 @@ export default function SharedDocumentPage() {
             <button
               type="button"
               onClick={() => setEditorMode('edit')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
-                editorMode === 'edit'
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${editorMode === 'edit'
                   ? 'bg-white text-indigo-700 shadow-xs'
                   : 'text-slate-500 hover:text-slate-800'
-              }`}
+                }`}
               title={language === 'id' ? 'Mode Edit Langsung' : 'Direct Edit Mode'}
             >
               <span>✍️</span>
@@ -1070,11 +1077,10 @@ export default function SharedDocumentPage() {
             <button
               type="button"
               onClick={() => setEditorMode('suggest')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
-                editorMode === 'suggest'
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${editorMode === 'suggest'
                   ? 'bg-amber-500 text-white shadow-xs'
                   : 'text-slate-500 hover:text-slate-800'
-              }`}
+                }`}
               title={language === 'id' ? 'Mode Sugesti / Track Changes' : 'Suggesting Mode'}
             >
               <span>💡</span>
@@ -1334,7 +1340,7 @@ export default function SharedDocumentPage() {
 
       {/* Editor Main Content Area */}
       <div className="flex max-w-7xl mx-auto items-start gap-6 w-full px-4 md:px-6">
-        <main 
+        <main
           className={`flex-1 min-w-0 pb-24 ${isCoEditor ? 'pt-32' : 'pt-20'}`}
           onContextMenu={(e) => {
             if (!isCoEditor) return;
@@ -1353,446 +1359,505 @@ export default function SharedDocumentPage() {
               }
             }
           }}
-      >
-        <div className="max-w-3xl mx-auto bg-white border border-slate-200/80 rounded-2xl shadow-sm min-h-[60vh] overflow-hidden my-6">
-          
-          {/* Header metadata layout for public reader */}
-          <div className="px-6 md:px-10 pt-8 border-b border-slate-100 pb-4">
-            <h1 className="text-xl md:text-2xl font-serif font-bold text-slate-900 mb-2 leading-snug">
-              {document.title}
-            </h1>
-            <div className="flex items-center gap-2 text-[10px] font-medium text-slate-400 uppercase tracking-wider">
-              <span>{language === 'id' ? 'Draf Bersama' : 'Shared Draft'}</span>
-              <span>•</span>
-              <span>{new Date(document.updated_at).toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-            </div>
-          </div>
+        >
+          <div className="max-w-3xl mx-auto bg-white border border-slate-200/80 rounded-2xl shadow-sm min-h-[60vh] overflow-hidden my-6">
 
-          <div className="py-2">
-            <EditorJsEditor
-              ref={editorJsRef}
-              initialContent={document.content}
-              readOnly={!isCoEditor}
-              onCommentMarkClick={(commentId) => {
-                setShowCommentsSidebar(true);
-              }}
-              onContentChange={isCoEditor ? handleContentChange : undefined}
-              onBlockTypeChange={setCurrentBlockType}
-              onAlignmentChange={(align) => {
-                setCurrentAlignment(align);
-                if (!isCoEditor || !document) return;
-                try {
-                  const alignments = JSON.parse(localStorage.getItem('scholarflow.editorjs.alignments.v1') || '{}');
-                  const updatedSettings = {
-                    ...document.settings,
-                    alignments
-                  };
-                  setDocument((prev) => prev ? { ...prev, settings: updatedSettings } : null);
-                  triggerDebouncedSave(document.title, document.content, updatedSettings);
-                } catch (e) {
-                  console.error('Error saving alignment change:', e);
-                }
-              }}
-              onCitationSearchChange={(query, rect) => {
-                setBubbleMenuRect(rect);
-                setBubbleMode('citation');
-                setShowBubbleMenu(true);
-                setBubbleSearchQuery(query);
-                runCitationSearchForQuery(query);
-              }}
-              onCitationSearchCancel={() => {
-                editorJsRef.current?.cancelCitationSearch();
-                setShowBubbleMenu(false);
-              }}
-              onInsertLinkRequest={(initialUrl, onSave, onUnlink) => {
-                setLinkUrlInput(initialUrl);
-                setInsertLinkCallback({
-                  save: onSave,
-                  unlink: onUnlink
-                });
-                setIsLinkModalOpen(true);
-              }}
-              onEditInlineEquation={(formula, onSave) => {
-                setMathFormulaInput(formula);
-                setEditingMathCallback(() => onSave);
-                setIsMathModalOpen(true);
-              }}
-              onCiteClick={(refId, label, citedSentence) => {
-                setActiveModalCitation({ refId, label, citedSentence });
-              }}
-              onStatsChange={(stats) => {
-                // Read active reference IDs reported in real-time
-                if (stats.activeReferenceIds) {
-                  const newIds = stats.activeReferenceIds;
-                  setActiveReferenceIds((prev) => {
-                    const isSame =
-                      prev.length === newIds.length &&
-                      prev.every((id, idx) => id === newIds[idx]);
-                    return isSame ? prev : newIds;
+            {/* Header metadata layout for public reader */}
+            <div className="px-6 md:px-10 pt-8 border-b border-slate-100 pb-4">
+              <h1 className="text-xl md:text-2xl font-serif font-bold text-slate-900 mb-2 leading-snug">
+                {document.title}
+              </h1>
+              <div className="flex items-center gap-2 text-[10px] font-medium text-slate-400 uppercase tracking-wider">
+                <span>{language === 'id' ? 'Draf Bersama' : 'Shared Draft'}</span>
+                <span>•</span>
+                <span>{new Date(document.updated_at).toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+              </div>
+            </div>
+
+            <div className="py-2">
+              <EditorJsEditor
+                ref={editorJsRef}
+                initialContent={document.content}
+                readOnly={!isCoEditor}
+                onCommentMarkClick={(commentId) => {
+                  setShowCommentsSidebar(true);
+                }}
+                onContentChange={isCoEditor ? handleContentChange : undefined}
+                onBlockTypeChange={setCurrentBlockType}
+                onAlignmentChange={(align) => {
+                  setCurrentAlignment(align);
+                  if (!isCoEditor || !document) return;
+                  try {
+                    const alignments = JSON.parse(localStorage.getItem('scholarflow.editorjs.alignments.v1') || '{}');
+                    const updatedSettings = {
+                      ...document.settings,
+                      alignments
+                    };
+                    setDocument((prev) => prev ? { ...prev, settings: updatedSettings } : null);
+                    triggerDebouncedSave(document.title, document.content, updatedSettings);
+                  } catch (e) {
+                    console.error('Error saving alignment change:', e);
+                  }
+                }}
+                onCitationSearchChange={(query, rect) => {
+                  setBubbleMenuRect(rect);
+                  setBubbleMode('citation');
+                  setShowBubbleMenu(true);
+                  setBubbleSearchQuery(query);
+                  runCitationSearchForQuery(query);
+                }}
+                onCitationSearchCancel={() => {
+                  editorJsRef.current?.cancelCitationSearch();
+                  setShowBubbleMenu(false);
+                }}
+                onInsertLinkRequest={(initialUrl, onSave, onUnlink) => {
+                  setLinkUrlInput(initialUrl);
+                  setInsertLinkCallback({
+                    save: onSave,
+                    unlink: onUnlink
                   });
-                }
-              }}
-            />
-          </div>
-        </div>
-      </main>
-
-      {/* Right Comments Sidebar Panel for Co-Editor (Full Height Browser Edge) */}
-      {showCommentsSidebar && (
-        <aside className="fixed top-0 right-0 h-screen w-80 md:w-96 bg-white border-l border-slate-200 z-[99] shadow-2xl flex flex-col font-sans text-slate-800 transition-all duration-300 animate-slide-in">
-          
-          {/* Sidebar Header */}
-          <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
-                <IconMessage className="h-4 w-4" />
-              </div>
-              <div>
-                <h3 className="text-xs font-bold text-slate-900 leading-none">
-                  {language === 'id' ? 'Komentar Dokumen' : 'Document Comments'}
-                </h3>
-                <p className="text-[10px] text-slate-400 mt-0.5">
-                  {language === 'id' ? 'Diskusi & Masukan Co-Editor' : 'Co-Editor Feedback & Discussion'}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowCommentsSidebar(false)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
-              title={language === 'id' ? 'Tutup Sidebar' : 'Close Sidebar'}
-            >
-              <IconX className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* Sub-Tabs: Komentar vs Usulan vs Selesai */}
-          <div className="px-4 pt-3 pb-2 border-b border-slate-100 bg-white">
-            <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100/80 rounded-xl text-xs font-semibold">
-              <button
-                onClick={() => setCommentSubTab('active')}
-                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 transition cursor-pointer text-[10px] ${
-                  commentSubTab === 'active'
-                    ? 'bg-white text-indigo-600 shadow-sm font-bold'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                <span>{language === 'id' ? 'Komentar' : 'Comments'}</span>
-                <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${
-                  commentSubTab === 'active' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'
-                }`}>
-                  {comments.filter(c => !c.resolved).length}
-                </span>
-              </button>
-
-              <button
-                onClick={() => setCommentSubTab('suggestions' as any)}
-                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 transition cursor-pointer text-[10px] ${
-                  (commentSubTab as string) === 'suggestions'
-                    ? 'bg-white text-amber-700 shadow-sm font-bold'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                <span>💡 {language === 'en' ? 'Suggestions' : 'Usulan'}</span>
-              </button>
-
-              <button
-                onClick={() => setCommentSubTab('resolved')}
-                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 transition cursor-pointer text-[10px] ${
-                  commentSubTab === 'resolved'
-                    ? 'bg-white text-emerald-600 shadow-sm font-bold'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                <span>{language === 'id' ? 'Selesai' : 'Resolved'}</span>
-                <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${
-                  commentSubTab === 'resolved' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'
-                }`}>
-                  ✓ {comments.filter(c => c.resolved).length}
-                </span>
-              </button>
+                  setIsLinkModalOpen(true);
+                }}
+                onEditInlineEquation={(formula, onSave) => {
+                  setMathFormulaInput(formula);
+                  setEditingMathCallback(() => onSave);
+                  setIsMathModalOpen(true);
+                }}
+                onCiteClick={(refId, label, citedSentence) => {
+                  setActiveModalCitation({ refId, label, citedSentence });
+                }}
+                onStatsChange={(stats) => {
+                  // Read active reference IDs reported in real-time
+                  if (stats.activeReferenceIds) {
+                    const newIds = stats.activeReferenceIds;
+                    setActiveReferenceIds((prev) => {
+                      const isSame =
+                        prev.length === newIds.length &&
+                        prev.every((id, idx) => id === newIds[idx]);
+                      return isSame ? prev : newIds;
+                    });
+                  }
+                }}
+              />
             </div>
           </div>
+        </main>
 
-          {/* Comments List */}
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3.5 bg-slate-50/30">
-            {commentSubTab === 'active' ? (
-              comments.filter(c => !c.resolved).length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                  <div className="p-3 rounded-2xl bg-indigo-50 text-indigo-400 mb-3">
-                    <IconMessage className="h-6 w-6" />
-                  </div>
-                  <p className="text-xs font-semibold text-slate-600">
-                    {language === 'id' ? 'Tidak ada komentar aktif' : 'No active comments'}
-                  </p>
-                  <p className="text-[10px] text-slate-400 mt-1 max-w-[200px]">
-                    {language === 'id' ? 'Blok teks pada editor untuk menambahkan komentar baru.' : 'Highlight text in the editor to add a new comment.'}
+        {/* Right Comments Sidebar Panel for Co-Editor (Full Height Browser Edge) */}
+        {showCommentsSidebar && (
+          <aside className="fixed top-0 right-0 h-screen w-80 md:w-96 bg-white border-l border-slate-200 z-[99] shadow-2xl flex flex-col font-sans text-slate-800 transition-all duration-300 animate-slide-in">
+
+            {/* Sidebar Header */}
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
+                  <IconMessage className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-slate-900 leading-none">
+                    {language === 'id' ? 'Komentar Dokumen' : 'Document Comments'}
+                  </h3>
+                  <p className="text-[10px] text-slate-400 mt-0.5">
+                    {language === 'id' ? 'Diskusi & Masukan Co-Editor' : 'Co-Editor Feedback & Discussion'}
                   </p>
                 </div>
-              ) : (
-                comments.filter(c => !c.resolved).map((c) => (
-                  <div
-                    key={c.id}
-                    onClick={() => {
-                      editorJsRef.current?.scrollToCommentMark(c.id);
-                    }}
-                    className="group border border-slate-200/80 hover:border-indigo-300 bg-white hover:bg-indigo-50/20 transition-all duration-200 rounded-2xl p-3.5 flex flex-col gap-2.5 text-left cursor-pointer shadow-sm hover:shadow-md hover:shadow-indigo-500/5 relative overflow-hidden"
+              </div>
+              <button
+                onClick={() => setShowCommentsSidebar(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                title={language === 'id' ? 'Tutup Sidebar' : 'Close Sidebar'}
+              >
+                <IconX className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Sub-Tabs: Komentar vs Usulan vs Selesai */}
+            <div className="px-4 pt-3 pb-2 border-b border-slate-100 bg-white">
+              <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100/80 rounded-xl text-xs font-semibold">
+                <button
+                  onClick={() => setCommentSubTab('active')}
+                  className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 transition cursor-pointer text-[10px] ${commentSubTab === 'active'
+                      ? 'bg-white text-indigo-600 shadow-sm font-bold'
+                      : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                >
+                  <span>{language === 'id' ? 'Komentar' : 'Comments'}</span>
+                  <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${commentSubTab === 'active' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'
+                    }`}>
+                    {comments.filter(c => !c.resolved).length}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setCommentSubTab('suggestions' as any)}
+                  className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 transition cursor-pointer text-[10px] ${(commentSubTab as string) === 'suggestions'
+                      ? 'bg-white text-amber-700 shadow-sm font-bold'
+                      : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                >
+                  <span>💡 {language === 'en' ? 'Suggestions' : 'Usulan'}</span>
+                </button>
+
+                <button
+                  onClick={() => setCommentSubTab('resolved')}
+                  className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 transition cursor-pointer text-[10px] ${commentSubTab === 'resolved'
+                      ? 'bg-white text-emerald-600 shadow-sm font-bold'
+                      : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                >
+                  <span>{language === 'id' ? 'Selesai' : 'Resolved'}</span>
+                  <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${commentSubTab === 'resolved' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'
+                    }`}>
+                    ✓ {comments.filter(c => c.resolved).length}
+                  </span>
+                </button>
+              </div>
+
+              {/* Sub-Filter Toggle for Suggestions in Shared/Co-Editor mode */}
+              {(commentSubTab as string) === 'suggestions' && (
+                <div className="flex items-center gap-1 mt-2 p-1 bg-slate-100/80 rounded-xl text-xs font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => setSuggestionSubTab('active')}
+                    className={`flex-1 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 transition cursor-pointer text-[10px] ${suggestionSubTab === 'active'
+                        ? 'bg-white text-indigo-700 shadow-sm font-bold'
+                        : 'text-slate-500 hover:text-slate-800'
+                      }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="h-6 w-6 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-extrabold flex items-center justify-center shrink-0">
-                          {c.author_name ? c.author_name.charAt(0).toUpperCase() : 'C'}
-                        </div>
-                        <span className="text-xs font-bold text-slate-800 truncate">{c.author_name}</span>
-                      </div>
-                      <span className="text-[9px] text-slate-400 font-medium shrink-0">
-                        {new Date(c.created_at).toLocaleTimeString(language === 'id' ? 'id-ID' : 'en-US', {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </span>
-                    </div>
+                    <span>💡 {language === 'id' ? 'Aktif' : 'Active'}</span>
+                    <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${suggestionSubTab === 'active' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                      {suggestions.filter(s => s.status === 'pending').length}
+                    </span>
+                  </button>
 
-                    {c.selected_text && (
-                      <div className="bg-amber-50/60 border-l-2 border-amber-400 px-2.5 py-1.5 rounded-r-lg text-[10px] text-amber-900 font-medium italic truncate">
-                        "{c.selected_text}"
-                      </div>
-                    )}
-
-                    <p className="text-xs text-slate-700 leading-relaxed font-medium whitespace-pre-line">
-                      {c.comment_text}
-                    </p>
-
-                    <div className="pt-1 flex items-center justify-between text-[9px] text-indigo-500 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span>{language === 'id' ? 'Klik untuk sorot di canvas' : 'Click to highlight in canvas'} →</span>
-                    </div>
-                  </div>
-                ))
-              )
-            ) : (commentSubTab as string) === 'suggestions' ? (
-              suggestions.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 px-4 text-center font-sans">
-                  <div className="p-3 rounded-2xl bg-amber-50 text-amber-500 mb-3">
-                    <IconSparkles className="h-6 w-6" />
-                  </div>
-                  <p className="text-xs font-semibold text-slate-600">
-                    {language === 'id' ? 'Belum ada usulan revisi' : 'No suggestions yet'}
-                  </p>
-                  <p className="text-[10px] text-slate-400 mt-1 max-w-[200px]">
-                    {language === 'id' ? 'Aktifkan Mode Sugesti atau blok teks untuk mengusulkan perubahan.' : 'Toggle Suggesting mode to propose edits.'}
-                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setSuggestionSubTab('history')}
+                    className={`flex-1 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 transition cursor-pointer text-[10px] ${suggestionSubTab === 'history'
+                        ? 'bg-white text-indigo-700 shadow-sm font-bold'
+                        : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                  >
+                    <span>📜 {language === 'id' ? 'Riwayat' : 'History'}</span>
+                    <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${suggestionSubTab === 'history' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                      {suggestions.filter(s => s.status === 'accepted' || s.status === 'rejected').length}
+                    </span>
+                  </button>
                 </div>
-              ) : (
-                suggestions.map((sug) => {
-                  const authorName = sug.author_name || sug.author || (language === 'id' ? 'Kolaborator' : 'Collaborator');
-                  const deletedText = sug.selected_text || sug.old_text;
-                  const replacementText = sug.suggested_text || sug.new_text;
-                  const currentUserName = user?.user_metadata?.full_name || profile?.full_name || user?.email?.split('@')[0] || '';
-                  const isCreatedByMe = (user?.id && sug.user_id && user.id === sug.user_id) || (sug.author_name && currentUserName && sug.author_name.toLowerCase() === currentUserName.toLowerCase());
+              )}
+            </div>
 
-                  return (
+            {/* Comments List */}
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3.5 bg-slate-50/30">
+              {commentSubTab === 'active' ? (
+                comments.filter(c => !c.resolved).length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                    <div className="p-3 rounded-2xl bg-indigo-50 text-indigo-400 mb-3">
+                      <IconMessage className="h-6 w-6" />
+                    </div>
+                    <p className="text-xs font-semibold text-slate-600">
+                      {language === 'id' ? 'Tidak ada komentar aktif' : 'No active comments'}
+                    </p>
+                    <p className="text-[10px] text-slate-400 mt-1 max-w-[200px]">
+                      {language === 'id' ? 'Blok teks pada editor untuk menambahkan komentar baru.' : 'Highlight text in the editor to add a new comment.'}
+                    </p>
+                  </div>
+                ) : (
+                  comments.filter(c => !c.resolved).map((c) => (
                     <div
-                      key={sug.id}
-                      className="border border-amber-200/90 bg-amber-50/20 hover:bg-amber-50/40 transition rounded-2xl p-3.5 flex flex-col gap-2.5 text-left shadow-xs font-sans"
+                      key={c.id}
+                      onClick={() => {
+                        editorJsRef.current?.scrollToCommentMark(c.id);
+                      }}
+                      className="group border border-slate-200/80 hover:border-indigo-300 bg-white hover:bg-indigo-50/20 transition-all duration-200 rounded-2xl p-3.5 flex flex-col gap-2.5 text-left cursor-pointer shadow-sm hover:shadow-md hover:shadow-indigo-500/5 relative overflow-hidden"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-extrabold text-amber-900 truncate">
-                          💡 {language === 'id' ? 'Usulan oleh' : 'Suggestion by'} {authorName}
-                        </span>
-                        <span className="text-[9px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full border border-amber-200/60">
-                          {sug.status === 'pending'
-                            ? (language === 'id' ? 'Menunggu' : 'Pending')
-                            : sug.status === 'accepted'
-                              ? (language === 'id' ? 'Diterima' : 'Accepted')
-                              : (language === 'id' ? 'Ditolak' : 'Rejected')}
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="h-6 w-6 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-extrabold flex items-center justify-center shrink-0">
+                            {c.author_name ? c.author_name.charAt(0).toUpperCase() : 'C'}
+                          </div>
+                          <span className="text-xs font-bold text-slate-800 truncate">{c.author_name}</span>
+                        </div>
+                        <span className="text-[9px] text-slate-400 font-medium shrink-0">
+                          {new Date(c.created_at).toLocaleTimeString(language === 'id' ? 'id-ID' : 'en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
                         </span>
                       </div>
 
-                      {deletedText && (
-                        <div className="bg-rose-50 border-l-2 border-rose-400 px-2.5 py-1.5 rounded-r-lg text-[10px] text-rose-900 line-through leading-relaxed">
-                          {language === 'id' ? 'Dihapus:' : 'Deleted:'} "{deletedText}"
+                      {c.selected_text && (
+                        <div className="bg-amber-50/60 border-l-2 border-amber-400 px-2.5 py-1.5 rounded-r-lg text-[10px] text-amber-900 font-medium italic truncate">
+                          "{c.selected_text}"
                         </div>
                       )}
 
-                      {replacementText && (
-                        <div className="bg-emerald-50 border-l-2 border-emerald-400 px-2.5 py-1.5 rounded-r-lg text-[10px] text-emerald-900 font-bold leading-relaxed">
-                          {language === 'id' ? 'Pengganti:' : 'Replacement:'} "{replacementText}"
+                      <p className="text-xs text-slate-700 leading-relaxed font-medium whitespace-pre-line">
+                        {c.comment_text}
+                      </p>
+
+                      <div className="pt-1 flex items-center justify-between text-[9px] text-indigo-500 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span>{language === 'id' ? 'Klik untuk sorot di canvas' : 'Click to highlight in canvas'} →</span>
+                      </div>
+                    </div>
+                  ))
+                )
+              ) : (commentSubTab as string) === 'suggestions' ? (
+                (() => {
+                  const filteredSugList = suggestionSubTab === 'active'
+                    ? suggestions.filter(s => s.status === 'pending')
+                    : suggestions.filter(s => s.status === 'accepted' || s.status === 'rejected');
+
+                  if (filteredSugList.length === 0) {
+                    return (
+                      <div className="flex flex-col items-center justify-center py-16 px-4 text-center font-sans">
+                        <div className="p-3 rounded-2xl bg-amber-50 text-amber-500 mb-3">
+                          <IconSparkles className="h-6 w-6" />
                         </div>
-                      )}
+                        <p className="text-xs font-semibold text-slate-600">
+                          {suggestionSubTab === 'active'
+                            ? (language === 'id' ? 'Belum ada usulan revisi aktif' : 'No active suggestions yet')
+                            : (language === 'id' ? 'Belum ada riwayat usulan selesai' : 'No suggestion history yet')}
+                        </p>
+                        <p className="text-[10px] text-slate-400 mt-1 max-w-[200px]">
+                          {suggestionSubTab === 'active'
+                            ? (language === 'id' ? 'Aktifkan Mode Sugesti atau blok teks untuk mengusulkan perubahan.' : 'Toggle Suggesting mode to propose edits.')
+                            : (language === 'id' ? 'Usulan yang telah diterima atau ditolak akan muncul di sini.' : 'Accepted or rejected suggestions will appear here.')}
+                        </p>
+                      </div>
+                    );
+                  }
 
-                      {sug.status === 'pending' && (
-                        <div className="flex items-center justify-end gap-2 pt-2 border-t border-amber-100 mt-1">
-                          {isCreatedByMe ? (
-                            <span className="text-[10px] text-slate-500 font-medium italic">
-                              ⏳ {language === 'id' ? 'Menunggu Peninjauan Pemilik' : 'Pending Review by Owner'}
-                            </span>
-                          ) : (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (sug && document?.user_id) {
-                                    const recipientId = (sug.user_id && sug.user_id !== user?.id) ? sug.user_id : document.user_id;
-                                    const myName = profile?.full_name || user?.email?.split('@')[0] || 'Co-Editor';
-                                    createNotification(
-                                      docId,
-                                      recipientId,
-                                      myName,
-                                      language === 'en'
-                                        ? `rejected the suggestion: "${(sug.suggested_text || sug.selected_text || sug.new_text || sug.old_text || '').slice(0, 30)}..."`
-                                        : `menolak usulan: "${(sug.suggested_text || sug.selected_text || sug.new_text || sug.old_text || '').slice(0, 30)}..."`
-                                    );
-                                  }
-                                  updateSuggestionStatus(docId, sug.id, 'rejected').then(() => fetchSuggestions(docId).then(setSuggestions));
-                                }}
-                                className="px-3 py-1.5 text-[10px] font-bold text-rose-700 hover:text-white bg-rose-50 hover:bg-rose-600 transition rounded-xl border border-rose-200 cursor-pointer"
-                              >
-                                ✕ {language === 'id' ? 'Tolak' : 'Reject'}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  acceptedLocallyRef.current.add(sug.id);
-                                  processedAcceptedSuggestionsRef.current.add(sug.id);
-                                  editorJsRef.current?.acceptSuggestion?.(sug.id);
-                                  if (sug && document?.content) {
-                                    try {
-                                      let rawContent = typeof document.content === 'string'
-                                        ? JSON.parse(document.content)
-                                        : document.content;
-                                      
-                                      let changed = false;
-                                      if (rawContent && Array.isArray(rawContent.blocks)) {
-                                        rawContent.blocks = rawContent.blocks.map((block: any) => {
-                                          if (block.data && typeof block.data.text === 'string') {
-                                            let text = block.data.text;
-                                            if (text.includes('<del') || text.includes('<ins')) {
-                                              text = text.replace(/<del[^>]*>.*?<\/del>/gi, '').replace(/<ins[^>]*>(.*?)<\/ins>/gi, '$1');
-                                              changed = true;
-                                            }
-                                            const targetText = sug.selected_text ? sug.selected_text.trim() : (sug.old_text ? sug.old_text.trim() : '');
-                                            if (targetText && text.toLowerCase().includes(targetText.toLowerCase())) {
-                                              const regex = new RegExp(targetText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-                                              text = text.replace(regex, sug.suggested_text ? sug.suggested_text.trim() : (sug.new_text ? sug.new_text.trim() : ''));
-                                              changed = true;
-                                            }
-                                            block.data.text = text;
-                                          }
-                                          return block;
-                                        });
-                                      }
+                  return filteredSugList.map((sug) => {
+                    const authorName = sug.author_name || sug.author || (language === 'id' ? 'Kolaborator' : 'Collaborator');
+                    const deletedText = sug.selected_text || sug.old_text;
+                    const replacementText = sug.suggested_text || sug.new_text;
+                    const currentUserName = user?.user_metadata?.full_name || profile?.full_name || user?.email?.split('@')[0] || '';
+                    const isCreatedByMe = (user?.id && sug.user_id && user.id === sug.user_id) || (sug.author_name && currentUserName && sug.author_name.toLowerCase() === currentUserName.toLowerCase());
 
-                                      if (changed) {
-                                        const updatedContentStr = JSON.stringify(rawContent);
-                                        lastSavedContentRef.current = getContentComparisonString(rawContent);
-                                        setDocument(prev => prev ? { ...prev, content: updatedContentStr } : prev);
-                                        updateSharedDocument(docId, { title: document.title || 'Untitled', content: updatedContentStr, settings: document.settings });
-                                        setTimeout(() => {
-                                          editorJsRef.current?.renderContent?.(rawContent);
-                                        }, 100);
-                                      }
-                                    } catch (e) {
-                                      console.error('Failed smart suggestion replacement:', e);
+                    const isAccepted = sug.status === 'accepted';
+                    const isRejected = sug.status === 'rejected';
+                    const isPending = sug.status === 'pending';
+
+                    const containerStyle = isAccepted
+                      ? 'border border-emerald-200 bg-emerald-50/30 hover:bg-emerald-50/50 transition rounded-2xl p-3.5 flex flex-col gap-2.5 text-left shadow-xs font-sans'
+                      : isRejected
+                        ? 'border border-rose-200 bg-rose-50/30 hover:bg-rose-50/50 transition rounded-2xl p-3.5 flex flex-col gap-2.5 text-left shadow-xs font-sans'
+                        : 'border border-amber-200/90 bg-amber-50/20 hover:bg-amber-50/40 transition rounded-2xl p-3.5 flex flex-col gap-2.5 text-left shadow-xs font-sans';
+
+                    const badgeStyle = isAccepted
+                      ? 'text-[9px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full border border-emerald-200'
+                      : isRejected
+                        ? 'text-[9px] bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded-full border border-rose-200'
+                        : 'text-[9px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full border border-amber-200/60';
+
+                    const statusBadgeText = isAccepted
+                      ? `✓ ${language === 'id' ? 'Diterima' : 'Accepted'}`
+                      : isRejected
+                        ? `✕ ${language === 'id' ? 'Ditolak' : 'Rejected'}`
+                        : `⏳ ${language === 'id' ? 'Menunggu' : 'Pending'}`;
+
+                    return (
+                      <div
+                        key={sug.id}
+                        className={containerStyle}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-extrabold text-slate-800 truncate">
+                            💡 {language === 'id' ? 'Usulan oleh' : 'Suggestion by'} {authorName}
+                          </span>
+                          <span className={badgeStyle}>
+                            {statusBadgeText}
+                          </span>
+                        </div>
+
+                        {deletedText && (
+                          <div className="bg-rose-50 border-l-2 border-rose-400 px-2.5 py-1.5 rounded-r-lg text-[10px] text-rose-900 line-through leading-relaxed">
+                            {language === 'id' ? 'Dihapus:' : 'Deleted:'} "{deletedText}"
+                          </div>
+                        )}
+
+                        {replacementText && (
+                          <div className="bg-emerald-50 border-l-2 border-emerald-400 px-2.5 py-1.5 rounded-r-lg text-[10px] text-emerald-900 font-bold leading-relaxed">
+                            {language === 'id' ? 'Pengganti:' : 'Replacement:'} "{replacementText}"
+                          </div>
+                        )}
+
+                        {isPending && (
+                          <div className="flex items-center justify-end gap-2 pt-2 border-t border-amber-100 mt-1">
+                            {isCreatedByMe ? (
+                              <span className="text-[10px] text-slate-500 font-medium italic">
+                                ⏳ {language === 'id' ? 'Menunggu Peninjauan Pemilik' : 'Pending Review by Owner'}
+                              </span>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (sug && document?.user_id) {
+                                      const recipientId = (sug.user_id && isValidUuid(sug.user_id) && sug.user_id !== user?.id) ? sug.user_id : document.user_id;
+                                      const myName = profile?.full_name || user?.email?.split('@')[0] || (language === 'id' ? 'Tamu' : 'Guest');
+                                      createNotification(
+                                        docId,
+                                        recipientId,
+                                        myName,
+                                        language === 'en'
+                                          ? `rejected the suggestion: "${(sug.suggested_text || sug.selected_text || sug.new_text || sug.old_text || '').slice(0, 30)}..."`
+                                          : `menolak usulan: "${(sug.suggested_text || sug.selected_text || sug.new_text || sug.old_text || '').slice(0, 30)}..."`
+                                      );
                                     }
-                                  }
-                                  if (sug && document?.user_id) {
-                                    const recipientId = (sug.user_id && sug.user_id !== user?.id) ? sug.user_id : document.user_id;
-                                    const myName = profile?.full_name || user?.email?.split('@')[0] || 'Co-Editor';
-                                    createNotification(
-                                      docId,
-                                      recipientId,
-                                      myName,
-                                      language === 'en'
-                                        ? `accepted the suggestion: "${(sug.suggested_text || sug.selected_text || sug.new_text || sug.old_text || '').slice(0, 30)}..."`
-                                        : `menerima usulan: "${(sug.suggested_text || sug.selected_text || sug.new_text || sug.old_text || '').slice(0, 30)}..."`
-                                    );
-                                  }
-                                  updateSuggestionStatus(docId, sug.id, 'accepted').then(() => fetchSuggestions(docId).then(setSuggestions));
-                                }}
-                                className="px-3.5 py-1.5 text-[10px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition rounded-xl shadow-xs cursor-pointer"
-                              >
-                                ✓ {language === 'id' ? 'Terima' : 'Accept'}
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              )
-            ) : (
-              comments.filter(c => c.resolved).length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                  <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-400 mb-3">
-                    <IconCheck className="h-6 w-6" />
-                  </div>
-                  <p className="text-xs font-semibold text-slate-600">
-                    {language === 'id' ? 'Belum ada komentar selesai' : 'No resolved comments yet'}
-                  </p>
-                  <p className="text-[10px] text-slate-400 mt-1 max-w-[200px]">
-                    {language === 'id' ? 'Komentar yang telah diselesaikan oleh pemilik akan tersimpan di sini.' : 'Comments resolved by the owner will be archived here.'}
-                  </p>
-                </div>
+                                    updateSuggestionStatus(docId, sug.id, 'rejected').then(() => fetchSuggestions(docId).then(setSuggestions));
+                                  }}
+                                  className="px-3 py-1.5 text-[10px] font-bold text-rose-700 hover:text-white bg-rose-50 hover:bg-rose-600 transition rounded-xl border border-rose-200 cursor-pointer"
+                                >
+                                  ✕ {language === 'id' ? 'Tolak' : 'Reject'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    acceptedLocallyRef.current.add(sug.id);
+                                    processedAcceptedSuggestionsRef.current.add(sug.id);
+                                    editorJsRef.current?.acceptSuggestion?.(sug.id);
+                                    if (sug && document?.content) {
+                                      try {
+                                        let rawContent = typeof document.content === 'string'
+                                          ? JSON.parse(document.content)
+                                          : document.content;
+
+                                        let changed = false;
+                                        if (rawContent && Array.isArray(rawContent.blocks)) {
+                                          rawContent.blocks = rawContent.blocks.map((block: any) => {
+                                            if (block.data && typeof block.data.text === 'string') {
+                                              let text = block.data.text;
+                                              if (text.includes('<del') || text.includes('<ins')) {
+                                                text = text.replace(/<del[^>]*>.*?<\/del>/gi, '').replace(/<ins[^>]*>(.*?)<\/ins>/gi, '$1');
+                                                changed = true;
+                                              }
+                                              const targetText = sug.selected_text ? sug.selected_text.trim() : (sug.old_text ? sug.old_text.trim() : '');
+                                              if (targetText && text.toLowerCase().includes(targetText.toLowerCase())) {
+                                                const regex = new RegExp(targetText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                                                text = text.replace(regex, sug.suggested_text ? sug.suggested_text.trim() : (sug.new_text ? sug.new_text.trim() : ''));
+                                                changed = true;
+                                              }
+                                              block.data.text = text;
+                                            }
+                                            return block;
+                                          });
+                                        }
+
+                                        if (changed) {
+                                          const updatedContentStr = JSON.stringify(rawContent);
+                                          lastSavedContentRef.current = getContentComparisonString(rawContent);
+                                          setDocument(prev => prev ? { ...prev, content: updatedContentStr } : prev);
+                                          updateSharedDocument(docId, { title: document.title || 'Untitled', content: updatedContentStr, settings: document.settings });
+                                          setTimeout(() => {
+                                            editorJsRef.current?.renderContent?.(rawContent);
+                                          }, 100);
+                                        }
+                                      } catch (e) {
+                                        console.error('Failed smart suggestion replacement:', e);
+                                      }
+                                    }
+                                    if (sug && document?.user_id) {
+                                      const recipientId = (sug.user_id && isValidUuid(sug.user_id) && sug.user_id !== user?.id) ? sug.user_id : document.user_id;
+                                      const myName = profile?.full_name || user?.email?.split('@')[0] || (language === 'id' ? 'Tamu' : 'Guest');
+                                      createNotification(
+                                        docId,
+                                        recipientId,
+                                        myName,
+                                        language === 'en'
+                                          ? `accepted the suggestion: "${(sug.suggested_text || sug.selected_text || sug.new_text || sug.old_text || '').slice(0, 30)}..."`
+                                          : `menerima usulan: "${(sug.suggested_text || sug.selected_text || sug.new_text || sug.old_text || '').slice(0, 30)}..."`
+                                      );
+                                    }
+                                    updateSuggestionStatus(docId, sug.id, 'accepted').then(() => fetchSuggestions(docId).then(setSuggestions));
+                                  }}
+                                  className="px-3.5 py-1.5 text-[10px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition rounded-xl shadow-xs cursor-pointer"
+                                >
+                                  ✓ {language === 'id' ? 'Terima' : 'Accept'}
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  });
+                })()
               ) : (
-                comments.filter(c => c.resolved).map((c) => (
-                  <div
-                    key={c.id}
-                    className="border border-slate-200/60 bg-white/70 rounded-2xl p-3.5 flex flex-col gap-2 text-left opacity-80 hover:opacity-100 transition shadow-sm"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-extrabold flex items-center justify-center shrink-0">
-                          {c.author_name ? c.author_name.charAt(0).toUpperCase() : 'C'}
-                        </div>
-                        <span className="text-xs font-bold text-slate-700 truncate">{c.author_name}</span>
-                      </div>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[9px] font-bold border border-emerald-200">
-                        <IconCheck className="h-2.5 w-2.5" />
-                        {language === 'id' ? 'Selesai' : 'Resolved'}
-                      </span>
+                comments.filter(c => c.resolved).length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                    <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-400 mb-3">
+                      <IconCheck className="h-6 w-6" />
                     </div>
-
-                    {c.selected_text && (
-                      <div className="bg-slate-100/70 border-l-2 border-slate-300 px-2.5 py-1 rounded-r-lg text-[10px] text-slate-500 italic truncate">
-                        "{c.selected_text}"
-                      </div>
-                    )}
-
-                    <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line">
-                      {c.comment_text}
+                    <p className="text-xs font-semibold text-slate-600">
+                      {language === 'id' ? 'Belum ada komentar selesai' : 'No resolved comments yet'}
+                    </p>
+                    <p className="text-[10px] text-slate-400 mt-1 max-w-[200px]">
+                      {language === 'id' ? 'Komentar yang telah diselesaikan oleh pemilik akan tersimpan di sini.' : 'Comments resolved by the owner will be archived here.'}
                     </p>
                   </div>
-                ))
-              )
-            )}
-          </div>
-        </aside>
-      )}
-    </div>
+                ) : (
+                  comments.filter(c => c.resolved).map((c) => (
+                    <div
+                      key={c.id}
+                      className="border border-slate-200/60 bg-white/70 rounded-2xl p-3.5 flex flex-col gap-2 text-left opacity-80 hover:opacity-100 transition shadow-sm"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-extrabold flex items-center justify-center shrink-0">
+                            {c.author_name ? c.author_name.charAt(0).toUpperCase() : 'C'}
+                          </div>
+                          <span className="text-xs font-bold text-slate-700 truncate">{c.author_name}</span>
+                        </div>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[9px] font-bold border border-emerald-200">
+                          <IconCheck className="h-2.5 w-2.5" />
+                          {language === 'id' ? 'Selesai' : 'Resolved'}
+                        </span>
+                      </div>
 
-    {/* Toast notification */}
-    {toastMessage && (
-      <div className={`fixed bottom-5 right-5 z-[9999] px-4 py-2.5 rounded-xl border shadow-lg flex items-center gap-2 animate-fade-in font-sans text-xs font-semibold ${
-        toastMessage.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
-        toastMessage.type === 'error' ? 'bg-rose-50 border-rose-200 text-rose-800' :
-        'bg-indigo-50 border-indigo-200 text-indigo-800'
-      }`}>
-        {toastMessage.type === 'success' && <IconCheck className="h-4 w-4 shrink-0 text-emerald-600" />}
-        {toastMessage.type === 'error' && <IconAlertCircle className="h-4 w-4 shrink-0 text-rose-600" />}
-        {toastMessage.type === 'info' && <IconInfoCircle className="h-4 w-4 shrink-0 text-indigo-600" />}
-        <span>{toastMessage.text}</span>
+                      {c.selected_text && (
+                        <div className="bg-slate-100/70 border-l-2 border-slate-300 px-2.5 py-1 rounded-r-lg text-[10px] text-slate-500 italic truncate">
+                          "{c.selected_text}"
+                        </div>
+                      )}
+
+                      <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line">
+                        {c.comment_text}
+                      </p>
+                    </div>
+                  ))
+                )
+              )}
+            </div>
+          </aside>
+        )}
       </div>
-    )}
+
+      {/* Toast notification */}
+      {toastMessage && (
+        <div className={`fixed bottom-5 right-5 z-[9999] px-4 py-2.5 rounded-xl border shadow-lg flex items-center gap-2 animate-fade-in font-sans text-xs font-semibold ${toastMessage.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
+            toastMessage.type === 'error' ? 'bg-rose-50 border-rose-200 text-rose-800' :
+              'bg-indigo-50 border-indigo-200 text-indigo-800'
+          }`}>
+          {toastMessage.type === 'success' && <IconCheck className="h-4 w-4 shrink-0 text-emerald-600" />}
+          {toastMessage.type === 'error' && <IconAlertCircle className="h-4 w-4 shrink-0 text-rose-600" />}
+          {toastMessage.type === 'info' && <IconInfoCircle className="h-4 w-4 shrink-0 text-indigo-600" />}
+          <span>{toastMessage.text}</span>
+        </div>
+      )}
 
       {/* Render portals for modals & popovers */}
       {mounted && showHighlightPopover && highlightPopoverRect && typeof window !== 'undefined' && createPortal(
         <>
-          <div 
-            className="fixed inset-0 z-[9998]" 
+          <div
+            className="fixed inset-0 z-[9998]"
             onClick={() => {
               setShowHighlightPopover(false);
               setHighlightPopoverRect(null);
-            }} 
+            }}
           />
           <div
             className="fixed z-[9999] bg-white border border-slate-200/80 rounded-xl p-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.08)] flex items-center gap-1.5 animate-scale-in"
@@ -1866,7 +1931,7 @@ export default function SharedDocumentPage() {
 
             <div className="flex flex-col gap-3">
               <p className="text-xs text-slate-500 leading-relaxed">
-                {language === 'en' 
+                {language === 'en'
                   ? 'Enter the URL destination for the selected text (e.g. https://example.com).'
                   : 'Masukkan alamat URL tujuan untuk teks yang dipilih (misal: https://example.com).'}
               </p>
@@ -2198,15 +2263,15 @@ export default function SharedDocumentPage() {
       {mounted && showBubbleMenu && bubbleMenuRect && typeof window !== 'undefined' && createPortal(
         <>
           {/* Overlay to dismiss menu */}
-          <div 
-            className="fixed inset-0 z-[9997]" 
+          <div
+            className="fixed inset-0 z-[9997]"
             onClick={() => {
               setShowBubbleMenu(false);
               setBubbleMode('format');
               if (bubbleMode === 'citation') {
                 editorJsRef.current?.cancelCitationSearch();
               }
-            }} 
+            }}
           />
           <div
             className="fixed z-[9998] bg-white border border-slate-200/80 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.15)] flex flex-col transition-all duration-150 backdrop-blur-sm overflow-hidden text-slate-800"
@@ -2230,8 +2295,8 @@ export default function SharedDocumentPage() {
               topPos = Math.max(10, Math.min(winH - menuHeight - 10, topPos));
 
               // Clamp left position inside viewport [10, winW - menuWidth - 10]
-              let leftPos = bubbleMenuRect.width > 0 
-                ? bubbleMenuRect.left + bubbleMenuRect.width / 2 - menuWidth / 2 
+              let leftPos = bubbleMenuRect.width > 0
+                ? bubbleMenuRect.left + bubbleMenuRect.width / 2 - menuWidth / 2
                 : anchorX;
 
               if (leftPos + menuWidth > winW - 10) {
@@ -2600,8 +2665,8 @@ export default function SharedDocumentPage() {
                     <input
                       type="text"
                       placeholder={
-                        profile?.full_name || 
-                        user?.email?.split('@')[0] || 
+                        profile?.full_name ||
+                        user?.email?.split('@')[0] ||
                         (language === 'en' ? 'Guest Co-Editor (optional)' : 'Guest Co-Editor (opsional)')
                       }
                       value={newCommentAuthor}
@@ -2646,11 +2711,11 @@ export default function SharedDocumentPage() {
                           }
                         }
 
-                        const author = newCommentAuthor.trim() || 
-                                       profile?.full_name || 
-                                       user?.email?.split('@')[0] || 
-                                       'Guest Co-Editor';
-                        
+                        const author = newCommentAuthor.trim() ||
+                          profile?.full_name ||
+                          user?.email?.split('@')[0] ||
+                          'Guest Co-Editor';
+
                         // 1. Save comment
                         const added = await addComment(
                           document.id,
@@ -2959,7 +3024,7 @@ export default function SharedDocumentPage() {
                 type="button"
                 onClick={() => {
                   const sugId = `sug-${Date.now()}`;
-                  const authorName = profile?.full_name || user?.email?.split('@')[0] || 'Co-Editor';
+                  const authorName = profile?.full_name || user?.email?.split('@')[0] || (language === 'id' ? 'Tamu' : 'Guest');
                   editorJsRef.current?.addSuggestionMark?.(sugId, selectedTextForSuggestion, newTextForSuggestion, authorName);
                   addSuggestion(docId, selectedTextForSuggestion, newTextForSuggestion, authorName, sugId, user?.id).then(() => {
                     fetchSuggestions(docId).then(setSuggestions);
@@ -3028,14 +3093,14 @@ export default function SharedDocumentPage() {
 
 function findMostRelevantSentence(abstract: string | null | undefined, query: string): string {
   if (!abstract) return "Abstrak tidak tersedia.";
-  
+
   const cleanedAbstract = abstract.replace(/(?<=[.!?])(?=[A-Za-z])/g, " ");
   const sentences = cleanedAbstract.split(/(?<=[.!?])\s+/);
   if (sentences.length <= 1) return cleanedAbstract;
-  
+
   const queryWords = new Set(query.toLowerCase().match(/[a-z0-9]+/g) ?? []);
   if (queryWords.size === 0) return sentences[0];
-  
+
   let bestSentence = sentences[0];
   let maxOverlap = -1;
   for (const sentence of sentences) {
@@ -3054,13 +3119,13 @@ function findMostRelevantSentence(abstract: string | null | undefined, query: st
 
 function HighlightedAbstract({ abstract, query }: { abstract: string | null | undefined; query: string }) {
   if (!abstract) return <p className="text-slate-400 italic text-xs">Abstrak tidak tersedia.</p>;
-  
+
   const cleanedAbstract = abstract.replace(/(?<=[.!?])(?=[A-Za-z])/g, " ");
   const sentences = cleanedAbstract.split(/(?<=[.!?])\s+/);
   if (sentences.length <= 1) {
     return <p className="text-slate-650 leading-relaxed text-xs">{cleanedAbstract}</p>;
   }
-  
+
   const queryWords = new Set(query.toLowerCase().match(/[a-z0-9]+/g) ?? []);
   let bestIndex = 0;
   let maxOverlap = -1;
@@ -3075,7 +3140,7 @@ function HighlightedAbstract({ abstract, query }: { abstract: string | null | un
       bestIndex = idx;
     }
   });
-  
+
   return (
     <p className="text-slate-600 leading-relaxed text-xs text-left">
       {sentences.map((sentence, idx) => {
