@@ -560,7 +560,9 @@ export default function SharedDocumentPage() {
   // Poll comments, suggestions, and document content every 5 seconds for live sync
   useEffect(() => {
     if (!docId) return;
-    const interval = setInterval(async () => {
+
+    const syncFn = async () => {
+      if (typeof window !== 'undefined' && window.document.hidden) return;
       try {
         const [newComms, newSugs, updatedDoc] = await Promise.all([
           fetchComments(docId),
@@ -581,7 +583,6 @@ export default function SharedDocumentPage() {
         }
 
         setComments(prev => {
-          // Check if any previously unresolved comment is now resolved
           prev.forEach(oldComm => {
             const newComm = newComms.find(c => c.id === oldComm.id);
             if (oldComm && !oldComm.resolved && newComm && newComm.resolved) {
@@ -600,8 +601,25 @@ export default function SharedDocumentPage() {
       } catch (e) {
         console.error('Error polling data:', e);
       }
-    }, 5000);
-    return () => clearInterval(interval);
+    };
+
+    const handleVisibility = () => {
+      if (typeof window !== 'undefined' && !window.document.hidden) {
+        syncFn();
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.document.addEventListener('visibilitychange', handleVisibility);
+    }
+    const interval = setInterval(syncFn, 5000);
+
+    return () => {
+      clearInterval(interval);
+      if (typeof window !== 'undefined') {
+        window.document.removeEventListener('visibilitychange', handleVisibility);
+      }
+    };
   }, [docId, showToast, language]);
 
   // Auto-sync comment highlights onto editor canvas whenever comments update
@@ -707,11 +725,18 @@ export default function SharedDocumentPage() {
     const userId = user?.id || `co-editor-${docId}`;
 
     const updateAndFetch = async () => {
+      if (typeof window !== 'undefined' && window.document.hidden) return;
       await updatePresence(docId, userId, authorName, isCoEditor ? 'co-editor' : 'reader');
       const active = await fetchActivePresence(docId);
       setActiveUsers(active);
     };
     updateAndFetch();
+
+    const handleVisibility = () => {
+      if (typeof window !== 'undefined' && !window.document.hidden) {
+        updateAndFetch();
+      }
+    };
 
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === `scholarflow_presence_${docId}`) {
@@ -719,6 +744,9 @@ export default function SharedDocumentPage() {
       }
     };
     window.addEventListener('storage', handleStorageChange);
+    if (typeof window !== 'undefined') {
+      window.document.addEventListener('visibilitychange', handleVisibility);
+    }
 
     const handleUnload = () => {
       leavePresence(docId, userId);
@@ -730,6 +758,9 @@ export default function SharedDocumentPage() {
       clearInterval(interval);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('beforeunload', handleUnload);
+      if (typeof window !== 'undefined') {
+        window.document.removeEventListener('visibilitychange', handleVisibility);
+      }
       leavePresence(docId, userId);
     };
   }, [docId, user?.id, profile?.full_name, user?.email, isCoEditor]);

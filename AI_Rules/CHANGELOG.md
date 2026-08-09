@@ -423,8 +423,8 @@
   - Added User Authentication Status Indicator Badge to the top right header in `app/shared/[id]/page.tsx`:
     - **Logged In Users**: Displays avatar initial, user name, and green online status dot (`🟢`), showing email on hover.
     - **Guest / Unauthenticated Users**: Displays amber guest badge (`🟡 Tamu / Guest`) with a direct `[ Masuk / Log In → ]` link for seamless authentication.
-  - Added UUID validation (`isValidUuid`) in `lib/api/comments.ts`, `components/editor/scholar-editor.tsx`, and `app/shared/[id]/page.tsx`:
-    - Safely handles unauthenticated guest users (`co-editor-${docId}` strings) when sending notifications.
-    - Prevents PostgreSQL error code `22P02` (`invalid input syntax for type uuid`) when non-UUID guest user IDs are passed as notification recipients.
+  - Implemented Page Visibility API Polling Optimization (`window.document.hidden` & `visibilitychange` event listener):
+    - Automatically pauses background polling loops (`presence`, `suggestions`, `comments`, `notifications`) when the browser tab is hidden/inactive (`window.document.hidden === true`).
+    - Immediately triggers an instant sync update when switching back to the ScholarFlow tab (`visibilitychange` event), eliminating unnecessary network traffic and keeping the development terminal quiet when viewing other tabs.
 
 

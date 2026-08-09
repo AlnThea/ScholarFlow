@@ -293,7 +293,8 @@ export function ScholarEditor() {
     };
     loadCommentsAndNotifications();
 
-    const interval = setInterval(async () => {
+    const pollFn = async () => {
+      if (typeof window !== 'undefined' && window.document.hidden) return;
       try {
         const notifs = await fetchNotifications(user.id);
         setNotifications(notifs);
@@ -307,9 +308,25 @@ export function ScholarEditor() {
       } catch (err) {
         console.error('Error polling comments/notifications:', err);
       }
-    }, 5000);
+    };
 
-    return () => clearInterval(interval);
+    const handleVisibility = () => {
+      if (typeof window !== 'undefined' && !window.document.hidden) {
+        pollFn();
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.document.addEventListener('visibilitychange', handleVisibility);
+    }
+    const interval = setInterval(pollFn, 5000);
+
+    return () => {
+      clearInterval(interval);
+      if (typeof window !== 'undefined') {
+        window.document.removeEventListener('visibilitychange', handleVisibility);
+      }
+    };
   }, [user?.id, currentDocument?.id]);
 
   // Presence Heartbeat Effect for Owner
@@ -318,6 +335,7 @@ export function ScholarEditor() {
     const authorName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Pemilik Dokumen';
 
     const updateAndFetch = async () => {
+      if (typeof window !== 'undefined' && window.document.hidden) return;
       await updatePresence(currentDocument.id, user.id, authorName, 'owner');
       const active = await fetchActivePresence(currentDocument.id);
       setActiveUsers(active);
@@ -347,12 +365,21 @@ export function ScholarEditor() {
     };
     updateAndFetch();
 
+    const handleVisibilityPresence = () => {
+      if (typeof window !== 'undefined' && !window.document.hidden) {
+        updateAndFetch();
+      }
+    };
+
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === `scholarflow_presence_${currentDocument.id}`) {
         fetchActivePresence(currentDocument.id).then(setActiveUsers);
       }
     };
     window.addEventListener('storage', handleStorageChange);
+    if (typeof window !== 'undefined') {
+      window.document.addEventListener('visibilitychange', handleVisibilityPresence);
+    }
 
     const handleUnload = () => {
       leavePresence(currentDocument.id, user.id);
@@ -364,6 +391,9 @@ export function ScholarEditor() {
       clearInterval(interval);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('beforeunload', handleUnload);
+      if (typeof window !== 'undefined') {
+        window.document.removeEventListener('visibilitychange', handleVisibilityPresence);
+      }
       leavePresence(currentDocument.id, user.id);
     };
   }, [currentDocument?.id, user?.id, user?.email, user?.user_metadata?.full_name]);

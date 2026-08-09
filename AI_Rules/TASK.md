@@ -43,9 +43,12 @@ Enhance document export to Microsoft Word with correct media embedding.
 37. [Completed] Replace native browser alerts with a custom premium React portal modal for the Free tier bibliography export upgrade lock.
 38. [Completed] Implement public document sharing and collaboration with Read-Only and Co-Editor modes at `/shared/[id]` route.
 39. [Completed] Implement Accepted & Rejected Suggestions History sub-tabs, card styling, and bilingual (i18n) support in editor sidebars.
+40. [Completed] Add Co-Editor header message icon active notification badge counting comments and suggestions.
+41. [Completed] Add User Authentication Status Indicator Badge (Logged In vs Guest) with direct login button in Co-Editor header.
+42. [Completed] Implement Page Visibility API (`window.document.hidden`) to pause background polling when tabs are inactive.
 
 ## Current Task
-Implemented Accepted & Rejected Suggestions History (Riwayat Usulan Selesai) sub-tabs and card styling across Owner and Co-Editor views.
+Implemented Accepted & Rejected Suggestions History, Co-Editor header badges, User Authentication chip, and Page Visibility API polling optimization.
 
 ## Next Tasks
 - Add detailed user guides for localizing custom templates.
