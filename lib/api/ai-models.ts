@@ -7,6 +7,9 @@ export interface AIModel {
   model_id: string;
   is_enabled: boolean;
   is_premium: boolean;
+  provider_type?: 'gemini' | 'openrouter' | 'custom_openai';
+  base_url?: string;
+  custom_api_key?: string;
   updated_at: string;
 }
 

@@ -58,9 +58,13 @@ v0.5.0-architecture: Architecture Sprint EPICs 1, 2, 3, 4, 5 completed (Database
 40. [Completed] Add Co-Editor header message icon active notification badge counting comments and suggestions.
 41. [Completed] Add User Authentication Status Indicator Badge (Logged In vs Guest) with direct login button in Co-Editor header.
 42. [Completed] Implement Page Visibility API (`window.document.hidden`) to pause background polling when tabs are inactive.
+43. [Completed] Redesign Admin AI Models Panel (`/admin/models`) into 2 grouped sections (Free Tier vs Pro Writer) with professional rounded-xl enterprise styling, stats bar, and 1-click status toggles.
+44. [Completed] Implement Custom OpenAI-Compatible Provider support (third-party API key sellers, custom proxies, private LLMs) with Base URL & API Key input fields in Admin AI Models Modal.
 
 ## Current Task
-Implemented Accepted & Rejected Suggestions History, Co-Editor header badges, User Authentication chip, and Page Visibility API polling optimization.
+Implemented Custom OpenAI-Compatible Provider support (third-party API key sellers, custom proxies, private LLMs) with Base URL & API Key input fields in Admin AI Models Modal.
+
+
 
 ## Next Tasks
 - Add detailed user guides for localizing custom templates.

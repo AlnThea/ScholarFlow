@@ -153,6 +153,47 @@ async function callOpenRouter(prompt: string, model: string): Promise<string> {
   return text;
 }
 
+/**
+ * Custom OpenAI-Compatible Provider API Call (Third-Party API Sellers, Proxies, Private LLMs)
+ */
+async function callCustomOpenAI(
+  prompt: string,
+  model: string,
+  baseUrl?: string,
+  customApiKey?: string
+): Promise<string> {
+  const apiKey = customApiKey || process.env.CUSTOM_OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
+  if (!apiKey) throw new Error('API Key is not configured for Custom Provider');
+
+  let rawUrl = (baseUrl && baseUrl.trim().length > 0) ? baseUrl.trim() : (process.env.CUSTOM_OPENAI_BASE_URL || 'https://openrouter.ai/api/v1');
+  let endpoint = rawUrl;
+  if (!rawUrl.endsWith('/chat/completions')) {
+    const cleanUrl = rawUrl.replace(/\/+$/, '');
+    endpoint = cleanUrl.endsWith('/v1') ? `${cleanUrl}/chat/completions` : `${cleanUrl}/v1/chat/completions`;
+  }
+
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.2,
+    }),
+  });
+
+  if (!response.ok) throw new Error(`Custom Provider API status ${response.status}`);
+
+  const result = await response.json();
+  const text = result?.choices?.[0]?.message?.content?.trim();
+  if (!text) throw new Error('Custom Provider API returned empty text');
+
+  return text;
+}
+
 export async function POST(request: Request) {
   try {
     // 1. Edge Rate Limiter Guard (15 RPM)
@@ -204,28 +245,31 @@ export async function POST(request: Request) {
     // 2. Dynamic model cascading list
     const { data: dbModels } = await supabase.from('ai_models').select('*');
 
-    const modelsList = dbModels || [
-      { id: 'gemini', name: 'Gemini 2.0 Flash (Direct)', model_id: 'gemini-2.0-flash', is_enabled: true, is_premium: false },
-      { id: 'llama3', name: 'Llama 3 (Free OR)', model_id: 'meta-llama/llama-3-8b-instruct:free', is_enabled: true, is_premium: false },
-      { id: 'gemma2', name: 'Gemma 2 (Free OR)', model_id: 'google/gemma-2-9b-it:free', is_enabled: true, is_premium: false },
-      { id: 'claude', name: 'Claude 3.5 (Pro OR)', model_id: 'anthropic/claude-3.5-sonnet', is_enabled: true, is_premium: true }
+    const modelsList: any[] = dbModels || [
+      { id: 'gemini', name: 'Gemini 2.0 Flash (Direct)', model_id: 'gemini-2.0-flash', is_enabled: true, is_premium: false, provider_type: 'gemini' },
+      { id: 'llama3', name: 'Llama 3 (Free OR)', model_id: 'meta-llama/llama-3-8b-instruct:free', is_enabled: true, is_premium: false, provider_type: 'openrouter' },
+      { id: 'gemma2', name: 'Gemma 2 (Free OR)', model_id: 'google/gemma-2-9b-it:free', is_enabled: true, is_premium: false, provider_type: 'openrouter' },
+      { id: 'claude', name: 'Claude 3.5 (Pro OR)', model_id: 'anthropic/claude-3.5-sonnet', is_enabled: true, is_premium: true, provider_type: 'openrouter' }
     ];
 
     const chosenModel = modelsList.find(m => m.id === model);
     const attempts: { name: string; run: () => Promise<string> }[] = [];
 
-    if (chosenModel && chosenModel.is_enabled) {
-      if (chosenModel.id === 'gemini') {
-        attempts.push({
-          name: chosenModel.name,
-          run: () => callDirectGemini(prompt, chosenModel.model_id)
-        });
+    const getRunnerForModel = (item: any) => {
+      if (item.provider_type === 'custom_openai' || (item.base_url && item.base_url.trim().length > 0)) {
+        return () => callCustomOpenAI(prompt, item.model_id, item.base_url, item.custom_api_key);
+      } else if (item.provider_type === 'gemini' || item.id === 'gemini' || item.model_id.includes('gemini')) {
+        return () => callDirectGemini(prompt, item.model_id);
       } else {
-        attempts.push({
-          name: chosenModel.name,
-          run: () => callOpenRouter(prompt, chosenModel.model_id)
-        });
+        return () => callOpenRouter(prompt, item.model_id);
       }
+    };
+
+    if (chosenModel && chosenModel.is_enabled) {
+      attempts.push({
+        name: chosenModel.name,
+        run: getRunnerForModel(chosenModel)
+      });
     } else if (model === 'gemini') {
       attempts.push({
         name: 'Gemini 2.0 Flash (Direct)',
@@ -236,17 +280,10 @@ export async function POST(request: Request) {
     modelsList.forEach(item => {
       const isAlreadyTried = (model === item.id) || (model === 'gemini' && item.id === 'gemini');
       if (item.is_enabled && !item.is_premium && !isAlreadyTried) {
-        if (item.id === 'gemini') {
-          attempts.push({
-            name: `${item.name} (Fallback)`,
-            run: () => callDirectGemini(prompt, item.model_id)
-          });
-        } else {
-          attempts.push({
-            name: `${item.name} (Fallback)`,
-            run: () => callOpenRouter(prompt, item.model_id)
-          });
-        }
+        attempts.push({
+          name: `${item.name} (Fallback)`,
+          run: getRunnerForModel(item)
+        });
       }
     });
 

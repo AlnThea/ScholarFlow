@@ -31,7 +31,7 @@
 - **Frontend**: Next.js App Router (React 19), TypeScript, Vanilla CSS / Tailwind.
 - **Editor**: Editor.js & TipTap Extensions (LaTeX math, inline citations, table blocks).
 - **Backend & Database**: Supabase (PostgreSQL) PaaS OR Express.js REST API (PostgreSQL / MySQL) VPS.
-- **AI Engine**: Google Gemini API (`gemini-2.0-flash` SSE Streaming) with OpenRouter fallback.
+- **AI Engine**: Google Gemini Direct API (`gemini-2.0-flash` SSE Streaming), OpenRouter API, and Custom OpenAI-Compatible Providers (Third-Party Key Sellers & Custom Proxies).
 - **Citation Engine**: `@citation-js/core` (APA Style, BibTeX, RIS parser).
 
 ---

@@ -44,6 +44,11 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
 - [x] **5.3 Header Badge & User Auth Chip** - Indikator status login pengguna (Logged In vs Guest) serta badge notifikasi aktif untuk komentar dan usulan.
 - [x] **5.4 Page Visibility API Integration** - Penggunaan `document.visibilityState` untuk menghentikan sementara polling latar belakang saat tab browser tidak aktif.
 
+### 6. Admin AI Gateway & Custom Provider Integration
+- [x] **6.1 Admin AI Models 2-Section Redesign** - Redesain tampilan `/admin/models` menjadi 2 kelompok kartu (Free Tier vs Pro Writer) dengan gaya enterprise `rounded-xl`, stats overview bar, dan tombol toggle status 1-click.
+- [x] **6.2 Custom OpenAI-Compatible Provider Support** - Dukungan integrasi penjual API key pihak ketiga, proxy LLM kustom (OneAPI, NewAPI, Groq, Together, LM Studio, Ollama), serta input Base URL kustom dan API Key kustom di modal Admin.
+
+
 ---
 
 ## 📋 BAGIAN B: ROADMAP PRODUCTION-READY & HYBRID MULTI-BACKEND (EPIC 1 - 5)

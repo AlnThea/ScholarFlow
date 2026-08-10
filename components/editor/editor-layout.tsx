@@ -627,7 +627,10 @@ export function EditorLayout({
     name: '',
     model_id: '',
     is_enabled: true,
-    is_premium: false
+    is_premium: false,
+    provider_type: 'openrouter',
+    base_url: '',
+    custom_api_key: ''
   });
 
   const handleOpenEditModelModal = (model: AIModel) => {
@@ -637,7 +640,10 @@ export function EditorLayout({
       name: model.name,
       model_id: model.model_id,
       is_enabled: model.is_enabled,
-      is_premium: model.is_premium
+      is_premium: model.is_premium,
+      provider_type: model.provider_type || (model.id === 'gemini' || model.model_id.includes('gemini') ? 'gemini' : 'openrouter'),
+      base_url: model.base_url || '',
+      custom_api_key: model.custom_api_key || ''
     });
     setIsModelModalOpen(true);
   };
@@ -649,7 +655,10 @@ export function EditorLayout({
       name: '',
       model_id: '',
       is_enabled: true,
-      is_premium: false
+      is_premium: false,
+      provider_type: 'openrouter',
+      base_url: '',
+      custom_api_key: ''
     });
     setIsModelModalOpen(true);
   };
@@ -659,6 +668,12 @@ export function EditorLayout({
       alert('ID Gateway, Nama Model, dan ID Model API harus diisi.');
       return;
     }
+
+    if (modalModelState.provider_type === 'custom_openai' && (!modalModelState.base_url || !modalModelState.base_url.trim())) {
+      alert('Custom API Base URL wajib diisi untuk provider Custom OpenAI-Compatible.');
+      return;
+    }
+
     setSavingModelId(modalModelState.id);
     try {
       if (selectedModelForModal) {
@@ -667,7 +682,10 @@ export function EditorLayout({
           name: modalModelState.name,
           model_id: modalModelState.model_id,
           is_enabled: modalModelState.is_enabled,
-          is_premium: modalModelState.is_premium
+          is_premium: modalModelState.is_premium,
+          provider_type: modalModelState.provider_type,
+          base_url: modalModelState.base_url,
+          custom_api_key: modalModelState.custom_api_key
         });
         alert('Model AI berhasil diperbarui!');
         setIsModelModalOpen(false);
@@ -698,6 +716,21 @@ export function EditorLayout({
       setSavingModelId(null);
     }
   };
+
+  const handleToggleModelStatus = async (model: AIModel) => {
+    setSavingModelId(model.id);
+    try {
+      await onUpdateAIModel(model.id, {
+        is_enabled: !model.is_enabled,
+      });
+    } catch (err: any) {
+      console.error(err);
+      alert(`Gagal mengubah status model AI: ${err.message || err}`);
+    } finally {
+      setSavingModelId(null);
+    }
+  };
+
 
   useEffect(() => {
     if (activeDashboardTab === 'admin-pricing' || activeDashboardTab === 'admin-gateways') {
@@ -1535,91 +1568,175 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                 )}
               </div>
             ) : activeDashboardTab === 'admin-models' ? (
-              /* Admin AI Models Dashboard View */
-              <div className="w-full flex flex-col gap-8 animate-fade-in px-4 md:px-8 py-2">
-                <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <div className="relative z-10 flex flex-col gap-2 max-w-lg">
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-white/20 text-white px-2.5 py-1 rounded-full self-start backdrop-blur-sm">
-                      AI Gateway Admin Panel
-                    </span>
-                    <h1 className="text-xl md:text-2xl font-extrabold leading-tight flex items-center gap-2">
+              /* Admin AI Models Dashboard View - Enterprise 2-Section Grouped Layout */
+              <div className="w-full flex flex-col gap-6 animate-fade-in px-4 md:px-8 py-2">
+                {/* Header Banner - Enterprise Rounded-XL */}
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 md:p-7 text-white shadow-md relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="relative z-10 flex flex-col gap-1.5 max-w-xl">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-0.5 rounded-md">
+                        AI Gateway Admin Panel
+                      </span>
+                    </div>
+                    <h1 className="text-xl md:text-2xl font-bold leading-tight text-slate-100">
                       Kelola Model AI & LLM Gateway
                     </h1>
-                    <p className="text-xs md:text-sm text-indigo-100/90 leading-normal font-medium">
-                      Atur model kecerdasan buatan, ubah ID model API (Google Gemini / OpenRouter), dan batasi hak akses model khusus untuk pengguna premium (Pro Writer).
+                    <p className="text-xs text-slate-300 leading-normal font-normal">
+                      Atur model kecerdasan buatan, konfigurasi API Model ID (Google Gemini & OpenRouter), dan tentukan batasan paket langganan (Free vs Pro Writer).
                     </p>
                   </div>
                   <button
                     onClick={handleOpenCreateModelModal}
-                    className="relative z-10 flex items-center gap-2 px-5 py-3 bg-white text-indigo-700 hover:bg-indigo-50 text-xs font-black rounded-xl shadow-lg transition-all duration-200 cursor-pointer self-start md:self-auto"
+                    className="relative z-10 flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow-sm transition-all duration-200 cursor-pointer self-start md:self-auto"
                   >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
                     Tambah Model Baru
                   </button>
-                  <div className="absolute right-0 bottom-0 opacity-15 translate-x-12 translate-y-12 h-64 w-64 rounded-full border-[20px] border-white" />
                 </div>
 
-                <div className="bg-white border border-slate-200/85 rounded-3xl overflow-hidden shadow-sm">
+                {/* Stats Overview Bar */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-sm flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-medium text-slate-500">Total Model AI</span>
+                      <span className="text-xl font-bold text-slate-900">{aiModels.length}</span>
+                    </div>
+                    <div className="p-2.5 bg-indigo-50 rounded-lg text-indigo-600 font-bold text-xs">
+                      LLM
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-sm flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-medium text-slate-500">Model Free Tier</span>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xl font-bold text-slate-900">
+                          {aiModels.filter(m => !m.is_premium).length}
+                        </span>
+                        <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60">
+                          {aiModels.filter(m => !m.is_premium && m.is_enabled).length} Aktif
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-2.5 bg-emerald-50 rounded-lg text-emerald-600 font-bold text-xs">
+                      FREE
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-sm flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-medium text-slate-500">Model Pro Writer</span>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xl font-bold text-slate-900">
+                          {aiModels.filter(m => m.is_premium).length}
+                        </span>
+                        <span className="text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200/60">
+                          {aiModels.filter(m => m.is_premium && m.is_enabled).length} Aktif
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-2.5 bg-amber-50 rounded-lg text-amber-600 font-bold text-xs">
+                      PRO
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 1: Model Free Tier (Gratis) */}
+                <div className="bg-white border border-slate-200/90 rounded-xl overflow-hidden shadow-sm flex flex-col">
+                  <div className="px-6 py-4 border-b border-slate-200/80 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="p-1.5 bg-emerald-100 text-emerald-700 rounded-md font-bold text-xs">
+                        🎁
+                      </span>
+                      <div className="flex flex-col">
+                        <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                          Model AI Free Tier (Gratis)
+                          <span className="text-[11px] font-semibold text-slate-500 bg-slate-200/60 px-2 py-0.5 rounded-full">
+                            {aiModels.filter(m => !m.is_premium).length} Model
+                          </span>
+                        </h2>
+                        <p className="text-xs text-slate-500 font-normal">
+                          Dapat diakses langsung oleh seluruh pengguna akun dasar (Free Writer).
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse text-left">
                       <thead>
-                        <tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                          <th className="px-6 py-4.5 font-bold min-w-[120px]">Status</th>
-                          <th className="px-6 py-4.5 font-bold min-w-[120px]">Gateway Key</th>
-                          <th className="px-6 py-4.5 font-bold min-w-[200px]">Nama Tampilan Model</th>
-                          <th className="px-6 py-4.5 font-bold min-w-[240px]">ID Model API Asli</th>
-                          <th className="px-6 py-4.5 font-bold min-w-[160px]">Hak Akses</th>
-                          <th className="px-6 py-4.5 font-bold text-center w-[160px]">Aksi</th>
+                        <tr className="border-b border-slate-200/70 bg-slate-50/70 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                          <th className="px-6 py-3 font-semibold min-w-[140px]">Status & Toggle</th>
+                          <th className="px-6 py-3 font-semibold min-w-[130px]">Gateway Key</th>
+                          <th className="px-6 py-3 font-semibold min-w-[200px]">Nama Tampilan Model</th>
+                          <th className="px-6 py-3 font-semibold min-w-[240px]">ID Model API Asli</th>
+                          <th className="px-6 py-3 font-semibold min-w-[130px]">Hak Akses</th>
+                          <th className="px-6 py-3 font-semibold text-center w-[140px]">Aksi</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100/80 text-xs">
-                        {aiModels.map((model) => {
-                          return (
-                            <tr key={model.id} className="hover:bg-slate-50/30 transition-all duration-150">
-                              {/* Status */}
-                              <td className="px-6 py-5.5 align-middle">
-                                <div className="flex items-center gap-2">
-                                  <span className={`w-2 h-2 rounded-full ${model.is_enabled ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
-                                  <span className={`text-[10px] font-bold uppercase ${model.is_enabled ? 'text-emerald-600' : 'text-slate-400'}`}>
+                      <tbody className="divide-y divide-slate-100 text-xs">
+                        {aiModels.filter(m => !m.is_premium).length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="px-6 py-8 text-center text-slate-400 text-xs font-normal">
+                              Belum ada model AI untuk Free Tier. Klik tombol Tambah Model Baru di atas.
+                            </td>
+                          </tr>
+                        ) : (
+                          aiModels.filter(m => !m.is_premium).map((model) => (
+                            <tr key={model.id} className="hover:bg-slate-50/60 transition-all duration-150">
+                              {/* Status & Quick Toggle */}
+                              <td className="px-6 py-4 align-middle">
+                                <button
+                                  onClick={() => handleToggleModelStatus(model)}
+                                  className="flex items-center gap-2.5 group cursor-pointer text-left"
+                                  title="Klik untuk mengubah status aktif/non-aktif"
+                                >
+                                  <div className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                    model.is_enabled ? 'bg-emerald-500' : 'bg-slate-300'
+                                  }`}>
+                                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                                      model.is_enabled ? 'translate-x-4' : 'translate-x-0'
+                                    }`} />
+                                  </div>
+                                  <span className={`text-[11px] font-semibold ${
+                                    model.is_enabled ? 'text-emerald-700' : 'text-slate-400'
+                                  }`}>
                                     {model.is_enabled ? 'Aktif' : 'Off'}
                                   </span>
-                                </div>
+                                </button>
                               </td>
 
                               {/* Gateway Key */}
-                              <td className="px-6 py-5.5 align-middle font-black text-slate-700 uppercase tracking-wide">
+                              <td className="px-6 py-4 align-middle font-bold text-slate-800 uppercase tracking-wide">
                                 {model.id}
                               </td>
 
                               {/* Nama Tampilan Model */}
-                              <td className="px-6 py-5.5 align-middle font-bold text-slate-800 text-sm">
+                              <td className="px-6 py-4 align-middle font-semibold text-slate-900 text-xs">
                                 {model.name}
                               </td>
 
                               {/* ID Model API Asli */}
-                              <td className="px-6 py-5.5 align-middle font-mono text-slate-600 text-xs">
+                              <td className="px-6 py-4 align-middle font-mono text-slate-600 text-xs">
                                 {model.model_id}
                               </td>
 
                               {/* Hak Akses */}
-                              <td className="px-6 py-5.5 align-middle">
-                                <span className={`text-[9px] font-black uppercase ${model.is_premium
-                                  ? 'text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100'
-                                  : 'text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/40'
-                                  }`}>
-                                  {model.is_premium ? 'Pro Writer' : 'Free Tier'}
+                              <td className="px-6 py-4 align-middle">
+                                <span className="text-[10px] font-semibold uppercase text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60">
+                                  Free Tier
                                 </span>
                               </td>
 
                               {/* Aksi */}
-                              <td className="px-6 py-5.5 align-middle text-center">
-                                <div className="flex items-center justify-center gap-2">
+                              <td className="px-6 py-4 align-middle text-center">
+                                <div className="flex items-center justify-center gap-1.5">
                                   <button
                                     onClick={() => handleOpenEditModelModal(model)}
-                                    className="flex items-center justify-center p-2.5 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-700 rounded-xl transition cursor-pointer"
-                                    title="Edit detail & API ID model"
+                                    className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-md transition cursor-pointer"
+                                    title="Edit Detail & API ID"
                                   >
                                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                       <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
@@ -1628,8 +1745,8 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
 
                                   <button
                                     onClick={() => handleDeleteModel(model.id)}
-                                    className="flex items-center justify-center p-2.5 bg-rose-50 border border-rose-100 hover:bg-rose-100 text-rose-650 rounded-xl transition cursor-pointer"
-                                    title="Hapus model AI"
+                                    className="p-1.5 text-slate-600 hover:text-rose-600 hover:bg-slate-100 rounded-md transition cursor-pointer"
+                                    title="Hapus Model"
                                   >
                                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                       <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -1638,13 +1755,133 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                                 </div>
                               </td>
                             </tr>
-                          );
-                        })}
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Section 2: Model Pro Writer / Premium (Berbayar) */}
+                <div className="bg-white border border-slate-200/90 rounded-xl overflow-hidden shadow-sm flex flex-col">
+                  <div className="px-6 py-4 border-b border-slate-200/80 bg-indigo-50/30 flex flex-col md:flex-row md:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="p-1.5 bg-indigo-100 text-indigo-700 rounded-md font-bold text-xs">
+                        ⭐
+                      </span>
+                      <div className="flex flex-col">
+                        <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                          Model AI Pro Writer / Premium (Berbayar)
+                          <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-100/70 px-2 py-0.5 rounded-full">
+                            {aiModels.filter(m => m.is_premium).length} Model
+                          </span>
+                        </h2>
+                        <p className="text-xs text-slate-500 font-normal">
+                          Khusus untuk pengguna berlangganan paket Pro Writer.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-left">
+                      <thead>
+                        <tr className="border-b border-slate-200/70 bg-slate-50/70 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                          <th className="px-6 py-3 font-semibold min-w-[140px]">Status & Toggle</th>
+                          <th className="px-6 py-3 font-semibold min-w-[130px]">Gateway Key</th>
+                          <th className="px-6 py-3 font-semibold min-w-[200px]">Nama Tampilan Model</th>
+                          <th className="px-6 py-3 font-semibold min-w-[240px]">ID Model API Asli</th>
+                          <th className="px-6 py-3 font-semibold min-w-[130px]">Hak Akses</th>
+                          <th className="px-6 py-3 font-semibold text-center w-[140px]">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-xs">
+                        {aiModels.filter(m => m.is_premium).length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="px-6 py-8 text-center text-slate-400 text-xs font-normal">
+                              Belum ada model AI untuk Pro Writer. Klik tombol Tambah Model Baru di atas.
+                            </td>
+                          </tr>
+                        ) : (
+                          aiModels.filter(m => m.is_premium).map((model) => (
+                            <tr key={model.id} className="hover:bg-slate-50/60 transition-all duration-150">
+                              {/* Status & Quick Toggle */}
+                              <td className="px-6 py-4 align-middle">
+                                <button
+                                  onClick={() => handleToggleModelStatus(model)}
+                                  className="flex items-center gap-2.5 group cursor-pointer text-left"
+                                  title="Klik untuk mengubah status aktif/non-aktif"
+                                >
+                                  <div className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                    model.is_enabled ? 'bg-indigo-600' : 'bg-slate-300'
+                                  }`}>
+                                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                                      model.is_enabled ? 'translate-x-4' : 'translate-x-0'
+                                    }`} />
+                                  </div>
+                                  <span className={`text-[11px] font-semibold ${
+                                    model.is_enabled ? 'text-indigo-700' : 'text-slate-400'
+                                  }`}>
+                                    {model.is_enabled ? 'Aktif' : 'Off'}
+                                  </span>
+                                </button>
+                              </td>
+
+                              {/* Gateway Key */}
+                              <td className="px-6 py-4 align-middle font-bold text-slate-800 uppercase tracking-wide">
+                                {model.id}
+                              </td>
+
+                              {/* Nama Tampilan Model */}
+                              <td className="px-6 py-4 align-middle font-semibold text-slate-900 text-xs">
+                                {model.name}
+                              </td>
+
+                              {/* ID Model API Asli */}
+                              <td className="px-6 py-4 align-middle font-mono text-slate-600 text-xs">
+                                {model.model_id}
+                              </td>
+
+                              {/* Hak Akses */}
+                              <td className="px-6 py-4 align-middle">
+                                <span className="text-[10px] font-bold uppercase text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200/60">
+                                  Pro Writer
+                                </span>
+                              </td>
+
+                              {/* Aksi */}
+                              <td className="px-6 py-4 align-middle text-center">
+                                <div className="flex items-center justify-center gap-1.5">
+                                  <button
+                                    onClick={() => handleOpenEditModelModal(model)}
+                                    className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-md transition cursor-pointer"
+                                    title="Edit Detail & API ID"
+                                  >
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                                    </svg>
+                                  </button>
+
+                                  <button
+                                    onClick={() => handleDeleteModel(model.id)}
+                                    className="p-1.5 text-slate-600 hover:text-rose-600 hover:bg-slate-100 rounded-md transition cursor-pointer"
+                                    title="Hapus Model"
+                                  >
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
                       </tbody>
                     </table>
                   </div>
                 </div>
               </div>
+
             ) : activeDashboardTab === 'admin-gateways' ? (
               /* Admin Payment Gateways Dashboard View */
               <div className="w-full flex flex-col gap-8 animate-fade-in px-4 md:px-8 py-2">
@@ -3816,14 +4053,19 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
       )}
       {mounted && isModelModalOpen && typeof window !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-2xl w-full max-w-lg flex flex-col gap-5 animate-scale-in text-slate-800">
+          <div className="bg-white border border-slate-200/90 rounded-xl p-6 shadow-2xl w-full max-w-lg flex flex-col gap-4 animate-scale-in text-slate-800 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-sm font-extrabold text-slate-800">
-                {selectedModelForModal ? 'Edit Detail Model AI' : 'Tambah Model AI Baru'}
-              </h3>
+              <div className="flex flex-col gap-0.5">
+                <h3 className="text-sm font-bold text-slate-900">
+                  {selectedModelForModal ? 'Edit Detail Model AI' : 'Tambah Model AI Baru'}
+                </h3>
+                <p className="text-xs text-slate-500 font-normal">
+                  Atur gateway LLM, provider API, dan hak akses paket.
+                </p>
+              </div>
               <button
                 onClick={() => setIsModelModalOpen(false)}
-                className="p-1 rounded-md text-slate-400 hover:bg-slate-100/80 hover:text-slate-650 transition cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition cursor-pointer"
               >
                 <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -3831,46 +4073,95 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
               </button>
             </div>
 
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 text-xs">
+              {/* Provider API Type */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tipe Provider API</label>
+                <select
+                  value={modalModelState.provider_type || 'openrouter'}
+                  onChange={(e) => setModalModelState(prev => ({ ...prev, provider_type: e.target.value as any }))}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-semibold outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-white"
+                >
+                  <option value="gemini">Google Gemini Direct API</option>
+                  <option value="openrouter">OpenRouter API (Standard Catalog)</option>
+                  <option value="custom_openai">Custom OpenAI-Compatible API (Penjual Key / Proxy / Private Endpoint)</option>
+                </select>
+              </div>
+
               {/* ID Gateway / Gateway Key */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Gateway Key (ID Sistem)</label>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Gateway Key (ID Sistem Unik)</label>
                 <input
                   type="text"
                   disabled={!!selectedModelForModal}
-                  placeholder="Contoh: gemini-flash, claude-sonnet"
+                  placeholder="Contoh: gemini-flash, custom-deepseek, seller-gpt4"
                   value={modalModelState.id}
                   onChange={(e) => setModalModelState(prev => ({ ...prev, id: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '') }))}
-                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-slate-50/10 disabled:bg-slate-100/60 disabled:text-slate-400 font-bold"
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-slate-50/50 disabled:bg-slate-100 disabled:text-slate-400 font-bold"
                 />
               </div>
 
               {/* Nama Tampilan Model */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Nama Tampilan Model</label>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nama Tampilan Model</label>
                 <input
                   type="text"
-                  placeholder="Contoh: Gemini Flash (Direct)"
+                  placeholder="Contoh: DeepSeek R1 (OpenAI Proxy)"
                   value={modalModelState.name}
                   onChange={(e) => setModalModelState(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-700 font-bold outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-slate-50/10"
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-bold outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-white"
                 />
               </div>
 
               {/* ID Model API Asli */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">ID Model API Asli</label>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">ID Model API Asli</label>
                 <input
                   type="text"
-                  placeholder="Contoh: gemini-1.5-flash atau anthropic/claude-3-5-sonnet"
+                  placeholder="Contoh: deepseek-reasoner, gpt-4o, atau anthropic/claude-3-5-sonnet"
                   value={modalModelState.model_id}
                   onChange={(e) => setModalModelState(prev => ({ ...prev, model_id: e.target.value }))}
-                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-slate-50/10 font-mono"
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-white font-mono"
                 />
               </div>
 
+              {/* Custom API Base URL & API Key (Tampil jika provider_type === 'custom_openai') */}
+              {modalModelState.provider_type === 'custom_openai' && (
+                <div className="flex flex-col gap-3 p-3.5 bg-indigo-50/40 border border-indigo-100 rounded-lg">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider">
+                      Custom API Base URL (URL Penjual Key / Proxy)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: https://api.penjual-key.com/v1 atau http://my-proxy:8080/v1"
+                      value={modalModelState.base_url || ''}
+                      onChange={(e) => setModalModelState(prev => ({ ...prev, base_url: e.target.value }))}
+                      className="w-full border border-indigo-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-white"
+                    />
+                    <span className="text-[10px] text-slate-500">
+                      Sistem akan secara otomatis memanggil endpoint OpenAI-compatible <code className="font-mono bg-indigo-100/60 px-1 py-0.5 rounded text-indigo-800">/chat/completions</code>.
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider">
+                      Custom API Key (Opsional)
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="sk-xxxx... (Biarkan kosong jika ingin menggunakan .env)"
+                      value={modalModelState.custom_api_key || ''}
+                      onChange={(e) => setModalModelState(prev => ({ ...prev, custom_api_key: e.target.value }))}
+                      className="w-full border border-indigo-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-white"
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Toggle Enabled */}
-              <div className="flex items-center justify-between p-3.5 border border-slate-200/60 rounded-2xl bg-slate-50/20">
+              <div className="flex items-center justify-between p-3 border border-slate-200/80 rounded-lg bg-slate-50/50">
+
                 <div className="flex flex-col gap-0.5">
                   <span className="text-xs font-bold text-slate-700">Status Keaktifan</span>
                   <span className="text-[9px] text-slate-400 leading-tight">Mengizinkan pengguna menggunakan model AI ini jika diaktifkan.</span>
