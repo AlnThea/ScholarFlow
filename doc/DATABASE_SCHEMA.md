@@ -1,26 +1,26 @@
-# ScholarFlow Database Schema
+# ScholarFlow Database Schema 📊
 
-This document details the PostgreSQL tables, indexes, triggers, and Row Level Security (RLS) policies set up in Supabase and Prisma ORM for ScholarFlow.
+This document details the PostgreSQL tables, indexes, triggers, and Row Level Security (RLS) policies set up in Supabase and Prisma ORM for ScholarFlow, synchronized with all 12 migration scripts.
 
 ---
 
 ## 📊 Entity Relationship Summary
-The database consists of the following 10 core tables:
+The database consists of 10 core production tables:
 
-1. **`profiles`**: Links to `auth.users` to manage user identity, access roles (`user` or `admin`), and active subscription plan (`plan_id`).
-2. **`documents`**: Stores draft manuscripts, contents (block JSON format), and personalized settings (`publishYear`, `citationStyle`, `language`).
-3. **`document_suggestions`**: Stores track-changes and AI suggestions (`original_text`, `suggested_text`, `status`).
-4. **`document_comments`**: Stores in-document user comments (`user_id`, `user_name`, `content`).
-5. **`document_notifications`**: Stores in-app user notifications for collaboration and document updates.
-6. **`citation_cache`**: Caches OpenAlex and Crossref search results to improve performance and minimize rate limit usage.
-7. **`citation_library`**: A global collection containing all references, parsed RIS entries, and uploaded PDF metadata.
-8. **`ai_models`**: Dynamic catalog managing active LLM models (`gemini-2.0-flash`, `llama3`, `gemma2`, `claude-3.5`).
-9. **`pricing_plans`**: Dynamically stores pricing packages (Free, Pro, Institution), features list, and price rates.
-10. **`payment_gateways`**: Configuration table enabling admin to dynamically toggle Stripe or Midtrans gateway status.
+1. **`profiles`**: User identities linked to Supabase `auth.users` (`id`, `email`, `full_name`, `avatar_url`, `role`, `subscription_plan`, `subscription_status`, `subscription_end`).
+2. **`documents`**: Draft manuscripts (`id`, `user_id`, `title`, `content`, `settings`, `created_at`, `updated_at`).
+3. **`document_comments`**: In-document block comments (`id`, `document_id`, `block_id`, `selected_text`, `comment_text`, `author_name`, `resolved`, `created_at`).
+4. **`document_suggestions`**: Track-changes & AI suggestions (`id`, `document_id`, `user_id`, `author_name`, `selected_text`, `suggested_text`, `status`, `created_at`).
+5. **`document_notifications`**: Co-editor notification bell (`id`, `document_id`, `recipient_id`, `sender_name`, `message`, `read`, `created_at`).
+6. **`citation_cache`**: Caches OpenAlex/Crossref search results (`id`, `query_hash`, `query_text`, `results`, `sources`, `hit_count`, `created_at`, `expires_at`).
+7. **`citation_library`**: References cited by users (`id`, `reference_id`, `citation_data`, `added_by`, `added_at`).
+8. **`ai_models`**: Dynamic AI model catalog (`id`, `name`, `model_id`, `is_enabled`, `is_premium`, `updated_at`).
+9. **`pricing_plans`**: Dynamic subscription plans (`id`, `name`, `price`, `price_period`, `description`, `features`, `is_popular`, `promo_text`, `updated_at`).
+10. **`payment_gateways`**: Active payment gateways (`id`, `name`, `is_enabled`, `updated_at`).
 
 ---
 
-## 🗄️ Table Details & RLS Policies
+## 🗄️ Detailed Table Specifications & RLS Policies
 
 ### 1. `profiles`
 Stores user profile metadata, system roles, and active subscription status. Automatically populated via trigger when a new user signs up.
@@ -31,151 +31,156 @@ Stores user profile metadata, system roles, and active subscription status. Auto
   - `full_name`: `text` (optional)
   - `avatar_url`: `text` (optional)
   - `role`: `text` (Default `'user'`, Check constraint: `role IN ('user', 'admin')`)
-  - `plan_id`: `text` (Default `'free'`)
+  - `subscription_plan`: `text` (Default `'free'`)
+  - `subscription_status`: `text` (Default `'active'`)
+  - `subscription_end`: `timestamptz` (Default `null`)
   - `created_at`: `timestamptz` (Default `now()`)
-  - `updated_at`: `timestamptz` (Default `now()`)
 
 - **Row Level Security (RLS)**:
-  - Policy `"Users can read own profile"`: `USING (auth.uid() = id)`
-  - Policy `"Users can update own profile"`: `USING (auth.uid() = id)`
+  - `"Users can read own profile"`: `USING (auth.uid() = id)`
+  - `"Users can update own profile"`: `USING (auth.uid() = id)`
 
 ---
 
 ### 2. `documents`
-Stores user documents and draft manuscripts, including unique format and citation parameters.
+Stores user documents and draft manuscripts, including their unique format/citation parameters.
 
 - **Columns**:
   - `id`: `uuid` (Primary Key, Default `gen_random_uuid()`)
   - `user_id`: `uuid` (references `auth.users(id)` ON DELETE CASCADE)
-  - `title`: `text` (Default `'Untitled Document'`)
-  - `content`: `text` (Markdown or block JSON format)
-  - `settings`: `jsonb` (Stores settings like `publishYear`, `citationStyle`, `language`, `showPageNumber`)
-  - `shared_with`: `jsonb` (Stores sharing permissions: `{ public: boolean, users: string[] }`)
+  - `title`: `text` (Default `'Untitled'`)
+  - `content`: `jsonb` (EditorJS block JSON format)
+  - `settings`: `jsonb` (Stores `publishYear`, `impactFactor`, `considerExternal`, `considerLibrary`, `citationStyle`, `language`, `showPageNumber`, `shareActive`, `sharePermission`)
   - `created_at`: `timestamptz` (Default `now()`)
   - `updated_at`: `timestamptz` (Default `now()`)
 
 - **Row Level Security (RLS)**:
-  - Policy `"Users can view own or shared documents"`:
+  - `"Users can view own or shared documents"`:
     ```sql
     USING (
       auth.uid() = user_id OR 
-      (shared_with->>'public' = 'true') OR
-      (shared_with->'users' ? auth.uid()::text)
+      (settings->>'shareActive')::boolean = true
     )
     ```
-  - Policy `"Users can manage own documents"`: `USING (auth.uid() = user_id)`
+  - `"Users can manage own documents"`: `USING (auth.uid() = user_id)`
 
 ---
 
-### 3. `document_suggestions`
-Stores track-changes and AI suggestions for collaborative manuscripts.
+### 3. `document_comments`
+Stores in-document co-editor comments associated with specific block IDs.
 
 - **Columns**:
   - `id`: `uuid` (Primary Key, Default `gen_random_uuid()`)
   - `document_id`: `uuid` (references `documents(id)` ON DELETE CASCADE)
-  - `user_id`: `uuid` (references `profiles(id)` ON DELETE CASCADE)
-  - `original_text`: `text` (required)
-  - `suggested_text`: `text` (required)
+  - `block_id`: `text` (Editor.js block identifier)
+  - `selected_text`: `text` (Context text selection)
+  - `comment_text`: `text` (Required comment message)
+  - `author_name`: `text` (Default `'Guest Co-Editor'`)
+  - `resolved`: `boolean` (Default `false`)
+  - `created_at`: `timestamptz` (Default `now()`)
+
+- **Row Level Security (RLS)**:
+  - `"Anyone can read comments on shared documents"`: `USING (EXISTS (SELECT 1 FROM documents d WHERE d.id = document_id AND (d.user_id = auth.uid() OR (d.settings->>'shareActive')::boolean = true)))`
+  - `"Anyone can insert comments on shared/owned documents with edit access"`: `WITH CHECK (EXISTS (SELECT 1 FROM documents d WHERE d.id = document_id AND (d.user_id = auth.uid() OR ((d.settings->>'shareActive')::boolean = true AND d.settings->>'sharePermission' = 'edit'))))`
+
+---
+
+### 4. `document_suggestions`
+Stores track-changes and AI suggestions.
+
+- **Columns**:
+  - `id`: `text` (Primary Key)
+  - `document_id`: `uuid` (references `documents(id)` ON DELETE CASCADE)
+  - `user_id`: `uuid` (optional)
+  - `author_name`: `text` (Default `'Collaborator'`)
+  - `selected_text`: `text`
+  - `suggested_text`: `text`
   - `status`: `text` (Default `'pending'`, Check constraint: `status IN ('pending', 'accepted', 'rejected')`)
   - `created_at`: `timestamptz` (Default `now()`)
 
 - **Row Level Security (RLS)**:
-  - Policy `"Users can manage suggestions on access documents"`: `USING (EXISTS (SELECT 1 FROM documents WHERE documents.id = document_id AND (documents.user_id = auth.uid() OR documents.shared_with->>'public' = 'true')))`
-
----
-
-### 4. `document_comments`
-Stores in-document comments by collaborators.
-
-- **Columns**:
-  - `id`: `uuid` (Primary Key, Default `gen_random_uuid()`)
-  - `document_id`: `uuid` (references `documents(id)` ON DELETE CASCADE)
-  - `user_id`: `uuid` (references `profiles(id)` ON DELETE CASCADE)
-  - `user_name`: `text` (required)
-  - `content`: `text` (required)
-  - `created_at`: `timestamptz` (Default `now()`)
+  - `"Anyone can read suggestions on shared documents"`: `USING (EXISTS (SELECT 1 FROM documents d WHERE d.id = document_id AND (d.user_id = auth.uid() OR (d.settings->>'shareActive')::boolean = true)))`
 
 ---
 
 ### 5. `document_notifications`
-Stores in-app user notifications for collaboration and document updates.
+Notification bell entries triggered by collaboration actions.
 
 - **Columns**:
   - `id`: `uuid` (Primary Key, Default `gen_random_uuid()`)
-  - `user_id`: `uuid` (references `profiles(id)` ON DELETE CASCADE)
-  - `title`: `text` (required)
-  - `message`: `text` (required)
-  - `is_read`: `boolean` (Default `false`)
+  - `document_id`: `uuid` (references `documents(id)` ON DELETE CASCADE)
+  - `recipient_id`: `uuid` (references `auth.users(id)` ON DELETE CASCADE)
+  - `sender_name`: `text` (Default `'Guest Co-Editor'`)
+  - `message`: `text` (Required)
+  - `read`: `boolean` (Default `false`)
   - `created_at`: `timestamptz` (Default `now()`)
+
+- **Row Level Security (RLS)**:
+  - `"Users can view own notifications"`: `USING (auth.uid() = recipient_id)`
 
 ---
 
 ### 6. `citation_cache`
-A shared cache table storing search results from OpenAlex and Crossref.
+Caches OpenAlex and Crossref search results to eliminate API rate limits.
 
 - **Columns**:
   - `id`: `uuid` (Primary Key, Default `gen_random_uuid()`)
-  - `query_key`: `text` (Unique search term identifier)
+  - `query_hash`: `text` (Unique MD5 query hash)
+  - `query_text`: `text`
   - `results`: `jsonb` (Array of candidate objects)
+  - `sources`: `text[]` (Array of source names)
   - `hit_count`: `integer` (Default `1`)
   - `created_at`: `timestamptz` (Default `now()`)
+  - `expires_at`: `timestamptz` (Default `now() + interval '7 days'`)
 
 ---
 
 ### 7. `citation_library`
-Stores user-curated reference citations, parsed RIS entries, and extracted PDF metadata.
+Global collection of references cited across manuscripts.
 
 - **Columns**:
   - `id`: `uuid` (Primary Key, Default `gen_random_uuid()`)
-  - `user_id`: `uuid` (references `profiles(id)` ON DELETE CASCADE)
-  - `title`: `text` (required)
-  - `authors`: `jsonb` (Array of author name strings)
-  - `year`: `integer` (optional)
-  - `journal`: `text` (optional)
-  - `doi`: `text` (optional)
-  - `url`: `text` (optional)
-  - `abstract`: `text` (optional)
-  - `citation_key`: `text` (optional)
-  - `created_at`: `timestamptz` (Default `now()`)
-
-- **Row Level Security (RLS)**:
-  - Policy `"Users can manage own citation library"`: `USING (auth.uid() = user_id)`
+  - `reference_id`: `text` (Unique identifier)
+  - `citation_data`: `jsonb` (Metadata JSON)
+  - `added_by`: `uuid` (references `auth.users(id)` ON DELETE SET NULL)
+  - `added_at`: `timestamptz` (Default `now()`)
 
 ---
 
 ### 8. `ai_models`
-Dynamic catalog managing available LLM models for AI actions.
+Dynamic AI model configuration catalog.
 
 - **Columns**:
   - `id`: `text` (Primary Key, e.g. `'gemini'`, `'llama3'`, `'gemma2'`, `'claude'`)
-  - `name`: `text` (e.g. `'Gemini 2.0 Flash (Direct)'`)
-  - `model_id`: `text` (e.g. `'gemini-2.0-flash'`)
+  - `name`: `text` (e.g. `'Gemini Flash (Direct)'`)
+  - `model_id`: `text` (e.g. `'gemini-1.5-flash'`)
   - `is_enabled`: `boolean` (Default `true`)
   - `is_premium`: `boolean` (Default `false`)
-  - `provider`: `text` (Default `'gemini'`)
-  - `created_at`: `timestamptz` (Default `now()`)
+  - `updated_at`: `timestamptz` (Default `now()`)
 
 ---
 
 ### 9. `pricing_plans`
-Stores pricing models and packages dynamically shown inside the user-facing modal.
+Stores subscription packages shown in user pricing modals.
 
 - **Columns**:
   - `id`: `text` (Primary Key, e.g. `'free'`, `'pro'`, `'institution'`)
-  - `name`: `text` (e.g. `'Pro Writer'`)
+  - `name`: `text`
   - `price`: `numeric` (Default `0`)
-  - `features`: `jsonb` (Array of feature item strings)
+  - `price_period`: `text` (Default `'bulan'`)
+  - `description`: `text`
+  - `features`: `text[]`
   - `is_popular`: `boolean` (Default `false`)
-  - `created_at`: `timestamptz` (Default `now()`)
+  - `promo_text`: `text`
+  - `updated_at`: `timestamptz` (Default `now()`)
 
 ---
 
 ### 10. `payment_gateways`
-Determines active payment gateways for subscription purchases.
+Active payment gateway configurations (Stripe / Midtrans).
 
 - **Columns**:
   - `id`: `text` (Primary Key, e.g. `'stripe'`, `'midtrans'`)
-  - `name`: `text` (Readable name)
+  - `name`: `text`
   - `is_enabled`: `boolean` (Default `true`)
-  - `config`: `jsonb` (Optional configuration parameters)
-  - `created_at`: `timestamptz` (Default `now()`)
+  - `updated_at`: `timestamptz` (Default `now()`)
