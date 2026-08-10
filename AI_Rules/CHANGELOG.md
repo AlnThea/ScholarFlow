@@ -1,6 +1,7 @@
 # ScholarFlow Changelog
 
-## v1.0.0 - EPIC 5 Testing & Production Readiness (Official Production Release)
+## v0.5.0-architecture - EPIC 5 Testing & Production Readiness (Architecture Sprint Complete)
+
 - Created universal Prisma ORM schema in `prisma/schema.prisma` for PostgreSQL and MySQL multi-database support.
 - Published step-by-step database migration guide in `doc/DATABASE_MIGRATION_GUIDE.md`.
 - Completed Security & Row Level Security (RLS) Audit report in `doc/SECURITY_RLS_AUDIT.md`.
