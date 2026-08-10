@@ -96,14 +96,15 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
 ---
 
 ### 🧠 EPIC 4: AI Engine & Performance Optimization
-- [ ] **4.1 Gemini 2.0 Flash Streaming Integration**
-  - [ ] Upgrade API route `/api/v1/ai/improve` dan `/api/v1/ai/abstract` untuk mendukung **Server-Sent Events (SSE) / Streaming** Gemini 2.0 Flash API.
-- [ ] **4.2 Edge Rate Limiting & Queueing**
-  - [ ] Implementasikan Rate Limiter 15 Request Per Minute (RPM) berbasis Token Bucket / Sliding Window (kompatibel Vercel KV / In-Memory).
-- [ ] **4.3 Lazy Loading & Bundle Splitting**
-  - [ ] Dynamic import untuk Tiptap Extension, KaTeX Math Block, dan PDF.js viewer untuk mempercepat First Contentful Paint (FCP).
-- [ ] **4.4 Edge-Safe API Routes Guard**
-  - [ ] Refactor endpoint PDF parsing / RIS parsing agar menggunakan parser berbasis In-Memory TypedArray yang aman di lingkungan Serverless & Edge.
+- [x] **4.1 Gemini 2.0 Flash Streaming Integration**
+  - [x] Upgrade API route `/api/v1/ai/improve` dan `/api/v1/ai/abstract` untuk mendukung **Server-Sent Events (SSE) / Streaming** Gemini 2.0 Flash API.
+- [x] **4.2 Edge Rate Limiting & Queueing**
+  - [x] Implementasikan Rate Limiter 15 Request Per Minute (RPM) berbasis Token Bucket / Sliding Window (kompatibel Vercel KV / In-Memory).
+- [x] **4.3 Lazy Loading & Bundle Splitting**
+  - [x] Dynamic import untuk Tiptap Extension, KaTeX Math Block, dan PDF.js viewer untuk mempercepat First Contentful Paint (FCP).
+- [x] **4.4 Edge-Safe API Routes Guard**
+  - [x] Refactor endpoint PDF parsing / RIS parsing agar menggunakan parser berbasis In-Memory TypedArray yang aman di lingkungan Serverless & Edge.
+
 
 ---
 

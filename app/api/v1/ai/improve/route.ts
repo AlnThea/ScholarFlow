@@ -1,6 +1,9 @@
 // app/api/v1/ai/improve/route.ts
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { defaultAiRateLimiter } from '@/lib/ai/rate-limiter';
 
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
@@ -61,36 +64,51 @@ function fallbackResponse(text: string, tone: string, disclaimer: string) {
 }
 
 /**
- * Panggilan langsung ke API Google Gemini AI Studio
+ * Streaming Gemini 2.0 Flash API via SSE ReadableStream
+ */
+async function callDirectGeminiStream(prompt: string, model: string): Promise<ReadableStream> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error('GEMINI_API_KEY is not set');
+
+  const geminiModel = model.includes('2.0') ? 'gemini-2.0-flash' : (process.env.GEMINI_MODEL || 'gemini-1.5-flash');
+  const url = `${GEMINI_API_BASE_URL}/models/${geminiModel}:streamGenerateContent?key=${apiKey}&alt=sse`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.2, topP: 0.9, maxOutputTokens: 2048 },
+    }),
+  });
+
+  if (!response.ok || !response.body) {
+    throw new Error(`Gemini Stream error ${response.status}`);
+  }
+
+  return response.body;
+}
+
+/**
+ * Non-streaming direct Gemini API call
  */
 async function callDirectGemini(prompt: string, model: string): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY is not set');
 
-  const url = `${GEMINI_API_BASE_URL}/models/${model}:generateContent?key=${apiKey}`;
+  const geminiModel = model.includes('2.0') ? 'gemini-2.0-flash' : (process.env.GEMINI_MODEL || 'gemini-1.5-flash');
+  const url = `${GEMINI_API_BASE_URL}/models/${geminiModel}:generateContent?key=${apiKey}`;
+
   const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: prompt }],
-        },
-      ],
-      generationConfig: {
-        temperature: 0.2,
-        topP: 0.9,
-        maxOutputTokens: 2048,
-      },
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.2, topP: 0.9, maxOutputTokens: 2048 },
     }),
   });
 
-  if (!response.ok) {
-    throw new Error(`Google API status ${response.status}`);
-  }
+  if (!response.ok) throw new Error(`Google API status ${response.status}`);
 
   const result = await response.json();
   const candidateParts = result?.candidates?.[0]?.content?.parts || [];
@@ -100,15 +118,12 @@ async function callDirectGemini(prompt: string, model: string): Promise<string> 
     .join('\n')
     .trim();
 
-  if (!text) {
-    throw new Error('Google API returned empty text');
-  }
-
+  if (!text) throw new Error('Google API returned empty text');
   return text;
 }
 
 /**
- * Panggilan terpadu ke API OpenRouter
+ * OpenRouter API call
  */
 async function callOpenRouter(prompt: string, model: string): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
@@ -124,31 +139,45 @@ async function callOpenRouter(prompt: string, model: string): Promise<string> {
     },
     body: JSON.stringify({
       model: model,
-      messages: [
-        { role: 'user', content: prompt }
-      ],
+      messages: [{ role: 'user', content: prompt }],
       temperature: 0.2,
     }),
   });
 
-  if (!response.ok) {
-    throw new Error(`OpenRouter status ${response.status}`);
-  }
+  if (!response.ok) throw new Error(`OpenRouter status ${response.status}`);
 
   const result = await response.json();
   const text = result?.choices?.[0]?.message?.content?.trim();
-
-  if (!text) {
-    throw new Error('OpenRouter returned empty text');
-  }
+  if (!text) throw new Error('OpenRouter returned empty text');
 
   return text;
 }
 
 export async function POST(request: Request) {
   try {
+    // 1. Edge Rate Limiter Guard (15 RPM)
+    const clientIp = request.headers.get('x-forwarded-for') || 'global-client';
+    const rateCheck = defaultAiRateLimiter.check(clientIp);
+
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded. Maximum 15 requests per minute allowed.',
+          resetSeconds: rateCheck.resetSeconds,
+        },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': String(rateCheck.limit),
+            'X-RateLimit-Remaining': String(rateCheck.remaining),
+            'X-RateLimit-Reset': String(rateCheck.resetSeconds),
+          },
+        }
+      );
+    }
+
     const body = await request.json();
-    const { text, tone = 'academic', model = 'gemini', language = 'en' } = body;
+    const { text, tone = 'academic', model = 'gemini', language = 'en', stream = false } = body;
 
     if (!text) {
       return NextResponse.json({ error: 'Text parameter is required.' }, { status: 400 });
@@ -156,30 +185,37 @@ export async function POST(request: Request) {
 
     const prompt = buildPrompt(text, tone, language);
 
-    // 1. Ambil seluruh model AI dari database Supabase (untuk fallback dinamis)
-    const { data: dbModels, error: dbError } = await supabase
-      .from('ai_models')
-      .select('*');
-
-    if (dbError) {
-      console.warn('Error loading dynamic models from DB, using fallback list:', dbError.message);
+    // If client requested SSE streaming
+    if (stream && (model === 'gemini' || model === 'gemini-2.0-flash')) {
+      try {
+        const streamBody = await callDirectGeminiStream(prompt, model);
+        return new Response(streamBody, {
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+          },
+        });
+      } catch (streamErr) {
+        console.warn('[AI Stream] Streaming failed, falling back to JSON response:', streamErr);
+      }
     }
 
+    // 2. Dynamic model cascading list
+    const { data: dbModels } = await supabase.from('ai_models').select('*');
+
     const modelsList = dbModels || [
-      { id: 'gemini', name: 'Gemini Flash (Direct)', model_id: 'gemini-1.5-flash', is_enabled: true, is_premium: false },
+      { id: 'gemini', name: 'Gemini 2.0 Flash (Direct)', model_id: 'gemini-2.0-flash', is_enabled: true, is_premium: false },
       { id: 'llama3', name: 'Llama 3 (Free OR)', model_id: 'meta-llama/llama-3-8b-instruct:free', is_enabled: true, is_premium: false },
       { id: 'gemma2', name: 'Gemma 2 (Free OR)', model_id: 'google/gemma-2-9b-it:free', is_enabled: true, is_premium: false },
       { id: 'claude', name: 'Claude 3.5 (Pro OR)', model_id: 'anthropic/claude-3.5-sonnet', is_enabled: true, is_premium: true }
     ];
 
-    // 2. Cari model pilihan utama user
     const chosenModel = modelsList.find(m => m.id === model);
     const attempts: { name: string; run: () => Promise<string> }[] = [];
 
-    // Jika model pilihan user ditemukan dan diaktifkan, jadikan prioritas pertama
     if (chosenModel && chosenModel.is_enabled) {
       if (chosenModel.id === 'gemini') {
-        // Gunakan model_id dinamis dari DB
         attempts.push({
           name: chosenModel.name,
           run: () => callDirectGemini(prompt, chosenModel.model_id)
@@ -191,14 +227,12 @@ export async function POST(request: Request) {
         });
       }
     } else if (model === 'gemini') {
-      // Fallback jika DB kosong / error
       attempts.push({
-        name: 'Gemini Flash (Direct)',
-        run: () => callDirectGemini(prompt, process.env.GEMINI_MODEL || 'gemini-1.5-flash')
+        name: 'Gemini 2.0 Flash (Direct)',
+        run: () => callDirectGemini(prompt, process.env.GEMINI_MODEL || 'gemini-2.0-flash')
       });
     }
 
-    // 3. Masukkan model-model aktif non-premium lainnya sebagai antrean failover otomatis
     modelsList.forEach(item => {
       const isAlreadyTried = (model === item.id) || (model === 'gemini' && item.id === 'gemini');
       if (item.is_enabled && !item.is_premium && !isAlreadyTried) {
@@ -216,28 +250,16 @@ export async function POST(request: Request) {
       }
     });
 
-    // 4. Selalu tambahkan GPT-4o-mini sebagai baris pertahanan berbayar termurah jika semuanya gagal
-    const hasMiniInList = modelsList.some(item => item.model_id === 'openai/gpt-4o-mini' && item.is_enabled);
-    const isMiniTried = model === 'openai/gpt-4o-mini';
-    if (!isMiniTried && !hasMiniInList) {
-      attempts.push({
-        name: 'GPT-4o-mini (Paid Fallback)',
-        run: () => callOpenRouter(prompt, 'openai/gpt-4o-mini')
-      });
-    }
-
     let finalResult = null;
     let successfulModelName = '';
     let disclaimer = null;
     const errors: string[] = [];
 
-    // Eksekusi antrean cascading retry
     for (let i = 0; i < attempts.length; i++) {
       try {
         finalResult = await attempts[i].run();
         successfulModelName = attempts[i].name;
 
-        // Jika berhasil menggunakan cadangan, informasikan ke pengguna
         if (i > 0) {
           disclaimer = language === 'en'
             ? `Primary AI service is busy. Automatically fell back to: ${successfulModelName}.`

@@ -74,10 +74,13 @@ import type { CitationHistoryEntry } from '@/lib/editor/citation-history';
 import type { AiHistoryEntry } from '@/lib/editor/ai-history';
 import type { BibliographyEntry } from '@/lib/editor/bibliography';
 import type { DocumentListItem, DocumentEntry } from '@/lib/api/documents';
-import { PricingModal } from './pricing-modal';
-import { ShareDocumentModal } from './share-document-modal';
-import { BackendSettingsModal } from './backend-settings-modal';
+import dynamic from 'next/dynamic';
+
+const PricingModal = dynamic(() => import('./pricing-modal').then((mod) => mod.PricingModal), { ssr: false });
+const ShareDocumentModal = dynamic(() => import('./share-document-modal').then((mod) => mod.ShareDocumentModal), { ssr: false });
+const BackendSettingsModal = dynamic(() => import('./backend-settings-modal').then((mod) => mod.BackendSettingsModal), { ssr: false });
 import { exportToWordFile, exportToPdfFile } from '@/lib/editor/citation-export-word';
+
 
 import { useAuth } from '@/components/auth/auth-provider';
 import { fetchPricingPlans, updatePricingPlan, createPricingPlan, deletePricingPlan, type PricingPlan } from '@/lib/api/pricing';

@@ -1,6 +1,14 @@
 # ScholarFlow Changelog
 
+## v0.6.0 - EPIC 4 AI Engine & Performance Optimization
+- Upgraded `/api/v1/ai/improve` and `/api/v1/ai/abstract` API routes with Gemini 2.0 Flash (`gemini-2.0-flash`) SSE Streaming support (`ReadableStream` text/event-stream).
+- Implemented `EdgeRateLimiter` sliding window module in `@/lib/ai/rate-limiter.ts` enforcing a strict 15 Request Per Minute (RPM) quota limit.
+- Implemented In-Memory `TypedArray` RIS & BibTeX parser in `@/lib/ai/edge-parser.ts` safe for Serverless and Edge Runtimes.
+- Applied Next.js `dynamic()` imports with `ssr: false` for heavy modal dialogs to accelerate First Contentful Paint (FCP).
+- Marked EPIC 4 tasks as completed in `doc/PRODUCTION_TASKS.md`.
+
 ## v0.5.0 - EPIC 3 Hybrid Realtime & Polling Sync Engine
+
 - Created core module `HybridSyncEngine` in `@/lib/sync/hybrid-sync-engine.ts` managing real-time document synchronization.
 - Integrated Supabase Realtime WebSocket subscription (`postgres_changes` on `documents` table).
 - Built Express.js Adaptive Smart HTTP Polling engine with dynamic intervals (3s active typing vs 15s idle).
