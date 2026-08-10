@@ -73,26 +73,35 @@ Shared services, schema interfaces, and editor logic.
   - [lib/editor/citation-export.ts](file:///c:/web/ScholarFlow/lib/editor/citation-export.ts) - Serializes citation lists to TXT or JSON formats.
   - [lib/editor/citation-history.ts](file:///c:/web/ScholarFlow/lib/editor/citation-history.ts) - Stores and rotates local citation search histories.
   - [lib/editor/sample-content.ts](file:///c:/web/ScholarFlow/lib/editor/sample-content.ts) - Template content for new/empty editor canvases.
-- **`lib/supabase.ts`** - Initialized Supabase client connection [lib/supabase.ts](file:///c:/web/ScholarFlow/lib/supabase.ts).
-
----
-
-### 4. Supabase Database (`supabase/`)
-Database migration and layout details.
-- **`supabase/migrations/`**
-  - [supabase/migrations/20260707000001_initial_schema.sql](file:///c:/web/ScholarFlow/supabase/migrations/20260707000001_initial_schema.sql) - Initial tables (`profiles`, `citation_cache`, `citation_library`), indexes, triggers, and Row Level Security (RLS) policies.
-  - [supabase/migrations/20260707000002_fix_profiles_rls.sql](file:///c:/web/ScholarFlow/supabase/migrations/20260707000002_fix_profiles_rls.sql) - Migration patch removing recursive circular rules.
-  - [supabase/migrations/20260715000002_add_settings_to_documents.sql](file:///c:/web/ScholarFlow/supabase/migrations/20260715000002_add_settings_to_documents.sql) - Adds settings columns to documents table.
-  - [supabase/migrations/20260716000001_create_pricing_plans_table.sql](file:///c:/web/ScholarFlow/supabase/migrations/20260716000001_create_pricing_plans_table.sql) - Creates dynamic pricing plans catalog with seeding.
-  - [supabase/migrations/20260716000002_add_subscriptions_to_profiles.sql](file:///c:/web/ScholarFlow/supabase/migrations/20260716000002_add_subscriptions_to_profiles.sql) - Extends profiles table with subscription parameters.
-  - [supabase/migrations/20260716000003_create_payment_gateways_table.sql](file:///c:/web/ScholarFlow/supabase/migrations/20260716000003_create_payment_gateways_table.sql) - Dynamic gateway settings toggle.
+- **`lib/services/`** - Data Provider Abstraction (Repository Pattern):
+  - [lib/services/types.ts](file:///c:/web/ScholarFlow/lib/services/types.ts) - Unified `IDataService` contract interface.
+  - [lib/services/supabase-service.ts](file:///c:/web/ScholarFlow/lib/services/supabase-service.ts) - Supabase PaaS database adapter.
+  - [lib/services/express-service.ts](file:///c:/web/ScholarFlow/lib/services/express-service.ts) - Express.js REST API VPS adapter.
+  - [lib/services/index.ts](file:///c:/web/ScholarFlow/lib/services/index.ts) - `getDataService()` factory, `<DataProvider>`, and `useDataService()` hook.
+- **`lib/sync/`** - Hybrid Realtime & Polling Sync Engine:
+  - [lib/sync/hybrid-sync-engine.ts](file:///c:/web/ScholarFlow/lib/sync/hybrid-sync-engine.ts) - Core sync engine (WebSocket + Smart Polling + 3x Failover + Page Visibility Guard).
+  - [lib/sync/index.ts](file:///c:/web/ScholarFlow/lib/sync/index.ts) - `<SyncProvider>` React Context and `useHybridSync()` hook.
+- **`lib/config/`** - App Configuration & Environment Mode:
+  - [lib/config/env.ts](file:///c:/web/ScholarFlow/lib/config/env.ts) - Environment Mode helper (`NEXT_PUBLIC_APP_ENV` - Laravel `APP_ENV` equivalent).
+- **`lib/ai/`** - AI Rate Limiter & Edge Parsers:
+  - [lib/ai/rate-limiter.ts](file:///c:/web/ScholarFlow/lib/ai/rate-limiter.ts) - 15 RPM Edge Rate Limiter (Token Bucket / Sliding Window).
+  - [lib/ai/edge-parser.ts](file:///c:/web/ScholarFlow/lib/ai/edge-parser.ts) - In-memory TypedArray RIS & BibTeX parser.
+- **`docker/`** - Multi-Hosting Docker & Nginx Configs:
+  - [docker/Dockerfile](file:///c:/web/ScholarFlow/docker/Dockerfile) - Multi-stage Node.js Alpine build for Express API.
+  - [docker/docker-compose.yml](file:///c:/web/ScholarFlow/docker/docker-compose.yml) - 1-Click orchestration (Express REST + PostgreSQL).
+  - [docker/nginx.conf](file:///c:/web/ScholarFlow/docker/nginx.conf) - Production Nginx Reverse Proxy with SSL & WSS WebSocket headers.
+- **`prisma/`** - Multi-Database ORM Schema:
+  - [prisma/schema.prisma](file:///c:/web/ScholarFlow/prisma/schema.prisma) - Universal Prisma schema for PostgreSQL and MySQL.
 
 ---
 
 ### 5. Documentation & Roadmap (`doc/`)
 - [doc/PRODUCTION_TASKS.md](file:///c:/web/ScholarFlow/doc/PRODUCTION_TASKS.md) - Master task roadmap & production readiness checklist.
+- [doc/DATABASE_MIGRATION_GUIDE.md](file:///c:/web/ScholarFlow/doc/DATABASE_MIGRATION_GUIDE.md) - Step-by-step database migration guide (Supabase -> VPS).
+- [doc/SECURITY_RLS_AUDIT.md](file:///c:/web/ScholarFlow/doc/SECURITY_RLS_AUDIT.md) - Security & Row Level Security (RLS) audit report.
 - [doc/API_REFERENCE.md](file:///c:/web/ScholarFlow/doc/API_REFERENCE.md) - Endpoint API documentation.
 - [doc/DATABASE_SCHEMA.md](file:///c:/web/ScholarFlow/doc/DATABASE_SCHEMA.md) - Database schema & RLS policies.
 - [doc/EDITOR_FLOW.md](file:///c:/web/ScholarFlow/doc/EDITOR_FLOW.md) - Editor & citation workflow breakdown.
 - [doc/PROJECT_MAP.md](file:///c:/web/ScholarFlow/doc/PROJECT_MAP.md) - Full project map index.
+
 
