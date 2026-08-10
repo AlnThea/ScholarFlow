@@ -49,46 +49,49 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
 ## 📋 BAGIAN B: ROADMAP PRODUCTION-READY & HYBRID MULTI-BACKEND (EPIC 1 - 5)
 
 ### 📋 EPIC 1: Database & Backend Abstraction (Repository / Data Provider Pattern)
-- [ ] **1.1 Interface Abstraksi `DataService`**
-  - [ ] Buat contract interface `IDataService` unified untuk CRUD Dokumen, Profil User, Citations, dan Catalog Pricing di `@/lib/services/types.ts`.
-  - [ ] Implementasikan Data Types strict tanpa mengandalkan tipe bawaan Supabase SDK murni.
-- [ ] **1.2 Adapter `SupabaseDataService`**
-  - [ ] Implementasikan `IDataService` menggunakan Client Supabase Auth & Database (`@supabase/supabase-js`).
-  - [ ] Dukungan Row Level Security (RLS) dan penanganan token session secara transparan.
-- [ ] **1.3 Adapter `ExpressDataService`**
-  - [ ] Implementasikan `IDataService` menggunakan HTTP Client (`fetch`/`axios`) yang terhubung ke API Express.js.
-  - [ ] Tambahkan handling JWT Auth Header (`Authorization: Bearer <token>`).
-  - [ ] Garansi skema kompatibel untuk PostgreSQL, MySQL, dan MariaDB.
-- [ ] **1.4 Service Factory & Injector (`@/lib/services/index.ts`)**
-  - [ ] Implementasikan Factory Pattern berdasarkan variabel lingkungan `process.env.NEXT_PUBLIC_BACKEND_TYPE` (`supabase` vs `express`).
-  - [ ] Sediakan React Context Provider (`DataProvider`) untuk kemudahan injeksi service ke seluruh komponen Next.js.
+- [x] **1.1 Interface Abstraksi `DataService`**
+  - [x] Buat contract interface `IDataService` unified untuk CRUD Dokumen, Profil User, Citations, dan Catalog Pricing di `@/lib/services/types.ts`.
+  - [x] Implementasikan Data Types strict tanpa mengandalkan tipe bawaan Supabase SDK murni.
+- [x] **1.2 Adapter `SupabaseDataService`**
+  - [x] Implementasikan `IDataService` menggunakan Client Supabase Auth & Database (`@supabase/supabase-js`).
+  - [x] Dukungan Row Level Security (RLS) dan penanganan token session secara transparan.
+- [x] **1.3 Adapter `ExpressDataService`**
+  - [x] Implementasikan `IDataService` menggunakan HTTP Client (`fetch`/`axios`) yang terhubung ke API Express.js.
+  - [x] Tambahkan handling JWT Auth Header (`Authorization: Bearer <token>`).
+  - [x] Garansi skema kompatibel untuk PostgreSQL, MySQL, dan MariaDB.
+- [x] **1.4 Service Factory & Injector (`@/lib/services/index.ts`)**
+  - [x] Implementasikan Factory Pattern berdasarkan variabel lingkungan `process.env.NEXT_PUBLIC_BACKEND_TYPE` (`supabase` vs `express`).
+  - [x] Sediakan React Context Provider (`DataProvider`) untuk kemudahan injeksi service ke seluruh komponen Next.js.
+
 
 ---
 
 ### 🌐 EPIC 2: Multi-Hosting Adapters (Deployment Flexibility)
-- [ ] **2.1 Vercel & Edge Runtime Adapter**
-  - [ ] Pastikan seluruh API Route Next.js aman dijalankan di Vercel Edge Runtime.
-  - [ ] Hilangkan dependensi modul Node.js murni (seperti `fs`, `path`, `child_process`) pada handler client-side dan edge routes.
-- [ ] **2.2 Cloudflare Pages / Workers Compatibility Layer**
-  - [ ] Konfigurasi `next.config.mjs` & runtime target agar siap untuk Cloudflare OpenNext / static export / edge adapters.
-- [ ] **2.3 VPS / Docker Containerization (Express.js Backend)**
-  - [ ] Sediakan `Dockerfile` & `docker-compose.yml` untuk REST API Express.js backend (siap deploy di aaPanel / VPS).
-  - [ ] Sediakan contoh konfigurasi Nginx Reverse Proxy & SSL (HTTPS/WSS) untuk server Express.js.
+- [x] **2.1 Vercel & Edge Runtime Adapter**
+  - [x] Pastikan seluruh API Route Next.js aman dijalankan di Vercel Edge Runtime.
+  - [x] Hilangkan dependensi modul Node.js murni (seperti `fs`, `path`, `child_process`) pada handler client-side dan edge routes.
+- [x] **2.2 Cloudflare Pages / Workers Compatibility Layer**
+  - [x] Konfigurasi `next.config.mjs` & runtime target agar siap untuk Cloudflare OpenNext / static export / edge adapters.
+- [x] **2.3 VPS / Docker Containerization (Express.js Backend)**
+  - [x] Sediakan `Dockerfile` & `docker-compose.yml` untuk REST API Express.js backend (siap deploy di aaPanel / VPS).
+  - [x] Sediakan contoh konfigurasi Nginx Reverse Proxy & SSL (HTTPS/WSS) untuk server Express.js.
+
 
 ---
 
 ### ⚡ EPIC 3: Hybrid Realtime & Polling Sync Engine
-- [ ] **3.1 Hybrid Sync Manager Core**
-  - [ ] Buat modul `HybridSyncEngine` yang mengelola koneksi dokumen real-time.
-- [ ] **3.2 Supabase WebSocket Realtime Channel**
-  - [ ] Langganan perubahan dokumen via WebSocket Supabase Realtime channel (`postgres_changes`).
-- [ ] **3.3 Express.js Smart HTTP Polling Engine**
-  - [ ] Polling adaptif dengan interval dinamis (misal: 3 detik saat aktif, 15 detik saat idle).
-- [ ] **3.4 Auto-Fallback & Recovery System**
-  - [ ] Deteksi terputusnya koneksi WebSocket 3 kali berturut-turut -> otomatis beralih (*failover*) ke HTTP Polling.
-  - [ ] Percobaan rekonfigurasi (*re-connect*) WebSocket di latar belakang secara periodik.
-- [ ] **3.5 Page Visibility Guard**
-  - [ ] Integrasi `document.visibilityState` untuk menjeda (*pause*) polling & WebSocket heartbeat saat tab browser tidak aktif demi menghemat memori & kuota server.
+- [x] **3.1 Hybrid Sync Manager Core**
+  - [x] Buat modul `HybridSyncEngine` yang mengelola koneksi dokumen real-time.
+- [x] **3.2 Supabase WebSocket Realtime Channel**
+  - [x] Langganan perubahan dokumen via WebSocket Supabase Realtime channel (`postgres_changes`).
+- [x] **3.3 Express.js Smart HTTP Polling Engine**
+  - [x] Polling adaptif dengan interval dinamis (misal: 3 detik saat aktif, 15 detik saat idle).
+- [x] **3.4 Auto-Fallback & Recovery System**
+  - [x] Deteksi terputusnya koneksi WebSocket 3 kali berturut-turut -> otomatis beralih (*failover*) ke HTTP Polling.
+  - [x] Percobaan rekonfigurasi (*re-connect*) WebSocket di latar belakang secara periodik.
+- [x] **3.5 Page Visibility Guard**
+  - [x] Integrasi `document.visibilityState` untuk menjeda (*pause*) polling & WebSocket heartbeat saat tab browser tidak aktif demi menghemat memori & kuota server.
+
 
 ---
 

@@ -16,7 +16,9 @@ import {
   IconFolderOpen,
   IconCreditCard,
   IconSparkles,
+  IconDatabase,
   IconLayoutDashboard,
+
   IconLanguage,
   IconSun,
   IconMoon
@@ -47,7 +49,8 @@ export function MinimalSidebar({
   activeDashboardTab,
   className,
   isDarkMode = false,
-  onToggleDarkMode
+  onToggleDarkMode,
+  onOpenBackendSettings
 }: { 
   isExpanded: boolean; 
   onToggle: () => void;
@@ -61,6 +64,8 @@ export function MinimalSidebar({
   className?: string;
   isDarkMode?: boolean;
   onToggleDarkMode?: () => void;
+  onOpenBackendSettings?: () => void;
+
 }) {
   const { language, setLanguage, t } = useLanguage();
   const { user, profile } = useAuth();
@@ -1044,7 +1049,30 @@ export function MinimalSidebar({
                   </span>
                 </div>
               </button>
+
+              <button
+                onClick={() => {
+                  if (onOpenBackendSettings) {
+                    onOpenBackendSettings();
+                  }
+                }}
+                className="flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left cursor-pointer transition-all duration-200 group text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
+              >
+                <IconDatabase className="h-[18px] w-[18px] mt-0.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 text-slate-400" />
+                <div className="flex flex-col min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold">
+                      {language === 'en' ? 'Manage Backend Architecture' : 'Kelola Backend & Database'}
+                    </span>
+                  </div>
+                  <span className="text-[8px] text-slate-400 leading-tight font-medium mt-0.5">
+                    {language === 'en' ? 'PaaS Supabase vs VPS Express REST' : 'PaaS Supabase vs VPS Express REST'}
+                  </span>
+                </div>
+
+              </button>
             </div>
+
 
             {/* Group 2: Billing & Finance */}
             <div className="flex flex-col gap-1">

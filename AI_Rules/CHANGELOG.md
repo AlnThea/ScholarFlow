@@ -1,6 +1,34 @@
 # ScholarFlow Changelog
 
+## v0.5.0 - EPIC 3 Hybrid Realtime & Polling Sync Engine
+- Created core module `HybridSyncEngine` in `@/lib/sync/hybrid-sync-engine.ts` managing real-time document synchronization.
+- Integrated Supabase Realtime WebSocket subscription (`postgres_changes` on `documents` table).
+- Built Express.js Adaptive Smart HTTP Polling engine with dynamic intervals (3s active typing vs 15s idle).
+- Implemented Auto-Fallback & Recovery System: 3x WebSocket disconnects automatically failover to HTTP polling with 30s background reconnect attempts.
+- Integrated Page Visibility Guard (`document.visibilityState` listener) to pause polling/heartbeats on inactive tabs and trigger instant sync on tab focus.
+- Created `<SyncProvider>` React Context and `useHybridSync()` hook in `@/lib/sync/index.ts`.
+- Marked EPIC 3 tasks as completed in `doc/PRODUCTION_TASKS.md`.
+
+## v0.4.0 - EPIC 2 Multi-Hosting Adapters (Deployment Flexibility)
+
+- Configured explicit Vercel Edge Runtime compatibility (`export const runtime = 'edge'`) on Next.js API Routes.
+- Enhanced `next.config.mjs` with Cloudflare Pages/Workers OpenNext compatibility options and Production Security Headers.
+- Created production-grade `docker/Dockerfile` (multi-stage Node.js Alpine build) for Express.js REST API backend.
+- Created `docker/docker-compose.yml` service orchestration (Express.js REST API + PostgreSQL database with healthchecks).
+- Created `docker/nginx.conf` production Reverse Proxy configuration for aaPanel / VPS with SSL and WebSocket WSS support.
+- Marked EPIC 2 tasks as completed in `doc/PRODUCTION_TASKS.md`.
+
+## v0.3.0 - EPIC 1 Database & Backend Abstraction (Repository / Data Provider Pattern)
+
+- Created unified interface `IDataService` and strict TypeScript domain models in `@/lib/services/types.ts`.
+- Implemented `SupabaseDataService` adapter in `@/lib/services/supabase-service.ts` leveraging Supabase Auth & RLS.
+- Implemented `ExpressDataService` REST adapter in `@/lib/services/express-service.ts` supporting JWT Bearer authentication headers and multi-database support (PostgreSQL, MySQL, MariaDB).
+- Created Service Factory `getDataService()` and React Context `DataProvider` & `useDataService()` hook in `@/lib/services/index.ts`.
+- Updated `.env.example` with `NEXT_PUBLIC_BACKEND_TYPE` and `NEXT_PUBLIC_EXPRESS_API_URL`.
+- Marked EPIC 1 tasks as completed in `doc/PRODUCTION_TASKS.md`.
+
 ## v0.0.3 - Production Roadmap & Architecture Refactoring Setup
+
 - Created production roadmap & task master checklist at `doc/PRODUCTION_TASKS.md`
 - Defined EPICs for Database Abstraction, Multi-Hosting Adapters, Hybrid Sync Engine, AI Optimization, and Production Testing
 - Updated `PROJECT_MAP.md` to reference `doc/PRODUCTION_TASKS.md`

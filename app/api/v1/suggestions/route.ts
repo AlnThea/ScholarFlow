@@ -1,5 +1,8 @@
 // app/api/v1/suggestions/route.ts
+export const runtime = 'edge';
+
 import { NextResponse } from 'next/server';
+
 import { supabase } from '@/lib/supabase';
 
 export type DocumentSuggestion = {

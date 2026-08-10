@@ -71,7 +71,9 @@ import type { BibliographyEntry } from '@/lib/editor/bibliography';
 import type { DocumentListItem, DocumentEntry } from '@/lib/api/documents';
 import { PricingModal } from './pricing-modal';
 import { ShareDocumentModal } from './share-document-modal';
+import { BackendSettingsModal } from './backend-settings-modal';
 import { exportToWordFile, exportToPdfFile } from '@/lib/editor/citation-export-word';
+
 import { useAuth } from '@/components/auth/auth-provider';
 import { fetchPricingPlans, updatePricingPlan, createPricingPlan, deletePricingPlan, type PricingPlan } from '@/lib/api/pricing';
 import { fetchPaymentGateways, updatePaymentGatewayStatus, type PaymentGateway } from '@/lib/api/payment-gateways';
@@ -339,7 +341,9 @@ export function EditorLayout({
   const [newTextForSuggestion, setNewTextForSuggestion] = useState('');
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isBackendModalOpen, setIsBackendModalOpen] = useState(false);
   const [isMathHelperOpen, setIsMathHelperOpen] = useState(false);
+
   const [mathToast, setMathToast] = useState<string | null>(null);
   const [dashboardExpandedProjects, setDashboardExpandedProjects] = useState<Record<string, boolean>>({});
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -1195,7 +1199,9 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
         className={isAnyModalOpen ? 'select-none pointer-events-none' : ''}
         isDarkMode={isDarkMode}
         onToggleDarkMode={toggleDarkMode}
+        onOpenBackendSettings={() => setIsBackendModalOpen(true)}
       />
+
 
       {/* If no document is selected, render the Dashboard View */}
       {!currentDocument ? (
@@ -3969,6 +3975,14 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
           </div>
         </div>
       )}
+
+      {/* Backend & Database Provider Architecture Modal */}
+      <BackendSettingsModal
+        isOpen={isBackendModalOpen}
+        onClose={() => setIsBackendModalOpen(false)}
+        onToast={(msg) => setMathToast(msg)}
+      />
     </div>
   );
 }
+
