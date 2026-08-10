@@ -59,8 +59,13 @@ import {
   IconMoon,
   IconX,
   IconSettings,
-  IconBell
+  IconBell,
+  IconWifi,
+  IconRefresh,
+  IconWifiOff
 } from '@tabler/icons-react';
+import { useDataService } from '@/lib/services';
+
 import { MinimalSidebar } from './minimal-sidebar';
 import { useLanguage } from '../i18n/language-context';
 import type { ImproveWritingResponse } from '@/lib/api/ai';
@@ -342,7 +347,9 @@ export function EditorLayout({
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isBackendModalOpen, setIsBackendModalOpen] = useState(false);
+  const { backendType } = useDataService();
   const [isMathHelperOpen, setIsMathHelperOpen] = useState(false);
+
 
   const [mathToast, setMathToast] = useState<string | null>(null);
   const [dashboardExpandedProjects, setDashboardExpandedProjects] = useState<Record<string, boolean>>({});
@@ -1945,8 +1952,34 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
 
             </div>
             <div className="flex items-center gap-2">
+              {/* Live Hybrid Sync Engine Status Chip */}
+              <div 
+                className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50/80 border border-emerald-200/80 text-emerald-700 text-[10px] font-bold cursor-help"
+                title={
+                  backendType === 'express'
+                    ? (language === 'en' ? 'Sync Engine: Express Smart HTTP Polling (3s/15s adaptive) • Page Visibility active' : 'Sync Engine: Express Smart HTTP Polling (3s/15s adaptif) • Page Visibility aktif')
+                    : (language === 'en' ? 'Sync Engine: Supabase Realtime WebSocket • Auto-failover 3x ready • Page Visibility active' : 'Sync Engine: Supabase Realtime WebSocket • Auto-failover 3x aktif • Page Visibility aktif')
+                }
+              >
+                {backendType === 'express' ? (
+                  <>
+                    <IconRefresh className="h-3 w-3 text-emerald-600 animate-spin-slow" />
+                    <span>{language === 'en' ? 'Smart Polling' : 'Smart Polling'}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span>{language === 'en' ? 'Realtime WS' : 'Realtime WS'}</span>
+                  </>
+                )}
+              </div>
+
               <div className="flex items-center gap-0.5 bg-slate-100/80 p-0.5 rounded-lg border border-slate-200/50">
                 {/* Export Dropdown */}
+
                 <div className="relative">
                   <button
                     disabled={isExporting || isExportingPdf}
