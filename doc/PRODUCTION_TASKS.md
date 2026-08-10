@@ -109,9 +109,10 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
 ---
 
 ### 🛡️ EPIC 5: Testing & Production Readiness
-- [ ] **5.1 Multi-DB Schema & Migration Guide**
-  - [ ] Buat `prisma/schema.prisma` atau SQL Schema DDL yang identik untuk PostgreSQL dan MySQL.
-- [ ] **5.2 Security & RLS Audit**
-  - [ ] Audit RLS Supabase & middleware autentikasi Express.js untuk memastikan akses dokumen tersertifikasi secara ketat (`user_id` validation).
-- [ ] **5.3 Resilience & Failure Recovery Testing**
-  - [ ] Uji skenario offline/online, failover sync, error handling API fallback, dan validasi data Pydantic/Zod.
+- [x] **5.1 Multi-DB Schema & Migration Guide**
+  - [x] Buat `prisma/schema.prisma` atau SQL Schema DDL yang identik untuk PostgreSQL dan MySQL.
+- [x] **5.2 Security & RLS Audit**
+  - [x] Audit RLS Supabase & middleware autentikasi Express.js untuk memastikan akses dokumen tersertifikasi secara ketat (`user_id` validation).
+- [x] **5.3 Resilience & Failure Recovery Testing**
+  - [x] Uji skenario offline/online, failover sync, error handling API fallback, dan validasi data Pydantic/Zod.
+

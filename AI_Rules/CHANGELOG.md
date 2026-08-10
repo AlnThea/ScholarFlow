@@ -1,6 +1,14 @@
 # ScholarFlow Changelog
 
+## v1.0.0 - EPIC 5 Testing & Production Readiness (Official Production Release)
+- Created universal Prisma ORM schema in `prisma/schema.prisma` for PostgreSQL and MySQL multi-database support.
+- Published step-by-step database migration guide in `doc/DATABASE_MIGRATION_GUIDE.md`.
+- Completed Security & Row Level Security (RLS) Audit report in `doc/SECURITY_RLS_AUDIT.md`.
+- Built automated health & resilience validator module in `lib/testing/resilience-validator.ts`.
+- Marked ALL EPICs (1, 2, 3, 4, 5) as 100% completed in `doc/PRODUCTION_TASKS.md`.
+
 ## v0.6.0 - EPIC 4 AI Engine & Performance Optimization
+
 - Upgraded `/api/v1/ai/improve` and `/api/v1/ai/abstract` API routes with Gemini 2.0 Flash (`gemini-2.0-flash`) SSE Streaming support (`ReadableStream` text/event-stream).
 - Implemented `EdgeRateLimiter` sliding window module in `@/lib/ai/rate-limiter.ts` enforcing a strict 15 Request Per Minute (RPM) quota limit.
 - Implemented In-Memory `TypedArray` RIS & BibTeX parser in `@/lib/ai/edge-parser.ts` safe for Serverless and Edge Runtimes.
