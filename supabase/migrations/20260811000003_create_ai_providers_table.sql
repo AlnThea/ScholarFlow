@@ -15,10 +15,7 @@ CREATE TABLE IF NOT EXISTS public.ai_providers (
 INSERT INTO public.ai_providers (id, name, type, base_url, is_built_in)
 VALUES
   ('gemini', 'Google Gemini Direct', 'gemini', NULL, TRUE),
-  ('openrouter', 'OpenRouter API', 'openrouter', NULL, TRUE),
-  ('huggingface', 'Hugging Face Hub & Router', 'huggingface', 'https://router.huggingface.co/v1', TRUE),
-  ('groq', 'Groq LPU Cloud', 'groq', 'https://api.groq.com/openai/v1', TRUE),
-  ('together', 'Together AI', 'together', 'https://api.together.xyz/v1', TRUE)
+  ('openrouter', 'OpenRouter API', 'openrouter', NULL, TRUE)
 ON CONFLICT (id) DO NOTHING;
 
 -- Add provider_id column to ai_models table if missing

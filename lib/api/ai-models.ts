@@ -24,14 +24,11 @@ export interface AIModel {
 }
 
 const LOCAL_STORAGE_KEY = 'scholarflow.ai_models.v1';
-const PROVIDER_LOCAL_STORAGE_KEY = 'scholarflow.ai_providers.v1';
+const PROVIDER_LOCAL_STORAGE_KEY = 'scholarflow.ai_providers.v2';
 
 export const DEFAULT_PROVIDERS: AIProvider[] = [
   { id: 'gemini', name: 'Google Gemini Direct', type: 'gemini', is_built_in: true, updated_at: new Date().toISOString() },
   { id: 'openrouter', name: 'OpenRouter API', type: 'openrouter', is_built_in: true, updated_at: new Date().toISOString() },
-  { id: 'huggingface', name: 'Hugging Face Hub & Router', type: 'huggingface', base_url: 'https://router.huggingface.co/v1', is_built_in: true, updated_at: new Date().toISOString() },
-  { id: 'groq', name: 'Groq LPU Cloud', type: 'groq', base_url: 'https://api.groq.com/openai/v1', is_built_in: true, updated_at: new Date().toISOString() },
-  { id: 'together', name: 'Together AI', type: 'together', base_url: 'https://api.together.xyz/v1', is_built_in: true, updated_at: new Date().toISOString() },
 ];
 
 const DEFAULT_MODELS: AIModel[] = [
@@ -48,7 +45,7 @@ function getLocalStoredProviders(): AIProvider[] {
     if (!raw) return DEFAULT_PROVIDERS;
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
+      return parsed.filter((p: AIProvider) => !p.is_built_in || p.id === 'gemini' || p.id === 'openrouter');
     }
   } catch (e) {
     console.error('Failed to parse local stored AI providers:', e);

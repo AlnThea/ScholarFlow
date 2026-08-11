@@ -2,6 +2,16 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## 🎯 [v0.7.3] - 2026-08-11
+
+### 🔌 Pure Dynamic Provider Registration & Cleaned Default Catalog
+- **Cleaned Built-In Defaults**:
+  - Removed pre-seeded Hugging Face, Groq, and Together AI providers from `DEFAULT_PROVIDERS` in `lib/api/ai-models.ts`. Only `Google Gemini Direct` and `OpenRouter API` remain as hardcoded built-ins.
+- **100% Dynamic Provider Addition**:
+  - Hugging Face, Groq Cloud, Together AI, or Custom OpenAI proxies are now added **100% dynamically** by the Admin via the **+ Tambah Provider AI** modal.
+
+---
+
 ## 🗄️ [v0.7.2] - 2026-08-11
 
 ### 💾 SQL Migration & Prisma Schema for AI Providers Table
