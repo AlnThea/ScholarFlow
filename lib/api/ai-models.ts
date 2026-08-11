@@ -72,12 +72,14 @@ export async function fetchAIProviders(): Promise<AIProvider[]> {
       .select('*')
       .order('id', { ascending: true });
 
-    if (!error && data && data.length > 0) {
+    if (error) {
+      console.warn('Supabase fetch AI providers error (using local storage fallback):', error.message || error);
+    } else if (data && data.length > 0) {
       saveLocalStoredProviders(data as AIProvider[]);
       return data as AIProvider[];
     }
-  } catch (e) {
-    console.warn('Supabase fetch AI providers fallback to local storage:', e);
+  } catch (e: any) {
+    console.warn('Supabase fetch AI providers fallback to local storage:', e?.message || e);
   }
   return getLocalStoredProviders();
 }
@@ -89,9 +91,12 @@ export async function createAIProvider(provider: Omit<AIProvider, 'updated_at'>)
   const now = new Date().toISOString();
   const newProvider: AIProvider = { ...provider, updated_at: now };
   try {
-    await supabase.from('ai_providers').insert(newProvider);
-  } catch (e) {
-    console.warn('Supabase create AI provider fallback to local storage:', e);
+    const { error } = await supabase.from('ai_providers').insert(newProvider);
+    if (error) {
+      console.warn('Supabase create AI provider DB insert error:', error.message || error);
+    }
+  } catch (e: any) {
+    console.warn('Supabase create AI provider fallback to local storage:', e?.message || e);
   }
   const current = getLocalStoredProviders();
   const updated = [...current.filter(p => p.id !== newProvider.id), newProvider];
@@ -105,9 +110,12 @@ export async function createAIProvider(provider: Omit<AIProvider, 'updated_at'>)
 export async function updateAIProvider(id: string, updates: Partial<Omit<AIProvider, 'id' | 'updated_at'>>): Promise<AIProvider> {
   const now = new Date().toISOString();
   try {
-    await supabase.from('ai_providers').update({ ...updates, updated_at: now }).eq('id', id);
-  } catch (e) {
-    console.warn('Supabase update AI provider fallback to local storage:', e);
+    const { error } = await supabase.from('ai_providers').update({ ...updates, updated_at: now }).eq('id', id);
+    if (error) {
+      console.warn('Supabase update AI provider DB error:', error.message || error);
+    }
+  } catch (e: any) {
+    console.warn('Supabase update AI provider fallback to local storage:', e?.message || e);
   }
   const current = getLocalStoredProviders();
   const target = current.find(p => p.id === id);
@@ -132,9 +140,12 @@ export async function updateAIProvider(id: string, updates: Partial<Omit<AIProvi
  */
 export async function deleteAIProvider(id: string): Promise<boolean> {
   try {
-    await supabase.from('ai_providers').delete().eq('id', id);
-  } catch (e) {
-    console.warn('Supabase delete AI provider fallback to local storage:', e);
+    const { error } = await supabase.from('ai_providers').delete().eq('id', id);
+    if (error) {
+      console.warn('Supabase delete AI provider DB error:', error.message || error);
+    }
+  } catch (e: any) {
+    console.warn('Supabase delete AI provider fallback to local storage:', e?.message || e);
   }
   const current = getLocalStoredProviders();
   saveLocalStoredProviders(current.filter(p => p.id !== id));
