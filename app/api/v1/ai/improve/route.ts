@@ -301,30 +301,44 @@ export async function POST(request: Request) {
       }
     }
 
-    // 2. Dynamic model cascading list
+    // 2. Dynamic model cascading list & provider resolution
     const { data: dbModels } = await supabase.from('ai_models').select('*');
+    const { data: dbProviders } = await supabase.from('ai_providers').select('*');
+
+    const providersList: any[] = dbProviders || [
+      { id: 'gemini', name: 'Google Gemini Direct', type: 'gemini' },
+      { id: 'openrouter', name: 'OpenRouter API', type: 'openrouter' },
+      { id: 'huggingface', name: 'Hugging Face Hub & Router', type: 'huggingface', base_url: 'https://router.huggingface.co/v1' },
+      { id: 'groq', name: 'Groq LPU Cloud', type: 'groq', base_url: 'https://api.groq.com/openai/v1' },
+      { id: 'together', name: 'Together AI', type: 'together', base_url: 'https://api.together.xyz/v1' }
+    ];
 
     const modelsList: any[] = dbModels || [
-      { id: 'gemini', name: 'Gemini 2.0 Flash (Direct)', model_id: 'gemini-2.0-flash', is_enabled: true, is_premium: false, provider_type: 'gemini' },
-      { id: 'llama3', name: 'Llama 3 (Free OR)', model_id: 'meta-llama/llama-3-8b-instruct:free', is_enabled: true, is_premium: false, provider_type: 'openrouter' },
-      { id: 'gemma2', name: 'Gemma 2 (Free OR)', model_id: 'google/gemma-2-9b-it:free', is_enabled: true, is_premium: false, provider_type: 'openrouter' },
-      { id: 'claude', name: 'Claude 3.5 (Pro OR)', model_id: 'anthropic/claude-3.5-sonnet', is_enabled: true, is_premium: true, provider_type: 'openrouter' }
+      { id: 'gemini', name: 'Gemini 2.0 Flash (Direct)', model_id: 'gemini-2.0-flash', provider_id: 'gemini', is_enabled: true, is_premium: false, provider_type: 'gemini' },
+      { id: 'llama3', name: 'Llama 3 (Free OR)', model_id: 'meta-llama/llama-3-8b-instruct:free', provider_id: 'openrouter', is_enabled: true, is_premium: false, provider_type: 'openrouter' },
+      { id: 'gemma2', name: 'Gemma 2 (Free OR)', model_id: 'google/gemma-2-9b-it:free', provider_id: 'openrouter', is_enabled: true, is_premium: false, provider_type: 'openrouter' },
+      { id: 'claude', name: 'Claude 3.5 (Pro OR)', model_id: 'anthropic/claude-3.5-sonnet', provider_id: 'openrouter', is_enabled: true, is_premium: true, provider_type: 'openrouter' }
     ];
 
     const chosenModel = modelsList.find(m => m.id === model);
     const attempts: { name: string; run: () => Promise<string> }[] = [];
 
     const getRunnerForModel = (item: any) => {
-      if (item.provider_type === 'huggingface') {
-        return () => callHuggingFace(prompt, item.model_id, item.custom_api_key, item.base_url);
-      } else if (item.provider_type === 'groq') {
-        return () => callCustomOpenAI(prompt, item.model_id, item.base_url || 'https://api.groq.com/openai/v1', item.custom_api_key || process.env.GROQ_API_KEY);
-      } else if (item.provider_type === 'together') {
-        return () => callCustomOpenAI(prompt, item.model_id, item.base_url || 'https://api.together.xyz/v1', item.custom_api_key || process.env.TOGETHER_API_KEY);
-      } else if (item.provider_type === 'custom_openai' || (item.base_url && item.base_url.trim().length > 0)) {
-        return () => callCustomOpenAI(prompt, item.model_id, item.base_url, item.custom_api_key);
-      } else if (item.provider_type === 'gemini' || item.id === 'gemini' || item.model_id.includes('gemini')) {
-        return () => callDirectGemini(prompt, item.model_id, item.custom_api_key);
+      const provider = providersList.find(p => p.id === (item.provider_id || item.provider_type));
+      const providerType = provider?.type || item.provider_type;
+      const baseUrl = provider?.base_url || item.base_url;
+      const apiKey = provider?.api_key || item.custom_api_key;
+
+      if (providerType === 'huggingface') {
+        return () => callHuggingFace(prompt, item.model_id, apiKey, baseUrl);
+      } else if (providerType === 'groq') {
+        return () => callCustomOpenAI(prompt, item.model_id, baseUrl || 'https://api.groq.com/openai/v1', apiKey || process.env.GROQ_API_KEY);
+      } else if (providerType === 'together') {
+        return () => callCustomOpenAI(prompt, item.model_id, baseUrl || 'https://api.together.xyz/v1', apiKey || process.env.TOGETHER_API_KEY);
+      } else if (providerType === 'custom_openai' || (baseUrl && baseUrl.trim().length > 0)) {
+        return () => callCustomOpenAI(prompt, item.model_id, baseUrl, apiKey);
+      } else if (providerType === 'gemini' || item.id === 'gemini' || item.model_id.includes('gemini')) {
+        return () => callDirectGemini(prompt, item.model_id, apiKey);
       } else {
         return () => callOpenRouter(prompt, item.model_id);
       }

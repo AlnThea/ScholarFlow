@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useParams } from 'next/navigation';
 import { improveWriting, type ImproveWritingResponse, synthesizeLiteratureReview, generateAbstract } from '@/lib/api/ai';
-import { fetchAIModels, updateAIModel, createAIModel, deleteAIModel, type AIModel } from '@/lib/api/ai-models';
+import { fetchAIModels, updateAIModel, createAIModel, deleteAIModel, type AIModel, fetchAIProviders, createAIProvider, updateAIProvider, deleteAIProvider, type AIProvider } from '@/lib/api/ai-models';
 import EditorJsEditor, { type EditorJsMethods } from './editorjs-editor';
 import { EditorLayout } from './editor-layout';
 import { searchCitations, type CitationCandidate } from '@/lib/api/citations';
@@ -498,11 +498,18 @@ export function ScholarEditor() {
     }, 3000);
   }, []);
 
+  const [aiProviders, setAiProviders] = useState<AIProvider[]>([]);
+
   useEffect(() => {
     fetchAIModels().then(data => {
       setAiModels(data);
     }).catch(err => {
       console.error("Failed to load AI models:", err);
+    });
+    fetchAIProviders().then(data => {
+      setAiProviders(data);
+    }).catch(err => {
+      console.error("Failed to load AI providers:", err);
     });
   }, []);
 
@@ -670,6 +677,36 @@ export function ScholarEditor() {
     } catch (err) {
       console.warn('AI Model DB delete failed, using local state:', err);
       setAiModels((prev) => prev.filter(m => m.id !== id));
+    }
+  }, []);
+
+  const handleUpdateAIProvider = useCallback(async (id: string, updates: Partial<AIProvider>) => {
+    try {
+      const updated = await updateAIProvider(id, updates);
+      setAiProviders((prev) => prev.map(p => p.id === id ? (updated || { ...p, ...updates }) : p));
+    } catch (err) {
+      console.warn('AI Provider DB update failed, using local state:', err);
+      setAiProviders((prev) => prev.map(p => p.id === id ? { ...p, ...updates, updated_at: new Date().toISOString() } : p));
+    }
+  }, []);
+
+  const handleCreateAIProvider = useCallback(async (provider: Omit<AIProvider, 'updated_at'>) => {
+    try {
+      const created = await createAIProvider(provider);
+      setAiProviders((prev) => [...prev, created || { ...provider, updated_at: new Date().toISOString() }]);
+    } catch (err) {
+      console.warn('AI Provider DB create failed, using local state:', err);
+      setAiProviders((prev) => [...prev, { ...provider, updated_at: new Date().toISOString() }]);
+    }
+  }, []);
+
+  const handleDeleteAIProvider = useCallback(async (id: string) => {
+    try {
+      await deleteAIProvider(id);
+      setAiProviders((prev) => prev.filter(p => p.id !== id));
+    } catch (err) {
+      console.warn('AI Provider DB delete failed, using local state:', err);
+      setAiProviders((prev) => prev.filter(p => p.id !== id));
     }
   }, []);
 
@@ -1789,6 +1826,10 @@ export function ScholarEditor() {
         onUpdateAIModel={handleUpdateAIModel}
         onCreateAIModel={handleCreateAIModel}
         onDeleteAIModel={handleDeleteAIModel}
+        aiProviders={aiProviders}
+        onUpdateAIProvider={handleUpdateAIProvider}
+        onCreateAIProvider={handleCreateAIProvider}
+        onDeleteAIProvider={handleDeleteAIProvider}
         onParafrasePlagiat={handleParafrasePlagiat}
         isSynthesizing={isSynthesizing}
         synthesizedText={synthesizedText}

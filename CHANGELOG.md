@@ -2,6 +2,18 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## 🏛️ [v0.7.0] - 2026-08-11
+
+### 🏢 2-Tier AI Provider & Model Management Architecture
+- **Provider & Model Decoupling**:
+  - Implemented 2-tier Provider management in `lib/api/ai-models.ts` (`AIProvider` & `AIModel`), allowing Admins to register AI Providers (Hugging Face, Groq, Together AI, Custom Proxy) with API Keys & Base URLs **once**.
+- **Model Provider Linking**:
+  - When adding new AI Models, Admins select the registered Provider from a dropdown and enter only the **Model ID** (e.g. `meta-llama/Llama-3.3-70B-Instruct`). Models automatically inherit API credentials from their parent Provider.
+- **Provider Modal & Persistence**:
+  - Added Provider Management Portal (`isProviderModalOpen`) and dual-persistence in Supabase `ai_providers` table & LocalStorage (`scholarflow.ai_providers.v1`).
+
+---
+
 ## 🔑 [v0.6.2] - 2026-08-11
 
 ### ⚡ Dynamic In-App API Key Configuration for Multi-Model Providers

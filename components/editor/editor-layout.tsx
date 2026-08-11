@@ -86,7 +86,7 @@ import { exportToWordFile, exportToPdfFile } from '@/lib/editor/citation-export-
 import { useAuth } from '@/components/auth/auth-provider';
 import { fetchPricingPlans, updatePricingPlan, createPricingPlan, deletePricingPlan, type PricingPlan } from '@/lib/api/pricing';
 import { fetchPaymentGateways, updatePaymentGatewayStatus, type PaymentGateway } from '@/lib/api/payment-gateways';
-import { type AIModel, createAIModel, deleteAIModel } from '@/lib/api/ai-models';
+import { type AIModel, type AIProvider, createAIModel, deleteAIModel, DEFAULT_PROVIDERS, createAIProvider, updateAIProvider, deleteAIProvider } from '@/lib/api/ai-models';
 import { createNotification, type DocumentNotification } from '@/lib/api/comments';
 import { type UserPresence } from '@/lib/api/presence';
 
@@ -171,6 +171,10 @@ type EditorLayoutProps = {
   onUpdateAIModel: (id: string, updates: Partial<AIModel>) => Promise<void>;
   onCreateAIModel: (model: Omit<AIModel, 'updated_at'>) => Promise<void>;
   onDeleteAIModel: (id: string) => Promise<void>;
+  aiProviders?: AIProvider[];
+  onUpdateAIProvider?: (id: string, updates: Partial<AIProvider>) => Promise<void>;
+  onCreateAIProvider?: (provider: Omit<AIProvider, 'updated_at'>) => Promise<void>;
+  onDeleteAIProvider?: (id: string) => Promise<void>;
   onParafrasePlagiat?: (sentence: string) => void;
   isSynthesizing: boolean;
   synthesizedText: string | null;
@@ -308,6 +312,10 @@ export function EditorLayout({
   onUpdateAIModel,
   onCreateAIModel,
   onDeleteAIModel,
+  aiProviders = DEFAULT_PROVIDERS,
+  onUpdateAIProvider,
+  onCreateAIProvider,
+  onDeleteAIProvider,
   onParafrasePlagiat,
   isSynthesizing,
   synthesizedText,
@@ -678,11 +686,22 @@ export function EditorLayout({
     id: '',
     name: '',
     model_id: '',
+    provider_id: 'openrouter',
     is_enabled: true,
     is_premium: false,
     provider_type: 'openrouter',
     base_url: '',
     custom_api_key: ''
+  });
+
+  const [isProviderModalOpen, setIsProviderModalOpen] = useState(false);
+  const [selectedProviderForModal, setSelectedProviderForModal] = useState<AIProvider | null>(null);
+  const [modalProviderState, setModalProviderState] = useState<Omit<AIProvider, 'updated_at'>>({
+    id: '',
+    name: '',
+    type: 'custom_openai',
+    base_url: '',
+    api_key: ''
   });
 
   const handleOpenEditModelModal = (model: AIModel) => {
@@ -691,6 +710,7 @@ export function EditorLayout({
       id: model.id,
       name: model.name,
       model_id: model.model_id,
+      provider_id: model.provider_id || model.provider_type || 'openrouter',
       is_enabled: model.is_enabled,
       is_premium: model.is_premium,
       provider_type: model.provider_type || (model.id === 'gemini' || model.model_id.includes('gemini') ? 'gemini' : 'openrouter'),
@@ -701,18 +721,86 @@ export function EditorLayout({
   };
 
   const handleOpenCreateModelModal = () => {
+    const firstProv = (aiProviders && aiProviders.length > 0) ? aiProviders[0] : DEFAULT_PROVIDERS[0];
     setSelectedModelForModal(null);
     setModalModelState({
       id: '',
       name: '',
       model_id: '',
+      provider_id: firstProv.id,
       is_enabled: true,
       is_premium: false,
-      provider_type: 'openrouter',
-      base_url: '',
-      custom_api_key: ''
+      provider_type: firstProv.type,
+      base_url: firstProv.base_url || '',
+      custom_api_key: firstProv.api_key || ''
     });
     setIsModelModalOpen(true);
+  };
+
+  const handleOpenCreateProviderModal = () => {
+    setSelectedProviderForModal(null);
+    setModalProviderState({
+      id: '',
+      name: '',
+      type: 'custom_openai',
+      base_url: '',
+      api_key: ''
+    });
+    setIsProviderModalOpen(true);
+  };
+
+  const handleOpenEditProviderModal = (provider: AIProvider) => {
+    setSelectedProviderForModal(provider);
+    setModalProviderState({
+      id: provider.id,
+      name: provider.name,
+      type: provider.type,
+      base_url: provider.base_url || '',
+      api_key: provider.api_key || '',
+      is_built_in: provider.is_built_in
+    });
+    setIsProviderModalOpen(true);
+  };
+
+  const handleSaveModalProvider = async () => {
+    if (!modalProviderState.id.trim() || !modalProviderState.name.trim()) {
+      showAlertModal('Input Tidak Lengkap', 'Mohon isi ID Provider dan Nama Provider.', 'warning');
+      return;
+    }
+
+    try {
+      if (selectedProviderForModal) {
+        await onUpdateAIProvider?.(modalProviderState.id, {
+          name: modalProviderState.name,
+          type: modalProviderState.type,
+          base_url: modalProviderState.base_url,
+          api_key: modalProviderState.api_key
+        });
+        showAlertModal('Berhasil', `Provider ${modalProviderState.name} berhasil diperbarui.`, 'success');
+      } else {
+        await onCreateAIProvider?.(modalProviderState);
+        showAlertModal('Berhasil', `Provider baru ${modalProviderState.name} berhasil ditambahkan.`, 'success');
+      }
+      setIsProviderModalOpen(false);
+    } catch (err: any) {
+      showAlertModal('Gagal Menyimpan Provider', err.message || 'Terjadi kesalahan.', 'error');
+    }
+  };
+
+  const handleDeleteProvider = (id: string) => {
+    showConfirmModal(
+      'Hapus Provider AI',
+      'Apakah Anda yakin ingin menghapus Provider AI ini? Model AI yang terhubung ke provider ini mungkin akan terpengaruh.',
+      async () => {
+        try {
+          await onDeleteAIProvider?.(id);
+          showAlertModal('Berhasil', 'Provider AI berhasil dihapus.', 'success');
+        } catch (err: any) {
+          showAlertModal('Gagal Menghapus', err.message || 'Terjadi kesalahan.', 'error');
+        }
+      },
+      'danger'
+    );
   };
 
   const [testingModelId, setTestingModelId] = useState<string | null>(null);
@@ -4369,22 +4457,39 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
             </div>
 
             <div className="flex flex-col gap-4 text-xs">
-              {/* Provider API Type */}
+              {/* Provider Selection */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                  {isEn ? 'API Provider Type' : 'Tipe Provider API'}
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    {isEn ? 'AI Provider' : 'Pilih Provider AI'}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenCreateProviderModal()}
+                    className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer"
+                  >
+                    + {isEn ? 'Add New Provider' : 'Tambah Provider AI'}
+                  </button>
+                </div>
                 <select
-                  value={modalModelState.provider_type || 'openrouter'}
-                  onChange={(e) => setModalModelState(prev => ({ ...prev, provider_type: e.target.value as any }))}
+                  value={modalModelState.provider_id || modalModelState.provider_type || 'openrouter'}
+                  onChange={(e) => {
+                    const selectedProv = (aiProviders || DEFAULT_PROVIDERS).find(p => p.id === e.target.value);
+                    setModalModelState(prev => ({
+                      ...prev,
+                      provider_id: e.target.value,
+                      provider_type: selectedProv?.type || (e.target.value as any),
+                      base_url: selectedProv?.base_url || prev.base_url,
+                      custom_api_key: selectedProv?.api_key || prev.custom_api_key
+                    }));
+                  }}
                   className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-semibold outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-white"
                 >
-                  <option value="gemini">{isEn ? 'Google Gemini Direct API' : 'Google Gemini Direct API'}</option>
-                  <option value="openrouter">{isEn ? 'OpenRouter API (Standard Catalog)' : 'OpenRouter API (Katalog Standar)'}</option>
-                  <option value="huggingface">{isEn ? 'Hugging Face Inference & Router API' : 'Hugging Face Inference & Router API'}</option>
-                  <option value="groq">{isEn ? 'Groq Cloud API (Llama 3, DeepSeek, Gemma)' : 'Groq Cloud API (Llama 3, DeepSeek, Gemma)'}</option>
-                  <option value="together">{isEn ? 'Together AI API (Open-Source Models)' : 'Together AI API (Model Open-Source)'}</option>
-                  <option value="custom_openai">{isEn ? 'Custom OpenAI-Compatible API (Key Seller / Proxy / Private Endpoint)' : 'Custom OpenAI-Compatible API (Penjual Key / Proxy / Private Endpoint)'}</option>
+                  {(aiProviders || DEFAULT_PROVIDERS).map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.type.toUpperCase()})
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -4551,6 +4656,127 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                   <span>{isEn ? 'Save Model' : 'Simpan Data'}</span>
                 </button>
               </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+      {mounted && isProviderModalOpen && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white border border-slate-200/90 rounded-xl p-6 shadow-2xl w-full max-w-md flex flex-col gap-4 animate-scale-in text-slate-800 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex flex-col gap-0.5">
+                <h3 className="text-sm font-bold text-slate-900">
+                  {selectedProviderForModal
+                    ? (isEn ? 'Edit AI Provider' : 'Edit Provider AI')
+                    : (isEn ? 'Add New AI Provider' : 'Tambah Provider AI Baru')}
+                </h3>
+                <p className="text-xs text-slate-500 font-normal">
+                  {isEn ? 'Configure API Key and Base URL once for all models under this provider.' : 'Konfigurasi API Key & Base URL sekali saja untuk semua model.'}
+                </p>
+              </div>
+              <button
+                onClick={() => setIsProviderModalOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition cursor-pointer"
+              >
+                <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-4 text-xs">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  {isEn ? 'Provider ID (Unique Key)' : 'ID Provider (Kunci Unik)'}
+                </label>
+                <input
+                  type="text"
+                  disabled={!!selectedProviderForModal}
+                  placeholder="Contoh: huggingface-prod, groq-main, my-seller-proxy"
+                  value={modalProviderState.id}
+                  onChange={(e) => setModalProviderState(prev => ({ ...prev, id: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '') }))}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none font-bold bg-slate-50/50 disabled:bg-slate-100 disabled:text-slate-400"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  {isEn ? 'Provider Display Name' : 'Nama Provider'}
+                </label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Hugging Face Production Hub, Groq LPU Cloud"
+                  value={modalProviderState.name}
+                  onChange={(e) => setModalProviderState(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-bold outline-none bg-white"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  {isEn ? 'Provider API Engine Type' : 'Tipe Engine Provider'}
+                </label>
+                <select
+                  value={modalProviderState.type}
+                  onChange={(e) => setModalProviderState(prev => ({ ...prev, type: e.target.value as any }))}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-semibold outline-none bg-white"
+                >
+                  <option value="huggingface">Hugging Face Inference & Router API</option>
+                  <option value="groq">Groq Cloud API</option>
+                  <option value="together">Together AI API</option>
+                  <option value="custom_openai">Custom OpenAI-Compatible API</option>
+                  <option value="openrouter">OpenRouter API</option>
+                  <option value="gemini">Google Gemini Direct API</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider">
+                  {isEn ? 'API Base URL (Optional)' : 'API Base URL (Opsional)'}
+                </label>
+                <input
+                  type="text"
+                  placeholder="Default: https://router.huggingface.co/v1 atau https://api.groq.com/openai/v1"
+                  value={modalProviderState.base_url || ''}
+                  onChange={(e) => setModalProviderState(prev => ({ ...prev, base_url: e.target.value }))}
+                  className="w-full border border-indigo-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono outline-none bg-white"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider">
+                  {isEn ? 'API Key (Input Once Here!)' : 'API Key (Input Sekali di Sini!)'}
+                </label>
+                <input
+                  type="password"
+                  placeholder="hf_xxxx / gsk_xxxx / tgp_xxxx / sk-xxxx..."
+                  value={modalProviderState.api_key || ''}
+                  onChange={(e) => setModalProviderState(prev => ({ ...prev, api_key: e.target.value }))}
+                  className="w-full border border-indigo-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono outline-none bg-white"
+                />
+                <span className="text-[9px] text-slate-400">
+                  {isEn ? 'All models linked to this provider will automatically use this API key.' : 'Semua model yang terhubung ke provider ini akan otomatis memakai API key ini.'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-4 mt-2">
+              <button
+                type="button"
+                onClick={() => setIsProviderModalOpen(false)}
+                className="inline-flex items-center justify-center px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold rounded-xl transition cursor-pointer shrink-0 whitespace-nowrap"
+              >
+                <span>{isEn ? 'Cancel' : 'Batal'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveModalProvider}
+                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md hover:shadow-indigo-500/20 transition duration-200 cursor-pointer shrink-0 whitespace-nowrap"
+              >
+                <IconDeviceFloppy className="h-3.5 w-3.5 shrink-0" />
+                <span>{isEn ? 'Save Provider' : 'Simpan Provider'}</span>
+              </button>
             </div>
           </div>
         </div>,

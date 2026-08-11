@@ -1,10 +1,20 @@
-// lib/api/ai-models.ts
 import { supabase } from '../supabase';
+
+export interface AIProvider {
+  id: string;
+  name: string;
+  type: 'gemini' | 'openrouter' | 'huggingface' | 'groq' | 'together' | 'custom_openai';
+  base_url?: string;
+  api_key?: string;
+  is_built_in?: boolean;
+  updated_at: string;
+}
 
 export interface AIModel {
   id: string;
   name: string;
   model_id: string;
+  provider_id?: string;
   is_enabled: boolean;
   is_premium: boolean;
   provider_type?: 'gemini' | 'openrouter' | 'huggingface' | 'groq' | 'together' | 'custom_openai';
@@ -14,13 +24,125 @@ export interface AIModel {
 }
 
 const LOCAL_STORAGE_KEY = 'scholarflow.ai_models.v1';
+const PROVIDER_LOCAL_STORAGE_KEY = 'scholarflow.ai_providers.v1';
+
+export const DEFAULT_PROVIDERS: AIProvider[] = [
+  { id: 'gemini', name: 'Google Gemini Direct', type: 'gemini', is_built_in: true, updated_at: new Date().toISOString() },
+  { id: 'openrouter', name: 'OpenRouter API', type: 'openrouter', is_built_in: true, updated_at: new Date().toISOString() },
+  { id: 'huggingface', name: 'Hugging Face Hub & Router', type: 'huggingface', base_url: 'https://router.huggingface.co/v1', is_built_in: true, updated_at: new Date().toISOString() },
+  { id: 'groq', name: 'Groq LPU Cloud', type: 'groq', base_url: 'https://api.groq.com/openai/v1', is_built_in: true, updated_at: new Date().toISOString() },
+  { id: 'together', name: 'Together AI', type: 'together', base_url: 'https://api.together.xyz/v1', is_built_in: true, updated_at: new Date().toISOString() },
+];
 
 const DEFAULT_MODELS: AIModel[] = [
-  { id: 'gemini', name: 'Gemini Flash (Direct)', model_id: 'gemini-1.5-flash', is_enabled: true, is_premium: false, provider_type: 'gemini', updated_at: new Date().toISOString() },
-  { id: 'llama3', name: 'Llama 3 (Free OR)', model_id: 'meta-llama/llama-3-8b-instruct:free', is_enabled: true, is_premium: false, provider_type: 'openrouter', updated_at: new Date().toISOString() },
-  { id: 'gemma2', name: 'Gemma 2 (Free OR)', model_id: 'google/gemma-2-9b-it:free', is_enabled: true, is_premium: false, provider_type: 'openrouter', updated_at: new Date().toISOString() },
-  { id: 'claude', name: 'Claude 3.5 (Pro OR)', model_id: 'anthropic/claude-3.5-sonnet', is_enabled: true, is_premium: true, provider_type: 'openrouter', updated_at: new Date().toISOString() }
+  { id: 'gemini', name: 'Gemini Flash (Direct)', model_id: 'gemini-1.5-flash', provider_id: 'gemini', is_enabled: true, is_premium: false, provider_type: 'gemini', updated_at: new Date().toISOString() },
+  { id: 'llama3', name: 'Llama 3 (Free OR)', model_id: 'meta-llama/llama-3-8b-instruct:free', provider_id: 'openrouter', is_enabled: true, is_premium: false, provider_type: 'openrouter', updated_at: new Date().toISOString() },
+  { id: 'gemma2', name: 'Gemma 2 (Free OR)', model_id: 'google/gemma-2-9b-it:free', provider_id: 'openrouter', is_enabled: true, is_premium: false, provider_type: 'openrouter', updated_at: new Date().toISOString() },
+  { id: 'claude', name: 'Claude 3.5 (Pro OR)', model_id: 'anthropic/claude-3.5-sonnet', provider_id: 'openrouter', is_enabled: true, is_premium: true, provider_type: 'openrouter', updated_at: new Date().toISOString() }
 ];
+
+function getLocalStoredProviders(): AIProvider[] {
+  if (typeof window === 'undefined') return DEFAULT_PROVIDERS;
+  try {
+    const raw = localStorage.getItem(PROVIDER_LOCAL_STORAGE_KEY);
+    if (!raw) return DEFAULT_PROVIDERS;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed;
+    }
+  } catch (e) {
+    console.error('Failed to parse local stored AI providers:', e);
+  }
+  return DEFAULT_PROVIDERS;
+}
+
+function saveLocalStoredProviders(providers: AIProvider[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(PROVIDER_LOCAL_STORAGE_KEY, JSON.stringify(providers));
+  } catch (e) {
+    console.error('Failed to save AI providers to localStorage:', e);
+  }
+}
+
+/**
+ * Fetch AI Providers list
+ */
+export async function fetchAIProviders(): Promise<AIProvider[]> {
+  try {
+    const { data, error } = await supabase
+      .from('ai_providers')
+      .select('*')
+      .order('id', { ascending: true });
+
+    if (!error && data && data.length > 0) {
+      saveLocalStoredProviders(data as AIProvider[]);
+      return data as AIProvider[];
+    }
+  } catch (e) {
+    console.warn('Supabase fetch AI providers fallback to local storage:', e);
+  }
+  return getLocalStoredProviders();
+}
+
+/**
+ * Create AI Provider
+ */
+export async function createAIProvider(provider: Omit<AIProvider, 'updated_at'>): Promise<AIProvider> {
+  const now = new Date().toISOString();
+  const newProvider: AIProvider = { ...provider, updated_at: now };
+  try {
+    await supabase.from('ai_providers').insert(newProvider);
+  } catch (e) {
+    console.warn('Supabase create AI provider fallback to local storage:', e);
+  }
+  const current = getLocalStoredProviders();
+  const updated = [...current.filter(p => p.id !== newProvider.id), newProvider];
+  saveLocalStoredProviders(updated);
+  return newProvider;
+}
+
+/**
+ * Update AI Provider
+ */
+export async function updateAIProvider(id: string, updates: Partial<Omit<AIProvider, 'id' | 'updated_at'>>): Promise<AIProvider> {
+  const now = new Date().toISOString();
+  try {
+    await supabase.from('ai_providers').update({ ...updates, updated_at: now }).eq('id', id);
+  } catch (e) {
+    console.warn('Supabase update AI provider fallback to local storage:', e);
+  }
+  const current = getLocalStoredProviders();
+  const target = current.find(p => p.id === id);
+  const updatedProvider: AIProvider = {
+    id,
+    name: updates.name ?? target?.name ?? '',
+    type: updates.type ?? target?.type ?? 'custom_openai',
+    base_url: updates.base_url ?? target?.base_url,
+    api_key: updates.api_key ?? target?.api_key,
+    is_built_in: target?.is_built_in ?? false,
+    updated_at: now,
+    ...target,
+    ...updates,
+  };
+  const updated = current.map(p => p.id === id ? updatedProvider : p);
+  saveLocalStoredProviders(updated);
+  return updatedProvider;
+}
+
+/**
+ * Delete AI Provider
+ */
+export async function deleteAIProvider(id: string): Promise<boolean> {
+  try {
+    await supabase.from('ai_providers').delete().eq('id', id);
+  } catch (e) {
+    console.warn('Supabase delete AI provider fallback to local storage:', e);
+  }
+  const current = getLocalStoredProviders();
+  saveLocalStoredProviders(current.filter(p => p.id !== id));
+  return true;
+}
 
 function getLocalStoredModels(): AIModel[] {
   if (typeof window === 'undefined') return DEFAULT_MODELS;
