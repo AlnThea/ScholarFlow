@@ -4,6 +4,17 @@ All notable changes, architectural milestones, and UI improvements to the Schola
 
 ---
 
+## 📚 [v0.5.2] - 2026-08-11
+
+### 🎓 Template Localization & Interactive UI Help Center
+- **Template Localization Guide**: Added detailed developer and user guide at [doc/TEMPLATE_LOCALIZATION_GUIDE.md](file:///c:/web/ScholarFlow/doc/TEMPLATE_LOCALIZATION_GUIDE.md) covering template architecture, `TemplateMetadata` interface, bilingual (`en` & `id`) block functions, and step-by-step instructions for adding custom academic manuscript templates.
+- **Interactive Help & Documentation Modal (`HelpModal`)**: Implemented a React portal modal component for interactive documentation directly accessible from the navigation sidebar.
+  - **4 Module Tabs**: Custom Template Localization, AI Academic Co-Pilot & Prompts, Reference Library & PDF/RIS Imports, and Multi-Backend Architecture & Document Exports.
+  - **Bilingual i18n Support**: Seamless switching between English and Indonesian in real-time.
+- **Sidebar Navigation Integration**: Connected `MinimalSidebar` Help item (both expanded and collapsed states) to trigger the `HelpModal` portal in `EditorLayout`.
+
+---
+
 ## 🚀 [v0.5.1] - 2026-08-10
 
 ### 🤖 LLM Gateway & Custom AI Provider Enhancements

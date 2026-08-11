@@ -60,14 +60,13 @@ v0.5.0-architecture: Architecture Sprint EPICs 1, 2, 3, 4, 5 completed (Database
 42. [Completed] Implement Page Visibility API (`window.document.hidden`) to pause background polling when tabs are inactive.
 43. [Completed] Redesign Admin AI Models Panel (`/admin/models`) into 2 grouped sections (Free Tier vs Pro Writer) with professional rounded-xl enterprise styling, stats bar, and 1-click status toggles.
 44. [Completed] Implement Custom OpenAI-Compatible Provider support (third-party API key sellers, custom proxies, private LLMs) with Base URL & API Key input fields in Admin AI Models Modal.
+45. [Completed] Add detailed user & developer guides for localizing custom templates (doc/TEMPLATE_LOCALIZATION_GUIDE.md) and interactive UI Help & Documentation modal.
 
 ## Current Task
-Implemented Custom OpenAI-Compatible Provider support (third-party API key sellers, custom proxies, private LLMs) with Base URL & API Key input fields in Admin AI Models Modal.
-
-
+Completed template localization user & developer guide (doc/TEMPLATE_LOCALIZATION_GUIDE.md) and interactive UI Help & Documentation modal component (v0.5.2).
 
 ## Next Tasks
-- Add detailed user guides for localizing custom templates.
+- Complete remaining UI pages & user-facing feature modules.
 
 ## Do Not Work On Yet
 - SPSS

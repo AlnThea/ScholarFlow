@@ -79,6 +79,7 @@ import dynamic from 'next/dynamic';
 const PricingModal = dynamic(() => import('./pricing-modal').then((mod) => mod.PricingModal), { ssr: false });
 const ShareDocumentModal = dynamic(() => import('./share-document-modal').then((mod) => mod.ShareDocumentModal), { ssr: false });
 const BackendSettingsModal = dynamic(() => import('./backend-settings-modal').then((mod) => mod.BackendSettingsModal), { ssr: false });
+const HelpModal = dynamic(() => import('./help-modal').then((mod) => mod.HelpModal), { ssr: false });
 import { exportToWordFile, exportToPdfFile } from '@/lib/editor/citation-export-word';
 
 
@@ -350,6 +351,7 @@ export function EditorLayout({
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isBackendModalOpen, setIsBackendModalOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const { backendType } = useDataService();
   const [isMathHelperOpen, setIsMathHelperOpen] = useState(false);
 
@@ -1243,6 +1245,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
         isDarkMode={isDarkMode}
         onToggleDarkMode={toggleDarkMode}
         onOpenBackendSettings={() => setIsBackendModalOpen(true)}
+        onOpenHelp={() => setIsHelpOpen(true)}
       />
 
 
@@ -4308,6 +4311,12 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
         isOpen={isBackendModalOpen}
         onClose={() => setIsBackendModalOpen(false)}
         onToast={(msg) => setMathToast(msg)}
+      />
+
+      {/* Interactive Help & Documentation Modal */}
+      <HelpModal
+        isOpen={isHelpOpen}
+        onClose={() => setIsHelpOpen(false)}
       />
     </div>
   );

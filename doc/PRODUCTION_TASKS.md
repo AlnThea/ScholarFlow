@@ -27,6 +27,7 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
 - [x] **2.1 Bilingual Context Provider** - Implementasi `LanguageProvider` dan hook `useLanguage` untuk mendukung Bahasa Indonesia dan Bahasa Inggris secara dinamis.
 - [x] **2.2 UI Localization** - Lokalialisasi penuh komponen editor layout, sidebar, modal konfirmasi, setup wizard, checkout Stripe/Midtrans, dan LaTeX Math Helper.
 - [x] **2.3 AI Backend Localization** - Penyesuaian sintesis, penyuntingan, dan pembuatan abstrak AI agar merespons sesuai bahasa target dokumen.
+- [x] **2.4 Template Localization Guide** - Panduan teknis pengesetkan templat akademik kustom & i18n di `doc/TEMPLATE_LOCALIZATION_GUIDE.md`.
 
 ### 3. UI/UX & Navigation Redesign
 - [x] **3.1 Settings & Navigation Menu Redesign** - Redesain sidebar pengaturan admin, menu utama, dan bantuan menjadi tampilan menu-list terkelompok dengan sub-judul deskriptif.
@@ -37,6 +38,7 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
 - [x] **4.1 Inline Math Equation Modal** - Penggantian prompt bawaan browser saat mengedit rumus inline dengan React Math Modal custom.
 - [x] **4.2 Hyperlink Portal Modal** - Modal custom untuk menyisipkan, mengedit URL, dan menghapus tautan (*unlink*) beserta deteksi status aktif tombol toolbar.
 - [x] **4.3 Color Picker Popover** - Popover pemilih warna highlight berbentuk blok persegi dengan dukungan unhighlighting.
+- [x] **4.4 Interactive Help & Documentation Modal** - Jendela bantuan interaktif (`HelpModal`) 4 modul (Templat, AI Co-Pilot, Sitasi PDF/RIS, Multi-Backend) yang terhubung ke sidebar navigasi.
 
 ### 5. Collaboration & History Management
 - [x] **5.1 Public Document Sharing (`/shared/[id]`)** - Moda Read-Only dan Co-Editor untuk kolaborasi dokumen publik.

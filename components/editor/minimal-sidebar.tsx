@@ -50,7 +50,8 @@ export function MinimalSidebar({
   className,
   isDarkMode = false,
   onToggleDarkMode,
-  onOpenBackendSettings
+  onOpenBackendSettings,
+  onOpenHelp
 }: { 
   isExpanded: boolean; 
   onToggle: () => void;
@@ -65,7 +66,7 @@ export function MinimalSidebar({
   isDarkMode?: boolean;
   onToggleDarkMode?: () => void;
   onOpenBackendSettings?: () => void;
-
+  onOpenHelp?: () => void;
 }) {
   const { language, setLanguage, t } = useLanguage();
   const { user, profile } = useAuth();
@@ -901,7 +902,11 @@ export function MinimalSidebar({
                   </div>
                   <div className="flex flex-col gap-1 px-1">
                     {/* Help */}
-                    <button className="flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left text-slate-600 bg-transparent hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 group">
+                    <button 
+                      type="button"
+                      onClick={onOpenHelp}
+                      className="flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left text-slate-600 bg-transparent hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 group"
+                    >
                       <IconHelpCircle className="h-[18px] w-[18px] mt-0.5 text-slate-400 flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
                       <div className="flex flex-col min-w-0">
                         <span className="text-xs font-bold">
@@ -983,6 +988,8 @@ export function MinimalSidebar({
 
                 {/* Help Button (collapsed) */}
                 <button
+                  type="button"
+                  onClick={onOpenHelp}
                   className="flex items-center justify-center w-full aspect-square rounded-lg bg-transparent text-slate-400 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 relative group"
                   title="Help"
                   aria-label="Help"
