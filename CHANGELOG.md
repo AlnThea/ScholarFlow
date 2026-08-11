@@ -2,6 +2,16 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## 🛠️ [v0.7.5] - 2026-08-11
+
+### 🔌 AI Provider Management Table & Database Column Alignment Fix
+- **Registered AI Providers Table Section**:
+  - Added dedicated **Section 0: Provider AI Terdaftar & Gateway Kredensial** table on `/admin/models` page displaying Provider ID, Provider Name, Engine Type, API Base URL, API Key Status, Edit Provider action, and **Delete Provider** action.
+- **Database Payload Alignment**:
+  - Fixed insert/update payload matching in `lib/api/ai-models.ts` for Supabase `public.ai_providers` (`id`, `name`, `type`, `base_url`, `api_key`) and `public.ai_models` (`provider_id`).
+
+---
+
 ## 🎯 [v0.7.3] - 2026-08-11
 
 ### 🔌 Pure Dynamic Provider Registration & Cleaned Default Catalog

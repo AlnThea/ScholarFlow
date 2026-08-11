@@ -90,8 +90,17 @@ export async function fetchAIProviders(): Promise<AIProvider[]> {
 export async function createAIProvider(provider: Omit<AIProvider, 'updated_at'>): Promise<AIProvider> {
   const now = new Date().toISOString();
   const newProvider: AIProvider = { ...provider, updated_at: now };
+
+  const dbPayload: any = {
+    id: newProvider.id,
+    name: newProvider.name,
+    type: newProvider.type,
+    base_url: newProvider.base_url || null,
+    api_key: newProvider.api_key || null,
+  };
+
   try {
-    const { error } = await supabase.from('ai_providers').insert(newProvider);
+    const { error } = await supabase.from('ai_providers').insert(dbPayload);
     if (error) {
       console.warn('Supabase create AI provider DB insert error:', error.message || error);
     }
@@ -109,8 +118,14 @@ export async function createAIProvider(provider: Omit<AIProvider, 'updated_at'>)
  */
 export async function updateAIProvider(id: string, updates: Partial<Omit<AIProvider, 'id' | 'updated_at'>>): Promise<AIProvider> {
   const now = new Date().toISOString();
+  const dbPayload: any = {};
+  if (updates.name !== undefined) dbPayload.name = updates.name;
+  if (updates.type !== undefined) dbPayload.type = updates.type;
+  if (updates.base_url !== undefined) dbPayload.base_url = updates.base_url || null;
+  if (updates.api_key !== undefined) dbPayload.api_key = updates.api_key || null;
+
   try {
-    const { error } = await supabase.from('ai_providers').update({ ...updates, updated_at: now }).eq('id', id);
+    const { error } = await supabase.from('ai_providers').update(dbPayload).eq('id', id);
     if (error) {
       console.warn('Supabase update AI provider DB error:', error.message || error);
     }
@@ -221,8 +236,10 @@ export async function updateAIModel(
       const basePayload: any = { updated_at: new Date().toISOString() };
       if (updates.name !== undefined) basePayload.name = updates.name;
       if (updates.model_id !== undefined) basePayload.model_id = updates.model_id;
+      if (updates.provider_id !== undefined) basePayload.provider_id = updates.provider_id;
       if (updates.is_enabled !== undefined) basePayload.is_enabled = updates.is_enabled;
       if (updates.is_premium !== undefined) basePayload.is_premium = updates.is_premium;
+      if (updates.provider_type !== undefined) basePayload.provider_type = updates.provider_type;
 
       const { data: baseData } = await supabase
         .from('ai_models')
