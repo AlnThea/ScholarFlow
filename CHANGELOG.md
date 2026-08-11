@@ -2,6 +2,17 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## 🤖 [v0.6.1] - 2026-08-11
+
+### 🤗 Hugging Face, Groq Cloud & Together AI Multi-Model Catalog Support
+- **Hugging Face Inference & Router API (`huggingface`)**:
+  - Implemented `callHuggingFace` supporting 1-key multi-model routing across Hugging Face Hub models (e.g. `meta-llama/Llama-3.3-70B-Instruct`, `Qwen/Qwen2.5-Coder-32B-Instruct`, `deepseek-ai/DeepSeek-R1-Distill-Qwen-32B`).
+  - Accepts `HUGGINGFACE_API_KEY`, `HF_TOKEN`, or custom model key.
+- **Groq Cloud & Together AI Native Support (`groq`, `together`)**:
+  - Added dedicated provider choices and badge indicators for Groq Cloud (`https://api.groq.com/openai/v1`) and Together AI (`https://api.together.xyz/v1`).
+
+---
+
 ## 🔄 [v0.6.0] - 2026-08-11
 
 ### 🔑 Gemini Multi-API Key Failover & Rotation Pool

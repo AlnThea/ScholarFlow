@@ -205,6 +205,54 @@ async function callCustomOpenAI(
   return text;
 }
 
+/**
+ * Hugging Face Inference API & Router Call (Supports HuggingFace catalog models)
+ */
+async function callHuggingFace(
+  prompt: string,
+  model: string,
+  customApiKey?: string,
+  baseUrl?: string
+): Promise<string> {
+  const apiKey = customApiKey || process.env.HUGGINGFACE_API_KEY || process.env.HF_TOKEN || process.env.OPENROUTER_API_KEY;
+  if (!apiKey) throw new Error('Hugging Face API Key (HUGGINGFACE_API_KEY or HF_TOKEN) is not configured');
+
+  const rawUrl = (baseUrl && baseUrl.trim().length > 0)
+    ? baseUrl.trim()
+    : 'https://router.huggingface.co/v1';
+
+  let endpoint = rawUrl;
+  if (!rawUrl.endsWith('/chat/completions')) {
+    const cleanUrl = rawUrl.replace(/\/+$/, '');
+    endpoint = cleanUrl.endsWith('/v1') ? `${cleanUrl}/chat/completions` : `${cleanUrl}/v1/chat/completions`;
+  }
+
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 2048,
+      temperature: 0.2,
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text().catch(() => '');
+    throw new Error(`Hugging Face status ${response.status}: ${errText}`);
+  }
+
+  const result = await response.json();
+  const text = result?.choices?.[0]?.message?.content?.trim();
+  if (!text) throw new Error('Hugging Face API returned empty text');
+
+  return text;
+}
+
 export async function POST(request: Request) {
   try {
     // 1. Edge Rate Limiter Guard (15 RPM)
@@ -267,7 +315,13 @@ export async function POST(request: Request) {
     const attempts: { name: string; run: () => Promise<string> }[] = [];
 
     const getRunnerForModel = (item: any) => {
-      if (item.provider_type === 'custom_openai' || (item.base_url && item.base_url.trim().length > 0)) {
+      if (item.provider_type === 'huggingface') {
+        return () => callHuggingFace(prompt, item.model_id, item.custom_api_key, item.base_url);
+      } else if (item.provider_type === 'groq') {
+        return () => callCustomOpenAI(prompt, item.model_id, item.base_url || 'https://api.groq.com/openai/v1', item.custom_api_key || process.env.GROQ_API_KEY);
+      } else if (item.provider_type === 'together') {
+        return () => callCustomOpenAI(prompt, item.model_id, item.base_url || 'https://api.together.xyz/v1', item.custom_api_key || process.env.TOGETHER_API_KEY);
+      } else if (item.provider_type === 'custom_openai' || (item.base_url && item.base_url.trim().length > 0)) {
         return () => callCustomOpenAI(prompt, item.model_id, item.base_url, item.custom_api_key);
       } else if (item.provider_type === 'gemini' || item.id === 'gemini' || item.model_id.includes('gemini')) {
         return () => callDirectGemini(prompt, item.model_id, item.custom_api_key);

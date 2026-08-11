@@ -1851,10 +1851,25 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                                     <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
                                     Google Gemini
                                   </span>
+                                ) : model.provider_type === 'huggingface' ? (
+                                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                    Hugging Face
+                                  </span>
+                                ) : model.provider_type === 'groq' ? (
+                                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/80">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                    Groq Cloud
+                                  </span>
+                                ) : model.provider_type === 'together' ? (
+                                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200/80">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                                    Together AI
+                                  </span>
                                 ) : model.provider_type === 'custom_openai' || (model.base_url && model.base_url.trim().length > 0) ? (
                                   <div className="flex flex-col gap-0.5">
-                                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-300">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
                                       Custom OpenAI
                                     </span>
                                     {model.base_url && (
@@ -2017,10 +2032,25 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                                     <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
                                     Google Gemini
                                   </span>
+                                ) : model.provider_type === 'huggingface' ? (
+                                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                    Hugging Face
+                                  </span>
+                                ) : model.provider_type === 'groq' ? (
+                                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/80">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                    Groq Cloud
+                                  </span>
+                                ) : model.provider_type === 'together' ? (
+                                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200/80">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                                    Together AI
+                                  </span>
                                 ) : model.provider_type === 'custom_openai' || (model.base_url && model.base_url.trim().length > 0) ? (
                                   <div className="flex flex-col gap-0.5">
-                                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-300">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
                                       Custom OpenAI
                                     </span>
                                     {model.base_url && (
@@ -4351,6 +4381,9 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                 >
                   <option value="gemini">{isEn ? 'Google Gemini Direct API' : 'Google Gemini Direct API'}</option>
                   <option value="openrouter">{isEn ? 'OpenRouter API (Standard Catalog)' : 'OpenRouter API (Katalog Standar)'}</option>
+                  <option value="huggingface">{isEn ? 'Hugging Face Inference & Router API' : 'Hugging Face Inference & Router API'}</option>
+                  <option value="groq">{isEn ? 'Groq Cloud API (Llama 3, DeepSeek, Gemma)' : 'Groq Cloud API (Llama 3, DeepSeek, Gemma)'}</option>
+                  <option value="together">{isEn ? 'Together AI API (Open-Source Models)' : 'Together AI API (Model Open-Source)'}</option>
                   <option value="custom_openai">{isEn ? 'Custom OpenAI-Compatible API (Key Seller / Proxy / Private Endpoint)' : 'Custom OpenAI-Compatible API (Penjual Key / Proxy / Private Endpoint)'}</option>
                 </select>
               </div>
