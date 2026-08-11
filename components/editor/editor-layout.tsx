@@ -342,6 +342,7 @@ export function EditorLayout({
   activeSidebarTab
 }: EditorLayoutProps) {
   const { language, setLanguage, t } = useLanguage();
+  const isEn = language === 'en';
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [showRightSidebar, setShowRightSidebar] = useState(false);
   const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
@@ -1697,10 +1698,12 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                       </span>
                     </div>
                     <h1 className="text-xl md:text-2xl font-bold leading-tight text-slate-100">
-                      Kelola Model AI & LLM Gateway
+                      {isEn ? 'Manage AI Models & LLM Gateway' : 'Kelola Model AI & LLM Gateway'}
                     </h1>
                     <p className="text-xs text-slate-300 leading-normal font-normal">
-                      Atur model kecerdasan buatan, konfigurasi API Model ID (Google Gemini & OpenRouter), dan tentukan batasan paket langganan (Free vs Pro Writer).
+                      {isEn
+                        ? 'Configure AI models, API Model IDs (Google Gemini & OpenRouter), and set subscription access limits (Free vs Pro Writer).'
+                        : 'Atur model kecerdasan buatan, konfigurasi API Model ID (Google Gemini & OpenRouter), dan tentukan batasan paket langganan (Free vs Pro Writer).'}
                     </p>
                   </div>
                   <button
@@ -1710,7 +1713,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
-                    Tambah Model Baru
+                    {isEn ? 'Add New Model' : 'Tambah Model Baru'}
                   </button>
                 </div>
 
@@ -1718,7 +1721,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-sm flex items-center justify-between">
                     <div className="flex flex-col">
-                      <span className="text-xs font-medium text-slate-500">Total Model AI</span>
+                      <span className="text-xs font-medium text-slate-500">{isEn ? 'Total AI Models' : 'Total Model AI'}</span>
                       <span className="text-xl font-bold text-slate-900">{aiModels.length}</span>
                     </div>
                     <div className="p-2.5 bg-indigo-50 rounded-lg text-indigo-600 font-bold text-xs">
@@ -1728,13 +1731,13 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
 
                   <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-sm flex items-center justify-between">
                     <div className="flex flex-col">
-                      <span className="text-xs font-medium text-slate-500">Model Free Tier</span>
+                      <span className="text-xs font-medium text-slate-500">{isEn ? 'Free Tier Models' : 'Model Free Tier'}</span>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-xl font-bold text-slate-900">
                           {aiModels.filter(m => !m.is_premium).length}
                         </span>
                         <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60">
-                          {aiModels.filter(m => !m.is_premium && m.is_enabled).length} Aktif
+                          {aiModels.filter(m => !m.is_premium && m.is_enabled).length} {isEn ? 'Active' : 'Aktif'}
                         </span>
                       </div>
                     </div>
@@ -1745,13 +1748,13 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
 
                   <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-sm flex items-center justify-between">
                     <div className="flex flex-col">
-                      <span className="text-xs font-medium text-slate-500">Model Pro Writer</span>
+                      <span className="text-xs font-medium text-slate-500">{isEn ? 'Pro Writer Models' : 'Model Pro Writer'}</span>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-xl font-bold text-slate-900">
                           {aiModels.filter(m => m.is_premium).length}
                         </span>
                         <span className="text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200/60">
-                          {aiModels.filter(m => m.is_premium && m.is_enabled).length} Aktif
+                          {aiModels.filter(m => m.is_premium && m.is_enabled).length} {isEn ? 'Active' : 'Aktif'}
                         </span>
                       </div>
                     </div>
@@ -1770,13 +1773,13 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                       </span>
                       <div className="flex flex-col">
                         <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                          Model AI Free Tier (Gratis)
+                          {isEn ? 'Free Tier AI Models (Free)' : 'Model AI Free Tier (Gratis)'}
                           <span className="text-[11px] font-semibold text-slate-500 bg-slate-200/60 px-2 py-0.5 rounded-full">
-                            {aiModels.filter(m => !m.is_premium).length} Model
+                            {aiModels.filter(m => !m.is_premium).length} {isEn ? 'Models' : 'Model'}
                           </span>
                         </h2>
                         <p className="text-xs text-slate-500 font-normal">
-                          Dapat diakses langsung oleh seluruh pengguna akun dasar (Free Writer).
+                          {isEn ? 'Accessible directly by all basic account users (Free Writer).' : 'Dapat diakses langsung oleh seluruh pengguna akun dasar (Free Writer).'}
                         </p>
                       </div>
                     </div>
@@ -1786,20 +1789,20 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                     <table className="w-full border-collapse text-left">
                       <thead>
                         <tr className="border-b border-slate-200/70 bg-slate-50/70 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                          <th className="px-6 py-3 font-semibold min-w-[140px]">Status & Toggle</th>
-                          <th className="px-6 py-3 font-semibold min-w-[130px]">Gateway Key</th>
-                          <th className="px-6 py-3 font-semibold min-w-[200px]">Nama Tampilan Model</th>
-                          <th className="px-6 py-3 font-semibold min-w-[170px]">Tipe Provider API</th>
-                          <th className="px-6 py-3 font-semibold min-w-[240px]">ID Model API Asli</th>
-                          <th className="px-6 py-3 font-semibold min-w-[130px]">Hak Akses</th>
-                          <th className="px-6 py-3 font-semibold text-center w-[140px]">Aksi</th>
+                          <th className="px-6 py-3 font-semibold min-w-[140px]">{isEn ? 'Status & Toggle' : 'Status & Toggle'}</th>
+                          <th className="px-6 py-3 font-semibold min-w-[130px]">{isEn ? 'Gateway Key' : 'Gateway Key'}</th>
+                          <th className="px-6 py-3 font-semibold min-w-[200px]">{isEn ? 'Model Display Name' : 'Nama Tampilan Model'}</th>
+                          <th className="px-6 py-3 font-semibold min-w-[170px]">{isEn ? 'API Provider Type' : 'Tipe Provider API'}</th>
+                          <th className="px-6 py-3 font-semibold min-w-[240px]">{isEn ? 'Real API Model ID' : 'ID Model API Asli'}</th>
+                          <th className="px-6 py-3 font-semibold min-w-[130px]">{isEn ? 'Access Tier' : 'Hak Akses'}</th>
+                          <th className="px-6 py-3 font-semibold text-center w-[140px]">{isEn ? 'Actions' : 'Aksi'}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-xs">
                         {aiModels.filter(m => !m.is_premium).length === 0 ? (
                           <tr>
                             <td colSpan={7} className="px-6 py-8 text-center text-slate-400 text-xs font-normal">
-                              Belum ada model AI untuk Free Tier. Klik tombol Tambah Model Baru di atas.
+                              {isEn ? 'No Free Tier AI models added yet. Click Add New Model above.' : 'Belum ada model AI untuk Free Tier. Klik tombol Tambah Model Baru di atas.'}
                             </td>
                           </tr>
                         ) : (
@@ -1810,7 +1813,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                                 <button
                                   onClick={() => handleToggleModelStatus(model)}
                                   className="flex items-center gap-2.5 group cursor-pointer text-left focus:outline-none"
-                                  title="Klik untuk mengubah status aktif/non-aktif"
+                                  title={isEn ? 'Click to toggle active status' : 'Klik untuk mengubah status aktif/non-aktif'}
                                 >
                                   <div className={`relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 transition-all duration-200 ease-in-out ${
                                     model.is_enabled
@@ -1826,7 +1829,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                                       ? 'text-emerald-700 bg-emerald-50 border-emerald-200/80'
                                       : 'text-slate-600 bg-slate-100 border-slate-300'
                                   }`}>
-                                    {model.is_enabled ? 'Aktif' : 'Off'}
+                                    {model.is_enabled ? (isEn ? 'Active' : 'Aktif') : 'Off'}
                                   </span>
                                 </button>
                               </td>
@@ -1887,7 +1890,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                                     onClick={() => handleTestModelConnection(model)}
                                     disabled={testingModelId === model.id}
                                     className="p-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-md transition cursor-pointer disabled:opacity-50"
-                                    title="Uji Koneksi API Model"
+                                    title={isEn ? 'Test API Model Connection' : 'Uji Koneksi API Model'}
                                   >
                                     {testingModelId === model.id ? (
                                       <IconLoader className="h-4 w-4 animate-spin" />
@@ -1901,7 +1904,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                                   <button
                                     onClick={() => handleOpenEditModelModal(model)}
                                     className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-md transition cursor-pointer"
-                                    title="Edit Detail & API ID"
+                                    title={isEn ? 'Edit Details & API ID' : 'Edit Detail & API ID'}
                                   >
                                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                       <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
@@ -1911,7 +1914,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                                   <button
                                     onClick={() => handleDeleteModel(model.id)}
                                     className="p-1.5 text-slate-600 hover:text-rose-600 hover:bg-slate-100 rounded-md transition cursor-pointer"
-                                    title="Hapus Model"
+                                    title={isEn ? 'Delete Model' : 'Hapus Model'}
                                   >
                                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                       <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -1936,13 +1939,13 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                       </span>
                       <div className="flex flex-col">
                         <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                          Model AI Pro Writer / Premium (Berbayar)
+                          {isEn ? 'Pro Writer AI Models (Premium)' : 'Model AI Pro Writer / Premium (Berbayar)'}
                           <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-100/70 px-2 py-0.5 rounded-full">
-                            {aiModels.filter(m => m.is_premium).length} Model
+                            {aiModels.filter(m => m.is_premium).length} {isEn ? 'Models' : 'Model'}
                           </span>
                         </h2>
                         <p className="text-xs text-slate-500 font-normal">
-                          Khusus untuk pengguna berlangganan paket Pro Writer.
+                          {isEn ? 'Restricted to Pro Writer subscription plan subscribers.' : 'Khusus untuk pengguna berlangganan paket Pro Writer.'}
                         </p>
                       </div>
                     </div>
@@ -1965,7 +1968,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                         {aiModels.filter(m => m.is_premium).length === 0 ? (
                           <tr>
                             <td colSpan={7} className="px-6 py-8 text-center text-slate-400 text-xs font-normal">
-                              Belum ada model AI untuk Pro Writer. Klik tombol Tambah Model Baru di atas.
+                              {isEn ? 'No Pro Writer AI models added yet. Click Add New Model above.' : 'Belum ada model AI untuk Pro Writer. Klik tombol Tambah Model Baru di atas.'}
                             </td>
                           </tr>
                         ) : (
@@ -1976,7 +1979,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                                 <button
                                   onClick={() => handleToggleModelStatus(model)}
                                   className="flex items-center gap-2.5 group cursor-pointer text-left focus:outline-none"
-                                  title="Klik untuk mengubah status aktif/non-aktif"
+                                  title={isEn ? 'Click to toggle active status' : 'Klik untuk mengubah status aktif/non-aktif'}
                                 >
                                   <div className={`relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 transition-all duration-200 ease-in-out ${
                                     model.is_enabled
@@ -1992,7 +1995,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                                       ? 'text-indigo-700 bg-indigo-50 border-indigo-200/80'
                                       : 'text-slate-600 bg-slate-100 border-slate-300'
                                   }`}>
-                                    {model.is_enabled ? 'Aktif' : 'Off'}
+                                    {model.is_enabled ? (isEn ? 'Active' : 'Aktif') : 'Off'}
                                   </span>
                                 </button>
                               </td>
@@ -2053,7 +2056,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                                     onClick={() => handleTestModelConnection(model)}
                                     disabled={testingModelId === model.id}
                                     className="p-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-md transition cursor-pointer disabled:opacity-50"
-                                    title="Uji Koneksi API Model"
+                                    title={isEn ? 'Test API Model Connection' : 'Uji Koneksi API Model'}
                                   >
                                     {testingModelId === model.id ? (
                                       <IconLoader className="h-4 w-4 animate-spin" />
@@ -2067,7 +2070,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                                   <button
                                     onClick={() => handleOpenEditModelModal(model)}
                                     className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-md transition cursor-pointer"
-                                    title="Edit Detail & API ID"
+                                    title={isEn ? 'Edit Details & API ID' : 'Edit Detail & API ID'}
                                   >
                                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                       <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
@@ -2077,7 +2080,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                                   <button
                                     onClick={() => handleDeleteModel(model.id)}
                                     className="p-1.5 text-slate-600 hover:text-rose-600 hover:bg-slate-100 rounded-md transition cursor-pointer"
-                                    title="Hapus Model"
+                                    title={isEn ? 'Delete Model' : 'Hapus Model'}
                                   >
                                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                       <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -4315,10 +4318,14 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex flex-col gap-0.5">
                 <h3 className="text-sm font-bold text-slate-900">
-                  {selectedModelForModal ? 'Edit Detail Model AI' : 'Tambah Model AI Baru'}
+                  {selectedModelForModal
+                    ? (isEn ? 'Edit AI Model Details' : 'Edit Detail Model AI')
+                    : (isEn ? 'Add New AI Model' : 'Tambah Model AI Baru')}
                 </h3>
                 <p className="text-xs text-slate-500 font-normal">
-                  Atur gateway LLM, provider API, dan hak akses paket.
+                  {isEn
+                    ? 'Configure LLM gateway, API provider, and subscription access.'
+                    : 'Atur gateway LLM, provider API, dan hak akses paket.'}
                 </p>
               </div>
               <button
@@ -4334,25 +4341,29 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
             <div className="flex flex-col gap-4 text-xs">
               {/* Provider API Type */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tipe Provider API</label>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  {isEn ? 'API Provider Type' : 'Tipe Provider API'}
+                </label>
                 <select
                   value={modalModelState.provider_type || 'openrouter'}
                   onChange={(e) => setModalModelState(prev => ({ ...prev, provider_type: e.target.value as any }))}
                   className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-semibold outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-white"
                 >
-                  <option value="gemini">Google Gemini Direct API</option>
-                  <option value="openrouter">OpenRouter API (Standard Catalog)</option>
-                  <option value="custom_openai">Custom OpenAI-Compatible API (Penjual Key / Proxy / Private Endpoint)</option>
+                  <option value="gemini">{isEn ? 'Google Gemini Direct API' : 'Google Gemini Direct API'}</option>
+                  <option value="openrouter">{isEn ? 'OpenRouter API (Standard Catalog)' : 'OpenRouter API (Katalog Standar)'}</option>
+                  <option value="custom_openai">{isEn ? 'Custom OpenAI-Compatible API (Key Seller / Proxy / Private Endpoint)' : 'Custom OpenAI-Compatible API (Penjual Key / Proxy / Private Endpoint)'}</option>
                 </select>
               </div>
 
               {/* ID Gateway / Gateway Key */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Gateway Key (ID Sistem Unik)</label>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  {isEn ? 'Gateway Key (Unique System ID)' : 'Gateway Key (ID Sistem Unik)'}
+                </label>
                 <input
                   type="text"
                   disabled={!!selectedModelForModal}
-                  placeholder="Contoh: gemini-flash, custom-deepseek, seller-gpt4"
+                  placeholder={isEn ? 'Example: gemini-flash, custom-deepseek, seller-gpt4' : 'Contoh: gemini-flash, custom-deepseek, seller-gpt4'}
                   value={modalModelState.id}
                   onChange={(e) => setModalModelState(prev => ({ ...prev, id: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '') }))}
                   className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-slate-50/50 disabled:bg-slate-100 disabled:text-slate-400 font-bold"
@@ -4361,10 +4372,12 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
 
               {/* Nama Tampilan Model */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nama Tampilan Model</label>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  {isEn ? 'Model Display Name' : 'Nama Tampilan Model'}
+                </label>
                 <input
                   type="text"
-                  placeholder="Contoh: DeepSeek R1 (OpenAI Proxy)"
+                  placeholder={isEn ? 'Example: DeepSeek R1 (OpenAI Proxy)' : 'Contoh: DeepSeek R1 (OpenAI Proxy)'}
                   value={modalModelState.name}
                   onChange={(e) => setModalModelState(prev => ({ ...prev, name: e.target.value }))}
                   className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-bold outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-white"
@@ -4373,10 +4386,12 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
 
               {/* ID Model API Asli */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">ID Model API Asli</label>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  {isEn ? 'Real API Model ID' : 'ID Model API Asli'}
+                </label>
                 <input
                   type="text"
-                  placeholder="Contoh: deepseek-reasoner, gpt-4o, atau anthropic/claude-3-5-sonnet"
+                  placeholder={isEn ? 'Example: deepseek-reasoner, gpt-4o, or anthropic/claude-3-5-sonnet' : 'Contoh: deepseek-reasoner, gpt-4o, atau anthropic/claude-3-5-sonnet'}
                   value={modalModelState.model_id}
                   onChange={(e) => setModalModelState(prev => ({ ...prev, model_id: e.target.value }))}
                   className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-white font-mono"
@@ -4388,27 +4403,27 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                 <div className="flex flex-col gap-3 p-3.5 bg-indigo-50/40 border border-indigo-100 rounded-lg">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider">
-                      Custom API Base URL (URL Penjual Key / Proxy)
+                      {isEn ? 'Custom API Base URL (Key Seller / Proxy URL)' : 'Custom API Base URL (URL Penjual Key / Proxy)'}
                     </label>
                     <input
                       type="text"
-                      placeholder="Contoh: https://api.penjual-key.com/v1 atau http://my-proxy:8080/v1"
+                      placeholder={isEn ? 'Example: https://api.seller-key.com/v1 or http://my-proxy:8080/v1' : 'Contoh: https://api.penjual-key.com/v1 atau http://my-proxy:8080/v1'}
                       value={modalModelState.base_url || ''}
                       onChange={(e) => setModalModelState(prev => ({ ...prev, base_url: e.target.value }))}
                       className="w-full border border-indigo-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-white"
                     />
                     <span className="text-[10px] text-slate-500">
-                      Sistem akan secara otomatis memanggil endpoint OpenAI-compatible <code className="font-mono bg-indigo-100/60 px-1 py-0.5 rounded text-indigo-800">/chat/completions</code>.
+                      {isEn ? 'System will automatically invoke OpenAI-compatible endpoint' : 'Sistem akan secara otomatis memanggil endpoint OpenAI-compatible'} <code className="font-mono bg-indigo-100/60 px-1 py-0.5 rounded text-indigo-800">/chat/completions</code>.
                     </span>
                   </div>
 
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider">
-                      Custom API Key (Opsional)
+                      {isEn ? 'Custom API Key (Optional)' : 'Custom API Key (Opsional)'}
                     </label>
                     <input
                       type="password"
-                      placeholder="sk-xxxx... (Biarkan kosong jika ingin menggunakan .env)"
+                      placeholder={isEn ? 'sk-xxxx... (Leave empty to use .env key)' : 'sk-xxxx... (Biarkan kosong jika ingin menggunakan .env)'}
                       value={modalModelState.custom_api_key || ''}
                       onChange={(e) => setModalModelState(prev => ({ ...prev, custom_api_key: e.target.value }))}
                       className="w-full border border-indigo-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-white"
@@ -4421,8 +4436,10 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
               <div className="flex items-center justify-between p-3 border border-slate-200/80 rounded-lg bg-slate-50/50">
 
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-xs font-bold text-slate-700">Status Keaktifan</span>
-                  <span className="text-[9px] text-slate-400 leading-tight">Mengizinkan pengguna menggunakan model AI ini jika diaktifkan.</span>
+                  <span className="text-xs font-bold text-slate-700">{isEn ? 'Active Status' : 'Status Keaktifan'}</span>
+                  <span className="text-[9px] text-slate-400 leading-tight">
+                    {isEn ? 'Allows users to select and use this AI model when enabled.' : 'Mengizinkan pengguna menggunakan model AI ini jika diaktifkan.'}
+                  </span>
                 </div>
                 <Switch
                   checked={modalModelState.is_enabled}
@@ -4433,8 +4450,10 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
               {/* Toggle Premium / Pro Writer */}
               <div className="flex items-center justify-between p-3.5 border border-slate-200/60 rounded-2xl bg-slate-50/20">
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-xs font-bold text-slate-700">Hak Akses Model (Khusus Pro Writer)</span>
-                  <span className="text-[9px] text-slate-400 leading-tight">Membatasi pemakaian model AI premium ini hanya untuk pelanggan Pro.</span>
+                  <span className="text-xs font-bold text-slate-700">{isEn ? 'Model Access (Pro Writer Only)' : 'Hak Akses Model (Khusus Pro Writer)'}</span>
+                  <span className="text-[9px] text-slate-400 leading-tight">
+                    {isEn ? 'Restrict this premium AI model to Pro subscribers only.' : 'Membatasi pemakaian model AI premium ini hanya untuk pelanggan Pro.'}
+                  </span>
                 </div>
                 <Switch
                   checked={modalModelState.is_premium}
@@ -4443,41 +4462,43 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
               </div>
             </div>
 
-            <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+            <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-2">
               <button
                 type="button"
                 onClick={() => handleTestModelConnection()}
                 disabled={testingModelId !== null}
-                className="flex items-center gap-1.5 px-3.5 py-2 border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-xl transition duration-200 cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-xl transition duration-200 cursor-pointer disabled:opacity-50 shrink-0 whitespace-nowrap"
               >
                 {testingModelId === (modalModelState.id || 'modal-preview') ? (
-                  <IconLoader className="h-3.5 w-3.5 animate-spin text-amber-700" />
+                  <IconLoader className="h-3.5 w-3.5 animate-spin text-amber-700 shrink-0" />
                 ) : (
-                  <svg className="h-3.5 w-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <svg className="h-3.5 w-3.5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
                   </svg>
                 )}
-                Uji Koneksi
+                <span>{isEn ? 'Test Connection' : 'Uji Koneksi'}</span>
               </button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <button
+                  type="button"
                   onClick={() => setIsModelModalOpen(false)}
-                  className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold rounded-xl transition cursor-pointer"
+                  className="inline-flex items-center justify-center px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold rounded-xl transition cursor-pointer shrink-0 whitespace-nowrap"
                 >
-                  Batal
+                  <span>{isEn ? 'Cancel' : 'Batal'}</span>
                 </button>
                 <button
+                  type="button"
                   onClick={handleSaveModalModel}
                   disabled={savingModelId === modalModelState.id}
-                  className="flex items-center gap-1.5 px-4.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs font-bold rounded-xl shadow-md hover:shadow-indigo-200 transition duration-200 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs font-bold rounded-xl shadow-md hover:shadow-indigo-500/20 transition duration-200 cursor-pointer shrink-0 whitespace-nowrap"
                 >
                   {savingModelId === modalModelState.id ? (
-                    <IconLoader className="h-3.5 w-3.5 animate-spin" />
+                    <IconLoader className="h-3.5 w-3.5 animate-spin shrink-0" />
                   ) : (
-                    <IconDeviceFloppy className="h-3.5 w-3.5" />
+                    <IconDeviceFloppy className="h-3.5 w-3.5 shrink-0" />
                   )}
-                  Simpan Data
+                  <span>{isEn ? 'Save Model' : 'Simpan Data'}</span>
                 </button>
               </div>
             </div>

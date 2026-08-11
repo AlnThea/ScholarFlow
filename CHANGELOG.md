@@ -2,6 +2,19 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## 🌐 [v0.5.5] - 2026-08-11
+
+### 🌍 100% Bilingual UI i18n & Modal Button Spacing Polish
+- **100% Bilingual Support for Admin AI Models (`/admin/models`)**:
+  - Upgraded `/admin/models` dashboard view and Create/Edit AI Model Modal to be 100% bilingual (`language === 'en'` vs `language === 'id'`).
+  - Added dynamic English and Indonesian translations for headers, descriptions, stats cards, table headers, status badges, modal fields, placeholders, helper hints, option labels, tooltips, and action buttons.
+- **Mandatory UI i18n Rule Enforcer**:
+  - Created [ui_i18n.md](file:///c:/web/ScholarFlow/.agents/rules/ui_i18n.md) and updated [AI_RULES_MINI.md](file:///c:/web/ScholarFlow/AI_Rules/AI_RULES_MINI.md) with mandatory bilingual i18n guidelines for all future component developments.
+- **Modal Button Spacing & Padding Polish**:
+  - Fixed invalid `px-4.5` Tailwind CSS class on modal action buttons, replacing it with `px-6 py-2.5 inline-flex items-center justify-center gap-2 shrink-0 whitespace-nowrap` for ample, symmetrical padding.
+
+---
+
 ## 🚀 [v0.5.4] - 2026-08-11
 
 ### 🎯 Canvas Text Selection Apply Fix & Dual-Persistence Database Backup

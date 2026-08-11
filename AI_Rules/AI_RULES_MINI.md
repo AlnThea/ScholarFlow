@@ -108,6 +108,7 @@ UI style:
 - minimal
 - academic
 - inspired by Notion and Jenni AI
+- Mandatory Bilingual i18n: All UI text, buttons, modals, placeholders, and tooltips MUST support both English (`en`) and Indonesian (`id`) based on `language === 'en'`.
 
 Do NOT imitate old Microsoft Word UI.
 
