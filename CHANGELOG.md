@@ -2,6 +2,17 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## 🔄 [v0.6.0] - 2026-08-11
+
+### 🔑 Gemini Multi-API Key Failover & Rotation Pool
+- **Automatic Multi-Key Failover Engine**:
+  - Implemented [gemini-key-pool.ts](file:///c:/web/ScholarFlow/lib/ai/gemini-key-pool.ts) allowing ScholarFlow to accept multiple Google Gemini API keys (comma or whitespace separated) from `.env` (`GEMINI_API_KEYS` or `GEMINI_API_KEY`) or Admin Model configurations.
+  - Automatically tracks rate limits (HTTP 429 / Quota Exceeded / Resource Exhausted) and puts exhausted keys in a temporary cooldown state while instantly failing over to key #2, #3, etc.
+  - **Zero UI Complexity**: Displays only 1 single Gemini model to the end user while transparently scaling daily quota capacity up to 3x, 5x, or 10x in the backend.
+  - **Auto-Reset**: Cooldown states automatically expire when keys are restored by Google API reset timers.
+
+---
+
 ## 🌐 [v0.5.5] - 2026-08-11
 
 ### 🌍 100% Bilingual UI i18n & Modal Button Spacing Polish

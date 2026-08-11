@@ -66,9 +66,11 @@ v0.5.0-architecture: Architecture Sprint EPICs 1, 2, 3, 4, 5 completed (Database
 48. [Completed] Enable automatic switching of right sidebar to Writing tab ('writing') when executing AI Polish, Paraphrase, Summarize, or Generate Abstract.
 49. [Completed] Implement LocalStorage Dual-Persistence fallback for AI Models (scholarflow.ai_models.v1) to prevent custom models from disappearing on page refresh.
 50. [Completed] Create SQL schema migration file (supabase/migrations/20260811000002_update_ai_models_provider_fields.sql) and update Prisma schema for custom LLM provider fields.
+51. [Completed] Upgrade Admin AI Models view and modals to 100% bilingual i18n (en/id) and create mandatory UI i18n rule file (.agents/rules/ui_i18n.md).
+52. [Completed] Implement Gemini Multi-API Key Rotation & Failover Pool (lib/ai/gemini-key-pool.ts) to automatically cycle across multiple API keys when quota (HTTP 429) is exceeded.
 
 ## Current Task
-Completed canvas text selection apply fix, right sidebar auto-switch to writing tab, LocalStorage dual-persistence for AI models, and SQL migration file (v0.5.4).
+Completed Gemini Multi-API Key Failover Pool, 100% UI bilingual i18n, and modal button padding polish (v0.6.0).
 
 ## Next Tasks
 - Complete remaining UI pages & user-facing feature modules.

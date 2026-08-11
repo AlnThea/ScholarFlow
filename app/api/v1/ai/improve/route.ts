@@ -63,63 +63,74 @@ function fallbackResponse(text: string, tone: string, disclaimer: string) {
   };
 }
 
+import { geminiKeyPool } from '@/lib/ai/gemini-key-pool';
+
 /**
  * Streaming Gemini 2.0 Flash API via SSE ReadableStream
  */
 async function callDirectGeminiStream(prompt: string, model: string): Promise<ReadableStream> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('GEMINI_API_KEY is not set');
+  const { result } = await geminiKeyPool.execute(async (apiKey) => {
+    const geminiModel = model.includes('2.0') ? 'gemini-2.0-flash' : (process.env.GEMINI_MODEL || 'gemini-1.5-flash');
+    const url = `${GEMINI_API_BASE_URL}/models/${geminiModel}:streamGenerateContent?key=${apiKey}&alt=sse`;
 
-  const geminiModel = model.includes('2.0') ? 'gemini-2.0-flash' : (process.env.GEMINI_MODEL || 'gemini-1.5-flash');
-  const url = `${GEMINI_API_BASE_URL}/models/${geminiModel}:streamGenerateContent?key=${apiKey}&alt=sse`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.2, topP: 0.9, maxOutputTokens: 2048 },
+      }),
+    });
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.2, topP: 0.9, maxOutputTokens: 2048 },
-    }),
+    if (!response.ok || !response.body) {
+      const errObj: any = new Error(`Gemini Stream error ${response.status}`);
+      errObj.status = response.status;
+      throw errObj;
+    }
+
+    return response.body;
   });
 
-  if (!response.ok || !response.body) {
-    throw new Error(`Gemini Stream error ${response.status}`);
-  }
-
-  return response.body;
+  return result;
 }
 
 /**
- * Non-streaming direct Gemini API call
+ * Non-streaming direct Gemini API call with Multi-Key Failover Pool
  */
-async function callDirectGemini(prompt: string, model: string): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('GEMINI_API_KEY is not set');
+async function callDirectGemini(prompt: string, model: string, customApiKey?: string): Promise<string> {
+  const { result } = await geminiKeyPool.execute(async (apiKey) => {
+    const geminiModel = model.includes('2.0') ? 'gemini-2.0-flash' : (process.env.GEMINI_MODEL || 'gemini-1.5-flash');
+    const url = `${GEMINI_API_BASE_URL}/models/${geminiModel}:generateContent?key=${apiKey}`;
 
-  const geminiModel = model.includes('2.0') ? 'gemini-2.0-flash' : (process.env.GEMINI_MODEL || 'gemini-1.5-flash');
-  const url = `${GEMINI_API_BASE_URL}/models/${geminiModel}:generateContent?key=${apiKey}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.2, topP: 0.9, maxOutputTokens: 2048 },
+      }),
+    });
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.2, topP: 0.9, maxOutputTokens: 2048 },
-    }),
-  });
+    if (!response.ok) {
+      const errText = await response.text().catch(() => '');
+      const errObj: any = new Error(`Google API status ${response.status}: ${errText}`);
+      errObj.status = response.status;
+      throw errObj;
+    }
 
-  if (!response.ok) throw new Error(`Google API status ${response.status}`);
+    const resJson = await response.json();
+    const candidateParts = resJson?.candidates?.[0]?.content?.parts || [];
+    const text = candidateParts
+      .map((part: any) => (part?.text || '').trim())
+      .filter(Boolean)
+      .join('\n')
+      .trim();
 
-  const result = await response.json();
-  const candidateParts = result?.candidates?.[0]?.content?.parts || [];
-  const text = candidateParts
-    .map((part: any) => (part?.text || '').trim())
-    .filter(Boolean)
-    .join('\n')
-    .trim();
+    if (!text) throw new Error('Google API returned empty text');
+    return text;
+  }, customApiKey);
 
-  if (!text) throw new Error('Google API returned empty text');
-  return text;
+  return result;
 }
 
 /**
@@ -259,7 +270,7 @@ export async function POST(request: Request) {
       if (item.provider_type === 'custom_openai' || (item.base_url && item.base_url.trim().length > 0)) {
         return () => callCustomOpenAI(prompt, item.model_id, item.base_url, item.custom_api_key);
       } else if (item.provider_type === 'gemini' || item.id === 'gemini' || item.model_id.includes('gemini')) {
-        return () => callDirectGemini(prompt, item.model_id);
+        return () => callDirectGemini(prompt, item.model_id, item.custom_api_key);
       } else {
         return () => callOpenRouter(prompt, item.model_id);
       }
