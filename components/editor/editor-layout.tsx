@@ -4431,36 +4431,53 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                 />
               </div>
 
-              {/* Custom API Base URL & API Key (Tampil jika provider_type === 'custom_openai') */}
-              {modalModelState.provider_type === 'custom_openai' && (
-                <div className="flex flex-col gap-3 p-3.5 bg-indigo-50/40 border border-indigo-100 rounded-lg">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider">
-                      {isEn ? 'Custom API Base URL (Key Seller / Proxy URL)' : 'Custom API Base URL (URL Penjual Key / Proxy)'}
-                    </label>
-                    <input
-                      type="text"
-                      placeholder={isEn ? 'Example: https://api.seller-key.com/v1 or http://my-proxy:8080/v1' : 'Contoh: https://api.penjual-key.com/v1 atau http://my-proxy:8080/v1'}
-                      value={modalModelState.base_url || ''}
-                      onChange={(e) => setModalModelState(prev => ({ ...prev, base_url: e.target.value }))}
-                      className="w-full border border-indigo-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-white"
-                    />
-                    <span className="text-[10px] text-slate-500">
-                      {isEn ? 'System will automatically invoke OpenAI-compatible endpoint' : 'Sistem akan secara otomatis memanggil endpoint OpenAI-compatible'} <code className="font-mono bg-indigo-100/60 px-1 py-0.5 rounded text-indigo-800">/chat/completions</code>.
-                    </span>
-                  </div>
+              {/* Dynamic Provider Config: Custom API Base URL & API Key (Tampil untuk Hugging Face, Groq, Together, & Custom OpenAI) */}
+              {modalModelState.provider_type !== 'gemini' && modalModelState.provider_type !== 'openrouter' && (
+                <div className="flex flex-col gap-3 p-3.5 bg-indigo-50/40 border border-indigo-100 rounded-lg animate-fade-in">
+                  {(modalModelState.provider_type === 'custom_openai' || modalModelState.provider_type === 'huggingface') && (
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider">
+                        {isEn ? 'API Base URL (Optional Override)' : 'API Base URL (Opsional / Override)'}
+                      </label>
+                      <input
+                        type="text"
+                        placeholder={
+                          modalModelState.provider_type === 'huggingface'
+                            ? (isEn ? 'Default: https://router.huggingface.co/v1' : 'Default: https://router.huggingface.co/v1')
+                            : (isEn ? 'Example: https://api.seller-key.com/v1 or http://my-proxy:8080/v1' : 'Contoh: https://api.penjual-key.com/v1 atau http://my-proxy:8080/v1')
+                        }
+                        value={modalModelState.base_url || ''}
+                        onChange={(e) => setModalModelState(prev => ({ ...prev, base_url: e.target.value }))}
+                        className="w-full border border-indigo-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-white"
+                      />
+                      <span className="text-[10px] text-slate-500">
+                        {isEn ? 'System automatically calls OpenAI-compatible endpoint' : 'Sistem akan secara otomatis memanggil endpoint OpenAI-compatible'} <code className="font-mono bg-indigo-100/60 px-1 py-0.5 rounded text-indigo-800">/chat/completions</code>.
+                      </span>
+                    </div>
+                  )}
 
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider">
-                      {isEn ? 'Custom API Key (Optional)' : 'Custom API Key (Opsional)'}
+                      {isEn ? 'API Key (Input Dynamically in App)' : 'API Key (Input Dinamis Langsung di Aplikasi)'}
                     </label>
                     <input
                       type="password"
-                      placeholder={isEn ? 'sk-xxxx... (Leave empty to use .env key)' : 'sk-xxxx... (Biarkan kosong jika ingin menggunakan .env)'}
+                      placeholder={
+                        modalModelState.provider_type === 'huggingface'
+                          ? 'hf_xxxx... (Input User Token Hugging Face)'
+                          : modalModelState.provider_type === 'groq'
+                          ? 'gsk_xxxx... (Input API Key Groq Cloud)'
+                          : modalModelState.provider_type === 'together'
+                          ? 'tgp_xxxx... (Input API Key Together AI)'
+                          : (isEn ? 'sk-xxxx... (Leave empty to use .env default key)' : 'sk-xxxx... (Biarkan kosong jika ingin menggunakan .env)')
+                      }
                       value={modalModelState.custom_api_key || ''}
                       onChange={(e) => setModalModelState(prev => ({ ...prev, custom_api_key: e.target.value }))}
                       className="w-full border border-indigo-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-white"
                     />
+                    <span className="text-[9px] text-slate-400">
+                      {isEn ? 'Stored securely in database & local storage.' : 'Tersimpan dengan aman di database & penyimpanan lokal.'}
+                    </span>
                   </div>
                 </div>
               )}

@@ -2,6 +2,16 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## 🔑 [v0.6.2] - 2026-08-11
+
+### ⚡ Dynamic In-App API Key Configuration for Multi-Model Providers
+- **In-App Dynamic API Key Entry**:
+  - Enhanced Create/Edit AI Model Modal to dynamically display **API Key & Base URL** input fields whenever selecting `Hugging Face`, `Groq Cloud`, `Together AI`, or `Custom OpenAI` providers.
+  - Allows Admins to input provider tokens (`hf_xxxx`, `gsk_xxxx`, `tgp_xxxx`, etc.) directly through the UI without editing `.env` or restarting the server.
+  - Gemini & OpenRouter maintain default fallback to `.env` variables if custom keys are left empty.
+
+---
+
 ## 🤖 [v0.6.1] - 2026-08-11
 
 ### 🤗 Hugging Face, Groq Cloud & Together AI Multi-Model Catalog Support
