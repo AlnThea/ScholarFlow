@@ -646,20 +646,20 @@ export function ScholarEditor() {
   const handleUpdateAIModel = useCallback(async (id: string, updates: Partial<AIModel>) => {
     try {
       const updated = await updateAIModel(id, updates);
-      setAiModels((prev) => prev.map(m => m.id === id ? updated : m));
+      setAiModels((prev) => prev.map(m => m.id === id ? (updated || { ...m, ...updates }) : m));
     } catch (err) {
-      console.error(err);
-      throw err;
+      console.warn('AI Model DB update failed, using local state:', err);
+      setAiModels((prev) => prev.map(m => m.id === id ? { ...m, ...updates, updated_at: new Date().toISOString() } : m));
     }
   }, []);
 
   const handleCreateAIModel = useCallback(async (model: Omit<AIModel, 'updated_at'>) => {
     try {
       const created = await createAIModel(model);
-      setAiModels((prev) => [...prev, created]);
+      setAiModels((prev) => [...prev, created || { ...model, updated_at: new Date().toISOString() }]);
     } catch (err) {
-      console.error(err);
-      throw err;
+      console.warn('AI Model DB create failed, using local state:', err);
+      setAiModels((prev) => [...prev, { ...model, updated_at: new Date().toISOString() }]);
     }
   }, []);
 
@@ -668,8 +668,8 @@ export function ScholarEditor() {
       await deleteAIModel(id);
       setAiModels((prev) => prev.filter(m => m.id !== id));
     } catch (err) {
-      console.error(err);
-      throw err;
+      console.warn('AI Model DB delete failed, using local state:', err);
+      setAiModels((prev) => prev.filter(m => m.id !== id));
     }
   }, []);
 
@@ -1407,6 +1407,7 @@ export function ScholarEditor() {
   const runImproveWriting = useCallback(async () => {
     if (!selectedText.trim()) return;
 
+    setActiveSidebarTab('writing');
     setIsImproving(true);
     setAiError(null);
 
@@ -1437,6 +1438,7 @@ export function ScholarEditor() {
   const runParaphrase = useCallback(async () => {
     if (!selectedText.trim()) return;
 
+    setActiveSidebarTab('writing');
     setIsImproving(true);
     setAiError(null);
 
@@ -1467,6 +1469,7 @@ export function ScholarEditor() {
   const runSummarize = useCallback(async () => {
     if (!selectedText.trim()) return;
 
+    setActiveSidebarTab('writing');
     setIsImproving(true);
     setAiError(null);
 
@@ -1495,6 +1498,7 @@ export function ScholarEditor() {
   }, [selectedText, selectedAiModel, setAiHistory, currentDocument, language]);
 
   const runGenerateAbstract = useCallback(async () => {
+    setActiveSidebarTab('writing');
     setIsImproving(true);
     setAiError(null);
 
@@ -1532,6 +1536,7 @@ export function ScholarEditor() {
   }, [currentDocument, selectedAiModel, setAiHistory, language]);
 
   const handleParafrasePlagiat = useCallback(async (sentence: string) => {
+    setActiveSidebarTab('writing');
     setSelectedText(sentence);
     setIsImproving(true);
     setAiError(null);

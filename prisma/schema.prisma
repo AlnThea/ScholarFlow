@@ -109,13 +109,15 @@ model CitationLibraryEntry {
 }
 
 model AiModelEntry {
-  id          String   @id
-  name        String
-  modelId     String   @map("model_id")
-  isEnabled   Boolean  @default(true) @map("is_enabled")
-  isPremium   Boolean  @default(false) @map("is_premium")
-  provider    String   @default("gemini")
-  createdAt   DateTime @default(now()) @map("created_at")
+  id           String   @id
+  name         String
+  modelId      String   @map("model_id")
+  isEnabled    Boolean  @default(true) @map("is_enabled")
+  isPremium    Boolean  @default(false) @map("is_premium")
+  providerType String?  @default("openrouter") @map("provider_type")
+  baseUrl      String?  @map("base_url")
+  customApiKey String?  @map("custom_api_key")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("ai_models")
 }

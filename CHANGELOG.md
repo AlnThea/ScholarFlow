@@ -2,6 +2,38 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## 🚀 [v0.5.4] - 2026-08-11
+
+### 🎯 Canvas Text Selection Apply Fix & Dual-Persistence Database Backup
+- **Selection Range Auto-Restore for AI Apply**:
+  - Upgraded `insertText` in `editorjs-editor.tsx` and `scholar-editor.tsx` to automatically remember and restore the exact text selection range (`lastHighlightedRangeRef` / `lastSelectionRangeRef`) when clicking **Apply** in the right sidebar.
+  - Refocused the main document canvas element (`contenteditable`) and replaced original text with AI polished results in real-time, triggering EditorJS auto-save and statistics re-calculation.
+- **Auto-Switching Right Sidebar to Writing Tab**:
+  - Upgraded `scholar-editor.tsx` and `editor-sidebar.tsx` so that triggering AI Polish, Paraphrase, Summarize, Generate Abstract, or Plagiarism Paraphrase automatically opens and switches the right sidebar straight to the **Writing (AI Assist)** tab (`'writing'`).
+- **Database Schema Migration & Dual-Persistence Backup**:
+  - Added **LocalStorage Dual-Persistence** (`scholarflow.ai_models.v1`) to `lib/api/ai-models.ts` so custom AI models added or edited via the Admin Panel remain persisted locally even if cloud DB table migrations are pending.
+  - Gracefully sanitized Supabase insert/update payloads to fallback to base fields (`id`, `name`, `model_id`, `is_enabled`, `is_premium`) if custom schema columns are missing.
+  - Created official SQL migration file [`supabase/migrations/20260811000002_update_ai_models_provider_fields.sql`](file:///c:/web/ScholarFlow/supabase/migrations/20260811000002_update_ai_models_provider_fields.sql) and updated [`prisma/schema.prisma`](file:///c:/web/ScholarFlow/prisma/schema.prisma).
+- **Custom React Alert & Confirm Modal Portal**:
+  - Replaced native browser `alert()` and `confirm()` prompts with a high-contrast, custom React Modal Portal (`showAlertModal` & `showConfirmModal`).
+- **Live Provider Engine Indicators**:
+  - Added **Tipe Provider API Badge** in Admin AI Models tables (`Google Gemini`, `Custom OpenAI`, `OpenRouter`) and **Live Engine Indicator Banner** in the editor toolbar.
+
+---
+
+## ⚡ [v0.5.3] - 2026-08-11
+
+### 🎛️ Admin AI Model Active Toggles & Test Connection Feature
+- **High-Contrast Toggle Switches (`/admin/models`)**:
+  - **Off State**: Upgraded to a high-contrast theme featuring a 2px crisp border (`border-2 border-slate-400`), dark slate knob (`bg-slate-500`), inner background shadow (`bg-slate-200 shadow-inner`), and distinct `Off` badge label (`text-slate-600 bg-slate-100 border-slate-300`).
+  - **Free Tier On State**: Vivid emerald green theme (`bg-emerald-500 border-emerald-600 shadow-emerald-500/20 ring-2 ring-emerald-500/20`) with white knob and emerald status badge.
+  - **Pro Writer On State**: Vivid enterprise indigo theme (`bg-indigo-600 border-indigo-700 shadow-indigo-500/20 ring-2 ring-indigo-500/20`) with white knob and indigo status badge.
+  - **Global Switch Component**: Enhanced reusable `<Switch />` component with dark knob and crisp border styling when Off.
+- **AI Gateway Test Connection System (`/api/v1/ai/test-connection`)**:
+  - **Edge API Endpoint**: Created `/api/v1/ai/test-connection` route to ping Google Gemini, OpenRouter, and Custom OpenAI-Compatible endpoints with latency calculation (`ms`) and response validation.
+  - **1-Click Table Action Button**: Added `⚡ Test Connection` button in the action column of both Free Tier and Pro Writer tables in `/admin/models`.
+  - **Modal Integration**: Added `⚡ Uji Koneksi` button to the Admin AI Model Create & Edit Modal alongside `Simpan Data`.
+
 ---
 
 ## 📚 [v0.5.2] - 2026-08-11

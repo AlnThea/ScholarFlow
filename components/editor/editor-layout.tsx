@@ -102,12 +102,16 @@ const Switch = ({ checked, onChange, disabled }: SwitchProps) => {
       type="button"
       disabled={disabled}
       onClick={onChange}
-      className={`relative inline-flex h-5.5 w-10 items-center rounded-full transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${checked ? 'bg-indigo-650' : 'bg-slate-200'
-        }`}
+      className={`relative inline-flex h-5.5 w-10 shrink-0 items-center rounded-full border-2 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none ${
+        checked
+          ? 'bg-indigo-600 border-indigo-700 shadow-sm shadow-indigo-500/20 ring-2 ring-indigo-500/20'
+          : 'bg-slate-300 border-slate-400/90 shadow-inner'
+      }`}
     >
       <span
-        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-all duration-200 ${checked ? 'translate-x-5' : 'translate-x-1.5'
-          }`}
+        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-all duration-200 ${
+          checked ? 'translate-x-5' : 'translate-x-0.5'
+        }`}
       />
     </button>
   );
@@ -599,6 +603,51 @@ export function EditorLayout({
   const [gatewaysList, setGatewaysList] = useState<PaymentGateway[]>([]);
   const [togglingGatewayId, setTogglingGatewayId] = useState<string | null>(null);
 
+  const [alertModalState, setAlertModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'success' | 'error' | 'warning' | 'info';
+    onConfirm?: () => void;
+    confirmText?: string;
+    cancelText?: string;
+    isConfirm?: boolean;
+  } | null>(null);
+
+  const showAlertModal = (
+    title: string,
+    message: string,
+    type: 'success' | 'error' | 'warning' | 'info' = 'info',
+    onConfirm?: () => void
+  ) => {
+    setAlertModalState({
+      isOpen: true,
+      title,
+      message,
+      type,
+      onConfirm,
+      isConfirm: false,
+    });
+  };
+
+  const showConfirmModal = (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    type: 'danger' | 'warning' | 'info' = 'warning',
+    confirmText?: string
+  ) => {
+    setAlertModalState({
+      isOpen: true,
+      title,
+      message,
+      type: type === 'danger' ? 'error' : (type as any),
+      onConfirm,
+      isConfirm: true,
+      confirmText,
+    });
+  };
+
   const [savingModelId, setSavingModelId] = useState<string | null>(null);
   const [editModelStates, setEditModelStates] = useState<Record<string, {
     name: string;
@@ -665,14 +714,64 @@ export function EditorLayout({
     setIsModelModalOpen(true);
   };
 
+  const [testingModelId, setTestingModelId] = useState<string | null>(null);
+
+  const handleTestModelConnection = async (targetModel?: {
+    id: string;
+    model_id: string;
+    provider_type?: string;
+    base_url?: string;
+    custom_api_key?: string;
+  }) => {
+    const modelToTest = targetModel || {
+      id: modalModelState.id || 'modal-preview',
+      model_id: modalModelState.model_id,
+      provider_type: modalModelState.provider_type,
+      base_url: modalModelState.base_url,
+      custom_api_key: modalModelState.custom_api_key,
+    };
+
+    if (!modelToTest.model_id || !modelToTest.model_id.trim()) {
+      showAlertModal('Perhatian', 'ID Model API (model_id) harus diisi sebelum menguji koneksi.', 'warning');
+      return;
+    }
+
+    setTestingModelId(modelToTest.id);
+
+    try {
+      const res = await fetch('/api/v1/ai/test-connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider_type: modelToTest.provider_type || 'openrouter',
+          model_id: modelToTest.model_id,
+          base_url: modelToTest.base_url,
+          custom_api_key: modelToTest.custom_api_key,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        showAlertModal('Koneksi Berhasil', `${data.message}\n\nRespon Uji Provider: "${data.sample_response}"`, 'success');
+      } else {
+        showAlertModal('Gagal Terhubung', `Tidak dapat terhubung ke Provider AI:\n\n${data.message}`, 'error');
+      }
+    } catch (err: any) {
+      showAlertModal('Kendala Jaringan', `Terjadi kendala koneksi:\n${err.message}`, 'error');
+    } finally {
+      setTestingModelId(null);
+    }
+  };
+
   const handleSaveModalModel = async () => {
     if (!modalModelState.id.trim() || !modalModelState.name.trim() || !modalModelState.model_id.trim()) {
-      alert('ID Gateway, Nama Model, dan ID Model API harus diisi.');
+      showAlertModal('Perhatian', 'ID Gateway, Nama Model, dan ID Model API harus diisi.', 'warning');
       return;
     }
 
     if (modalModelState.provider_type === 'custom_openai' && (!modalModelState.base_url || !modalModelState.base_url.trim())) {
-      alert('Custom API Base URL wajib diisi untuk provider Custom OpenAI-Compatible.');
+      showAlertModal('Perhatian', 'Custom API Base URL wajib diisi untuk provider Custom OpenAI-Compatible.', 'warning');
       return;
     }
 
@@ -689,34 +788,41 @@ export function EditorLayout({
           base_url: modalModelState.base_url,
           custom_api_key: modalModelState.custom_api_key
         });
-        alert('Model AI berhasil diperbarui!');
+        showAlertModal('Berhasil', 'Model AI berhasil diperbarui!', 'success');
         setIsModelModalOpen(false);
       } else {
         // Create mode
         await onCreateAIModel(modalModelState);
-        alert('Model AI baru berhasil ditambahkan!');
+        showAlertModal('Berhasil', 'Model AI baru berhasil ditambahkan!', 'success');
         setIsModelModalOpen(false);
       }
     } catch (err: any) {
       console.error(err);
-      alert(`Gagal menyimpan model AI: ${err.message || err}`);
+      showAlertModal('Gagal Menyimpan', `Gagal menyimpan model AI: ${err.message || err}`, 'error');
     } finally {
       setSavingModelId(null);
     }
   };
 
-  const handleDeleteModel = async (modelId: string) => {
-    if (!confirm(`Apakah Anda yakin ingin menghapus model AI "${modelId}"?`)) return;
-    setSavingModelId(modelId);
-    try {
-      await onDeleteAIModel(modelId);
-      alert('Model AI berhasil dihapus!');
-    } catch (err: any) {
-      console.error(err);
-      alert(`Gagal menghapus model AI: ${err.message || err}`);
-    } finally {
-      setSavingModelId(null);
-    }
+  const handleDeleteModel = (modelId: string) => {
+    showConfirmModal(
+      'Hapus Model AI',
+      `Apakah Anda yakin ingin menghapus model AI "${modelId}" dari sistem?`,
+      async () => {
+        setSavingModelId(modelId);
+        try {
+          await onDeleteAIModel(modelId);
+          showAlertModal('Berhasil Hapus', `Model AI "${modelId}" berhasil dihapus!`, 'success');
+        } catch (err: any) {
+          console.error(err);
+          showAlertModal('Gagal Hapus', `Gagal menghapus model AI: ${err.message || err}`, 'error');
+        } finally {
+          setSavingModelId(null);
+        }
+      },
+      'danger',
+      'Hapus Model'
+    );
   };
 
   const handleToggleModelStatus = async (model: AIModel) => {
@@ -725,9 +831,14 @@ export function EditorLayout({
       await onUpdateAIModel(model.id, {
         is_enabled: !model.is_enabled,
       });
+      showAlertModal(
+        'Status Model AI',
+        `Model "${model.name}" berhasil di${!model.is_enabled ? 'aktifkan' : 'non-aktifkan'}!`,
+        'success'
+      );
     } catch (err: any) {
       console.error(err);
-      alert(`Gagal mengubah status model AI: ${err.message || err}`);
+      showAlertModal('Gagal', `Gagal mengubah status model AI: ${err.message || err}`, 'error');
     } finally {
       setSavingModelId(null);
     }
@@ -764,15 +875,13 @@ export function EditorLayout({
     try {
       const res = await updatePaymentGatewayStatus(gatewayId, isEnabled);
       if (res.success) {
-        setGatewaysList((prev) =>
-          prev.map((g) => (g.id === gatewayId ? { ...g, is_enabled: isEnabled } : g))
-        );
+        showAlertModal('Gateway Pembayaran', `Status gateway "${gatewayId}" berhasil diubah!`, 'success');
       } else {
-        alert(`Gagal mengubah status gateway: ${res.error}`);
+        showAlertModal('Gagal', `Gagal mengubah status gateway: ${res.error}`, 'error');
       }
     } catch (err) {
       console.error(err);
-      alert('Terjadi kesalahan saat mengubah status.');
+      showAlertModal('Error', 'Terjadi kesalahan saat mengubah status gateway.', 'error');
     } finally {
       setTogglingGatewayId(null);
     }
@@ -793,13 +902,13 @@ export function EditorLayout({
       });
 
       if (res.success) {
-        alert('Paket harga berhasil diperbarui!');
+        showAlertModal('Paket Harga', 'Paket harga berhasil diperbarui!', 'success');
       } else {
-        alert(`Gagal memperbarui paket: ${res.error}`);
+        showAlertModal('Gagal', `Gagal memperbarui paket: ${res.error}`, 'error');
       }
     } catch (err) {
       console.error(err);
-      alert('Terjadi kesalahan saat menyimpan perubahan.');
+      showAlertModal('Error', 'Terjadi kesalahan saat menyimpan perubahan.', 'error');
     } finally {
       setSavingPlanId(null);
     }
@@ -1333,7 +1442,13 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
 
                   <button
                     onClick={() => {
-                      alert("Silakan klik menu 'Library' di sidebar kiri untuk mengelola rujukan PDF Anda.");
+                      showAlertModal(
+                        'Kelola Rujukan PDF',
+                        language === 'en'
+                          ? "Please click the 'Library' menu in the left sidebar to manage your PDF references."
+                          : "Silakan klik menu 'Library' di sidebar kiri untuk mengelola rujukan PDF Anda.",
+                        'info'
+                      );
                     }}
                     className="flex items-start gap-4 p-5 bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md rounded-2xl text-left cursor-pointer transition group"
                   >
@@ -1674,6 +1789,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                           <th className="px-6 py-3 font-semibold min-w-[140px]">Status & Toggle</th>
                           <th className="px-6 py-3 font-semibold min-w-[130px]">Gateway Key</th>
                           <th className="px-6 py-3 font-semibold min-w-[200px]">Nama Tampilan Model</th>
+                          <th className="px-6 py-3 font-semibold min-w-[170px]">Tipe Provider API</th>
                           <th className="px-6 py-3 font-semibold min-w-[240px]">ID Model API Asli</th>
                           <th className="px-6 py-3 font-semibold min-w-[130px]">Hak Akses</th>
                           <th className="px-6 py-3 font-semibold text-center w-[140px]">Aksi</th>
@@ -1682,7 +1798,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                       <tbody className="divide-y divide-slate-100 text-xs">
                         {aiModels.filter(m => !m.is_premium).length === 0 ? (
                           <tr>
-                            <td colSpan={6} className="px-6 py-8 text-center text-slate-400 text-xs font-normal">
+                            <td colSpan={7} className="px-6 py-8 text-center text-slate-400 text-xs font-normal">
                               Belum ada model AI untuk Free Tier. Klik tombol Tambah Model Baru di atas.
                             </td>
                           </tr>
@@ -1693,18 +1809,22 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                               <td className="px-6 py-4 align-middle">
                                 <button
                                   onClick={() => handleToggleModelStatus(model)}
-                                  className="flex items-center gap-2.5 group cursor-pointer text-left"
+                                  className="flex items-center gap-2.5 group cursor-pointer text-left focus:outline-none"
                                   title="Klik untuk mengubah status aktif/non-aktif"
                                 >
-                                  <div className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                    model.is_enabled ? 'bg-emerald-500' : 'bg-slate-300'
+                                  <div className={`relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 transition-all duration-200 ease-in-out ${
+                                    model.is_enabled
+                                      ? 'bg-emerald-500 border-emerald-600 shadow-sm shadow-emerald-500/20 ring-2 ring-emerald-500/20'
+                                      : 'bg-slate-300 border-slate-400/90 shadow-inner'
                                   }`}>
-                                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                                      model.is_enabled ? 'translate-x-4' : 'translate-x-0'
+                                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${
+                                      model.is_enabled ? 'translate-x-5' : 'translate-x-0.5'
                                     }`} />
                                   </div>
-                                  <span className={`text-[11px] font-semibold ${
-                                    model.is_enabled ? 'text-emerald-700' : 'text-slate-400'
+                                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded border transition-all ${
+                                    model.is_enabled
+                                      ? 'text-emerald-700 bg-emerald-50 border-emerald-200/80'
+                                      : 'text-slate-600 bg-slate-100 border-slate-300'
                                   }`}>
                                     {model.is_enabled ? 'Aktif' : 'Off'}
                                   </span>
@@ -1719,6 +1839,33 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                               {/* Nama Tampilan Model */}
                               <td className="px-6 py-4 align-middle font-semibold text-slate-900 text-xs">
                                 {model.name}
+                              </td>
+
+                              {/* Tipe Provider API */}
+                              <td className="px-6 py-4 align-middle">
+                                {model.provider_type === 'gemini' || model.id === 'gemini' || model.model_id.includes('gemini') ? (
+                                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200/80">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+                                    Google Gemini
+                                  </span>
+                                ) : model.provider_type === 'custom_openai' || (model.base_url && model.base_url.trim().length > 0) ? (
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                      Custom OpenAI
+                                    </span>
+                                    {model.base_url && (
+                                      <span className="text-[9px] font-mono text-slate-400 truncate max-w-[150px]" title={model.base_url}>
+                                        {model.base_url}
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200/80">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                                    OpenRouter
+                                  </span>
+                                )}
                               </td>
 
                               {/* ID Model API Asli */}
@@ -1736,6 +1883,21 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                               {/* Aksi */}
                               <td className="px-6 py-4 align-middle text-center">
                                 <div className="flex items-center justify-center gap-1.5">
+                                  <button
+                                    onClick={() => handleTestModelConnection(model)}
+                                    disabled={testingModelId === model.id}
+                                    className="p-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-md transition cursor-pointer disabled:opacity-50"
+                                    title="Uji Koneksi API Model"
+                                  >
+                                    {testingModelId === model.id ? (
+                                      <IconLoader className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                                      </svg>
+                                    )}
+                                  </button>
+
                                   <button
                                     onClick={() => handleOpenEditModelModal(model)}
                                     className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-md transition cursor-pointer"
@@ -1793,6 +1955,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                           <th className="px-6 py-3 font-semibold min-w-[140px]">Status & Toggle</th>
                           <th className="px-6 py-3 font-semibold min-w-[130px]">Gateway Key</th>
                           <th className="px-6 py-3 font-semibold min-w-[200px]">Nama Tampilan Model</th>
+                          <th className="px-6 py-3 font-semibold min-w-[170px]">Tipe Provider API</th>
                           <th className="px-6 py-3 font-semibold min-w-[240px]">ID Model API Asli</th>
                           <th className="px-6 py-3 font-semibold min-w-[130px]">Hak Akses</th>
                           <th className="px-6 py-3 font-semibold text-center w-[140px]">Aksi</th>
@@ -1801,7 +1964,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                       <tbody className="divide-y divide-slate-100 text-xs">
                         {aiModels.filter(m => m.is_premium).length === 0 ? (
                           <tr>
-                            <td colSpan={6} className="px-6 py-8 text-center text-slate-400 text-xs font-normal">
+                            <td colSpan={7} className="px-6 py-8 text-center text-slate-400 text-xs font-normal">
                               Belum ada model AI untuk Pro Writer. Klik tombol Tambah Model Baru di atas.
                             </td>
                           </tr>
@@ -1812,18 +1975,22 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                               <td className="px-6 py-4 align-middle">
                                 <button
                                   onClick={() => handleToggleModelStatus(model)}
-                                  className="flex items-center gap-2.5 group cursor-pointer text-left"
+                                  className="flex items-center gap-2.5 group cursor-pointer text-left focus:outline-none"
                                   title="Klik untuk mengubah status aktif/non-aktif"
                                 >
-                                  <div className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                    model.is_enabled ? 'bg-indigo-600' : 'bg-slate-300'
+                                  <div className={`relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 transition-all duration-200 ease-in-out ${
+                                    model.is_enabled
+                                      ? 'bg-indigo-600 border-indigo-700 shadow-sm shadow-indigo-500/20 ring-2 ring-indigo-500/20'
+                                      : 'bg-slate-300 border-slate-400/90 shadow-inner'
                                   }`}>
-                                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                                      model.is_enabled ? 'translate-x-4' : 'translate-x-0'
+                                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${
+                                      model.is_enabled ? 'translate-x-5' : 'translate-x-0.5'
                                     }`} />
                                   </div>
-                                  <span className={`text-[11px] font-semibold ${
-                                    model.is_enabled ? 'text-indigo-700' : 'text-slate-400'
+                                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded border transition-all ${
+                                    model.is_enabled
+                                      ? 'text-indigo-700 bg-indigo-50 border-indigo-200/80'
+                                      : 'text-slate-600 bg-slate-100 border-slate-300'
                                   }`}>
                                     {model.is_enabled ? 'Aktif' : 'Off'}
                                   </span>
@@ -1838,6 +2005,33 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                               {/* Nama Tampilan Model */}
                               <td className="px-6 py-4 align-middle font-semibold text-slate-900 text-xs">
                                 {model.name}
+                              </td>
+
+                              {/* Tipe Provider API */}
+                              <td className="px-6 py-4 align-middle">
+                                {model.provider_type === 'gemini' || model.id === 'gemini' || model.model_id.includes('gemini') ? (
+                                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200/80">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+                                    Google Gemini
+                                  </span>
+                                ) : model.provider_type === 'custom_openai' || (model.base_url && model.base_url.trim().length > 0) ? (
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                      Custom OpenAI
+                                    </span>
+                                    {model.base_url && (
+                                      <span className="text-[9px] font-mono text-slate-400 truncate max-w-[150px]" title={model.base_url}>
+                                        {model.base_url}
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200/80">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                                    OpenRouter
+                                  </span>
+                                )}
                               </td>
 
                               {/* ID Model API Asli */}
@@ -1855,6 +2049,21 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                               {/* Aksi */}
                               <td className="px-6 py-4 align-middle text-center">
                                 <div className="flex items-center justify-center gap-1.5">
+                                  <button
+                                    onClick={() => handleTestModelConnection(model)}
+                                    disabled={testingModelId === model.id}
+                                    className="p-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-md transition cursor-pointer disabled:opacity-50"
+                                    title="Uji Koneksi API Model"
+                                  >
+                                    {testingModelId === model.id ? (
+                                      <IconLoader className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                                      </svg>
+                                    )}
+                                  </button>
+
                                   <button
                                     onClick={() => handleOpenEditModelModal(model)}
                                     className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-md transition cursor-pointer"
@@ -3053,17 +3262,25 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                         title={language === 'en' ? 'Select AI Model' : 'Pilih Model AI'}
                       >
                         {aiModels && aiModels.length > 0 ? (
-                          aiModels.filter(m => m.is_enabled).map(m => (
-                            <option key={m.id} value={m.id}>
-                              {m.name.replace(" (Direct)", "").replace(" (Free OR)", "").replace(" (Pro OR)", "")}
-                            </option>
-                          ))
+                          aiModels.filter(m => m.is_enabled).map(m => {
+                            const cleanName = m.name.replace(" (Direct)", "").replace(" (Free OR)", "").replace(" (Pro OR)", "");
+                            const pLabel = m.provider_type === 'custom_openai' || (m.base_url && m.base_url.trim().length > 0)
+                              ? 'Custom Proxy'
+                              : (m.provider_type === 'gemini' || m.id === 'gemini' || m.model_id.includes('gemini'))
+                                ? 'Gemini Direct'
+                                : 'OpenRouter';
+                            return (
+                              <option key={m.id} value={m.id}>
+                                {cleanName} [{pLabel}]
+                              </option>
+                            );
+                          })
                         ) : (
                           <>
-                            <option value="gemini">Gemini</option>
-                            <option value="llama3">Llama 3</option>
-                            <option value="gemma2">Gemma 2</option>
-                            <option value="claude">Claude</option>
+                            <option value="gemini">Gemini [Gemini Direct]</option>
+                            <option value="llama3">Llama 3 [OpenRouter]</option>
+                            <option value="gemma2">Gemma 2 [OpenRouter]</option>
+                            <option value="claude">Claude [OpenRouter]</option>
                           </>
                         )}
                       </select>
@@ -3085,6 +3302,36 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                       </select>
                     </div>
                   </div>
+
+                  {/* Provider Engine Live Banner Indicator */}
+                  {(() => {
+                    const currentModelObj = aiModels?.find(m => m.id === selectedAiModel);
+                    const pType = currentModelObj?.provider_type || (selectedAiModel === 'gemini' ? 'gemini' : 'openrouter');
+                    const isCustom = pType === 'custom_openai' || (currentModelObj?.base_url && currentModelObj.base_url.trim().length > 0);
+                    const isGemini = pType === 'gemini' || selectedAiModel === 'gemini' || currentModelObj?.model_id?.includes('gemini');
+
+                    return (
+                      <div className="mx-3 my-1 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200/60 flex items-center justify-between text-[9px]">
+                        <span className="text-slate-400 font-bold uppercase tracking-wider">Engine Provider:</span>
+                        {isGemini ? (
+                          <span className="font-bold text-sky-700 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
+                            Google Gemini Direct API
+                          </span>
+                        ) : isCustom ? (
+                          <span className="font-bold text-amber-800 flex items-center gap-1.5" title={currentModelObj?.base_url || 'Custom Proxy'}>
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                            Custom OpenAI Proxy API
+                          </span>
+                        ) : (
+                          <span className="font-bold text-purple-700 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+                            OpenRouter API
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* Actions Section Header */}
                   <div className="flex items-center justify-between px-3 py-1.5 border-b border-slate-100/50 text-[9px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/40">
@@ -3129,9 +3376,13 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                         const modelObj = aiModels.find(m => m.id === selectedAiModel);
                         const isPremium = modelObj ? modelObj.is_premium : (selectedAiModel === 'claude');
                         if (isPremium && activePlanId === 'free') {
-                          alert(language === 'en'
-                            ? `🔒 Model "${modelObj?.name || 'Premium'}" is exclusive to Pro Writer plans. Please upgrade your account.`
-                            : `🔒 Model "${modelObj?.name || 'Premium'}" khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda.`
+                          showAlertModal(
+                            'Akses Model Premium 🔒',
+                            language === 'en'
+                              ? `Model "${modelObj?.name || 'Premium'}" is exclusive to Pro Writer plans. Please upgrade your account to access this model.`
+                              : `Model "${modelObj?.name || 'Premium'}" khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda untuk mengakses model ini.`,
+                            'warning',
+                            () => setIsPlanModalOpen(true)
                           );
                         } else {
                           onImproveWriting();
@@ -3163,9 +3414,13 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                         const modelObj = aiModels.find(m => m.id === selectedAiModel);
                         const isPremium = modelObj ? modelObj.is_premium : (selectedAiModel === 'claude');
                         if (isPremium && activePlanId === 'free') {
-                          alert(language === 'en'
-                            ? `🔒 Model "${modelObj?.name || 'Premium'}" is exclusive to Pro Writer plans. Please upgrade your account.`
-                            : `🔒 Model "${modelObj?.name || 'Premium'}" khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda.`
+                          showAlertModal(
+                            'Akses Model Premium 🔒',
+                            language === 'en'
+                              ? `Model "${modelObj?.name || 'Premium'}" is exclusive to Pro Writer plans. Please upgrade your account to access this model.`
+                              : `Model "${modelObj?.name || 'Premium'}" khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda untuk mengakses model ini.`,
+                            'warning',
+                            () => setIsPlanModalOpen(true)
                           );
                         } else {
                           onParaphrase();
@@ -4188,25 +4443,43 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+            <div className="flex items-center justify-between border-t border-slate-100 pt-3">
               <button
-                onClick={() => setIsModelModalOpen(false)}
-                className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold rounded-xl transition cursor-pointer"
+                type="button"
+                onClick={() => handleTestModelConnection()}
+                disabled={testingModelId !== null}
+                className="flex items-center gap-1.5 px-3.5 py-2 border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-xl transition duration-200 cursor-pointer disabled:opacity-50"
               >
-                Batal
-              </button>
-              <button
-                onClick={handleSaveModalModel}
-                disabled={savingModelId === modalModelState.id}
-                className="flex items-center gap-1.5 px-4.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs font-bold rounded-xl shadow-md hover:shadow-indigo-200 transition duration-200 cursor-pointer"
-              >
-                {savingModelId === modalModelState.id ? (
-                  <IconLoader className="h-3.5 w-3.5 animate-spin" />
+                {testingModelId === (modalModelState.id || 'modal-preview') ? (
+                  <IconLoader className="h-3.5 w-3.5 animate-spin text-amber-700" />
                 ) : (
-                  <IconDeviceFloppy className="h-3.5 w-3.5" />
+                  <svg className="h-3.5 w-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                  </svg>
                 )}
-                Simpan Data
+                Uji Koneksi
               </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsModelModalOpen(false)}
+                  className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold rounded-xl transition cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleSaveModalModel}
+                  disabled={savingModelId === modalModelState.id}
+                  className="flex items-center gap-1.5 px-4.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs font-bold rounded-xl shadow-md hover:shadow-indigo-200 transition duration-200 cursor-pointer"
+                >
+                  {savingModelId === modalModelState.id ? (
+                    <IconLoader className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <IconDeviceFloppy className="h-3.5 w-3.5" />
+                  )}
+                  Simpan Data
+                </button>
+              </div>
             </div>
           </div>
         </div>,
@@ -4304,6 +4577,85 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
             </div>
           </div>
         </div>
+      )}
+
+      {/* Custom React Alert & Confirm Modal Portal */}
+      {mounted && alertModalState && alertModalState.isOpen && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[10100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in font-sans">
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-2xl w-full max-w-md flex flex-col gap-4 animate-scale-in text-slate-800">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className={`p-2 rounded-xl text-lg font-bold ${
+                  alertModalState.type === 'success'
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : alertModalState.type === 'error'
+                      ? 'bg-rose-100 text-rose-700'
+                      : alertModalState.type === 'warning'
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-indigo-100 text-indigo-700'
+                }`}>
+                  {alertModalState.type === 'success' ? '✅' : alertModalState.type === 'error' ? '❌' : alertModalState.type === 'warning' ? '⚠️' : 'ℹ️'}
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-bold text-slate-900">
+                    {alertModalState.title}
+                  </h3>
+                  <span className="text-[10px] text-slate-400">
+                    ScholarFlow Admin System
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setAlertModalState(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition cursor-pointer"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Message Body */}
+            <div className="text-xs text-slate-600 leading-relaxed whitespace-pre-line font-medium p-1">
+              {alertModalState.message}
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+              {alertModalState.isConfirm && (
+                <button
+                  onClick={() => setAlertModalState(null)}
+                  className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold rounded-xl transition cursor-pointer"
+                >
+                  Batal
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  if (alertModalState.onConfirm) {
+                    alertModalState.onConfirm();
+                  }
+                  setAlertModalState(null);
+                }}
+                className={`px-6 py-2 min-w-[84px] text-center text-white text-xs font-extrabold rounded-xl shadow-md transition duration-200 cursor-pointer ${
+                  alertModalState.type === 'success'
+                    ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'
+                    : alertModalState.type === 'error'
+                      ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-200'
+                      : alertModalState.type === 'warning'
+                        ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-200'
+                        : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200'
+                }`}
+              >
+                {alertModalState.confirmText || 'OK'}
+              </button>
+            </div>
+
+          </div>
+        </div>,
+        document.body
       )}
 
       {/* Backend & Database Provider Architecture Modal */}

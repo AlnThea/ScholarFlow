@@ -61,9 +61,14 @@ v0.5.0-architecture: Architecture Sprint EPICs 1, 2, 3, 4, 5 completed (Database
 43. [Completed] Redesign Admin AI Models Panel (`/admin/models`) into 2 grouped sections (Free Tier vs Pro Writer) with professional rounded-xl enterprise styling, stats bar, and 1-click status toggles.
 44. [Completed] Implement Custom OpenAI-Compatible Provider support (third-party API key sellers, custom proxies, private LLMs) with Base URL & API Key input fields in Admin AI Models Modal.
 45. [Completed] Add detailed user & developer guides for localizing custom templates (doc/TEMPLATE_LOCALIZATION_GUIDE.md) and interactive UI Help & Documentation modal.
+46. [Completed] Upgrade Admin AI Model active toggle switch contrast (border-2, dark knob, emerald Free / indigo Pro) and add AI Gateway Test Connection API (/api/v1/ai/test-connection).
+47. [Completed] Upgrade document selection apply logic to restore saved highlight ranges and refocus contenteditable elements when applying AI results.
+48. [Completed] Enable automatic switching of right sidebar to Writing tab ('writing') when executing AI Polish, Paraphrase, Summarize, or Generate Abstract.
+49. [Completed] Implement LocalStorage Dual-Persistence fallback for AI Models (scholarflow.ai_models.v1) to prevent custom models from disappearing on page refresh.
+50. [Completed] Create SQL schema migration file (supabase/migrations/20260811000002_update_ai_models_provider_fields.sql) and update Prisma schema for custom LLM provider fields.
 
 ## Current Task
-Completed template localization user & developer guide (doc/TEMPLATE_LOCALIZATION_GUIDE.md) and interactive UI Help & Documentation modal component (v0.5.2).
+Completed canvas text selection apply fix, right sidebar auto-switch to writing tab, LocalStorage dual-persistence for AI models, and SQL migration file (v0.5.4).
 
 ## Next Tasks
 - Complete remaining UI pages & user-facing feature modules.

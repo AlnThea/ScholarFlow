@@ -1227,7 +1227,63 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
       }
     },
     insertText: (text: string) => {
-      document.execCommand('insertText', false, text);
+      const selection = window.getSelection();
+      let targetRange = lastHighlightedRangeRef.current || lastSelectionRangeRef.current;
+
+      if (targetRange) {
+        try {
+          if (selection) {
+            selection.removeAllRanges();
+            selection.addRange(targetRange);
+          }
+          let container: HTMLElement | null = targetRange.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+            ? (targetRange.commonAncestorContainer as HTMLElement)
+            : targetRange.commonAncestorContainer.parentElement;
+          if (container) {
+            const contentEditable = container.closest('[contenteditable="true"]') as HTMLElement;
+            if (contentEditable) {
+              contentEditable.focus();
+            }
+          }
+        } catch (e) {
+          console.warn('Could not restore selection before insertText:', e);
+        }
+      }
+
+      let success = false;
+      try {
+        success = document.execCommand('insertText', false, text);
+      } catch (cmdErr) {
+        success = false;
+      }
+
+      if (!success && targetRange) {
+        try {
+          targetRange.deleteContents();
+          const textNode = document.createTextNode(text);
+          targetRange.insertNode(textNode);
+          const newRange = document.createRange();
+          newRange.setStartAfter(textNode);
+          newRange.setEndAfter(textNode);
+          if (selection) {
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+          }
+          lastSelectionRangeRef.current = newRange;
+          lastHighlightedRangeRef.current = null;
+        } catch (rangeErr) {
+          console.error('Failed direct range replacement:', rangeErr);
+        }
+      }
+
+      if (editorRef.current && editorRef.current.save) {
+        editorRef.current.save().then((outputData: any) => {
+          if (onContentChange) {
+            onContentChange(outputData);
+          }
+        }).catch((saveErr: any) => console.error('Save error after insertText:', saveErr));
+      }
+
       calculateLiveStats();
     },
     setFontSize: (size: string) => {

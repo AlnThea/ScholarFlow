@@ -226,6 +226,13 @@ export function EditorSidebar({
     }
   }, [activeTab]);
 
+  // Auto-switch to 'writing' tab when AI operation starts or produces a result
+  useEffect(() => {
+    if (isImproving || improvedText !== null || isSynthesizing || synthesizedText !== null) {
+      setWorkspaceTab('writing');
+    }
+  }, [isImproving, improvedText, isSynthesizing, synthesizedText]);
+
   const [query, setQuery] = useState('');
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   
@@ -1353,9 +1360,22 @@ export function EditorSidebar({
                                     ? (language === 'en' ? 'Abstract' : 'Abstrak')
                                     : (language === 'en' ? 'Academic' : 'Akademis')}
                       </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white text-slate-505 border border-slate-200/60 font-mono">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white text-slate-700 border border-slate-200/60 font-mono">
                         {item.model.replace(" (Direct)", "").replace(" (Free OR)", "").replace(" (Pro OR)", "")}
                       </span>
+                      {item.model.toLowerCase().includes('gemini') ? (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200/60">
+                          Gemini Direct
+                        </span>
+                      ) : item.model.toLowerCase().includes('custom') ? (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200/60">
+                          Custom Proxy
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200/60">
+                          OpenRouter
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-3">
                        <span className="text-xs text-slate-400 font-medium font-mono">{item.savedAt}</span>
