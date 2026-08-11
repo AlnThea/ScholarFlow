@@ -2,6 +2,17 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ✨ [v0.7.1] - 2026-08-11
+
+### 🎨 Clean & Streamlined Add/Edit AI Model Modal
+- **Clean 4-Field Model Modal**:
+  - Refactored Add/Edit AI Model Modal to focus purely on Model setup: **AI Provider selection**, **Gateway Key**, **Model Display Name**, and **Real API Model ID**.
+  - Replaced cluttered model-level Base URL / API Key inputs with a clean **Linked Provider Credentials Info Badge** that shows the parent Provider credentials.
+- **Top Banner Quick Provider Management**:
+  - Added **Manage Providers** button directly in the `/admin/models` dashboard top banner alongside the **Add New Model** button for rapid provider management.
+
+---
+
 ## 🏛️ [v0.7.0] - 2026-08-11
 
 ### 🏢 2-Tier AI Provider & Model Management Architecture

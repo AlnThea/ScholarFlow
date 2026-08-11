@@ -1794,15 +1794,26 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                         : 'Atur model kecerdasan buatan, konfigurasi API Model ID (Google Gemini & OpenRouter), dan tentukan batasan paket langganan (Free vs Pro Writer).'}
                     </p>
                   </div>
-                  <button
-                    onClick={handleOpenCreateModelModal}
-                    className="relative z-10 flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow-sm transition-all duration-200 cursor-pointer self-start md:self-auto"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    {isEn ? 'Add New Model' : 'Tambah Model Baru'}
-                  </button>
+                  <div className="relative z-10 flex items-center gap-2.5 self-start md:self-auto">
+                    <button
+                      onClick={handleOpenCreateProviderModal}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold rounded-lg shadow-sm transition-all duration-200 cursor-pointer"
+                    >
+                      <svg className="h-4 w-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.34 15.84c-.14.15-.3.3-.46.46m4.24-4.24a5 5 0 11-7.07 0 5 5 0 017.07 0z" />
+                      </svg>
+                      {isEn ? 'Manage Providers' : 'Kelola Provider AI'}
+                    </button>
+                    <button
+                      onClick={handleOpenCreateModelModal}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow-sm transition-all duration-200 cursor-pointer"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                      </svg>
+                      {isEn ? 'Add New Model' : 'Tambah Model Baru'}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Stats Overview Bar */}
@@ -4536,56 +4547,33 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                 />
               </div>
 
-              {/* Dynamic Provider Config: Custom API Base URL & API Key (Tampil untuk Hugging Face, Groq, Together, & Custom OpenAI) */}
-              {modalModelState.provider_type !== 'gemini' && modalModelState.provider_type !== 'openrouter' && (
-                <div className="flex flex-col gap-3 p-3.5 bg-indigo-50/40 border border-indigo-100 rounded-lg animate-fade-in">
-                  {(modalModelState.provider_type === 'custom_openai' || modalModelState.provider_type === 'huggingface') && (
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider">
-                        {isEn ? 'API Base URL (Optional Override)' : 'API Base URL (Opsional / Override)'}
-                      </label>
-                      <input
-                        type="text"
-                        placeholder={
-                          modalModelState.provider_type === 'huggingface'
-                            ? (isEn ? 'Default: https://router.huggingface.co/v1' : 'Default: https://router.huggingface.co/v1')
-                            : (isEn ? 'Example: https://api.seller-key.com/v1 or http://my-proxy:8080/v1' : 'Contoh: https://api.penjual-key.com/v1 atau http://my-proxy:8080/v1')
-                        }
-                        value={modalModelState.base_url || ''}
-                        onChange={(e) => setModalModelState(prev => ({ ...prev, base_url: e.target.value }))}
-                        className="w-full border border-indigo-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-white"
-                      />
-                      <span className="text-[10px] text-slate-500">
-                        {isEn ? 'System automatically calls OpenAI-compatible endpoint' : 'Sistem akan secara otomatis memanggil endpoint OpenAI-compatible'} <code className="font-mono bg-indigo-100/60 px-1 py-0.5 rounded text-indigo-800">/chat/completions</code>.
+              {/* Linked Provider Information */}
+              {(() => {
+                const currentProv = (aiProviders || DEFAULT_PROVIDERS).find(p => p.id === (modalModelState.provider_id || modalModelState.provider_type));
+                if (!currentProv) return null;
+                return (
+                  <div className="flex items-center justify-between p-3 bg-indigo-50/50 border border-indigo-100 rounded-lg text-xs animate-fade-in">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] font-bold uppercase text-indigo-700 tracking-wider">
+                        {isEn ? 'Linked Provider Credentials' : 'Kredensial Provider Terhubung'}
+                      </span>
+                      <span className="text-xs font-bold text-slate-800">
+                        {currentProv.name} ({currentProv.type.toUpperCase()})
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono">
+                        {currentProv.api_key ? `API Key: ...${currentProv.api_key.slice(-6)}` : (currentProv.base_url || '.env default key')}
                       </span>
                     </div>
-                  )}
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider">
-                      {isEn ? 'API Key (Input Dynamically in App)' : 'API Key (Input Dinamis Langsung di Aplikasi)'}
-                    </label>
-                    <input
-                      type="password"
-                      placeholder={
-                        modalModelState.provider_type === 'huggingface'
-                          ? 'hf_xxxx... (Input User Token Hugging Face)'
-                          : modalModelState.provider_type === 'groq'
-                          ? 'gsk_xxxx... (Input API Key Groq Cloud)'
-                          : modalModelState.provider_type === 'together'
-                          ? 'tgp_xxxx... (Input API Key Together AI)'
-                          : (isEn ? 'sk-xxxx... (Leave empty to use .env default key)' : 'sk-xxxx... (Biarkan kosong jika ingin menggunakan .env)')
-                      }
-                      value={modalModelState.custom_api_key || ''}
-                      onChange={(e) => setModalModelState(prev => ({ ...prev, custom_api_key: e.target.value }))}
-                      className="w-full border border-indigo-200 rounded-lg px-3 py-2 text-xs text-slate-800 font-mono outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-white"
-                    />
-                    <span className="text-[9px] text-slate-400">
-                      {isEn ? 'Stored securely in database & local storage.' : 'Tersimpan dengan aman di database & penyimpanan lokal.'}
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEditProviderModal(currentProv)}
+                      className="px-2.5 py-1 text-[10px] font-bold text-indigo-600 hover:bg-indigo-100 rounded border border-indigo-200 transition cursor-pointer shrink-0"
+                    >
+                      {isEn ? 'Edit Provider' : 'Edit Provider'}
+                    </button>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Toggle Enabled */}
               <div className="flex items-center justify-between p-3 border border-slate-200/80 rounded-lg bg-slate-50/50">
