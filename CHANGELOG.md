@@ -2,6 +2,16 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## 🗄️ [v0.7.2] - 2026-08-11
+
+### 💾 SQL Migration & Prisma Schema for AI Providers Table
+- **Supabase Migration Script**:
+  - Created official SQL migration script [20260811000003_create_ai_providers_table.sql](file:///c:/web/ScholarFlow/supabase/migrations/20260811000003_create_ai_providers_table.sql) to provision `ai_providers` table and default seed data.
+- **Prisma Schema Update**:
+  - Added `AiProviderEntry` model to [schema.prisma](file:///c:/web/ScholarFlow/prisma/schema.prisma) and linked `provider_id` field in `AiModelEntry`.
+
+---
+
 ## ✨ [v0.7.1] - 2026-08-11
 
 ### 🎨 Clean & Streamlined Add/Edit AI Model Modal

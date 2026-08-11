@@ -112,6 +112,7 @@ model AiModelEntry {
   id           String   @id
   name         String
   modelId      String   @map("model_id")
+  providerId   String?  @map("provider_id")
   isEnabled    Boolean  @default(true) @map("is_enabled")
   isPremium    Boolean  @default(false) @map("is_premium")
   providerType String?  @default("openrouter") @map("provider_type")
@@ -120,6 +121,18 @@ model AiModelEntry {
   updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("ai_models")
+}
+
+model AiProviderEntry {
+  id         String   @id
+  name       String
+  type       String   @default("custom_openai")
+  baseUrl    String?  @map("base_url")
+  apiKey     String?  @map("api_key")
+  isBuiltIn  Boolean  @default(false) @map("is_built_in")
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("ai_providers")
 }
 
 model PricingPlanEntry {
