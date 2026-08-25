@@ -312,7 +312,7 @@ export function MinimalSidebar({
     router.replace('/login');
   };
 
-  const isEffectiveExpanded = isExpanded || activeView === 'documents' || activeView === 'library';
+  const isEffectiveExpanded = isExpanded || activeView === 'documents' || activeView === 'library' || activeView === 'settings';
 
   const filteredDocs = React.useMemo(() => {
     return documents.filter(doc => 
