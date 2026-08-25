@@ -13,6 +13,8 @@ interface ShareDocumentModalProps {
   documentTitle?: string;
   settings?: DocumentSettings;
   onSaveSettings?: (newSettings: Partial<DocumentSettings>) => void;
+  activePlanId?: string;
+  role?: string;
 }
 
 export function ShareDocumentModal({
@@ -21,7 +23,9 @@ export function ShareDocumentModal({
   documentId,
   documentTitle,
   settings,
-  onSaveSettings
+  onSaveSettings,
+  activePlanId = 'free',
+  role = 'user'
 }: ShareDocumentModalProps) {
   const { language } = useLanguage();
   const [isLinkActive, setIsLinkActive] = useState(false);
@@ -155,7 +159,9 @@ export function ShareDocumentModal({
                   className="border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 bg-white outline-none focus:border-indigo-500 transition"
                 >
                   <option value="view">{language === 'en' ? 'Read-only access' : 'Dapat membaca saja (Read-only)'}</option>
-                  <option value="edit">{language === 'en' ? 'Can edit draft (Co-Editor)' : 'Dapat mengedit draf (Co-Editor)'}</option>
+                  {(activePlanId === 'enterprise' || activePlanId === 'team' || role === 'admin') && (
+                    <option value="edit">{language === 'en' ? 'Can edit draft (Co-Editor)' : 'Dapat mengedit draf (Co-Editor)'}</option>
+                  )}
                 </select>
               </div>
 

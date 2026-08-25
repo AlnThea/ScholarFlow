@@ -2912,17 +2912,21 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                 {/* Divider */}
                 <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
 
-                {/* Share Button */}
-                <button
-                  onClick={() => setIsShareOpen(true)}
-                  className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-slate-650 hover:bg-white hover:text-slate-800 transition cursor-pointer"
-                >
-                  <IconShare className="h-3.5 w-3.5 text-slate-500" />
-                  {language === 'en' ? 'Share' : 'Bagikan'}
-                </button>
+                {/* Share Button (Hidden for Free tier) */}
+                {(activePlanId !== 'free' || role === 'admin') && (
+                  <>
+                    <button
+                      onClick={() => setIsShareOpen(true)}
+                      className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-slate-650 hover:bg-white hover:text-slate-800 transition cursor-pointer"
+                    >
+                      <IconShare className="h-3.5 w-3.5 text-slate-500" />
+                      {language === 'en' ? 'Share' : 'Bagikan'}
+                    </button>
 
-                {/* Divider */}
-                <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
+                    {/* Divider */}
+                    <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
+                  </>
+                )}
 
                 {/* Pricing Button */}
                 <button
@@ -4084,6 +4088,8 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
       <ShareDocumentModal
         isOpen={isShareOpen}
         onClose={() => setIsShareOpen(false)}
+        activePlanId={activePlanId}
+        role={role}
         documentId={currentDocument?.id}
         documentTitle={currentDocument?.title}
         settings={currentDocument?.settings}
