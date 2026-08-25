@@ -1246,24 +1246,31 @@ export function MinimalSidebar({
       <div className="border-t border-slate-200/60 p-3">
         {isEffectiveExpanded ? (
           <div className="flex items-center gap-2.5">
-            {/* Avatar */}
-            <div className="h-8 w-8 flex-shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
-              {initials}
-            </div>
-            {/* Name + email + role badge */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <p className="text-xs font-semibold text-slate-700 truncate">{displayName}</p>
-                <span className={`flex-shrink-0 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
-                  role === 'admin'
-                    ? 'bg-indigo-100 text-indigo-600'
-                    : 'bg-slate-100 text-slate-500'
-                }`}>
-                  {role}
-                </span>
+            {/* Avatar & Info (Clickable to Settings) */}
+            <button 
+              onClick={() => router.push('/settings')}
+              className="flex-1 flex items-center gap-2.5 min-w-0 text-left hover:bg-slate-100/50 p-1.5 rounded-lg transition-colors cursor-pointer"
+              title={language === 'en' ? 'Account Settings' : 'Pengaturan Akun'}
+            >
+              {/* Avatar */}
+              <div className="h-8 w-8 flex-shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                {initials}
               </div>
-              <p className="text-[10px] text-slate-400 truncate">{user?.email}</p>
-            </div>
+              {/* Name + email + role badge */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs font-semibold text-slate-700 truncate">{displayName}</p>
+                  <span className={`flex-shrink-0 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
+                    role === 'admin'
+                      ? 'bg-indigo-100 text-indigo-600'
+                      : 'bg-slate-100 text-slate-500'
+                  }`}>
+                    {role}
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400 truncate">{user?.email}</p>
+              </div>
+            </button>
             {/* Logout button */}
             <button
               type="button"
@@ -1277,13 +1284,14 @@ export function MinimalSidebar({
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2">
-            {/* Avatar */}
-            <div
-              title={displayName}
-              className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold shadow-sm cursor-default"
+            {/* Avatar (Clickable to Settings) */}
+            <button
+              onClick={() => router.push('/settings')}
+              title={language === 'en' ? 'Account Settings' : 'Pengaturan Akun'}
+              className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold shadow-sm cursor-pointer hover:ring-2 hover:ring-indigo-300 transition-all"
             >
               {initials}
-            </div>
+            </button>
             {/* Logout button (collapsed) */}
             <button
               type="button"
