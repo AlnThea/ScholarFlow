@@ -135,3 +135,13 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
   - [ ] Integrasi `echarts-for-react` (Keyword Network) dan `recharts` (Timeline).
 - [ ] **6.4 Editor Export Bridge**
   - [ ] Fitur "Export Insight to Editor" (AI Summary) & Save to Library.
+
+---
+
+### 📚 EPIC 7: Centralized Library Management ("My Library")
+- [ ] **7.1 Library Dashboard UI**
+  - [ ] Halaman utama manajemen pustaka di `/app/dashboard/library/page.tsx` dengan layout tabel/list modern.
+- [ ] **7.2 CRUD Operations & Metadata Sync**
+  - [ ] Fitur Edit, Delete, dan pengelompokan referensi.
+- [ ] **7.3 Bulk Import & PDF Upload**
+  - [ ] Integrasi import file `.ris` / `BibTeX` dan upload PDF untuk ekstraksi metadata otomatis.

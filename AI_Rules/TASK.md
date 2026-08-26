@@ -74,6 +74,7 @@ Completed Gemini Multi-API Key Failover Pool, 100% UI bilingual i18n, and modal 
 
 ## Next Tasks
 - Complete remaining UI pages & user-facing feature modules.
+- **My Library (Centralized Reference Manager)** (Dashboard page untuk kelola referensi & import RIS/PDF).
 - **Bibliometric Analysis** (Dashboard page + ECharts Network Graph MVP).
 
 ## Do Not Work On Yet
