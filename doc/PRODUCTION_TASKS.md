@@ -123,3 +123,15 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
 - [x] **5.3 Resilience & Failure Recovery Testing**
   - [x] Uji skenario offline/online, failover sync, error handling API fallback, dan validasi data Pydantic/Zod.
 
+
+---
+
+### 📊 EPIC 6: Bibliometric Analysis & Research Discovery
+- [ ] **6.1 Bibliometric Dashboard UI**
+  - [ ] Halaman utama pencarian bibliometrik di `/app/dashboard/bibliometric/page.tsx`.
+- [ ] **6.2 OpenAlex Metadata Fetcher API**
+  - [ ] Endpoint API `/api/bibliometric/search` untuk menarik metadata literatur.
+- [ ] **6.3 Network & Trend Visualization**
+  - [ ] Integrasi `echarts-for-react` (Keyword Network) dan `recharts` (Timeline).
+- [ ] **6.4 Editor Export Bridge**
+  - [ ] Fitur "Export Insight to Editor" (AI Summary) & Save to Library.

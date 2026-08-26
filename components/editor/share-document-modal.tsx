@@ -159,7 +159,7 @@ export function ShareDocumentModal({
                   className="border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 bg-white outline-none focus:border-indigo-500 transition"
                 >
                   <option value="view">{language === 'en' ? 'Read-only access' : 'Dapat membaca saja (Read-only)'}</option>
-                  {(activePlanId === 'enterprise' || activePlanId === 'team' || role === 'admin') && (
+                  {(activePlanId === 'enterprise' || activePlanId === 'team' || activePlanId === 'institution' || role === 'admin') && (
                     <option value="edit">{language === 'en' ? 'Can edit draft (Co-Editor)' : 'Dapat mengedit draf (Co-Editor)'}</option>
                   )}
                 </select>

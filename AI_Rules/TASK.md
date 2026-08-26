@@ -74,10 +74,10 @@ Completed Gemini Multi-API Key Failover Pool, 100% UI bilingual i18n, and modal 
 
 ## Next Tasks
 - Complete remaining UI pages & user-facing feature modules.
+- **Bibliometric Analysis** (Dashboard page + ECharts Network Graph MVP).
 
 ## Do Not Work On Yet
-- SPSS
+- SPSS / PSPP (Strategy decided: "AI Output Interpreter" - user uploads output tables, AI interprets and drafts academic narrative to editor. Do not build a full SPSS clone).
 - SEM PLS
-- Bibliometric
 - Journal publishing
 - Realtime collaboration

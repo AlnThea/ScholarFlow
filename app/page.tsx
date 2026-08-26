@@ -13,8 +13,115 @@ import {
   IconArrowRight,
   IconCheck,
   IconBrain,
-  IconBulb
+  IconBulb,
+  IconCrown
 } from '@tabler/icons-react';
+import { useDataService } from '@/lib/services';
+import type { PricingPlan } from '@/lib/services/types';
+
+function PricingSection() {
+  const { dataService } = useDataService();
+  const [plans, setPlans] = useState<PricingPlan[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    dataService.getPricingPlans()
+      .then(fetchedPlans => {
+        // Sort plans so the cheapest/free is first, and Contact Us (-1) is last
+        const sorted = [...fetchedPlans].sort((a, b) => {
+          const priceA = a.price < 0 ? Infinity : a.price;
+          const priceB = b.price < 0 ? Infinity : b.price;
+          return priceA - priceB;
+        });
+        setPlans(sorted);
+      })
+      .catch(err => console.error('Failed to load pricing:', err))
+      .finally(() => setIsLoading(false));
+  }, [dataService]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-10">
+        <div className="flex items-center gap-2 text-slate-400">
+          <svg className="h-5 w-5 animate-spin text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" strokeOpacity="0.2" />
+            <path d="M12 2a10 10 0 0 1 10 10" />
+          </svg>
+          <span className="text-sm font-medium">Memuat paket...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (plans.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className={`grid md:grid-cols-2 gap-6 justify-center items-center ${plans.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
+      {plans.map(plan => {
+        const isContactUs = plan.price < 0;
+        const isFree = plan.price === 0;
+        const isPopular = plan.is_popular;
+        
+        return (
+          <div key={plan.id} className={`relative bg-white rounded-3xl p-8 border transition-all duration-300 flex flex-col h-full ${isPopular ? 'border-indigo-500 shadow-xl shadow-indigo-100 scale-105 z-10' : 'border-slate-200 hover:border-indigo-200 hover:shadow-lg'}`}>
+            {isPopular && (
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-[10px] font-bold uppercase tracking-widest py-1.5 px-4 rounded-full shadow-md">
+                Paling Laris
+              </div>
+            )}
+            
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-slate-800 mb-2">{plan.name}</h3>
+              <p className="text-sm text-slate-500 min-h-[40px]">{plan.description || (isContactUs ? 'Solusi kustom untuk institusi' : isFree ? 'Sempurna untuk mencoba' : 'Untuk riset profesional')}</p>
+            </div>
+            
+            <div className="mb-8">
+              <span className={`font-extrabold text-slate-900 ${isContactUs ? 'text-3xl' : 'text-4xl'}`}>
+                {isContactUs ? 'Hubungi Kami' : isFree ? 'Gratis' : `Rp ${plan.price.toLocaleString('id-ID')}`}
+              </span>
+              {!isFree && !isContactUs && <span className="text-slate-500 font-medium">/{plan.price_period}</span>}
+            </div>
+            
+            <ul className="space-y-4 mb-8 flex-1">
+              {plan.features.map((feature, idx) => (
+                <li key={idx} className="flex items-start gap-3 text-sm text-slate-600">
+                  <IconCheck className={`w-5 h-5 shrink-0 ${isPopular ? 'text-indigo-500' : 'text-emerald-500'}`} />
+                  <span className="leading-tight">{feature}</span>
+                </li>
+              ))}
+            </ul>
+            
+            {isContactUs ? (
+              <a 
+                href="mailto:admin@scholarflow.com?subject=Tanya%20Paket%20Enterprise" 
+                className={`w-full py-3.5 rounded-xl text-sm font-bold transition-all text-center block ${
+                  isPopular 
+                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 hover:-translate-y-0.5' 
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
+              >
+                Hubungi Sales
+              </a>
+            ) : (
+              <Link 
+                href="/register" 
+                className={`w-full py-3.5 rounded-xl text-sm font-bold transition-all text-center block ${
+                  isPopular 
+                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 hover:-translate-y-0.5' 
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
+              >
+                {isFree ? 'Mulai Sekarang' : 'Berlangganan'}
+              </Link>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function LandingPage() {
   const { user, loading } = useAuth();
@@ -236,6 +343,20 @@ export default function LandingPage() {
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-24 bg-slate-50 relative">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <h2 className="text-3xl font-extrabold text-slate-900 mb-4">Investasi untuk Karir Akademik Anda</h2>
+            <p className="text-slate-500 text-lg">
+              Pilih paket yang sesuai dengan kebutuhan riset Anda. Mulai dengan gratis, tingkatkan kapan saja.
+            </p>
+          </div>
+
+          <PricingSection />
         </div>
       </section>
 

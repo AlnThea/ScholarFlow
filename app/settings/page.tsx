@@ -14,7 +14,7 @@ const HelpModal = dynamic(() => import('@/components/editor/help-modal').then((m
 const BackendSettingsModal = dynamic(() => import('@/components/editor/backend-settings-modal').then((mod) => mod.BackendSettingsModal), { ssr: false });
 
 export default function SettingsPage() {
-  const { user, profile, loading, refreshAuth } = useAuth();
+  const { user, profile, loading } = useAuth();
   const router = useRouter();
   const { t, language, setLanguage } = useLanguage();
 
