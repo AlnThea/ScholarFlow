@@ -1,31 +1,54 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDataService, CitationCandidate } from "@/lib/services";
 
 export default function LibraryPage() {
+  const { dataService } = useDataService();
   const [searchQuery, setSearchQuery] = useState("");
+  const [library, setLibrary] = useState<CitationCandidate[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Mock data for the MVP UI
-  const mockLibrary = [
-    {
-      id: "1",
-      title: "Attention Is All You Need",
-      authors: "Vaswani, A., Shazeer, N., Parmar, N., et al.",
-      year: "2017",
-      journal: "Advances in Neural Information Processing Systems",
-      type: "Journal Article",
-      dateAdded: "2026-08-20",
-    },
-    {
-      id: "2",
-      title: "Generative AI in Education: A Systematic Literature Review",
-      authors: "Smith, J., Doe, A.",
-      year: "2024",
-      journal: "Educational Technology Research and Development",
-      type: "Review",
-      dateAdded: "2026-08-25",
-    },
-  ];
+  useEffect(() => {
+    loadLibrary();
+  }, [dataService]);
+
+  const loadLibrary = async () => {
+    setIsLoading(true);
+    try {
+      const data = await dataService.getCitationLibrary();
+      // Convert Record<string, CitationCandidate> to Array
+      setLibrary(Object.values(data));
+    } catch (error) {
+      console.error("Failed to load library:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (referenceId: string) => {
+    if (!confirm("Are you sure you want to delete this reference?")) return;
+    
+    try {
+      const res = await dataService.deleteCitationFromLibrary(referenceId);
+      if (res.success) {
+        setLibrary(prev => prev.filter(c => c.reference_id !== referenceId));
+      } else {
+        alert("Failed to delete: " + res.error);
+      }
+    } catch (error) {
+      console.error("Failed to delete citation:", error);
+    }
+  };
+
+  const filteredLibrary = library.filter(item => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    const titleMatch = item.title?.toLowerCase().includes(query);
+    const authorMatch = item.authors?.join(", ").toLowerCase().includes(query);
+    const venueMatch = item.venue?.toLowerCase().includes(query);
+    return titleMatch || authorMatch || venueMatch;
+  });
 
   return (
     <div className="flex flex-col w-full h-full p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
@@ -93,7 +116,7 @@ export default function LibraryPage() {
                     Year
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Type
+                    Source
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Actions
@@ -101,49 +124,66 @@ export default function LibraryPage() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {mockLibrary.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-1">
-                          {item.title}
-                        </span>
-                        <span className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5">
-                          {item.authors}
-                        </span>
-                        <span className="text-xs text-gray-400 dark:text-gray-500 mt-1 line-clamp-1">
-                          {item.journal}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {item.year}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                        {item.type}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 p-1">
-                          Edit
-                        </button>
-                        <button className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 p-1">
-                          Delete
-                        </button>
-                      </div>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                      Loading library...
                     </td>
                   </tr>
-                ))}
+                ) : filteredLibrary.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                      No references found.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredLibrary.map((item) => (
+                    <tr key={item.reference_id} className="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-1">
+                            {item.title}
+                          </span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5">
+                            {item.authors?.join(", ") || "Unknown Authors"}
+                          </span>
+                          <span className="text-xs text-gray-400 dark:text-gray-500 mt-1 line-clamp-1">
+                            {item.venue || "Unknown Journal"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {item.year || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                          {item.source || "Manual"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 p-1">
+                            Edit
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(item.reference_id)}
+                            className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 p-1"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
           
-          {/* Empty State / Pagination (Placeholder) */}
+          {/* Footer Info */}
           <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex items-center justify-between">
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              Showing {mockLibrary.length} references
+              Showing {filteredLibrary.length} references
             </span>
           </div>
         </div>
