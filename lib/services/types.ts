@@ -127,10 +127,10 @@ export interface IDataService {
   ): Promise<ServiceResponse>;
 
   // Citation Library Operations
-  getCitationLibrary(): Promise<Record<string, CitationCandidate>>;
+  getCitationLibrary(userId: string): Promise<Record<string, CitationCandidate>>;
   saveCitationToLibrary(candidate: CitationCandidate, userId: string): Promise<ServiceResponse>;
-  deleteCitationFromLibrary(referenceId: string): Promise<ServiceResponse>;
-  isCitationInLibrary(referenceId: string): Promise<boolean>;
+  deleteCitationFromLibrary(referenceId: string, userId: string): Promise<ServiceResponse>;
+  isCitationInLibrary(referenceId: string, userId: string): Promise<boolean>;
 
   // Catalog Pricing Operations
   getPricingPlans(): Promise<PricingPlan[]>;

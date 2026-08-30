@@ -858,6 +858,30 @@ export function MinimalSidebar({
                       </div>
                       <IconChevronRight className="ml-auto h-3.5 w-3.5 text-slate-400 self-center flex-shrink-0" />
                     </button>
+
+                    {/* Bibliometric Analysis */}
+                    <button 
+                      className={`flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left transition-all duration-200 group cursor-pointer ${
+                        !currentDocumentId && activeDashboardTab === 'bibliometric'
+                          ? 'text-indigo-700 bg-indigo-50/70 font-semibold'
+                          : 'text-slate-650 hover:bg-slate-100/80 hover:text-slate-900'
+                      }`}
+                      onClick={() => {
+                        router.push('/dashboard/bibliometric');
+                      }}
+                    >
+                      <IconSparkles className={`h-[18px] w-[18px] mt-0.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                        !currentDocumentId && activeDashboardTab === 'bibliometric' ? 'text-indigo-600' : 'text-slate-400'
+                      }`} />
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span className="text-xs font-bold">
+                          {language === 'en' ? 'Bibliometric Analysis' : 'Analisis Bibliometrik'}
+                        </span>
+                        <span className="text-[8px] text-slate-400 leading-tight font-medium mt-0.5">
+                          {language === 'en' ? 'Explore keyword network' : 'Jelajahi jaringan kata kunci'}
+                        </span>
+                      </div>
+                    </button>
                   </div>
                 </div>
 
@@ -966,6 +990,20 @@ export function MinimalSidebar({
                   onClick={() => setActiveView('library')}
                 >
                   <IconBook className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
+                </button>
+
+                {/* Bibliometric Button (collapsed) */}
+                <button
+                  className={`flex items-center justify-center w-full aspect-square rounded-lg transition-all duration-200 relative group cursor-pointer ${
+                    !currentDocumentId && activeDashboardTab === 'bibliometric'
+                      ? 'text-indigo-700 bg-indigo-50/70'
+                      : 'text-slate-400 hover:bg-slate-100/80 hover:text-slate-900'
+                  }`}
+                  title={language === 'en' ? 'Bibliometric Analysis' : 'Analisis Bibliometrik'}
+                  aria-label={language === 'en' ? 'Bibliometric Analysis' : 'Analisis Bibliometrik'}
+                  onClick={() => router.push('/dashboard/bibliometric')}
+                >
+                  <IconSparkles className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
                 </button>
 
                 {/* Akun & Billing Button (collapsed) */}
