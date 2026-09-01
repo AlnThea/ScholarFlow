@@ -3926,9 +3926,10 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
           )}
 
           {/* Editor canvas area + Right sidebar */}
-          <div className="flex flex-1 overflow-hidden">
-            <main
-              className="w-full flex-1 p-6 md:p-10 overflow-y-auto"
+          <div className="flex flex-1 overflow-hidden justify-center bg-slate-50/50">
+            <div className="flex w-full max-w-[1200px] h-full relative">
+              <main
+                className="flex-1 p-6 md:p-10 overflow-y-auto"
               onContextMenu={(e) => {
                 const selection = window.getSelection();
                 if (selection && !selection.isCollapsed && selection.toString().trim()) {
@@ -4046,6 +4047,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                 activeTab={activeSidebarTab}
               />
             )}
+            </div>
 
             {/* New Right PDF Viewer Sidebar */}
             {activePdfUrl && (
