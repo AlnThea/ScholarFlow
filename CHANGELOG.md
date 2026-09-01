@@ -2,6 +2,10 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## 🚀 [Unreleased]
+### ✨ Burstiness & Sentence Length Analyzer
+- **Added**: Integrating a 100% Client-Side Sentence Variance (Burstiness) Analyzer to detect AI-generated text patterns using Math/Regex (Standard Deviation) and visualizing it with `recharts` in the editor sidebar.
+
 ## 🛠️ [v0.7.5] - 2026-08-11
 
 ### 🔌 AI Provider Management Table & Database Column Alignment Fix

@@ -1050,10 +1050,10 @@ export function ScholarEditor() {
 
   // Load citation library: Supabase (global) + localStorage fallback
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || !user?.id) return;
 
     // 1. Try loading from Supabase global library first
-    fetchCitationLibrary().then((supabaseLibrary) => {
+    fetchCitationLibrary(user.id).then((supabaseLibrary) => {
       if (Object.keys(supabaseLibrary).length > 0) {
         setCitationLibrary(supabaseLibrary);
         // Sync to localStorage as local cache
@@ -1074,7 +1074,7 @@ export function ScholarEditor() {
         window.localStorage.removeItem(CITATION_LIBRARY_KEY);
       }
     });
-  }, [hydrated]);
+  }, [hydrated, user?.id]);
 
   // Resolving direct PDF url in background when citation modal is opened
   useEffect(() => {

@@ -1352,7 +1352,13 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
       calculateLiveStats();
     },
     upsertBibliography: async (entries: Array<{ label: string; formatted: string }>, isFreeTier: boolean = false) => {
-      if (!editorRef.current || !editorRef.current.blocks) return;
+      if (!editorRef.current) return;
+      try {
+        await editorRef.current.isReady;
+      } catch (e) {
+        return;
+      }
+      if (!editorRef.current.blocks) return;
       
       const wasReadOnly = editorRef.current.readOnly.isEnabled;
       try {

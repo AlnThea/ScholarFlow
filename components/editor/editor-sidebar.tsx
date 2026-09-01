@@ -33,6 +33,7 @@ import type { AiHistoryEntry } from '@/lib/editor/ai-history';
 import type { DocumentSuggestion } from '@/lib/api/suggestions';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useLanguage } from '../i18n/language-context';
+import { BurstinessChart } from './burstiness-chart';
 
 type SidebarProps = {
   selectedText: string;
@@ -784,6 +785,8 @@ export function EditorSidebar({
                     }
                   </span>
                 </div>
+                
+                <BurstinessChart content={selectedText} />
               </section>
 
               {/* Citation Style Selector Section */}
