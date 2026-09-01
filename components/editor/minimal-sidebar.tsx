@@ -312,7 +312,10 @@ export function MinimalSidebar({
     router.replace('/login');
   };
 
-  const isEffectiveExpanded = isExpanded || activeView === 'documents' || activeView === 'library' || activeView === 'settings';
+  const isDocumentEditor = !!currentDocumentId;
+  const isEffectiveExpanded = isDocumentEditor 
+    ? isExpanded 
+    : (isExpanded || activeView === 'documents' || activeView === 'library' || activeView === 'settings');
 
   const filteredDocs = React.useMemo(() => {
     return documents.filter(doc => 
@@ -380,28 +383,42 @@ export function MinimalSidebar({
   return (
     <aside
       className={`bg-slate-50 border-r border-slate-200/80 shadow-[2px_0_12px_rgba(0,0,0,0.015)] transition-all duration-300 ease-in-out ${
-        isEffectiveExpanded ? 'w-60' : 'w-16'
+        isEffectiveExpanded ? 'w-60' : (isDocumentEditor ? 'w-0 opacity-0 overflow-hidden pointer-events-none border-0' : 'w-16')
       } flex flex-col h-screen sticky top-0 z-30 font-sans ${className || ''}`}
     >
       {/* 1. DOCUMENTS VIEW HEADER & CONTENT */}
       {activeView === 'documents' && (
         <>
           {/* Header Row */}
-          <div className="flex items-center gap-2 px-3 pt-5 pb-4 border-b border-slate-100/80">
-            <button
-              type="button"
-              onClick={() => setActiveView('main')}
-              className="bg-transparent border-0 p-1.5 rounded-md text-slate-400 hover:bg-slate-100/80 hover:text-slate-700 cursor-pointer flex items-center justify-center transition-all duration-200"
-              title={language === 'en' ? 'Back to Main Menu' : 'Kembali ke Menu Utama'}
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="19" y1="12" x2="5" y2="12"></line>
-                <polyline points="12 19 5 12 12 5"></polyline>
-              </svg>
-            </button>
-            <span className="text-[14px] font-semibold text-slate-800 tracking-tight whitespace-nowrap truncate">
-              {language === 'en' ? 'My Documents' : 'Dokumen Saya'}
-            </span>
+          <div className="flex items-center justify-between px-3 pt-5 pb-4 border-b border-slate-100/80">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveView('main')}
+                className="bg-transparent border-0 p-1.5 rounded-md text-slate-400 hover:bg-slate-100/80 hover:text-slate-700 cursor-pointer flex items-center justify-center transition-all duration-200"
+                title={language === 'en' ? 'Back to Main Menu' : 'Kembali ke Menu Utama'}
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+              </button>
+              <span className="text-[14px] font-semibold text-slate-800 tracking-tight whitespace-nowrap truncate">
+                {language === 'en' ? 'My Documents' : 'Dokumen Saya'}
+              </span>
+            </div>
+            {isDocumentEditor && (
+              <button
+                type="button"
+                onClick={onToggle}
+                aria-label="Collapse sidebar"
+                className="bg-transparent border-0 p-1 rounded-md text-slate-400 hover:bg-slate-100/80 hover:text-slate-700 cursor-pointer flex items-center justify-center transition-all duration-200"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+            )}
           </div>
 
           {/* Search bar */}

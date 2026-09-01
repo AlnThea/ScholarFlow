@@ -74,6 +74,7 @@ Completed Gemini Multi-API Key Failover Pool, 100% UI bilingual i18n, and modal 
 
 ## Next Tasks
 - Complete remaining UI pages & user-facing feature modules.
+- **[Completed] Distraction-Free Zen Mode** (Hide left sidebar completely when collapsed for maximum editor workspace).
 - **[Completed] Burstiness & Sentence Length Analyzer** (Debounced Real-time UI Sidebar panel with Recharts to detect AI patterns vs human variance).
 - **My Library (Centralized Reference Manager)** (Dashboard page untuk kelola referensi & import RIS/PDF).
 - **Bibliometric Analysis** (Dashboard page + ECharts Network Graph MVP).

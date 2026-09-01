@@ -3,6 +3,9 @@
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
 ## 🚀 [Unreleased]
+### ✨ Distraction-Free Zen Mode Layout
+- **Added**: Upgraded the Left Sidebar (`MinimalSidebar`) to completely hide (`w-0`) when collapsed instead of shrinking to `w-16`. A floating Hamburger menu appears on the document header to toggle it, providing a fully immersive, distraction-free writing canvas for the user.
+
 ### ✨ Burstiness & Sentence Length Analyzer
 - **Added**: Integrating a 100% Client-Side Sentence Variance (Burstiness) Analyzer to detect AI-generated text patterns using Math/Regex (Standard Deviation) and visualizing it with `recharts` in the editor sidebar.
 

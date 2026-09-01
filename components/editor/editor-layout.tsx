@@ -351,7 +351,7 @@ export function EditorLayout({
 }: EditorLayoutProps) {
   const { language, setLanguage, t } = useLanguage();
   const isEn = language === 'en';
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(!currentDocument);
   const [showRightSidebar, setShowRightSidebar] = useState(false);
   const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
@@ -1259,6 +1259,15 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
 
   const [bubbleSearchQuery, setBubbleSearchQuery] = useState('');
 
+  // Auto-collapse sidebar (Zen Mode) when entering a document
+  useEffect(() => {
+    if (currentDocument) {
+      setIsSidebarExpanded(false);
+    } else {
+      setIsSidebarExpanded(true); // Auto-expand in dashboard
+    }
+  }, [currentDocument?.id]);
+
   useEffect(() => {
     if (bubbleMode === 'citation') {
       setBubbleSearchQuery(selectedText);
@@ -1267,7 +1276,9 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
 
   useEffect(() => {
     const saved = localStorage.getItem('sidebar-expanded');
-    if (saved !== null) setIsSidebarExpanded(saved === 'true');
+    if (saved !== null && !currentDocument) {
+      setIsSidebarExpanded(saved === 'true');
+    }
 
     // Selection change handler to sync toolbar states and show bubble menu
     const handleSelectionChange = () => {
