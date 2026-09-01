@@ -352,7 +352,7 @@ export function EditorLayout({
   const { language, setLanguage, t } = useLanguage();
   const isEn = language === 'en';
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(!currentDocument);
-  const [showRightSidebar, setShowRightSidebar] = useState(false);
+  const [showRightSidebar, setShowRightSidebar] = useState(true);
   const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
   const [currentBlockType, setCurrentBlockType] = useState('paragraph');
