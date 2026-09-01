@@ -344,7 +344,7 @@ export function EditorSidebar({
 
   return (
     <>
-      <aside className={`relative h-full flex flex-row border-l border-slate-200/80 bg-white shadow-[-4px_0_16px_rgba(15,23,42,0.03)] transition-all duration-300 ${isExpanded ? 'w-[360px]' : 'w-12'} shrink-0 z-40`}>
+      <aside className={`relative h-full flex flex-row border border-slate-100 bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden transition-all duration-300 ${isExpanded ? 'w-[360px]' : 'w-12'} shrink-0 z-40`}>
         {/* Main Content Area */}
         <div className={`flex min-h-0 flex-col transition-all duration-300 overflow-hidden ${isExpanded ? 'flex-1 opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}>
           <div className="border-b border-slate-100 px-4 py-4 flex items-center justify-between min-h-[65px]">
