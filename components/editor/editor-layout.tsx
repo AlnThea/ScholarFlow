@@ -3926,8 +3926,8 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
           )}
 
           {/* Editor canvas area + Right sidebar */}
-          <div className="flex flex-1 overflow-hidden justify-center bg-slate-50/50">
-            <div className="flex w-full max-w-[1200px] h-full relative">
+          <div className="flex flex-1 overflow-hidden justify-center bg-slate-50/50 p-6 md:p-10">
+            <div className="flex w-full max-w-[1200px] h-full relative bg-white rounded-xl shadow-sm border border-slate-200/60 overflow-hidden">
               <main
                 className="flex-1 p-6 md:p-10 overflow-y-auto"
               onContextMenu={(e) => {
@@ -3988,66 +3988,64 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
 
             {/* Right Panel — Citation Results, Plagiarism Checker, & AI */}
             {showRightSidebar && (
-              <div className="py-6 md:py-10 pr-6 md:pr-10 pl-2 h-full">
-                <EditorSidebar
-                  selectedText={selectedText}
-                  citationResults={citationResults}
-                  citationHistory={citationHistory}
-                  wordCount={wordCount}
-                  characterCount={characterCount}
-                  citationCount={citationCount}
-                  bibliographyEntries={bibliographyEntries}
-                  improvedText={improvedText}
-                  isImproving={isImproving}
-                  isSearchingCitations={isSearchingCitations}
-                  aiError={aiError}
-                  citationError={citationError}
-                  citationNote={citationNote}
-                  onApplyImprovedText={onApplyImprovedText}
-                  onImproveWriting={onImproveWriting}
-                  onParaphrase={onParaphrase}
-                  onSummarize={onSummarize}
-                  onGenerateAbstract={onGenerateAbstract}
-                  onFindCitation={onFindCitation}
-                  onRepeatCitationSearch={onRepeatCitationSearch}
-                  onInsertCitation={onInsertCitation}
-                  onInsertBibliography={onInsertBibliography}
-                  onInsertImageSample={onInsertImageSample}
-                  onExportBibliographyText={onExportBibliographyText}
-                  onExportBibliographyJson={onExportBibliographyJson}
-                  onExportBibliographyBibtex={onExportBibliographyBibtex}
-                  onExportBibliographyRis={onExportBibliographyRis}
-                  onInsertCitationCandidate={onInsertCitationCandidate}
-                  onParafrasePlagiat={onParafrasePlagiat}
-                  selectedAiModel={selectedAiModel}
-                  isSynthesizing={isSynthesizing}
-                  synthesizedText={synthesizedText}
-                  synthesizeError={synthesizeError}
-                  synthesizeDisclaimer={synthesizeDisclaimer}
-                  onSynthesizeReview={onSynthesizeReview}
-                  onInsertSynthesizedText={onInsertSynthesizedText}
-                  citationStyle={citationStyle}
-                  onChangeCitationStyle={onChangeCitationStyle}
-                  folders={folders}
-                  folderAssignments={folderAssignments}
-                  onCreateFolder={onCreateFolder}
-                  onAssignFolder={onAssignFolder}
-                  aiHistory={aiHistory}
-                  onDeleteAiHistoryEntry={onDeleteAiHistoryEntry}
-                  onClearAiHistory={onClearAiHistory}
-                  isApplied={isApplied}
-                  isExpanded={isRightSidebarExpanded}
-                  onToggleExpanded={handleToggleRightSidebarExpanded}
-                  onClose={() => setShowRightSidebar(false)}
-                  comments={comments}
-                  suggestions={suggestions}
-                  onAcceptSuggestion={onAcceptSuggestion}
-                  onRejectSuggestion={onRejectSuggestion}
-                  onResolveComment={onResolveComment}
-                  onCommentClick={onCommentClick}
-                  activeTab={activeSidebarTab}
-                />
-              </div>
+              <EditorSidebar
+                selectedText={selectedText}
+                citationResults={citationResults}
+                citationHistory={citationHistory}
+                wordCount={wordCount}
+                characterCount={characterCount}
+                citationCount={citationCount}
+                bibliographyEntries={bibliographyEntries}
+                improvedText={improvedText}
+                isImproving={isImproving}
+                isSearchingCitations={isSearchingCitations}
+                aiError={aiError}
+                citationError={citationError}
+                citationNote={citationNote}
+                onApplyImprovedText={onApplyImprovedText}
+                onImproveWriting={onImproveWriting}
+                onParaphrase={onParaphrase}
+                onSummarize={onSummarize}
+                onGenerateAbstract={onGenerateAbstract}
+                onFindCitation={onFindCitation}
+                onRepeatCitationSearch={onRepeatCitationSearch}
+                onInsertCitation={onInsertCitation}
+                onInsertBibliography={onInsertBibliography}
+                onInsertImageSample={onInsertImageSample}
+                onExportBibliographyText={onExportBibliographyText}
+                onExportBibliographyJson={onExportBibliographyJson}
+                onExportBibliographyBibtex={onExportBibliographyBibtex}
+                onExportBibliographyRis={onExportBibliographyRis}
+                onInsertCitationCandidate={onInsertCitationCandidate}
+                onParafrasePlagiat={onParafrasePlagiat}
+                selectedAiModel={selectedAiModel}
+                isSynthesizing={isSynthesizing}
+                synthesizedText={synthesizedText}
+                synthesizeError={synthesizeError}
+                synthesizeDisclaimer={synthesizeDisclaimer}
+                onSynthesizeReview={onSynthesizeReview}
+                onInsertSynthesizedText={onInsertSynthesizedText}
+                citationStyle={citationStyle}
+                onChangeCitationStyle={onChangeCitationStyle}
+                folders={folders}
+                folderAssignments={folderAssignments}
+                onCreateFolder={onCreateFolder}
+                onAssignFolder={onAssignFolder}
+                aiHistory={aiHistory}
+                onDeleteAiHistoryEntry={onDeleteAiHistoryEntry}
+                onClearAiHistory={onClearAiHistory}
+                isApplied={isApplied}
+                isExpanded={isRightSidebarExpanded}
+                onToggleExpanded={handleToggleRightSidebarExpanded}
+                onClose={() => setShowRightSidebar(false)}
+                comments={comments}
+                suggestions={suggestions}
+                onAcceptSuggestion={onAcceptSuggestion}
+                onRejectSuggestion={onRejectSuggestion}
+                onResolveComment={onResolveComment}
+                onCommentClick={onCommentClick}
+                activeTab={activeSidebarTab}
+              />
             )}
             </div>
 

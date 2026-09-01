@@ -2011,7 +2011,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
   }, [readOnly, isReady]);
 
   return (
-    <div className="sf-editor flex flex-col min-h-full bg-white p-6 md:p-10 pb-32 max-w-3xl mx-auto rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.02)] border border-slate-100">
+    <div className="sf-editor flex flex-col min-h-full w-full max-w-3xl mx-auto pb-32 relative">
       <div 
         id={holderId} 
         onClick={(e) => {
