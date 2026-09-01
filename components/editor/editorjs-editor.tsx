@@ -1424,7 +1424,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           { text: 'Daftar Pustaka / References', level: 2 },
           undefined,
           insertAt,
-          true,
+          false,
         );
 
         // Build labeled list as HTML paragraph
@@ -1440,7 +1440,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           { text: biblioHtml },
           undefined,
           insertAt + 1,
-          true,
+          false,
         );
 
         if (isFreeTier) {
@@ -1458,7 +1458,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
                   </div>
                 </div>
                 <button class="sf-upgrade-btn" style="background-color: #6366f1; color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 11px; font-weight: 700; cursor: pointer; transition: background-color 0.2s; flex-shrink: 0;" onclick="window.dispatchEvent(new CustomEvent('sf-trigger-pricing'))">
-                  See Pricing
+                  Upgrade Now
                 </button>
               </div>
             </div>
@@ -1469,7 +1469,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
             { text: bannerHtml },
             undefined,
             insertAt + 2,
-            true,
+            false,
           );
 
           // Apply DOM classes directly to bypass paragraph tool sanitize stripping
