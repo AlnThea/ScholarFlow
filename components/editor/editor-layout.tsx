@@ -3929,7 +3929,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
           <div className="flex flex-1 overflow-hidden justify-center bg-slate-50/50 p-6 md:p-10">
             <div className="flex w-full max-w-[1200px] h-full relative bg-white rounded-xl shadow-sm border border-slate-200/60 overflow-hidden">
               <main
-                className="flex-1 p-6 md:p-10 overflow-y-auto"
+                className="flex-1 p-6 md:p-10 overflow-y-auto thin-scroll"
               onContextMenu={(e) => {
                 const selection = window.getSelection();
                 if (selection && !selection.isCollapsed && selection.toString().trim()) {

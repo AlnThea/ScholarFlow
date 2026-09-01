@@ -365,7 +365,7 @@ export function EditorSidebar({
           </div>
 
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 thin-scroll">
           {workspaceTab === 'library' ? (
             <div className="space-y-4">
               <div className="relative">
@@ -1266,7 +1266,7 @@ export function EditorSidebar({
                   setWorkspaceTab(item.id as typeof workspaceTab);
                   if (!isExpanded) toggleExpanded(); // Auto-expand when a tab is clicked
                 }}
-                className={`w-full aspect-square flex flex-col items-center justify-center gap-1 rounded-md transition relative group ${
+                className={`w-full py-2 flex flex-col items-center justify-center gap-1 rounded-md transition relative group ${
                   workspaceTab === item.id && isExpanded
                     ? 'bg-indigo-100 text-indigo-700 shadow-sm'
                     : 'bg-transparent text-slate-500 hover:bg-slate-200/50 hover:text-slate-800'
@@ -1274,6 +1274,9 @@ export function EditorSidebar({
                 title={item.label}
               >
                 {item.icon}
+                <span className="text-[9px] font-medium text-center w-full truncate px-0.5" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', marginTop: '8px', paddingBottom: '4px' }}>
+                  {item.label}
+                </span>
                 {workspaceTab === item.id && isExpanded && (
                   <span className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-1 h-1/2 bg-indigo-600 rounded-r-full" />
                 )}

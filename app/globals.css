@@ -174,6 +174,21 @@ body {
   /* Firefox */
 }
 
+.thin-scroll::-webkit-scrollbar {
+  width: 2px !important;
+  height: 2px !important;
+}
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+.thin-scroll {
+  scrollbar-width: thin !important;
+}
+
 /* Custom Code block textarea auto-grow styling */
 .ce-code__textarea {
   overflow-y: hidden !important;
