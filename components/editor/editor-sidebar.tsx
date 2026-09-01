@@ -344,24 +344,18 @@ export function EditorSidebar({
 
   return (
     <>
-      <aside className={`relative h-full flex flex-col border-l border-slate-200/80 bg-white shadow-[-4px_0_16px_rgba(15,23,42,0.03)] transition-all duration-300 ${isExpanded ? 'w-[360px]' : 'w-16'} shrink-0 z-40`}>
-      <div className="flex min-h-0 flex-1 flex-col">
-        <div className={`border-b border-slate-100 px-4 py-4 flex items-center ${isExpanded ? 'justify-between' : 'justify-center'}`}>
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={toggleExpanded}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line bg-panel text-text hover:bg-accentSoft/70"
-              aria-label={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
-            >
-              {isExpanded ? <IconChevronRight className="h-4 w-4" /> : <IconChevronLeft className="h-4 w-4" />}
-            </button>
-            
-            {isExpanded && onClose && (
+      <aside className={`relative h-full flex flex-row border-l border-slate-200/80 bg-white shadow-[-4px_0_16px_rgba(15,23,42,0.03)] transition-all duration-300 ${isExpanded ? 'w-[360px]' : 'w-12'} shrink-0 z-40`}>
+        {/* Main Content Area */}
+        <div className={`flex min-h-0 flex-col transition-all duration-300 overflow-hidden ${isExpanded ? 'flex-1 opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}>
+          <div className="border-b border-slate-100 px-4 py-4 flex items-center justify-between min-h-[65px]">
+            <span className="font-bold text-slate-800 text-sm">
+              {workspaceTab === 'library' ? 'Library' : workspaceTab === 'writing' ? 'AI Writing' : workspaceTab === 'document' ? 'Document Stats' : 'Comments'}
+            </span>
+            {onClose && (
               <button
                 type="button"
                 onClick={onClose}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line bg-panel text-slate-500 hover:text-slate-800 hover:bg-accentSoft/70"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line bg-panel text-slate-500 hover:text-slate-800 hover:bg-accentSoft/70 transition"
                 aria-label="Close sidebar"
                 title="Tutup Asisten Riset"
               >
@@ -369,45 +363,7 @@ export function EditorSidebar({
               </button>
             )}
           </div>
-          
-          {isExpanded && (
-            <button
-              type="button"
-              onClick={onInsertImageSample}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-line bg-panel text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
-              aria-label="Insert sample image"
-              title="Insert sample image"
-            >
-              <IconDownload className="h-4 w-4 rotate-180" />
-            </button>
-          )}
-        </div>
 
-        {isExpanded && (
-          <div className="px-4 pt-4">
-            <div className={`grid ${comments ? 'grid-cols-4' : 'grid-cols-3'} gap-1 rounded-md border border-line bg-panel p-1 text-xs font-medium text-muted`}>
-              {[
-                { id: 'library', label: 'Library' },
-                { id: 'writing', label: 'Writing' },
-                { id: 'document', label: 'Document' },
-                ...(comments ? [{ id: 'comments', label: language === 'en' ? 'Comments' : 'Komentar' }] : [])
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setWorkspaceTab(item.id as typeof workspaceTab)}
-                  className={
-                    workspaceTab === item.id
-                      ? 'rounded px-2 py-2 bg-white text-text shadow-sm'
-                      : 'rounded px-2 py-2 transition hover:text-text'
-                  }
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
           {workspaceTab === 'library' ? (
@@ -1280,8 +1236,65 @@ export function EditorSidebar({
             <div className="text-xs text-slate-400 italic">Error Tab</div>
           )}
         </div>
-      </div>
-    </aside>
+        </div>
+        
+        {/* Vertical Tabs Bar on the Right */}
+        <div className="w-12 shrink-0 flex flex-col items-center py-4 border-l border-slate-100 bg-slate-50 gap-4 overflow-hidden">
+          {/* Toggle Button */}
+          <button
+            type="button"
+            onClick={toggleExpanded}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line bg-white text-text hover:bg-accentSoft/70 transition mb-2 shadow-sm"
+            aria-label={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+            title={isExpanded ? 'Tutup Panel' : 'Buka Panel'}
+          >
+            {isExpanded ? <IconChevronRight className="h-4 w-4" /> : <IconChevronLeft className="h-4 w-4" />}
+          </button>
+          
+          {/* Vertical Tabs */}
+          <div className="flex flex-col gap-2 w-full px-1.5 flex-1">
+            {[
+              { id: 'library', label: 'Library', icon: <IconBook className="h-4 w-4" /> },
+              { id: 'writing', label: 'AI Writing', icon: <IconWand className="h-4 w-4" /> },
+              { id: 'document', label: 'Stats', icon: <IconFileText className="h-4 w-4" /> },
+              ...(comments ? [{ id: 'comments', label: 'Comments', icon: <IconQuote className="h-4 w-4" /> }] : [])
+            ].map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => {
+                  setWorkspaceTab(item.id as typeof workspaceTab);
+                  if (!isExpanded) toggleExpanded(); // Auto-expand when a tab is clicked
+                }}
+                className={`w-full aspect-square flex flex-col items-center justify-center gap-1 rounded-md transition relative group ${
+                  workspaceTab === item.id && isExpanded
+                    ? 'bg-indigo-100 text-indigo-700 shadow-sm'
+                    : 'bg-transparent text-slate-500 hover:bg-slate-200/50 hover:text-slate-800'
+                }`}
+                title={item.label}
+              >
+                {item.icon}
+                {workspaceTab === item.id && isExpanded && (
+                  <span className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-1 h-1/2 bg-indigo-600 rounded-r-full" />
+                )}
+              </button>
+            ))}
+          </div>
+          
+          {/* Bottom Action (if any) */}
+          {isExpanded && (
+            <button
+              type="button"
+              onClick={onInsertImageSample}
+              className="mt-auto inline-flex h-8 w-8 items-center justify-center rounded-md border border-line bg-white text-text transition hover:border-accent/30 hover:bg-accentSoft/70 shadow-sm"
+              aria-label="Insert sample image"
+              title="Insert sample image"
+            >
+              <IconDownload className="h-4 w-4 rotate-180" />
+            </button>
+          )}
+        </div>
+      </aside>
 
     {/* AI History Modal popup */}
     {isHistoryModalOpen && (
