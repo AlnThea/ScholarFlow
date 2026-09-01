@@ -3985,11 +3985,6 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
               />
             </main>
 
-            {/* Spacer layout to prevent overlapping the canvas on large screens */}
-            {showRightSidebar && (
-              <div className={`hidden lg:block flex-shrink-0 transition-all duration-300 ${isRightSidebarExpanded ? 'w-[360px]' : 'w-16'}`} />
-            )}
-
             {/* Right Panel — Citation Results, Plagiarism Checker, & AI */}
             {showRightSidebar && (
               <EditorSidebar
