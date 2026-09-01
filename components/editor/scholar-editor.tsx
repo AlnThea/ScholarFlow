@@ -1710,10 +1710,14 @@ export function ScholarEditor() {
         editorJsRef.current?.insertCitation(candidate.citation_label, candidate.reference_id);
       }
 
-      // 2. Perbarui state library
+      // 2. Perbarui state library & sinkronisasi ke localStorage
       setCitationLibrary((current) => {
         if (current[candidate.reference_id]) return current;
-        return { ...current, [candidate.reference_id]: candidate };
+        const newLibrary = { ...current, [candidate.reference_id]: candidate };
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('scholarflow_citation_library', JSON.stringify(newLibrary));
+        }
+        return newLibrary;
       });
 
       // 4. Simpan ke Supabase global library (fire & forget)
@@ -1990,13 +1994,13 @@ export function ScholarEditor() {
               <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
-                  <h3 className="text-sm font-bold text-slate-800">Detail Sitasi Jurnal</h3>
+                  <h3 className="text-sm font-bold text-slate-800">{language === 'en' ? 'Journal Citation Details' : 'Detail Sitasi Jurnal'}</h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => setActiveModalCitation(null)}
                   className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition"
-                  aria-label="Tutup"
+                  aria-label={language === 'en' ? 'Close' : 'Tutup'}
                 >
                   <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -2029,13 +2033,13 @@ export function ScholarEditor() {
                           <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2H4c-1.25 0-2 .75-2 2v4c0 1.25.75 2 2 2h4c0 2.5-1.75 4.5-4 5v2m14 3c3 0 7-1 7-8V5c0-1.25-.75-2-2-2h-4c-1.25 0-2 .75-2 2v4c0 1.25.75 2 2 2h4c0 2.5-1.75 4.5-4 5v2"></path>
                           </svg>
-                          Klaim/Pernyataan Anda:
+                          {language === 'en' ? 'Your Claim/Statement:' : 'Klaim/Pernyataan Anda:'}
                         </span>
                         <p className="italic font-medium text-xs text-slate-600">"{citedSentence}"</p>
                       </div>
                     )}                    {/* Matched text in Journal */}
                     <div className="flex flex-col gap-2">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kutipan Terkait dari Jurnal (Matching Snippet):</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{language === 'en' ? 'Relevant Quote from Journal (Matching Snippet):' : 'Kutipan Terkait dari Jurnal (Matching Snippet):'}</span>
                       <div className="p-4 rounded-xl bg-indigo-50/50 border border-indigo-100/80 text-xs leading-relaxed text-indigo-950 font-medium italic min-h-[4rem] flex items-center justify-center">
                         {isTranslating ? (
                           <span className="text-[11px] text-slate-400 font-medium animate-pulse flex items-center gap-1.5 justify-center py-2 w-full">
@@ -2043,7 +2047,7 @@ export function ScholarEditor() {
                               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            Menerjemahkan & mencocokkan kutipan lintas bahasa...
+                            {language === 'en' ? 'Translating & matching cross-lingual quotes...' : 'Menerjemahkan & mencocokkan kutipan lintas bahasa...'}
                           </span>
                         ) : (
                           `"${findMostRelevantSentence(candidate.abstract, translatedCitedSentence || citedSentence || '')}"`
@@ -2054,7 +2058,7 @@ export function ScholarEditor() {
                     {/* Full Abstract with Highlight */}
                     {candidate.abstract && (
                       <div className="flex flex-col gap-2">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Abstrak Lengkap Jurnal:</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{language === 'en' ? 'Full Journal Abstract:' : 'Abstrak Lengkap Jurnal:'}</span>
                         <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/30">
                           <HighlightedAbstract abstract={candidate.abstract} query={translatedCitedSentence || citedSentence || ''} />
                         </div>
@@ -2063,7 +2067,7 @@ export function ScholarEditor() {
                   </>
                 ) : (
                   <div className="py-8 text-center text-slate-400 text-xs">
-                    Informasi detail sitasi tidak ditemukan di pustaka lokal.
+                    {language === 'en' ? 'Citation detail information not found in local library.' : 'Informasi detail sitasi tidak ditemukan di pustaka lokal.'}
                   </div>
                 )}
               </div>
@@ -2075,7 +2079,7 @@ export function ScholarEditor() {
                   onClick={() => setActiveModalCitation(null)}
                   className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
                 >
-                  Tutup
+                  {language === 'en' ? 'Close' : 'Tutup'}
                 </button>
                 {isResolvingPdf && !resolvedPdfUrl && (
                   <span className="text-[10px] text-slate-400 font-medium animate-pulse mr-2 flex items-center gap-1.5">
