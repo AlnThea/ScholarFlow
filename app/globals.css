@@ -190,11 +190,22 @@ body {
 }
 
 /* Custom Code block textarea auto-grow styling */
+.ce-code {
+  padding: 12px 10px !important;
+  background-color: #f8fafc !important; /* match slate-50 */
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+}
+
 .ce-code__textarea {
   overflow-y: hidden !important;
   resize: none !important;
   white-space: pre-wrap !important;
   word-wrap: break-word !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  min-height: 1.5em !important;
 }
 
 /* Dark Mode overrides for static Tailwind classes */
@@ -253,9 +264,14 @@ body {
   color: hsl(var(--text)) !important;
 }
 
-.dark .ce-code__textarea {
+.dark .ce-code {
   background-color: hsl(var(--surface)) !important;
   border-color: hsl(var(--line)) !important;
+}
+
+/* Fix excessive bottom padding in Editor.js */
+.codex-editor__redactor {
+  padding-bottom: 40px !important;
 }
 
 .dark .tc-row,

@@ -102,16 +102,14 @@ const Switch = ({ checked, onChange, disabled }: SwitchProps) => {
       type="button"
       disabled={disabled}
       onClick={onChange}
-      className={`relative inline-flex h-5.5 w-10 shrink-0 items-center rounded-full border-2 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none ${
-        checked
-          ? 'bg-indigo-600 border-indigo-700 shadow-sm shadow-indigo-500/20 ring-2 ring-indigo-500/20'
-          : 'bg-slate-300 border-slate-400/90 shadow-inner'
-      }`}
+      className={`relative inline-flex h-5.5 w-10 shrink-0 items-center rounded-full border-2 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none ${checked
+        ? 'bg-indigo-600 border-indigo-700 shadow-sm shadow-indigo-500/20 ring-2 ring-indigo-500/20'
+        : 'bg-slate-300 border-slate-400/90 shadow-inner'
+        }`}
     >
       <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-all duration-200 ${
-          checked ? 'translate-x-5' : 'translate-x-0.5'
-        }`}
+        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-all duration-200 ${checked ? 'translate-x-5' : 'translate-x-0.5'
+          }`}
       />
     </button>
   );
@@ -1033,7 +1031,7 @@ export function EditorLayout({
 
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [linkUrlInput, setLinkUrlInput] = useState('');
-  const [insertLinkCallback, setInsertLinkCallback] = useState<{ 
+  const [insertLinkCallback, setInsertLinkCallback] = useState<{
     save: (url: string) => void;
     unlink?: () => void;
   } | null>(null);
@@ -1058,26 +1056,26 @@ export function EditorLayout({
     setLinkUrlInput('');
   };
 
-const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className={props.className}
-    viewBox="0 0 24 24"
-    strokeWidth="2"
-    stroke="currentColor"
-    fill="none"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-    <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-    <path d="M5 12v-7a2 2 0 0 1 2 -2h7l5 5v4" />
-    <path d="M5 18h1.5a1.5 1.5 0 0 0 0 -3h-1.5v6" />
-    <path d="M17 18h-3v-3h3" />
-    <path d="M14 18h3" />
-    <path d="M10 15v6h1a2 2 0 0 0 2 -2v-2a2 2 0 0 0 -2 -2h-1z" />
-  </svg>
-);
+  const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className={props.className}
+      viewBox="0 0 24 24"
+      strokeWidth="2"
+      stroke="currentColor"
+      fill="none"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+      <path d="M5 12v-7a2 2 0 0 1 2 -2h7l5 5v4" />
+      <path d="M5 18h1.5a1.5 1.5 0 0 0 0 -3h-1.5v6" />
+      <path d="M17 18h-3v-3h3" />
+      <path d="M14 18h3" />
+      <path d="M10 15v6h1a2 2 0 0 0 2 -2v-2a2 2 0 0 0 -2 -2h-1z" />
+    </svg>
+  );
 
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
@@ -1287,12 +1285,12 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
         const editorContainer = document.getElementById('editorjs-holder');
-        
+
         // 1. Check anchorNode parent
         let anchorParent = selection.anchorNode
-          ? (selection.anchorNode.nodeType === Node.TEXT_NODE 
-              ? selection.anchorNode.parentElement 
-              : selection.anchorNode as HTMLElement)
+          ? (selection.anchorNode.nodeType === Node.TEXT_NODE
+            ? selection.anchorNode.parentElement
+            : selection.anchorNode as HTMLElement)
           : null;
         let node = anchorParent;
         while (node && editorContainer && editorContainer.contains(node)) {
@@ -1309,9 +1307,9 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
         // 2. Check focusNode parent if anchorNode didn't find both
         if (!hasLink || !hasHighlight) {
           let focusParent = selection.focusNode
-            ? (selection.focusNode.nodeType === Node.TEXT_NODE 
-                ? selection.focusNode.parentElement 
-                : selection.focusNode as HTMLElement)
+            ? (selection.focusNode.nodeType === Node.TEXT_NODE
+              ? selection.focusNode.parentElement
+              : selection.focusNode as HTMLElement)
             : null;
           node = focusParent;
           while (node && editorContainer && editorContainer.contains(node)) {
@@ -2018,20 +2016,17 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                                   className="flex items-center gap-2.5 group cursor-pointer text-left focus:outline-none"
                                   title={isEn ? 'Click to toggle active status' : 'Klik untuk mengubah status aktif/non-aktif'}
                                 >
-                                  <div className={`relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 transition-all duration-200 ease-in-out ${
-                                    model.is_enabled
-                                      ? 'bg-emerald-500 border-emerald-600 shadow-sm shadow-emerald-500/20 ring-2 ring-emerald-500/20'
-                                      : 'bg-slate-300 border-slate-400/90 shadow-inner'
-                                  }`}>
-                                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${
-                                      model.is_enabled ? 'translate-x-5' : 'translate-x-0.5'
-                                    }`} />
+                                  <div className={`relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 transition-all duration-200 ease-in-out ${model.is_enabled
+                                    ? 'bg-emerald-500 border-emerald-600 shadow-sm shadow-emerald-500/20 ring-2 ring-emerald-500/20'
+                                    : 'bg-slate-300 border-slate-400/90 shadow-inner'
+                                    }`}>
+                                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${model.is_enabled ? 'translate-x-5' : 'translate-x-0.5'
+                                      }`} />
                                   </div>
-                                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded border transition-all ${
-                                    model.is_enabled
-                                      ? 'text-emerald-700 bg-emerald-50 border-emerald-200/80'
-                                      : 'text-slate-600 bg-slate-100 border-slate-300'
-                                  }`}>
+                                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded border transition-all ${model.is_enabled
+                                    ? 'text-emerald-700 bg-emerald-50 border-emerald-200/80'
+                                    : 'text-slate-600 bg-slate-100 border-slate-300'
+                                    }`}>
                                     {model.is_enabled ? (isEn ? 'Active' : 'Aktif') : 'Off'}
                                   </span>
                                 </button>
@@ -2199,20 +2194,17 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                                   className="flex items-center gap-2.5 group cursor-pointer text-left focus:outline-none"
                                   title={isEn ? 'Click to toggle active status' : 'Klik untuk mengubah status aktif/non-aktif'}
                                 >
-                                  <div className={`relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 transition-all duration-200 ease-in-out ${
-                                    model.is_enabled
-                                      ? 'bg-indigo-600 border-indigo-700 shadow-sm shadow-indigo-500/20 ring-2 ring-indigo-500/20'
-                                      : 'bg-slate-300 border-slate-400/90 shadow-inner'
-                                  }`}>
-                                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${
-                                      model.is_enabled ? 'translate-x-5' : 'translate-x-0.5'
-                                    }`} />
+                                  <div className={`relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 transition-all duration-200 ease-in-out ${model.is_enabled
+                                    ? 'bg-indigo-600 border-indigo-700 shadow-sm shadow-indigo-500/20 ring-2 ring-indigo-500/20'
+                                    : 'bg-slate-300 border-slate-400/90 shadow-inner'
+                                    }`}>
+                                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${model.is_enabled ? 'translate-x-5' : 'translate-x-0.5'
+                                      }`} />
                                   </div>
-                                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded border transition-all ${
-                                    model.is_enabled
-                                      ? 'text-indigo-700 bg-indigo-50 border-indigo-200/80'
-                                      : 'text-slate-600 bg-slate-100 border-slate-300'
-                                  }`}>
+                                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded border transition-all ${model.is_enabled
+                                    ? 'text-indigo-700 bg-indigo-50 border-indigo-200/80'
+                                    : 'text-slate-600 bg-slate-100 border-slate-300'
+                                    }`}>
                                     {model.is_enabled ? (isEn ? 'Active' : 'Aktif') : 'Off'}
                                   </span>
                                 </button>
@@ -2644,7 +2636,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
             </div>
             <div className="flex items-center gap-2">
               {/* Live Hybrid Sync Engine Status Chip */}
-              <div 
+              <div
                 className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50/80 border border-emerald-200/80 text-emerald-700 text-[10px] font-bold cursor-help"
                 title={
                   backendType === 'express'
@@ -2888,13 +2880,11 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                                   onNotificationClick?.(notif);
                                   setShowNotificationsDropdown(false);
                                 }}
-                                className={`px-4 py-3 text-left hover:bg-slate-50 transition cursor-pointer flex gap-3 items-start ${
-                                  !notif.read ? 'bg-indigo-50/10' : ''
-                                }`}
+                                className={`px-4 py-3 text-left hover:bg-slate-50 transition cursor-pointer flex gap-3 items-start ${!notif.read ? 'bg-indigo-50/10' : ''
+                                  }`}
                               >
-                                <span className={`h-1.5 w-1.5 rounded-full mt-1.5 shrink-0 ${
-                                  !notif.read ? 'bg-indigo-500' : 'bg-transparent'
-                                }`} />
+                                <span className={`h-1.5 w-1.5 rounded-full mt-1.5 shrink-0 ${!notif.read ? 'bg-indigo-500' : 'bg-transparent'
+                                  }`} />
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs text-slate-700 leading-normal whitespace-normal break-words">
                                     <span className="font-semibold text-slate-850">{notif.sender_name}</span> {notif.message}
@@ -2949,11 +2939,10 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                 {/* Research Assistant Button */}
                 <button
                   onClick={() => setShowRightSidebar(prev => !prev)}
-                  className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
-                    showRightSidebar
-                      ? 'bg-white text-indigo-750 shadow-sm font-bold'
-                      : 'text-slate-650 hover:bg-white hover:text-slate-800'
-                  }`}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition cursor-pointer ${showRightSidebar
+                    ? 'bg-white text-indigo-750 shadow-sm font-bold'
+                    : 'text-slate-650 hover:bg-white hover:text-slate-800'
+                    }`}
                   title={language === 'en' ? 'Toggle Research Assistant Panel' : 'Toggle Bilah Asisten Riset'}
                 >
                   <IconLayoutSidebarRightCollapse className={`h-3.5 w-3.5 ${showRightSidebar ? 'text-indigo-650' : 'text-slate-500'}`} />
@@ -3012,11 +3001,10 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
               <button
                 type="button"
                 onClick={() => setEditorMode('edit')}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
-                  editorMode === 'edit'
-                    ? 'bg-white text-indigo-700 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${editorMode === 'edit'
+                  ? 'bg-white text-indigo-700 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+                  }`}
                 title={language === 'id' ? 'Mode Edit Langsung' : 'Direct Edit Mode'}
               >
                 <span>✍️</span>
@@ -3025,11 +3013,10 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
               <button
                 type="button"
                 onClick={() => setEditorMode('suggest')}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
-                  editorMode === 'suggest'
-                    ? 'bg-amber-500 text-white shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${editorMode === 'suggest'
+                  ? 'bg-amber-500 text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+                  }`}
                 title={language === 'id' ? 'Mode Sugesti / Track Changes' : 'Suggesting Mode'}
               >
                 <span>💡</span>
@@ -3458,8 +3445,8 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                 topPos = Math.max(10, Math.min(winH - menuHeight - 10, topPos));
 
                 // Clamp left position inside viewport [10, winW - menuWidth - 10]
-                let leftPos = bubbleMenuRect.width > 0 
-                  ? bubbleMenuRect.left + bubbleMenuRect.width / 2 - menuWidth / 2 
+                let leftPos = bubbleMenuRect.width > 0
+                  ? bubbleMenuRect.left + bubbleMenuRect.width / 2 - menuWidth / 2
                   : anchorX;
 
                 if (leftPos + menuWidth > winW - 10) {
@@ -3926,127 +3913,127 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
           )}
 
           {/* Editor canvas area + Right sidebar */}
-          <div className="flex flex-1 overflow-hidden justify-center bg-slate-50/50 p-6 md:p-10">
-            <div className="flex w-full max-w-[1200px] h-full relative bg-white rounded-xl shadow-sm border border-slate-200/60 overflow-hidden">
+          <div className="flex flex-1 overflow-hidden justify-center bg-slate-50/50 pt-6 md:pt-2">
+            <div className="flex w-full max-w-[1200px] h-full relative bg-white shadow-sm border  border-slate-400/60 overflow-hidden">
               <main
                 className="flex-1 p-6 md:p-10 overflow-y-auto thin-scroll"
-              onContextMenu={(e) => {
-                const selection = window.getSelection();
-                if (selection && !selection.isCollapsed && selection.toString().trim()) {
-                  const holder = document.getElementById('editorjs-holder');
-                  const anchorEl = selection.anchorNode?.nodeType === Node.TEXT_NODE
-                    ? selection.anchorNode.parentElement
-                    : (selection.anchorNode as HTMLElement);
+                onContextMenu={(e) => {
+                  const selection = window.getSelection();
+                  if (selection && !selection.isCollapsed && selection.toString().trim()) {
+                    const holder = document.getElementById('editorjs-holder');
+                    const anchorEl = selection.anchorNode?.nodeType === Node.TEXT_NODE
+                      ? selection.anchorNode.parentElement
+                      : (selection.anchorNode as HTMLElement);
 
-                  if (holder && anchorEl && holder.contains(anchorEl)) {
-                    e.preventDefault();
-                    setBubbleMenuRect(new DOMRect(e.clientX, e.clientY, 0, 0));
-                    setBubbleMode('format');
-                    setShowBubbleMenu(true);
+                    if (holder && anchorEl && holder.contains(anchorEl)) {
+                      e.preventDefault();
+                      setBubbleMenuRect(new DOMRect(e.clientX, e.clientY, 0, 0));
+                      setBubbleMode('format');
+                      setShowBubbleMenu(true);
+                    }
                   }
-                }
-              }}
-            >
-              <EditorJsEditor
-                ref={editorJsRef}
-                initialContent={currentDocument?.content}
-                onBlockTypeChange={setCurrentBlockType}
-                onAlignmentChange={(align) => {
-                  setCurrentAlignment(align);
-                  onAlignmentChange?.(align);
                 }}
-                onStatsChange={onStatsChange}
-                onCiteClick={onCiteClick}
-                onCommentMarkClick={(commentId) => {
-                  setShowRightSidebar(true);
-                  setIsRightSidebarExpanded(true);
-                }}
-                onContentChange={onContentChange}
-                onCitationSearchChange={(query, rect) => {
-                  setBubbleMenuRect(rect);
-                  setBubbleMode('citation');
-                  setShowBubbleMenu(true);
-                  setBubbleSearchQuery(query);
-                  onRepeatCitationSearch(query);
-                }}
-                onCitationSearchCancel={() => {
-                  editorJsRef.current?.cancelCitationSearch();
-                  setShowBubbleMenu(false);
-                }}
-                onEditInlineEquation={(formula, onSave) => {
-                  setMathFormulaInput(formula);
-                  setEditingMathCallback({ save: onSave });
-                  setIsMathModalOpen(true);
-                }}
-                onInsertLinkRequest={(defaultUrl, onSave, onUnlink) => {
-                  setLinkUrlInput(defaultUrl);
-                  setInsertLinkCallback({ save: onSave, unlink: onUnlink });
-                  setIsLinkModalOpen(true);
-                }}
-              />
-            </main>
+              >
+                <EditorJsEditor
+                  ref={editorJsRef}
+                  initialContent={currentDocument?.content}
+                  onBlockTypeChange={setCurrentBlockType}
+                  onAlignmentChange={(align) => {
+                    setCurrentAlignment(align);
+                    onAlignmentChange?.(align);
+                  }}
+                  onStatsChange={onStatsChange}
+                  onCiteClick={onCiteClick}
+                  onCommentMarkClick={(commentId) => {
+                    setShowRightSidebar(true);
+                    setIsRightSidebarExpanded(true);
+                  }}
+                  onContentChange={onContentChange}
+                  onCitationSearchChange={(query, rect) => {
+                    setBubbleMenuRect(rect);
+                    setBubbleMode('citation');
+                    setShowBubbleMenu(true);
+                    setBubbleSearchQuery(query);
+                    onRepeatCitationSearch(query);
+                  }}
+                  onCitationSearchCancel={() => {
+                    editorJsRef.current?.cancelCitationSearch();
+                    setShowBubbleMenu(false);
+                  }}
+                  onEditInlineEquation={(formula, onSave) => {
+                    setMathFormulaInput(formula);
+                    setEditingMathCallback({ save: onSave });
+                    setIsMathModalOpen(true);
+                  }}
+                  onInsertLinkRequest={(defaultUrl, onSave, onUnlink) => {
+                    setLinkUrlInput(defaultUrl);
+                    setInsertLinkCallback({ save: onSave, unlink: onUnlink });
+                    setIsLinkModalOpen(true);
+                  }}
+                />
+              </main>
 
-            {/* Right Panel — Citation Results, Plagiarism Checker, & AI */}
-            {showRightSidebar && (
-              <EditorSidebar
-                selectedText={selectedText}
-                citationResults={citationResults}
-                citationHistory={citationHistory}
-                wordCount={wordCount}
-                characterCount={characterCount}
-                citationCount={citationCount}
-                bibliographyEntries={bibliographyEntries}
-                improvedText={improvedText}
-                isImproving={isImproving}
-                isSearchingCitations={isSearchingCitations}
-                aiError={aiError}
-                citationError={citationError}
-                citationNote={citationNote}
-                onApplyImprovedText={onApplyImprovedText}
-                onImproveWriting={onImproveWriting}
-                onParaphrase={onParaphrase}
-                onSummarize={onSummarize}
-                onGenerateAbstract={onGenerateAbstract}
-                onFindCitation={onFindCitation}
-                onRepeatCitationSearch={onRepeatCitationSearch}
-                onInsertCitation={onInsertCitation}
-                onInsertBibliography={onInsertBibliography}
-                onInsertImageSample={onInsertImageSample}
-                onExportBibliographyText={onExportBibliographyText}
-                onExportBibliographyJson={onExportBibliographyJson}
-                onExportBibliographyBibtex={onExportBibliographyBibtex}
-                onExportBibliographyRis={onExportBibliographyRis}
-                onInsertCitationCandidate={onInsertCitationCandidate}
-                onParafrasePlagiat={onParafrasePlagiat}
-                selectedAiModel={selectedAiModel}
-                isSynthesizing={isSynthesizing}
-                synthesizedText={synthesizedText}
-                synthesizeError={synthesizeError}
-                synthesizeDisclaimer={synthesizeDisclaimer}
-                onSynthesizeReview={onSynthesizeReview}
-                onInsertSynthesizedText={onInsertSynthesizedText}
-                citationStyle={citationStyle}
-                onChangeCitationStyle={onChangeCitationStyle}
-                folders={folders}
-                folderAssignments={folderAssignments}
-                onCreateFolder={onCreateFolder}
-                onAssignFolder={onAssignFolder}
-                aiHistory={aiHistory}
-                onDeleteAiHistoryEntry={onDeleteAiHistoryEntry}
-                onClearAiHistory={onClearAiHistory}
-                isApplied={isApplied}
-                isExpanded={isRightSidebarExpanded}
-                onToggleExpanded={handleToggleRightSidebarExpanded}
-                onClose={() => setShowRightSidebar(false)}
-                comments={comments}
-                suggestions={suggestions}
-                onAcceptSuggestion={onAcceptSuggestion}
-                onRejectSuggestion={onRejectSuggestion}
-                onResolveComment={onResolveComment}
-                onCommentClick={onCommentClick}
-                activeTab={activeSidebarTab}
-              />
-            )}
+              {/* Right Panel — Citation Results, Plagiarism Checker, & AI */}
+              {showRightSidebar && (
+                <EditorSidebar
+                  selectedText={selectedText}
+                  citationResults={citationResults}
+                  citationHistory={citationHistory}
+                  wordCount={wordCount}
+                  characterCount={characterCount}
+                  citationCount={citationCount}
+                  bibliographyEntries={bibliographyEntries}
+                  improvedText={improvedText}
+                  isImproving={isImproving}
+                  isSearchingCitations={isSearchingCitations}
+                  aiError={aiError}
+                  citationError={citationError}
+                  citationNote={citationNote}
+                  onApplyImprovedText={onApplyImprovedText}
+                  onImproveWriting={onImproveWriting}
+                  onParaphrase={onParaphrase}
+                  onSummarize={onSummarize}
+                  onGenerateAbstract={onGenerateAbstract}
+                  onFindCitation={onFindCitation}
+                  onRepeatCitationSearch={onRepeatCitationSearch}
+                  onInsertCitation={onInsertCitation}
+                  onInsertBibliography={onInsertBibliography}
+                  onInsertImageSample={onInsertImageSample}
+                  onExportBibliographyText={onExportBibliographyText}
+                  onExportBibliographyJson={onExportBibliographyJson}
+                  onExportBibliographyBibtex={onExportBibliographyBibtex}
+                  onExportBibliographyRis={onExportBibliographyRis}
+                  onInsertCitationCandidate={onInsertCitationCandidate}
+                  onParafrasePlagiat={onParafrasePlagiat}
+                  selectedAiModel={selectedAiModel}
+                  isSynthesizing={isSynthesizing}
+                  synthesizedText={synthesizedText}
+                  synthesizeError={synthesizeError}
+                  synthesizeDisclaimer={synthesizeDisclaimer}
+                  onSynthesizeReview={onSynthesizeReview}
+                  onInsertSynthesizedText={onInsertSynthesizedText}
+                  citationStyle={citationStyle}
+                  onChangeCitationStyle={onChangeCitationStyle}
+                  folders={folders}
+                  folderAssignments={folderAssignments}
+                  onCreateFolder={onCreateFolder}
+                  onAssignFolder={onAssignFolder}
+                  aiHistory={aiHistory}
+                  onDeleteAiHistoryEntry={onDeleteAiHistoryEntry}
+                  onClearAiHistory={onClearAiHistory}
+                  isApplied={isApplied}
+                  isExpanded={isRightSidebarExpanded}
+                  onToggleExpanded={handleToggleRightSidebarExpanded}
+                  onClose={() => setShowRightSidebar(false)}
+                  comments={comments}
+                  suggestions={suggestions}
+                  onAcceptSuggestion={onAcceptSuggestion}
+                  onRejectSuggestion={onRejectSuggestion}
+                  onResolveComment={onResolveComment}
+                  onCommentClick={onCommentClick}
+                  activeTab={activeSidebarTab}
+                />
+              )}
             </div>
 
             {/* New Right PDF Viewer Sidebar */}
@@ -4297,7 +4284,7 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
 
             <div className="flex flex-col gap-3">
               <p className="text-xs text-slate-500 leading-relaxed">
-                {language === 'en' 
+                {language === 'en'
                   ? 'Enter the URL destination for the selected text (e.g. https://example.com).'
                   : 'Masukkan alamat URL tujuan untuk teks yang dipilih (misal: https://example.com).'}
               </p>
@@ -4355,13 +4342,13 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
       )}
       {mounted && showHighlightPopover && highlightPopoverRect && typeof window !== 'undefined' && createPortal(
         <>
-          <div 
-            className="fixed inset-0 z-[9998]" 
+          <div
+            className="fixed inset-0 z-[9998]"
             onClick={() => {
               setShowHighlightPopover(false);
               setHighlightPopoverRect(null);
               setHighlightTriggerSource(null);
-            }} 
+            }}
           />
           <div
             className="fixed z-[9999] bg-white border border-slate-200/80 rounded-xl p-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.08)] flex items-center gap-1.5 animate-scale-in"
@@ -4978,19 +4965,18 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
       {mounted && alertModalState && alertModalState.isOpen && typeof window !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[10100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in font-sans">
           <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-2xl w-full max-w-md flex flex-col gap-4 animate-scale-in text-slate-800">
-            
+
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className={`p-2 rounded-xl text-lg font-bold ${
-                  alertModalState.type === 'success'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : alertModalState.type === 'error'
-                      ? 'bg-rose-100 text-rose-700'
-                      : alertModalState.type === 'warning'
-                        ? 'bg-amber-100 text-amber-700'
-                        : 'bg-indigo-100 text-indigo-700'
-                }`}>
+                <div className={`p-2 rounded-xl text-lg font-bold ${alertModalState.type === 'success'
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : alertModalState.type === 'error'
+                    ? 'bg-rose-100 text-rose-700'
+                    : alertModalState.type === 'warning'
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-indigo-100 text-indigo-700'
+                  }`}>
                   {alertModalState.type === 'success' ? '✅' : alertModalState.type === 'error' ? '❌' : alertModalState.type === 'warning' ? '⚠️' : 'ℹ️'}
                 </div>
                 <div className="flex flex-col">
@@ -5034,15 +5020,14 @@ const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
                   }
                   setAlertModalState(null);
                 }}
-                className={`px-6 py-2 min-w-[84px] text-center text-white text-xs font-extrabold rounded-xl shadow-md transition duration-200 cursor-pointer ${
-                  alertModalState.type === 'success'
-                    ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'
-                    : alertModalState.type === 'error'
-                      ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-200'
-                      : alertModalState.type === 'warning'
-                        ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-200'
-                        : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200'
-                }`}
+                className={`px-6 py-2 min-w-[84px] text-center text-white text-xs font-extrabold rounded-xl shadow-md transition duration-200 cursor-pointer ${alertModalState.type === 'success'
+                  ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'
+                  : alertModalState.type === 'error'
+                    ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-200'
+                    : alertModalState.type === 'warning'
+                      ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-200'
+                      : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200'
+                  }`}
               >
                 {alertModalState.confirmText || 'OK'}
               </button>

@@ -124,7 +124,7 @@ class InlineMathSanitizerTool {
     };
   }
   render() { return document.createElement('button'); }
-  surround() {}
+  surround() { }
   checkState() { return false; }
 }
 
@@ -141,7 +141,7 @@ class CitationSanitizerTool {
     };
   }
   render() { return document.createElement('button'); }
-  surround() {}
+  surround() { }
   checkState() { return false; }
 }
 
@@ -208,7 +208,7 @@ class CustomFormatsSanitizerTool {
     };
   }
   render() { return document.createElement('button'); }
-  surround() {}
+  surround() { }
   checkState() { return false; }
 }
 
@@ -300,10 +300,10 @@ interface EditorJsEditorProps {
   onInsertLinkRequest?: (defaultUrl: string, onSave: (url: string) => void, onUnlink?: () => void) => void;
 }
 
-export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>(({ 
+export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>(({
   initialContent,
   readOnly = false,
-  onBlockTypeChange, 
+  onBlockTypeChange,
   onAlignmentChange,
   onStatsChange,
   onCiteClick,
@@ -327,15 +327,16 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
   // Tracks index of bibliography header block (-1 = not yet inserted)
   const bibliographyBlockIndexRef = useRef<number>(-1);
 
-    // Adjust heights of all code textareas based on their content scrollHeight
-    const adjustAllCodeTextareaHeights = () => {
-      if (typeof document === 'undefined') return;
-      const textareas = document.querySelectorAll('.ce-code__textarea') as NodeListOf<HTMLTextAreaElement>;
-      textareas.forEach((textarea) => {
-        textarea.style.height = 'auto';
-        textarea.style.height = textarea.scrollHeight + 'px';
-      });
-    };
+  // Adjust heights of all code textareas based on their content scrollHeight
+  const adjustAllCodeTextareaHeights = () => {
+    if (typeof document === 'undefined') return;
+    const textareas = document.querySelectorAll('.ce-code__textarea') as NodeListOf<HTMLTextAreaElement>;
+    textareas.forEach((textarea) => {
+      textarea.style.height = '0px'; // Reset height first to get accurate scrollHeight
+      const borderHeight = textarea.offsetHeight - textarea.clientHeight;
+      textarea.style.height = (textarea.scrollHeight + borderHeight) + 'px';
+    });
+  };
 
   // Restore alignment styles to all editor blocks based on saved localStorage map
   const restoreBlockAlignments = () => {
@@ -413,16 +414,16 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
   // Helper to clean saved EditorJS JSON content before writing to database
   const cleanSavedContent = (content: any) => {
     if (!content || !content.blocks) return content;
-    
+
     // Deep clone content to avoid mutating the live state
     const cloned = JSON.parse(JSON.stringify(content));
-    
+
     cloned.blocks.forEach((block: any) => {
       if (block.data && typeof block.data.text === 'string') {
         block.data.text = cleanHtmlContent(block.data.text);
       }
     });
-    
+
     return cloned;
   };
 
@@ -441,14 +442,14 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
     const trimmed = text.trim();
     const words = trimmed ? trimmed.split(/\s+/).filter(Boolean).length : 0;
     const chars = text.length;
-    
+
     const citationEls = Array.from(holder.querySelectorAll('cite[data-citation]'))
       .filter(el => el.textContent && el.textContent.trim().length > 0);
     const citations = citationEls.length;
     const activeReferenceIds = citationEls
       .map(el => el.getAttribute('data-ref-id'))
       .filter(Boolean) as string[];
-    
+
     onStatsChange?.({
       wordCount: words,
       characterCount: chars,
@@ -484,7 +485,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           }
         }
       }
-      
+
       // Keep alignment styles intact (EditorJS re-renders block wrappers occasionally)
       restoreBlockAlignments();
     } catch (e) {
@@ -652,7 +653,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
 
         const data = (await block.save()) as any;
         const currentText = data?.data?.text || '';
-        
+
         console.log('ScholarFlow setBlockType Conversion request:', {
           index,
           blockId: block.id,
@@ -662,13 +663,13 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         });
 
         const blocks = editorRef.current.blocks as any;
-        
+
         // 1. Try blocks.convert() API first if supported
         if (typeof blocks.convert === 'function') {
           console.log('ScholarFlow: converting via blocks.convert with blockId:', block.id);
           const targetTool = type === 'paragraph' ? 'paragraph' : 'header';
           await blocks.convert(block.id, targetTool);
-          
+
           // Refresh block reference and update data explicitly to preserve text and apply properties
           const updatedBlock = await editorRef.current.blocks.getBlockByIndex(index);
           if (updatedBlock) {
@@ -683,8 +684,8 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           // 2. Fallback: blocks.insert with replace: true (omitting empty config)
           console.log('ScholarFlow: replacing via blocks.insert');
           const blockType = type === 'paragraph' ? 'paragraph' : 'header';
-          const blockData = type === 'paragraph' 
-            ? { text: currentText } 
+          const blockData = type === 'paragraph'
+            ? { text: currentText }
             : { text: currentText, level: parseInt(type.substring(1), 10) };
 
           await blocks.insert(blockType, blockData, undefined, index, true, true);
@@ -704,19 +705,19 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
       const toggleTag = (tagName: string, className?: string) => {
         const selection = window.getSelection();
         if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
-        
+
         const range = selection.getRangeAt(0);
-        
+
         // Find closest parent that matches the holder container or tag
         let parent = range.commonAncestorContainer as HTMLElement | null;
         if (parent && parent.nodeType === Node.TEXT_NODE) {
           parent = parent.parentElement;
         }
-        
+
         const targetTag = tagName.toUpperCase();
         let node: HTMLElement | null = parent;
         let isWrapped = false;
-        
+
         while (node && node.id !== holderId && node.tagName !== 'DIV') {
           if (node.tagName === targetTag && (!className || node.classList.contains(className))) {
             isWrapped = true;
@@ -724,7 +725,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           }
           node = node.parentElement;
         }
-        
+
         if (isWrapped && node) {
           // Unwrap: replace node with its child nodes
           const fragment = document.createDocumentFragment();
@@ -742,7 +743,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
             const fragment = range.extractContents();
             element.appendChild(fragment);
             range.insertNode(element);
-            
+
             // Re-select wrapped element
             const newRange = document.createRange();
             newRange.selectNodeContents(element);
@@ -770,9 +771,9 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
       } else if (format === 'highlight') {
         const selection = window.getSelection();
         if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
-        
+
         const range = selection.getRangeAt(0);
-        
+
         const getColorClass = (colorKey?: string) => {
           switch (colorKey) {
             case 'green':
@@ -794,7 +795,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         if (parent && parent.nodeType === Node.TEXT_NODE) {
           parent = parent.parentElement;
         }
-        
+
         let existingMark: HTMLElement | null = null;
         let node = parent;
         while (node && node.id !== holderId && node.tagName !== 'DIV') {
@@ -819,7 +820,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
                 }
               }
             }
-          } catch (e) {}
+          } catch (e) { }
         }
 
         if (existingMark) {
@@ -842,7 +843,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
             const fragment = range.extractContents();
             element.appendChild(fragment);
             range.insertNode(element);
-            
+
             // Re-select wrapped element
             const newRange = document.createRange();
             newRange.selectNodeContents(element);
@@ -859,12 +860,12 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         if (!selection || selection.isCollapsed) return;
         const range = selection.getRangeAt(0);
         let existingLink: HTMLAnchorElement | null = null;
-        
+
         // 1. Check if anchorNode is inside an A tag
         let anchorParent = selection.anchorNode
-          ? (selection.anchorNode.nodeType === Node.TEXT_NODE 
-              ? selection.anchorNode.parentElement 
-              : selection.anchorNode as HTMLElement)
+          ? (selection.anchorNode.nodeType === Node.TEXT_NODE
+            ? selection.anchorNode.parentElement
+            : selection.anchorNode as HTMLElement)
           : null;
         let node = anchorParent;
         while (node && node.id !== holderId && node.tagName !== 'DIV') {
@@ -878,9 +879,9 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         // 2. Check if focusNode is inside an A tag if anchorNode didn't find one
         if (!existingLink) {
           let focusParent = selection.focusNode
-            ? (selection.focusNode.nodeType === Node.TEXT_NODE 
-                ? selection.focusNode.parentElement 
-                : selection.focusNode as HTMLElement)
+            ? (selection.focusNode.nodeType === Node.TEXT_NODE
+              ? selection.focusNode.parentElement
+              : selection.focusNode as HTMLElement)
             : null;
           node = focusParent;
           while (node && node.id !== holderId && node.tagName !== 'DIV') {
@@ -912,7 +913,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         }
         if (existingLink) {
           const linkEl = existingLink;
-          
+
           const handleUpdateLink = (url: string) => {
             if (url.trim() === '') {
               handleUnlink();
@@ -952,17 +953,17 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         } else {
           // Save range so we can insert the link later
           savedLinkRangeRef.current = range.cloneRange();
-          
+
           const handleSaveLink = (url: string) => {
             const savedRange = savedLinkRangeRef.current;
             if (!savedRange) return;
-            
+
             const a = document.createElement('a');
             a.href = url;
             a.target = '_blank';
             a.rel = 'noopener noreferrer';
             a.className = 'text-indigo-650 underline';
-            
+
             try {
               // Restore focus to editor block first
               const contentEditable = savedRange.commonAncestorContainer.nodeType === Node.TEXT_NODE
@@ -972,17 +973,17 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
               if (blockEl) {
                 blockEl.focus();
               }
-              
+
               const sel = window.getSelection();
               if (sel) {
                 sel.removeAllRanges();
                 sel.addRange(savedRange);
               }
-              
+
               const fragment = savedRange.extractContents();
               a.appendChild(fragment);
               savedRange.insertNode(a);
-              
+
               // Trigger save
               calculateLiveStats();
               if (onContentChange && editorRef.current) {
@@ -993,7 +994,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
             } catch (e) {
               console.warn('Failed to wrap selection with link:', e);
             }
-            
+
             savedLinkRangeRef.current = null;
           };
 
@@ -1028,12 +1029,12 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           const contentEditable = block.holder.querySelector('[contenteditable="true"]') as HTMLElement;
           if (contentEditable) {
             contentEditable.style.textAlign = align;
-            
+
             // Save state to localStorage to persist across refreshes
             const alignments = JSON.parse(localStorage.getItem(ALIGNMENT_KEY) || '{}');
             alignments[block.id] = align;
             localStorage.setItem(ALIGNMENT_KEY, JSON.stringify(alignments));
-            
+
             // Callback to update parent layout toolbar state
             onAlignmentChange?.(align);
           }
@@ -1076,14 +1077,14 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
       cite.className = 'text-indigo-600 font-semibold not-italic cursor-pointer hover:underline';
       cite.textContent = ` [${citationLabel}]`;
       range.insertNode(cite);
-      
+
       // Move cursor to right after the inserted citation
       const newRange = document.createRange();
       newRange.setStartAfter(cite);
       newRange.collapse(true);
       selection.removeAllRanges();
       selection.addRange(newRange);
-      
+
       // Update last saved range
       lastSelectionRangeRef.current = newRange.cloneRange();
       calculateLiveStats();
@@ -1135,7 +1136,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         cite.setAttribute('data-ref-id', referenceId);
         cite.className = 'text-indigo-600 font-semibold not-italic cursor-pointer hover:underline';
         cite.textContent = ` [${label}]`;
-        
+
         span.parentNode.replaceChild(cite, span);
 
         // Move cursor after the inserted citation
@@ -1148,7 +1149,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           selection.addRange(newRange);
           lastSelectionRangeRef.current = newRange.cloneRange();
         }
-        
+
         calculateLiveStats();
 
         if (onContentChange && editorRef.current) {
@@ -1163,7 +1164,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
       if (span && span.parentNode) {
         const textNode = document.createTextNode(span.textContent || '');
         span.parentNode.replaceChild(textNode, span);
-        
+
         // Refocus selection
         const selection = window.getSelection();
         if (selection) {
@@ -1174,7 +1175,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           selection.addRange(newRange);
           lastSelectionRangeRef.current = newRange.cloneRange();
         }
-        
+
         calculateLiveStats();
       }
     },
@@ -1320,7 +1321,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
 
       // Fallback: extract contents and wrap in new span
       const documentFragment = range.extractContents();
-      
+
       // Clean up child spans with font size to prevent endless nesting
       const childSpans = documentFragment.querySelectorAll('span');
       childSpans.forEach(span => {
@@ -1342,7 +1343,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         wrapperSpan.appendChild(documentFragment);
         range.insertNode(wrapperSpan);
       }
-      
+
       calculateLiveStats();
     },
     insertBibliographyText: (text: string) => {
@@ -1359,7 +1360,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         return;
       }
       if (!editorRef.current.blocks) return;
-      
+
       const wasReadOnly = editorRef.current.readOnly.isEnabled;
       try {
         isRenderingRef.current = true;
@@ -1382,7 +1383,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         let foundIdx = findBibliographyBlockIndex();
         while (foundIdx >= 0) {
           const total = editorRef.current.blocks.getBlocksCount();
-          
+
           // Pindahkan caret ke block sebelumnya jika caret saat ini berada di dalam block yang akan dihapus
           const currentIdx = editorRef.current.blocks.getCurrentBlockIndex();
           if (currentIdx >= foundIdx && foundIdx > 0) {
@@ -1463,7 +1464,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
               </div>
             </div>
           `;
-          
+
           editorRef.current.blocks.insert(
             'paragraph',
             { text: bannerHtml },
@@ -1487,7 +1488,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
                 const paragraphEl = contentBlockEl.querySelector('.ce-paragraph, [contenteditable]') as HTMLElement | null;
                 if (paragraphEl) {
                   paragraphEl.classList.add('sf-bibliography-fade-container', 'sf-bibliography-blur');
-                  
+
                   // Append the fade overlay if not present
                   let overlay = paragraphEl.querySelector('.sf-fade-overlay');
                   if (!overlay) {
@@ -1615,10 +1616,10 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         const commentId = c.id;
         const targetText = c.selected_text!.trim();
         const existingMark = holder.querySelector(`mark[data-comment-id="${commentId}"], .sf-comment-mark[data-comment-id="${commentId}"]`);
-        
+
         if (existingMark) return;
 
-        const searchScope = c.block_id 
+        const searchScope = c.block_id
           ? (holder.querySelector(`[data-id="${c.block_id}"]`) || holder)
           : holder;
 
@@ -1674,7 +1675,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         if (!applied) {
           const blocks = searchScope.querySelectorAll('.ce-block__content, .cdx-block, [contenteditable="true"]');
           const targetBlocks = blocks.length > 0 ? Array.from(blocks) : [searchScope];
-          
+
           for (const blockEl of targetBlocks) {
             const html = blockEl.innerHTML;
             if (html && html.includes(targetText) && !html.includes(`data-comment-id="${commentId}"`)) {
@@ -1733,7 +1734,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
       if (!holder) return;
       const delEl = holder.querySelector(`del[data-suggestion-id="${suggestionId}"], .sf-suggestion-del[data-suggestion-id="${suggestionId}"]`);
       const insEl = holder.querySelector(`ins[data-suggestion-id="${suggestionId}"], .sf-suggestion-ins[data-suggestion-id="${suggestionId}"]`);
-      
+
       if (delEl) delEl.remove();
       if (insEl) {
         const parent = insEl.parentNode;
@@ -1756,7 +1757,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
       if (!holder) return;
       const delEl = holder.querySelector(`del[data-suggestion-id="${suggestionId}"], .sf-suggestion-del[data-suggestion-id="${suggestionId}"]`);
       const insEl = holder.querySelector(`ins[data-suggestion-id="${suggestionId}"], .sf-suggestion-ins[data-suggestion-id="${suggestionId}"]`);
-      
+
       if (insEl) insEl.remove();
       if (delEl) {
         const parent = delEl.parentNode;
@@ -1776,21 +1777,22 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
     },
   }));
 
-    useEffect(() => {
-      if (typeof window === 'undefined') return; // client‑side only
-      if (editorRef.current) return;
+  useEffect(() => {
+    if (typeof window === 'undefined') return; // client‑side only
+    if (editorRef.current) return;
 
-      let isMounted = true;
+    let isMounted = true;
 
-      const handleCodeInput = (e: Event) => {
-        const target = e.target as HTMLElement;
-        if (target && target.classList.contains('ce-code__textarea')) {
-          const textarea = target as HTMLTextAreaElement;
-          textarea.style.height = 'auto';
-          textarea.style.height = textarea.scrollHeight + 'px';
-        }
-      };
-      document.addEventListener('input', handleCodeInput);
+    const handleCodeInput = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target && target.classList.contains('ce-code__textarea')) {
+        const textarea = target as HTMLTextAreaElement;
+        textarea.style.height = '0px';
+        const borderHeight = textarea.offsetHeight - textarea.clientHeight;
+        textarea.style.height = (textarea.scrollHeight + borderHeight) + 'px';
+      }
+    };
+    document.addEventListener('input', handleCodeInput);
 
     // Dynamically import EditorJS and its plugins to prevent SSR import errors
     import('@editorjs/editorjs')
@@ -1916,7 +1918,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
             onReady: () => {
               if (!isMounted) return;
               setIsReady(true);
-              
+
               // Initialize Undo/Redo manager
               undoRef.current = new Undo({ editor });
 
@@ -1958,7 +1960,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
             onChange: async () => {
               syncActiveBlockType();
               calculateLiveStats();
-              
+
               if (isRenderingRef.current) {
                 return;
               }
@@ -2011,12 +2013,12 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
   }, [readOnly, isReady]);
 
   return (
-    <div className="sf-editor flex flex-col min-h-full w-full max-w-3xl mx-auto pb-32 relative">
-      <div 
-        id={holderId} 
+    <div className="sf-editor flex flex-col min-h-full w-full max-w-3xl mx-auto pb-8 relative">
+      <div
+        id={holderId}
         onClick={(e) => {
           const target = e.target as HTMLElement;
-          
+
           // Handle comment mark click
           const commentMark = target.closest('mark[data-comment-id], .sf-comment-mark');
           if (commentMark) {
@@ -2030,7 +2032,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           const mathSpan = target.closest('.sf-inline-math') as HTMLElement | null;
           if (mathSpan && !readOnly) {
             const currentFormula = mathSpan.getAttribute('data-formula') || '';
-            
+
             const handleSaveFormula = (newFormula: string) => {
               if (newFormula.trim() === '') {
                 mathSpan.remove();
@@ -2064,14 +2066,14 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           if (cite) {
             const refId = cite.getAttribute('data-ref-id');
             const label = cite.textContent?.replace(/[\[\]]/g, '').trim() || '';
-            
+
             // Get preceding text/sentence in the paragraph as context
             const paragraphText = cite.parentElement?.innerText || '';
             const citeText = cite.textContent || '';
             const textBeforeCite = paragraphText.split(citeText)[0] || '';
             const sentences = textBeforeCite.split(/(?<=[.!?])\s+/);
             const citedSentence = sentences[sentences.length - 1]?.trim() || '';
-            
+
             if (refId && onCiteClick) {
               onCiteClick(refId, label, citedSentence);
             }
@@ -2124,7 +2126,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           syncActiveBlockType();
           calculateLiveStats();
         }}
-        className="flex-1 outline-none ProseMirror" 
+        className="flex-1 outline-none ProseMirror"
       />
     </div>
   );

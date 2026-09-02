@@ -72,7 +72,7 @@ type SidebarProps = {
   synthesizeDisclaimer: string | null;
   onSynthesizeReview: () => void;
   onInsertSynthesizedText: (text: string) => void;
-  
+
   // Final features props
   citationStyle: string;
   onChangeCitationStyle: (style: string) => void;
@@ -216,7 +216,7 @@ export function EditorSidebar({
 }: SidebarProps) {
   const { language, t } = useLanguage();
   const { user } = useAuth();
-  const [workspaceTab, setWorkspaceTab] = useState<'library' | 'writing' | 'document' | 'comments'>('library');
+  const [workspaceTab, setWorkspaceTab] = useState<'library' | 'writing' | 'document' | 'comments'>('document');
   const [commentFilterTab, setCommentFilterTab] = useState<'active' | 'suggestions' | 'resolved'>('active');
   const [suggestionSubTab, setSuggestionSubTab] = useState<'active' | 'history'>('active');
 
@@ -236,7 +236,7 @@ export function EditorSidebar({
 
   const [query, setQuery] = useState('');
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
-  
+
   const [localIsExpanded, setLocalIsExpanded] = useState(true);
   const isExpanded = propIsExpanded !== undefined ? propIsExpanded : localIsExpanded;
   const hasImprovedText = improvedText !== null;
@@ -262,13 +262,13 @@ export function EditorSidebar({
     }
     setScanStatus('scanning');
     setScanProgress(0);
-    
+
     const interval = setInterval(() => {
       setScanProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
           setScanStatus('completed');
-          
+
           // Generate a realistic similarity score (e.g. randomized between 8% and 24%)
           const calculatedScore = Math.floor(Math.random() * 18) + 8;
           setSimilarityScore(calculatedScore);
@@ -317,14 +317,14 @@ export function EditorSidebar({
   const filteredCollections = useMemo(() => {
     const q = query.trim().toLowerCase();
     let items = bibliographyEntries;
-    
+
     // Filter by folder selection
     if (selectedFolderFilter !== 'all') {
       items = items.filter(
         (entry) => folderAssignments[entry.referenceId] === selectedFolderFilter
       );
     }
-    
+
     if (!q) return items;
     return items.filter((entry) => {
       const haystack = `${entry.label} ${entry.formatted}`.toLowerCase();
@@ -351,34 +351,23 @@ export function EditorSidebar({
             <span className="font-bold text-slate-800 text-sm">
               {workspaceTab === 'library' ? 'Library' : workspaceTab === 'writing' ? 'AI Writing' : workspaceTab === 'document' ? 'Document Stats' : 'Comments'}
             </span>
-            {onClose && (
-              <button
-                type="button"
-                onClick={onClose}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line bg-panel text-slate-500 hover:text-slate-800 hover:bg-accentSoft/70 transition"
-                aria-label="Close sidebar"
-                title="Tutup Asisten Riset"
-              >
-                <IconX className="h-4 w-4" />
-              </button>
-            )}
           </div>
 
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 thin-scroll">
-          {workspaceTab === 'library' ? (
-            <div className="space-y-4">
-              <div className="relative">
-                <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-                <input
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search collections..."
-                  className="h-11 w-full rounded-md border border-line bg-panel pl-9 pr-3 text-sm outline-none transition placeholder:text-muted focus:border-accent/40"
-                />
-              </div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 thin-scroll">
+            {workspaceTab === 'library' ? (
+              <div className="space-y-4">
+                <div className="relative">
+                  <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                  <input
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Search collections..."
+                    className="h-11 w-full rounded-md border border-line bg-panel pl-9 pr-3 text-sm outline-none transition placeholder:text-muted focus:border-accent/40"
+                  />
+                </div>
 
-              <div className="space-y-3">
+                <div className="space-y-3">
                   {/* AI Literature Review Synthesizer Card */}
                   {bibliographyEntries.length > 0 && (
                     <div className="rounded-lg border border-line bg-gradient-to-br from-indigo-50/20 to-violet-50/20 p-3 shadow-sm flex flex-col gap-2.5 border-l-4 border-l-indigo-500">
@@ -389,7 +378,7 @@ export function EditorSidebar({
                       <p className="text-[10px] text-slate-500 leading-normal">
                         Sintesis kontribusi {bibliographyEntries.length} paper rujukan aktif di bawah menjadi satu draf paragraf literatur akademis.
                       </p>
-                      
+
                       <button
                         type="button"
                         onClick={onSynthesizeReview}
@@ -516,13 +505,13 @@ export function EditorSidebar({
                             <p className={`mt-1 text-xs leading-5 text-muted select-none ${activePlanId === 'free' ? 'blur-[3px] pointer-events-none' : ''}`}>
                               {entry.formatted}
                             </p>
-                            
+
                             {activePlanId === 'free' && (
                               <div className="mt-1.5 flex items-center gap-1 text-[9px] text-amber-600 font-bold bg-amber-50 border border-amber-100 rounded px-1.5 py-0.5 max-w-max select-none">
                                 <span>🔒 Rujukan Terkunci (Paket Free)</span>
                               </div>
                             )}
-                            
+
                             {/* Folder assignment dropdown */}
                             <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-50">
                               <span className="text-[10px] text-slate-500 font-bold">Folder:</span>
@@ -550,524 +539,512 @@ export function EditorSidebar({
                   )}
                 </div>
               </div>
-          ) : workspaceTab === 'writing' ? (
-            <div className="space-y-3">
-              <section className="rounded-lg border border-line bg-white p-3 shadow-sm">
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <IconSparkles className="h-4 w-4 text-accent" />
-                    <h3 className="text-sm font-semibold text-text">Writing tools</h3>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsHistoryModalOpen(true)}
-                    className="text-xs font-bold text-indigo-650 hover:text-indigo-800 transition flex items-center gap-1 cursor-pointer"
-                  >
-                    <IconHistory className="h-3.5 w-3.5" />
-                    <span>{t('sidebar.history')}</span>
-                  </button>
-                </div>
-                <div className="mb-3 max-h-28 overflow-y-auto rounded-md border border-dashed border-line bg-slate-50 p-3 text-xs leading-5 text-muted">
-                  {selectedText.trim()
-                    ? selectedText
-                    : 'Select text in the document to enable writing tools.'}
-                </div>
-                <div className="space-y-2">
-                  <ActionButton
-                    label={isImproving ? 'Improving...' : 'Improve Academic Writing'}
-                    description="Refine clarity, tone, and academic structure."
-                    icon={isImproving ? IconLoader2 : IconWand}
-                    onClick={onImproveWriting}
-                    disabled={!selectedText.trim() || isImproving}
-                  />
-                  <ActionButton
-                    label={isImproving ? 'Paraphrasing...' : 'Paraphrase'}
-                    description="Rewrite the selected text while keeping the meaning."
-                    icon={isImproving ? IconLoader2 : IconLanguage}
-                    onClick={onParaphrase}
-                    disabled={!selectedText.trim() || isImproving}
-                  />
-                  <ActionButton
-                    label={isImproving ? 'Summarizing...' : 'Summarize'}
-                    description="Condense the selected text into a shorter academic summary."
-                    icon={isImproving ? IconLoader2 : IconFileText}
-                    onClick={onSummarize}
-                    disabled={!selectedText.trim() || isImproving}
-                  />
-                  <ActionButton
-                    label={isImproving ? 'Generating...' : 'Generate Abstract'}
-                    description="Draft an abstract from the current document context."
-                    icon={isImproving ? IconLoader2 : IconBook}
-                    onClick={onGenerateAbstract}
-                    disabled={isImproving}
-                  />
-                  <ActionButton
-                    label={isSearchingCitations ? 'Searching...' : 'Find Citation'}
-                    description="Search verified metadata for the selected claim."
-                    icon={isSearchingCitations ? IconLoader2 : IconSum}
-                    onClick={handleFindCitation}
-                    disabled={!selectedText.trim() || isSearchingCitations}
-                  />
-                   <ActionButton
-                    label="Auto-Suggest Citation (AI)"
-                    description={language === 'en'
-                      ? "🔒 Automated citation suggestions based on your statement claims (Pro)."
-                      : "🔒 Rekomendasi sitasi otomatis berdasarkan isi klaim kalimat Anda (Pro)."
-                    }
-                    icon={IconSparkles}
-                    onClick={() => {
-                      if (activePlanId === 'free') {
-                        alert(language === 'en'
-                          ? "🔒 Automated AI Citation Suggestion feature is exclusive to Pro Writer plans. Please upgrade your account in the Pricing menu."
-                          : "🔒 Fitur Rekomendasi Sitasi AI khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing."
-                        );
-                      } else {
-                        onRepeatCitationSearch(selectedText);
-                        alert(language === 'en'
-                          ? "AI is recommending references based on your statement claims. Search results can be viewed in the 'Library' tab."
-                          : "AI merekomendasikan referensi berdasarkan klaim kalimat Anda. Hasil pencarian referensi dapat dilihat di tab 'Library' -> 'Sources'."
-                        );
-                      }
-                    }}
-                    disabled={!selectedText.trim()}
-                  />
-                </div>
-                {citationError ? (
-                  <div className="mt-3 rounded-md border border-rose-200 bg-rose-50 p-3 text-xs leading-5 text-rose-700">
-                    {citationError}
-                  </div>
-                ) : citationNote ? (
-                  <div className="mt-3 rounded-md border border-line bg-slate-50 p-3 text-xs leading-5 text-muted">
-                    {citationNote}
-                  </div>
-                ) : null}
-              </section>
-
-              <section className="rounded-lg border border-line bg-white p-3 shadow-sm">
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <h3 className="text-sm font-semibold text-text">Improve result</h3>
-                  {hasImprovedText ? (
+            ) : workspaceTab === 'writing' ? (
+              <div className="space-y-3">
+                <section className="rounded-lg border border-line bg-white p-3 shadow-sm">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <IconSparkles className="h-4 w-4 text-accent" />
+                      <h3 className="text-sm font-semibold text-text">Writing tools</h3>
+                    </div>
                     <button
                       type="button"
-                      onClick={onApplyImprovedText}
-                      disabled={isApplied}
-                      className="inline-flex items-center gap-2 rounded-md border border-line bg-panel px-3 py-1.5 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => setIsHistoryModalOpen(true)}
+                      className="text-xs font-bold text-indigo-650 hover:text-indigo-800 transition flex items-center gap-1 cursor-pointer"
                     >
-                      <IconCheck className="h-3.5 w-3.5" />
-                      {isApplied ? 'Applied' : 'Apply'}
+                      <IconHistory className="h-3.5 w-3.5" />
+                      <span>{t('sidebar.history')}</span>
                     </button>
+                  </div>
+                  <div className="mb-3 max-h-28 overflow-y-auto rounded-md border border-dashed border-line bg-slate-50 p-3 text-xs leading-5 text-muted">
+                    {selectedText.trim()
+                      ? selectedText
+                      : 'Select text in the document to enable writing tools.'}
+                  </div>
+                  <div className="space-y-2">
+                    <ActionButton
+                      label={isImproving ? 'Improving...' : 'Improve Academic Writing'}
+                      description="Refine clarity, tone, and academic structure."
+                      icon={isImproving ? IconLoader2 : IconWand}
+                      onClick={onImproveWriting}
+                      disabled={!selectedText.trim() || isImproving}
+                    />
+                    <ActionButton
+                      label={isImproving ? 'Paraphrasing...' : 'Paraphrase'}
+                      description="Rewrite the selected text while keeping the meaning."
+                      icon={isImproving ? IconLoader2 : IconLanguage}
+                      onClick={onParaphrase}
+                      disabled={!selectedText.trim() || isImproving}
+                    />
+                    <ActionButton
+                      label={isImproving ? 'Summarizing...' : 'Summarize'}
+                      description="Condense the selected text into a shorter academic summary."
+                      icon={isImproving ? IconLoader2 : IconFileText}
+                      onClick={onSummarize}
+                      disabled={!selectedText.trim() || isImproving}
+                    />
+                    <ActionButton
+                      label={isImproving ? 'Generating...' : 'Generate Abstract'}
+                      description="Draft an abstract from the current document context."
+                      icon={isImproving ? IconLoader2 : IconBook}
+                      onClick={onGenerateAbstract}
+                      disabled={isImproving}
+                    />
+                    <ActionButton
+                      label={isSearchingCitations ? 'Searching...' : 'Find Citation'}
+                      description="Search verified metadata for the selected claim."
+                      icon={isSearchingCitations ? IconLoader2 : IconSum}
+                      onClick={handleFindCitation}
+                      disabled={!selectedText.trim() || isSearchingCitations}
+                    />
+                    <ActionButton
+                      label="Auto-Suggest Citation (AI)"
+                      description={language === 'en'
+                        ? "🔒 Automated citation suggestions based on your statement claims (Pro)."
+                        : "🔒 Rekomendasi sitasi otomatis berdasarkan isi klaim kalimat Anda (Pro)."
+                      }
+                      icon={IconSparkles}
+                      onClick={() => {
+                        if (activePlanId === 'free') {
+                          alert(language === 'en'
+                            ? "🔒 Automated AI Citation Suggestion feature is exclusive to Pro Writer plans. Please upgrade your account in the Pricing menu."
+                            : "🔒 Fitur Rekomendasi Sitasi AI khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing."
+                          );
+                        } else {
+                          onRepeatCitationSearch(selectedText);
+                          alert(language === 'en'
+                            ? "AI is recommending references based on your statement claims. Search results can be viewed in the 'Library' tab."
+                            : "AI merekomendasikan referensi berdasarkan klaim kalimat Anda. Hasil pencarian referensi dapat dilihat di tab 'Library' -> 'Sources'."
+                          );
+                        }
+                      }}
+                      disabled={!selectedText.trim()}
+                    />
+                  </div>
+                  {citationError ? (
+                    <div className="mt-3 rounded-md border border-rose-200 bg-rose-50 p-3 text-xs leading-5 text-rose-700">
+                      {citationError}
+                    </div>
+                  ) : citationNote ? (
+                    <div className="mt-3 rounded-md border border-line bg-slate-50 p-3 text-xs leading-5 text-muted">
+                      {citationNote}
+                    </div>
                   ) : null}
-                </div>
-                {aiError ? (
-                  <div className="rounded-md border border-rose-200 bg-rose-50 p-3 text-xs leading-5 text-rose-700">
-                    {aiError}
-                  </div>
-                ) : hasImprovedText ? (
-                  <div className="space-y-3">
-                    <div className="rounded-md border border-line bg-slate-50 p-3">
-                      <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
-                        Improved Text
-                      </p>
-                      <p className="text-sm leading-6 text-text">{improvedText?.improved_text}</p>
-                    </div>
-                    <div className="flex items-start gap-2 rounded-md border border-line bg-panel p-3 text-xs leading-5 text-muted">
-                      <IconSparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
-                      <span>{improvedText?.disclaimer}</span>
-                    </div>
-                  </div>
-                ) : null}
-              </section>
-            </div>
-          ) : workspaceTab === 'document' ? (
-            <div className="space-y-3">
-              <section className="rounded-lg border border-line bg-white p-3 shadow-sm">
-                <div className="mb-3 flex items-center gap-2">
-                  <IconBook className="h-4 w-4 text-accent" />
-                  <h3 className="text-sm font-semibold text-text">Document stats</h3>
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-md border border-line bg-panel px-2 py-2">
-                    <p className="text-[10px] uppercase tracking-[0.12em] text-muted">Words</p>
-                    <p className="mt-1 text-sm font-semibold text-text">{wordCount}</p>
-                  </div>
-                  <div className="rounded-md border border-line bg-panel px-2 py-2">
-                    <p className="text-[10px] uppercase tracking-[0.12em] text-muted">Chars</p>
-                    <p className="mt-1 text-sm font-semibold text-text">{characterCount}</p>
-                  </div>
-                  <div className="rounded-md border border-line bg-panel px-2 py-2">
-                    <p className="text-[10px] uppercase tracking-[0.12em] text-muted">Cites</p>
-                    <p className="mt-1 text-sm font-semibold text-text">{citationCount}</p>
-                  </div>
-                </div>
+                </section>
 
-                {/* Premium AI Readability Metrics */}
-                <div className="mt-3 grid grid-cols-2 gap-2 text-left animate-fade-in">
-                  <div className="rounded-xl border border-line bg-panel p-3 flex flex-col gap-1">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">⏱️ Waktu Baca</span>
-                    <span className="text-xs font-bold text-slate-700">~{Math.max(1, Math.ceil(wordCount / 150))} Menit</span>
+                <section className="rounded-lg border border-line bg-white p-3 shadow-sm">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <h3 className="text-sm font-semibold text-text">Improve result</h3>
+                    {hasImprovedText ? (
+                      <button
+                        type="button"
+                        onClick={onApplyImprovedText}
+                        disabled={isApplied}
+                        className="inline-flex items-center gap-2 rounded-md border border-line bg-panel px-3 py-1.5 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <IconCheck className="h-3.5 w-3.5" />
+                        {isApplied ? 'Applied' : 'Apply'}
+                      </button>
+                    ) : null}
                   </div>
-                  
-                  <div className="rounded-xl border border-line bg-panel p-3 flex flex-col gap-1">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">✍️ Kalimat Pasif</span>
-                    <span className="text-xs font-bold text-slate-700">
-                      {wordCount > 0 
-                        ? `${Math.max(8, Math.min(45, Math.round(((characterCount % 15) + 12) + (characterCount / Math.max(1, wordCount) > 5.7 ? 8 : 0))))}%`
-                        : '0%'
+                  {aiError ? (
+                    <div className="rounded-md border border-rose-200 bg-rose-50 p-3 text-xs leading-5 text-rose-700">
+                      {aiError}
+                    </div>
+                  ) : hasImprovedText ? (
+                    <div className="space-y-3">
+                      <div className="rounded-md border border-line bg-slate-50 p-3">
+                        <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+                          Improved Text
+                        </p>
+                        <p className="text-sm leading-6 text-text">{improvedText?.improved_text}</p>
+                      </div>
+                      <div className="flex items-start gap-2 rounded-md border border-line bg-panel p-3 text-xs leading-5 text-muted">
+                        <IconSparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
+                        <span>{improvedText?.disclaimer}</span>
+                      </div>
+                    </div>
+                  ) : null}
+                </section>
+              </div>
+            ) : workspaceTab === 'document' ? (
+              <div className="space-y-3">
+                <section className="rounded-lg border border-line bg-white p-3 shadow-sm">
+                  <div className="mb-3 flex items-center gap-2">
+                    <IconBook className="h-4 w-4 text-accent" />
+                    <h3 className="text-sm font-semibold text-text">Document stats</h3>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="rounded-md border border-line bg-panel px-2 py-2">
+                      <p className="text-[10px] uppercase tracking-[0.12em] text-muted">Words</p>
+                      <p className="mt-1 text-sm font-semibold text-text">{wordCount}</p>
+                    </div>
+                    <div className="rounded-md border border-line bg-panel px-2 py-2">
+                      <p className="text-[10px] uppercase tracking-[0.12em] text-muted">Chars</p>
+                      <p className="mt-1 text-sm font-semibold text-text">{characterCount}</p>
+                    </div>
+                    <div className="rounded-md border border-line bg-panel px-2 py-2">
+                      <p className="text-[10px] uppercase tracking-[0.12em] text-muted">Cites</p>
+                      <p className="mt-1 text-sm font-semibold text-text">{citationCount}</p>
+                    </div>
+                  </div>
+
+                  {/* Premium AI Readability Metrics */}
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-left animate-fade-in">
+                    <div className="rounded-xl border border-line bg-panel p-3 flex flex-col gap-1">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">⏱️ Waktu Baca</span>
+                      <span className="text-xs font-bold text-slate-700">~{Math.max(1, Math.ceil(wordCount / 150))} Menit</span>
+                    </div>
+
+                    <div className="rounded-xl border border-line bg-panel p-3 flex flex-col gap-1">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">✍️ Kalimat Pasif</span>
+                      <span className="text-xs font-bold text-slate-700">
+                        {wordCount > 0
+                          ? `${Math.max(8, Math.min(45, Math.round(((characterCount % 15) + 12) + (characterCount / Math.max(1, wordCount) > 5.7 ? 8 : 0))))}%`
+                          : '0%'
+                        }
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-2 rounded-xl border border-line bg-panel p-3 flex items-center justify-between animate-fade-in">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">📊 Keterbacaan AI</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${(wordCount > 0 ? (characterCount / wordCount) : 0) > 6.2
+                      ? 'bg-rose-50 text-rose-700 border-rose-200'
+                      : (wordCount > 0 ? (characterCount / wordCount) : 0) > 5.7
+                        ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                        : (wordCount > 0 ? (characterCount / wordCount) : 0) > 5.2
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      }`}>
+                      {wordCount > 0
+                        ? (characterCount / wordCount) > 6.2
+                          ? 'Sangat Teknis (Disertasi)'
+                          : (characterCount / wordCount) > 5.7
+                            ? 'Akademik (Jurnal)'
+                            : (characterCount / wordCount) > 5.2
+                              ? 'Formal (Esai/Artikel)'
+                              : 'Mudah Dipahami'
+                        : 'N/A'
                       }
                     </span>
                   </div>
-                </div>
 
-                <div className="mt-2 rounded-xl border border-line bg-panel p-3 flex items-center justify-between animate-fade-in">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">📊 Keterbacaan AI</span>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                    (wordCount > 0 ? (characterCount / wordCount) : 0) > 6.2 
-                      ? 'bg-rose-50 text-rose-700 border-rose-200' 
-                      : (wordCount > 0 ? (characterCount / wordCount) : 0) > 5.7 
-                        ? 'bg-indigo-50 text-indigo-700 border-indigo-200' 
-                        : (wordCount > 0 ? (characterCount / wordCount) : 0) > 5.2 
-                          ? 'bg-amber-50 text-amber-700 border-amber-200' 
-                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                  }`}>
-                    {wordCount > 0 
-                      ? (characterCount / wordCount) > 6.2 
-                        ? 'Sangat Teknis (Disertasi)' 
-                        : (characterCount / wordCount) > 5.7 
-                          ? 'Akademik (Jurnal)' 
-                          : (characterCount / wordCount) > 5.2 
-                            ? 'Formal (Esai/Artikel)' 
-                            : 'Mudah Dipahami'
-                      : 'N/A'
-                    }
-                  </span>
-                </div>
-                
-                <BurstinessChart content={selectedText} />
-              </section>
+                  <BurstinessChart content={selectedText} />
+                </section>
 
-              {/* Citation Style Selector Section */}
-              <section className="rounded-lg border border-line bg-white p-3 shadow-sm flex flex-col gap-2.5">
-                <div className="flex items-center gap-2">
-                  <IconBook className="h-4 w-4 text-accent" />
-                  <h3 className="text-sm font-semibold text-text font-sans">Gaya Sitasi</h3>
-                </div>
-                <div className="flex flex-col gap-1.5 text-left">
-                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Format Sitasi Jurnal</span>
-                  <select
-                    value={citationStyle}
-                    onChange={(e) => onChangeCitationStyle(e.target.value)}
-                    className="w-full border border-line rounded-lg px-2.5 py-1.5 text-xs text-slate-700 bg-white outline-none focus:border-indigo-500 transition cursor-pointer"
-                  >
-                    <option value="apa">APA 7th Edition</option>
-                    <option value="ieee">IEEE Standard</option>
-                    <option value="harvard">Harvard Style</option>
-                    <option value="mla">MLA 8th Edition</option>
-                    <option value="chicago">Chicago Manual of Style</option>
-                  </select>
-                </div>
-              </section>
-              {/* Plagiarism Checker Section */}
-              <section className="rounded-lg border border-line bg-white p-3 shadow-sm">
-                <div className="mb-3 flex items-center justify-between">
+                {/* Citation Style Selector Section */}
+                <section className="rounded-lg border border-line bg-white p-3 shadow-sm flex flex-col gap-2.5">
                   <div className="flex items-center gap-2">
-                    <IconSearch className="h-4 w-4 text-accent" />
-                    <h3 className="text-sm font-semibold text-text">Plagiarism Checker</h3>
+                    <IconBook className="h-4 w-4 text-accent" />
+                    <h3 className="text-sm font-semibold text-text font-sans">Gaya Sitasi</h3>
                   </div>
-                  {scanStatus === 'completed' && (
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      similarityScore < 15 
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                        : similarityScore < 40 
-                          ? 'bg-amber-50 text-amber-700 border border-amber-200' 
-                          : 'bg-rose-50 text-rose-700 border border-rose-200'
-                    }`}>
-                      Similarity: {similarityScore}%
-                    </span>
-                  )}
-                </div>
-
-                {scanStatus === 'idle' && (
-                  <div className="py-2 text-center flex flex-col gap-2">
-                    <p className="text-[11px] text-muted leading-relaxed">
-                      Pindai manuskrip Anda untuk mendeteksi kesamaan kata dengan database jurnal ilmiah global.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={handleStartScan}
-                      className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-sm transition cursor-pointer"
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Format Sitasi Jurnal</span>
+                    <select
+                      value={citationStyle}
+                      onChange={(e) => onChangeCitationStyle(e.target.value)}
+                      className="w-full border border-line rounded-lg px-2.5 py-1.5 text-xs text-slate-700 bg-white outline-none focus:border-indigo-500 transition cursor-pointer"
                     >
-                      Mulai Pindai Plagiarisme
-                    </button>
+                      <option value="apa">APA 7th Edition</option>
+                      <option value="ieee">IEEE Standard</option>
+                      <option value="harvard">Harvard Style</option>
+                      <option value="mla">MLA 8th Edition</option>
+                      <option value="chicago">Chicago Manual of Style</option>
+                    </select>
                   </div>
-                )}
-
-                {scanStatus === 'scanning' && (
-                  <div className="py-2 flex flex-col gap-2.5">
-                    <div className="flex items-center justify-between text-[10px] text-muted font-bold">
-                      <span>MEMINDAI DATABASE JURNAL...</span>
-                      <span>{scanProgress}%</span>
+                </section>
+                {/* Plagiarism Checker Section */}
+                <section className="rounded-lg border border-line bg-white p-3 shadow-sm">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <IconSearch className="h-4 w-4 text-accent" />
+                      <h3 className="text-sm font-semibold text-text">Plagiarism Checker</h3>
                     </div>
-                    <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                      <div 
-                        className="bg-indigo-600 h-1.5 rounded-full transition-all duration-300"
-                        style={{ width: `${scanProgress}%` }}
-                      />
-                    </div>
-                    <span className="text-[9px] text-center text-slate-400 italic">Memeriksa Crossref, IEEE, Springer...</span>
-                  </div>
-                )}
-
-                {scanStatus === 'completed' && (
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
-                      <div className="flex flex-col">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase">Status Kelayakan</span>
-                        <span className={`text-[10px] font-bold ${
-                          similarityScore < 15 ? 'text-emerald-600' : similarityScore < 40 ? 'text-amber-600' : 'text-rose-600'
+                    {scanStatus === 'completed' && (
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${similarityScore < 15
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : similarityScore < 40
+                          ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                          : 'bg-rose-50 text-rose-700 border border-rose-200'
                         }`}>
-                          {similarityScore < 15 ? 'Aman (Layak Publikasi)' : similarityScore < 40 ? 'Perlu Parafrase Ringan' : 'Indikasi Plagiasi Tinggi'}
-                        </span>
-                      </div>
-                      <button 
-                        onClick={() => setScanStatus('idle')}
-                        className="text-[9px] font-bold text-indigo-600 hover:text-indigo-800 transition uppercase"
-                      >
-                        Ulangi
-                      </button>
-                    </div>
-
-                    {activePlanId === 'free' ? (
-                      /* Free tier lock */
-                      <div className="p-3 border border-dashed border-slate-200 rounded-xl bg-slate-50 text-center flex flex-col items-center gap-1.5">
-                        <span className="text-xs font-bold text-slate-700 flex items-center gap-1">🔒 Laporan Penuh Terkunci</span>
-                        <p className="text-[9px] text-slate-400 leading-normal">
-                          Pengguna paket gratis hanya mendapatkan akses simulasi cepat. Upgrade ke **Pro Writer** untuk melihat kalimat plagiat dan tombol parafrase otomatis.
-                        </p>
-                      </div>
-                    ) : (
-                      /* Pro tier full details */
-                      <div className="flex flex-col gap-2">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider text-left">Kalimat dengan Kemiripan Tinggi:</span>
-                        
-                        {plagiarismDetails.map((item, idx) => (
-                          <div key={idx} className="border border-slate-100 rounded-lg p-2.5 bg-slate-50/50 flex flex-col gap-1.5 text-left">
-                            <div className="flex justify-between items-center text-[9px] text-slate-400 font-semibold">
-                              <span className="text-rose-600 uppercase tracking-wider">{item.similarity}% match</span>
-                              <span className="text-slate-500 font-bold truncate max-w-[140px]">{item.source}</span>
-                            </div>
-                            <p className="text-[10px] text-slate-650 leading-normal italic font-medium">
-                              "{item.text}"
-                            </p>
-                            {onParafrasePlagiat && (
-                              <button
-                                onClick={() => {
-                                  onParafrasePlagiat(item.text);
-                                  setWorkspaceTab('writing');
-                                }}
-                                className="mt-1 w-full py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[9px] font-bold rounded shadow-sm border border-indigo-100 transition cursor-pointer text-center"
-                              >
-                                Parafrase Kalimat Ini (AI)
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                        Similarity: {similarityScore}%
+                      </span>
                     )}
                   </div>
-                )}
-              </section>
 
-              <section className="rounded-lg border border-line bg-white p-3 shadow-sm">
-                <div className="mb-3 flex items-center gap-2">
-                  <IconFileText className="h-4 w-4 text-accent" />
-                  <h3 className="text-sm font-semibold text-text">Insert tools</h3>
-                </div>
-                <div className="grid gap-2">
-                  <button
-                    type="button"
-                    onClick={onInsertCitation}
-                    className="inline-flex items-center gap-2 rounded-md border border-line bg-panel px-3 py-2 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
-                  >
-                    <IconQuote className="h-3.5 w-3.5 text-accent" />
-                    Insert citation
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onInsertBibliography}
-                    className="inline-flex items-center gap-2 rounded-md border border-line bg-panel px-3 py-2 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
-                  >
-                    <IconFileText className="h-3.5 w-3.5 text-accent" />
-                    Bibliography
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onInsertImageSample}
-                    className="inline-flex items-center gap-2 rounded-md border border-line bg-panel px-3 py-2 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
-                  >
-                    <IconCirclePlus className="h-3.5 w-3.5 text-accent" />
-                    Sample image
-                  </button>
-                </div>
-              </section>
-            </div>
-          ) : workspaceTab === 'comments' ? (
-            <div className="space-y-4 animate-fade-in font-sans text-slate-800">
-              <div className="flex flex-col gap-1 text-left">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                  {language === 'en' ? 'Document Comments' : 'Komentar Dokumen'}
-                </span>
-                <p className="text-[11px] text-slate-500 leading-normal font-medium">
-                  {language === 'en'
-                    ? 'Review feedback left by co-editors and collaborators.'
-                    : 'Tinjau masukan yang diberikan oleh co-editor dan kolaborator.'}
-                </p>
+                  {scanStatus === 'idle' && (
+                    <div className="py-2 text-center flex flex-col gap-2">
+                      <p className="text-[11px] text-muted leading-relaxed">
+                        Pindai manuskrip Anda untuk mendeteksi kesamaan kata dengan database jurnal ilmiah global.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleStartScan}
+                        className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-sm transition cursor-pointer"
+                      >
+                        Mulai Pindai Plagiarisme
+                      </button>
+                    </div>
+                  )}
+
+                  {scanStatus === 'scanning' && (
+                    <div className="py-2 flex flex-col gap-2.5">
+                      <div className="flex items-center justify-between text-[10px] text-muted font-bold">
+                        <span>MEMINDAI DATABASE JURNAL...</span>
+                        <span>{scanProgress}%</span>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="bg-indigo-600 h-1.5 rounded-full transition-all duration-300"
+                          style={{ width: `${scanProgress}%` }}
+                        />
+                      </div>
+                      <span className="text-[9px] text-center text-slate-400 italic">Memeriksa Crossref, IEEE, Springer...</span>
+                    </div>
+                  )}
+
+                  {scanStatus === 'completed' && (
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
+                        <div className="flex flex-col">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase">Status Kelayakan</span>
+                          <span className={`text-[10px] font-bold ${similarityScore < 15 ? 'text-emerald-600' : similarityScore < 40 ? 'text-amber-600' : 'text-rose-600'
+                            }`}>
+                            {similarityScore < 15 ? 'Aman (Layak Publikasi)' : similarityScore < 40 ? 'Perlu Parafrase Ringan' : 'Indikasi Plagiasi Tinggi'}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => setScanStatus('idle')}
+                          className="text-[9px] font-bold text-indigo-600 hover:text-indigo-800 transition uppercase"
+                        >
+                          Ulangi
+                        </button>
+                      </div>
+
+                      {activePlanId === 'free' ? (
+                        /* Free tier lock */
+                        <div className="p-3 border border-dashed border-slate-200 rounded-xl bg-slate-50 text-center flex flex-col items-center gap-1.5">
+                          <span className="text-xs font-bold text-slate-700 flex items-center gap-1">🔒 Laporan Penuh Terkunci</span>
+                          <p className="text-[9px] text-slate-400 leading-normal">
+                            Pengguna paket gratis hanya mendapatkan akses simulasi cepat. Upgrade ke **Pro Writer** untuk melihat kalimat plagiat dan tombol parafrase otomatis.
+                          </p>
+                        </div>
+                      ) : (
+                        /* Pro tier full details */
+                        <div className="flex flex-col gap-2">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider text-left">Kalimat dengan Kemiripan Tinggi:</span>
+
+                          {plagiarismDetails.map((item, idx) => (
+                            <div key={idx} className="border border-slate-100 rounded-lg p-2.5 bg-slate-50/50 flex flex-col gap-1.5 text-left">
+                              <div className="flex justify-between items-center text-[9px] text-slate-400 font-semibold">
+                                <span className="text-rose-600 uppercase tracking-wider">{item.similarity}% match</span>
+                                <span className="text-slate-500 font-bold truncate max-w-[140px]">{item.source}</span>
+                              </div>
+                              <p className="text-[10px] text-slate-650 leading-normal italic font-medium">
+                                "{item.text}"
+                              </p>
+                              {onParafrasePlagiat && (
+                                <button
+                                  onClick={() => {
+                                    onParafrasePlagiat(item.text);
+                                    setWorkspaceTab('writing');
+                                  }}
+                                  className="mt-1 w-full py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[9px] font-bold rounded shadow-sm border border-indigo-100 transition cursor-pointer text-center"
+                                >
+                                  Parafrase Kalimat Ini (AI)
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </section>
+
+                <section className="rounded-lg border border-line bg-white p-3 shadow-sm">
+                  <div className="mb-3 flex items-center gap-2">
+                    <IconFileText className="h-4 w-4 text-accent" />
+                    <h3 className="text-sm font-semibold text-text">Insert tools</h3>
+                  </div>
+                  <div className="grid gap-2">
+                    <button
+                      type="button"
+                      onClick={onInsertCitation}
+                      className="inline-flex items-center gap-2 rounded-md border border-line bg-panel px-3 py-2 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
+                    >
+                      <IconQuote className="h-3.5 w-3.5 text-accent" />
+                      Insert citation
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onInsertBibliography}
+                      className="inline-flex items-center gap-2 rounded-md border border-line bg-panel px-3 py-2 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
+                    >
+                      <IconFileText className="h-3.5 w-3.5 text-accent" />
+                      Bibliography
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onInsertImageSample}
+                      className="inline-flex items-center gap-2 rounded-md border border-line bg-panel px-3 py-2 text-xs font-medium text-text transition hover:border-accent/30 hover:bg-accentSoft/70"
+                    >
+                      <IconCirclePlus className="h-3.5 w-3.5 text-accent" />
+                      Sample image
+                    </button>
+                  </div>
+                </section>
               </div>
+            ) : workspaceTab === 'comments' ? (
+              <div className="space-y-4 animate-fade-in font-sans text-slate-800">
+                <div className="flex flex-col gap-1 text-left">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                    {language === 'en' ? 'Document Comments' : 'Komentar Dokumen'}
+                  </span>
+                  <p className="text-[11px] text-slate-500 leading-normal font-medium">
+                    {language === 'en'
+                      ? 'Review feedback left by co-editors and collaborators.'
+                      : 'Tinjau masukan yang diberikan oleh co-editor dan kolaborator.'}
+                  </p>
+                </div>
 
-              {/* Active vs Suggestions vs Resolved Sub-tabs */}
-              <div className="flex items-center gap-1 p-1 bg-slate-100/70 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => setCommentFilterTab('active')}
-                  className={`flex-1 py-1.5 px-1.5 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
-                    commentFilterTab === 'active'
+                {/* Active vs Suggestions vs Resolved Sub-tabs */}
+                <div className="flex items-center gap-1 p-1 bg-slate-100/70 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setCommentFilterTab('active')}
+                    className={`flex-1 py-1.5 px-1.5 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 cursor-pointer ${commentFilterTab === 'active'
                       ? 'bg-white text-indigo-700 shadow-sm border border-slate-200/60'
                       : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  <span>{language === 'en' ? 'Active' : 'Komentar'}</span>
-                  <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${
-                    commentFilterTab === 'active' ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-200/60 text-slate-600'
-                  }`}>
-                    {comments.filter(c => !c.resolved).length}
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setCommentFilterTab('suggestions')}
-                  className={`flex-1 py-1.5 px-1.5 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
-                    commentFilterTab === 'suggestions'
-                      ? 'bg-white text-amber-700 shadow-sm border border-slate-200/60'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  <span>💡 {language === 'en' ? 'Suggestions' : 'Usulan'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setCommentFilterTab('resolved')}
-                  className={`flex-1 py-1.5 px-1.5 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
-                    commentFilterTab === 'resolved'
-                      ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/60'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  <span>{language === 'en' ? 'Resolved' : 'Selesai'}</span>
-                  <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${
-                    commentFilterTab === 'resolved' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-200/60 text-slate-600'
-                  }`}>
-                    {comments.filter(c => c.resolved).length}
-                  </span>
-                </button>
-              </div>
-
-              {/* Sub-Filter Toggle for Suggestions: Active vs History */}
-              {commentFilterTab === 'suggestions' && (
-                <div className="flex items-center gap-1 p-1 bg-slate-100/80 rounded-lg text-[10px] font-bold">
-                  <button
-                    type="button"
-                    onClick={() => setSuggestionSubTab('active')}
-                    className={`flex-1 py-1 px-2 rounded-md transition flex items-center justify-center gap-1 cursor-pointer ${
-                      suggestionSubTab === 'active'
-                        ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60 font-bold'
-                        : 'text-slate-500 hover:text-slate-800'
-                    }`}
+                      }`}
                   >
-                    <span>💡 {language === 'en' ? 'Active' : 'Aktif'}</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${
-                      suggestionSubTab === 'active' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'bg-slate-200/60 text-slate-600'
-                    }`}>
-                      {suggestions.filter(s => s.status === 'pending').length}
+                    <span>{language === 'en' ? 'Active' : 'Komentar'}</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${commentFilterTab === 'active' ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-200/60 text-slate-600'
+                      }`}>
+                      {comments.filter(c => !c.resolved).length}
                     </span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => setSuggestionSubTab('history')}
-                    className={`flex-1 py-1 px-2 rounded-md transition flex items-center justify-center gap-1 cursor-pointer ${
-                      suggestionSubTab === 'history'
-                        ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60 font-bold'
-                        : 'text-slate-500 hover:text-slate-800'
-                    }`}
+                    onClick={() => setCommentFilterTab('suggestions')}
+                    className={`flex-1 py-1.5 px-1.5 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 cursor-pointer ${commentFilterTab === 'suggestions'
+                      ? 'bg-white text-amber-700 shadow-sm border border-slate-200/60'
+                      : 'text-slate-500 hover:text-slate-800'
+                      }`}
                   >
-                    <span>📜 {language === 'en' ? 'History' : 'Riwayat'}</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${
-                      suggestionSubTab === 'history' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'bg-slate-200/60 text-slate-600'
-                    }`}>
-                      {suggestions.filter(s => s.status === 'accepted' || s.status === 'rejected').length}
+                    <span>💡 {language === 'en' ? 'Suggestions' : 'Usulan'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCommentFilterTab('resolved')}
+                    className={`flex-1 py-1.5 px-1.5 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 cursor-pointer ${commentFilterTab === 'resolved'
+                      ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/60'
+                      : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                  >
+                    <span>{language === 'en' ? 'Resolved' : 'Selesai'}</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${commentFilterTab === 'resolved' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-200/60 text-slate-600'
+                      }`}>
+                      {comments.filter(c => c.resolved).length}
                     </span>
                   </button>
                 </div>
-              )}
 
-              <div className="flex flex-col gap-3 max-h-[calc(100vh-360px)] overflow-y-auto pr-1">
-                {commentFilterTab === 'active' ? (
-                  comments.filter(c => !c.resolved).length === 0 ? (
-                    <div className="text-center py-12 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-xs text-slate-400 font-medium italic">
-                      {language === 'en' ? 'No active comments' : 'Tidak ada komentar aktif'}
-                    </div>
-                  ) : (
-                    comments.filter(c => !c.resolved).map((c) => (
-                      <div
-                        key={c.id}
-                        onClick={() => onCommentClick?.(c)}
-                        className="border border-slate-200 hover:border-indigo-300 bg-slate-50/20 hover:bg-indigo-50/5 transition rounded-xl p-3 flex flex-col gap-2 text-left cursor-pointer shadow-sm shadow-slate-100/10"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-extrabold text-slate-800 truncate max-w-[130px]">
-                            {c.author_name}
-                          </span>
-                          <span className="text-[8px] text-slate-400">
-                            {new Date(c.created_at).toLocaleTimeString(language === 'en' ? 'en-US' : 'id-ID', {
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </span>
-                        </div>
+                {/* Sub-Filter Toggle for Suggestions: Active vs History */}
+                {commentFilterTab === 'suggestions' && (
+                  <div className="flex items-center gap-1 p-1 bg-slate-100/80 rounded-lg text-[10px] font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setSuggestionSubTab('active')}
+                      className={`flex-1 py-1 px-2 rounded-md transition flex items-center justify-center gap-1 cursor-pointer ${suggestionSubTab === 'active'
+                        ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60 font-bold'
+                        : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                    >
+                      <span>💡 {language === 'en' ? 'Active' : 'Aktif'}</span>
+                      <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${suggestionSubTab === 'active' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'bg-slate-200/60 text-slate-600'
+                        }`}>
+                        {suggestions.filter(s => s.status === 'pending').length}
+                      </span>
+                    </button>
 
-                        {c.selected_text && (
-                          <div className="bg-slate-100/60 border-l-2 border-indigo-400 px-2 py-1 rounded text-[9px] text-slate-600 italic truncate">
-                            "{c.selected_text}"
-                          </div>
-                        )}
+                    <button
+                      type="button"
+                      onClick={() => setSuggestionSubTab('history')}
+                      className={`flex-1 py-1 px-2 rounded-md transition flex items-center justify-center gap-1 cursor-pointer ${suggestionSubTab === 'history'
+                        ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/60 font-bold'
+                        : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                    >
+                      <span>📜 {language === 'en' ? 'History' : 'Riwayat'}</span>
+                      <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${suggestionSubTab === 'history' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'bg-slate-200/60 text-slate-600'
+                        }`}>
+                        {suggestions.filter(s => s.status === 'accepted' || s.status === 'rejected').length}
+                      </span>
+                    </button>
+                  </div>
+                )}
 
-                        <p className="text-xs text-slate-700 leading-normal font-medium whitespace-pre-line">
-                          {c.comment_text}
-                        </p>
-
-                        <div className="flex justify-end pt-1 border-t border-slate-100 mt-1">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (onResolveComment) {
-                                onResolveComment(c.id);
-                              }
-                            }}
-                            className="px-2.5 py-1 text-[9px] font-extrabold text-indigo-600 hover:text-white bg-indigo-50 hover:bg-indigo-600 transition rounded-lg border border-indigo-100 shadow-sm cursor-pointer"
-                          >
-                            Resolve
-                          </button>
-                        </div>
+                <div className="flex flex-col gap-3 max-h-[calc(100vh-360px)] overflow-y-auto pr-1">
+                  {commentFilterTab === 'active' ? (
+                    comments.filter(c => !c.resolved).length === 0 ? (
+                      <div className="text-center py-12 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-xs text-slate-400 font-medium italic">
+                        {language === 'en' ? 'No active comments' : 'Tidak ada komentar aktif'}
                       </div>
-                    ))
-                  )
-                ) : commentFilterTab === 'suggestions' ? (
-                  (() => {
-                    const allSugList = suggestions && suggestions.length > 0
-                      ? suggestions
-                      : (() => {
+                    ) : (
+                      comments.filter(c => !c.resolved).map((c) => (
+                        <div
+                          key={c.id}
+                          onClick={() => onCommentClick?.(c)}
+                          className="border border-slate-200 hover:border-indigo-300 bg-slate-50/20 hover:bg-indigo-50/5 transition rounded-xl p-3 flex flex-col gap-2 text-left cursor-pointer shadow-sm shadow-slate-100/10"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-extrabold text-slate-800 truncate max-w-[130px]">
+                              {c.author_name}
+                            </span>
+                            <span className="text-[8px] text-slate-400">
+                              {new Date(c.created_at).toLocaleTimeString(language === 'en' ? 'en-US' : 'id-ID', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+
+                          {c.selected_text && (
+                            <div className="bg-slate-100/60 border-l-2 border-indigo-400 px-2 py-1 rounded text-[9px] text-slate-600 italic truncate">
+                              "{c.selected_text}"
+                            </div>
+                          )}
+
+                          <p className="text-xs text-slate-700 leading-normal font-medium whitespace-pre-line">
+                            {c.comment_text}
+                          </p>
+
+                          <div className="flex justify-end pt-1 border-t border-slate-100 mt-1">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (onResolveComment) {
+                                  onResolveComment(c.id);
+                                }
+                              }}
+                              className="px-2.5 py-1 text-[9px] font-extrabold text-indigo-600 hover:text-white bg-indigo-50 hover:bg-indigo-600 transition rounded-lg border border-indigo-100 shadow-sm cursor-pointer"
+                            >
+                              Resolve
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )
+                  ) : commentFilterTab === 'suggestions' ? (
+                    (() => {
+                      const allSugList = suggestions && suggestions.length > 0
+                        ? suggestions
+                        : (() => {
                           const holder = typeof window !== 'undefined' ? window.document.getElementById('editorjs-holder') : null;
                           const sugList: Array<DocumentSuggestion> = [];
                           if (holder) {
@@ -1093,151 +1070,151 @@ export function EditorSidebar({
                           return sugList;
                         })();
 
-                    const filteredSugList = suggestionSubTab === 'active'
-                      ? allSugList.filter(s => s.status === 'pending')
-                      : allSugList.filter(s => s.status === 'accepted' || s.status === 'rejected');
+                      const filteredSugList = suggestionSubTab === 'active'
+                        ? allSugList.filter(s => s.status === 'pending')
+                        : allSugList.filter(s => s.status === 'accepted' || s.status === 'rejected');
 
-                    if (filteredSugList.length === 0) {
-                      return (
-                        <div className="text-center py-12 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-xs text-slate-400 font-medium italic font-sans">
-                          {suggestionSubTab === 'active'
-                            ? (language === 'en' ? 'No active track changes suggestions found' : 'Belum ada usulan revisi aktif pada dokumen')
-                            : (language === 'en' ? 'No completed suggestion history' : 'Belum ada riwayat usulan selesai')}
-                        </div>
-                      );
-                    }
+                      if (filteredSugList.length === 0) {
+                        return (
+                          <div className="text-center py-12 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-xs text-slate-400 font-medium italic font-sans">
+                            {suggestionSubTab === 'active'
+                              ? (language === 'en' ? 'No active track changes suggestions found' : 'Belum ada usulan revisi aktif pada dokumen')
+                              : (language === 'en' ? 'No completed suggestion history' : 'Belum ada riwayat usulan selesai')}
+                          </div>
+                        );
+                      }
 
-                    return filteredSugList.map((sug) => {
-                      const authorName = sug.author_name || sug.author || (language === 'en' ? 'Collaborator' : 'Kolaborator');
-                      const deletedText = sug.selected_text || sug.old_text;
-                      const replacementText = sug.suggested_text || sug.new_text;
-                      const currentUserName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || '';
-                      const isCreatedByMe = (user?.id && sug.user_id && user.id === sug.user_id) || (sug.author_name && currentUserName && sug.author_name.toLowerCase() === currentUserName.toLowerCase());
+                      return filteredSugList.map((sug) => {
+                        const authorName = sug.author_name || sug.author || (language === 'en' ? 'Collaborator' : 'Kolaborator');
+                        const deletedText = sug.selected_text || sug.old_text;
+                        const replacementText = sug.suggested_text || sug.new_text;
+                        const currentUserName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || '';
+                        const isCreatedByMe = (user?.id && sug.user_id && user.id === sug.user_id) || (sug.author_name && currentUserName && sug.author_name.toLowerCase() === currentUserName.toLowerCase());
 
-                      const isAccepted = sug.status === 'accepted';
-                      const isRejected = sug.status === 'rejected';
-                      const isPending = sug.status === 'pending';
+                        const isAccepted = sug.status === 'accepted';
+                        const isRejected = sug.status === 'rejected';
+                        const isPending = sug.status === 'pending';
 
-                      const containerStyle = isAccepted
-                        ? 'border border-emerald-200 bg-emerald-50/30 hover:bg-emerald-50/50 transition rounded-xl p-3 flex flex-col gap-2 text-left shadow-xs font-sans'
-                        : isRejected
-                          ? 'border border-rose-200 bg-rose-50/30 hover:bg-rose-50/50 transition rounded-xl p-3 flex flex-col gap-2 text-left shadow-xs font-sans'
-                          : 'border border-amber-200 bg-amber-50/20 hover:bg-amber-50/40 transition rounded-xl p-3 flex flex-col gap-2 text-left shadow-xs font-sans';
+                        const containerStyle = isAccepted
+                          ? 'border border-emerald-200 bg-emerald-50/30 hover:bg-emerald-50/50 transition rounded-xl p-3 flex flex-col gap-2 text-left shadow-xs font-sans'
+                          : isRejected
+                            ? 'border border-rose-200 bg-rose-50/30 hover:bg-rose-50/50 transition rounded-xl p-3 flex flex-col gap-2 text-left shadow-xs font-sans'
+                            : 'border border-amber-200 bg-amber-50/20 hover:bg-amber-50/40 transition rounded-xl p-3 flex flex-col gap-2 text-left shadow-xs font-sans';
 
-                      const badgeStyle = isAccepted
-                        ? 'text-[8px] bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold px-1.5 py-0.5 rounded-full'
-                        : isRejected
-                          ? 'text-[8px] bg-rose-100 text-rose-800 border border-rose-200 font-bold px-1.5 py-0.5 rounded-full'
-                          : 'text-[8px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded-full';
+                        const badgeStyle = isAccepted
+                          ? 'text-[8px] bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold px-1.5 py-0.5 rounded-full'
+                          : isRejected
+                            ? 'text-[8px] bg-rose-100 text-rose-800 border border-rose-200 font-bold px-1.5 py-0.5 rounded-full'
+                            : 'text-[8px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded-full';
 
-                      const statusBadgeText = isAccepted
-                        ? `✓ ${language === 'en' ? 'Accepted' : 'Diterima'}`
-                        : isRejected
-                          ? `✕ ${language === 'en' ? 'Rejected' : 'Ditolak'}`
-                          : `⏳ ${language === 'en' ? 'Pending' : 'Menunggu'}`;
+                        const statusBadgeText = isAccepted
+                          ? `✓ ${language === 'en' ? 'Accepted' : 'Diterima'}`
+                          : isRejected
+                            ? `✕ ${language === 'en' ? 'Rejected' : 'Ditolak'}`
+                            : `⏳ ${language === 'en' ? 'Pending' : 'Menunggu'}`;
 
-                      return (
+                        return (
+                          <div
+                            key={sug.id}
+                            className={containerStyle}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-extrabold text-slate-800 truncate">
+                                💡 {language === 'en' ? 'Suggestion by' : 'Usulan oleh'} {authorName}
+                              </span>
+                              <span className={badgeStyle}>
+                                {statusBadgeText}
+                              </span>
+                            </div>
+
+                            {deletedText && (
+                              <div className="bg-rose-50 border-l-2 border-rose-400 px-2 py-1 rounded text-[9px] text-rose-800 line-through leading-relaxed">
+                                {language === 'en' ? 'Deleted:' : 'Dihapus:'} "{deletedText}"
+                              </div>
+                            )}
+
+                            {replacementText && (
+                              <div className="bg-emerald-50 border-l-2 border-emerald-400 px-2 py-1 rounded text-[9px] text-emerald-800 font-bold leading-relaxed">
+                                {language === 'en' ? 'Replacement:' : 'Pengganti:'} "{replacementText}"
+                              </div>
+                            )}
+
+                            {isPending && (
+                              <div className="flex items-center justify-end gap-1.5 pt-1.5 border-t border-amber-100 mt-1">
+                                {isCreatedByMe ? (
+                                  <span className="text-[9px] text-slate-500 font-medium italic">
+                                    ⏳ {language === 'en' ? 'Pending Review' : 'Menunggu Peninjauan'}
+                                  </span>
+                                ) : (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        onRejectSuggestion?.(sug.id);
+                                      }}
+                                      className="px-2.5 py-1 text-[9px] font-bold text-rose-700 hover:text-white bg-rose-50 hover:bg-rose-600 transition rounded-lg border border-rose-200 cursor-pointer"
+                                    >
+                                      ✕ {language === 'en' ? 'Reject' : 'Tolak'}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        onAcceptSuggestion?.(sug.id);
+                                      }}
+                                      className="px-3 py-1 text-[9px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition rounded-lg shadow-xs cursor-pointer"
+                                    >
+                                      ✓ {language === 'en' ? 'Accept' : 'Terima'}
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      });
+                    })()
+                  ) : (
+                    comments.filter(c => c.resolved).length === 0 ? (
+                      <div className="text-center py-12 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-xs text-slate-400 font-medium italic">
+                        {language === 'en' ? 'No resolved comments' : 'Belum ada komentar selesai'}
+                      </div>
+                    ) : (
+                      comments.filter(c => c.resolved).map((c) => (
                         <div
-                          key={sug.id}
-                          className={containerStyle}
+                          key={c.id}
+                          onClick={() => onCommentClick?.(c)}
+                          className="border border-slate-200/80 hover:border-emerald-300 bg-emerald-50/10 hover:bg-emerald-50/20 transition rounded-xl p-3 flex flex-col gap-2 text-left cursor-pointer shadow-sm"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-extrabold text-slate-800 truncate">
-                              💡 {language === 'en' ? 'Suggestion by' : 'Usulan oleh'} {authorName}
+                            <span className="text-[10px] font-extrabold text-slate-800 truncate max-w-[120px]">
+                              {c.author_name}
                             </span>
-                            <span className={badgeStyle}>
-                              {statusBadgeText}
+                            <span className="text-[8px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 flex items-center gap-1">
+                              ✓ {language === 'en' ? 'Resolved' : 'Selesai'}
                             </span>
                           </div>
 
-                          {deletedText && (
-                            <div className="bg-rose-50 border-l-2 border-rose-400 px-2 py-1 rounded text-[9px] text-rose-800 line-through leading-relaxed">
-                              {language === 'en' ? 'Deleted:' : 'Dihapus:'} "{deletedText}"
+                          {c.selected_text && (
+                            <div className="bg-emerald-50/50 border-l-2 border-emerald-400 px-2 py-1 rounded text-[9px] text-emerald-800 italic truncate">
+                              "{c.selected_text}"
                             </div>
                           )}
 
-                          {replacementText && (
-                            <div className="bg-emerald-50 border-l-2 border-emerald-400 px-2 py-1 rounded text-[9px] text-emerald-800 font-bold leading-relaxed">
-                              {language === 'en' ? 'Replacement:' : 'Pengganti:'} "{replacementText}"
-                            </div>
-                          )}
-
-                          {isPending && (
-                            <div className="flex items-center justify-end gap-1.5 pt-1.5 border-t border-amber-100 mt-1">
-                              {isCreatedByMe ? (
-                                <span className="text-[9px] text-slate-500 font-medium italic">
-                                  ⏳ {language === 'en' ? 'Pending Review' : 'Menunggu Peninjauan'}
-                                </span>
-                              ) : (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      onRejectSuggestion?.(sug.id);
-                                    }}
-                                    className="px-2.5 py-1 text-[9px] font-bold text-rose-700 hover:text-white bg-rose-50 hover:bg-rose-600 transition rounded-lg border border-rose-200 cursor-pointer"
-                                  >
-                                    ✕ {language === 'en' ? 'Reject' : 'Tolak'}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      onAcceptSuggestion?.(sug.id);
-                                    }}
-                                    className="px-3 py-1 text-[9px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition rounded-lg shadow-xs cursor-pointer"
-                                  >
-                                    ✓ {language === 'en' ? 'Accept' : 'Terima'}
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          )}
+                          <p className="text-xs text-slate-600 leading-normal font-medium whitespace-pre-line">
+                            {c.comment_text}
+                          </p>
                         </div>
-                      );
-                    });
-                  })()
-                ) : (
-                  comments.filter(c => c.resolved).length === 0 ? (
-                    <div className="text-center py-12 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-xs text-slate-400 font-medium italic">
-                      {language === 'en' ? 'No resolved comments' : 'Belum ada komentar selesai'}
-                    </div>
-                  ) : (
-                    comments.filter(c => c.resolved).map((c) => (
-                      <div
-                        key={c.id}
-                        onClick={() => onCommentClick?.(c)}
-                        className="border border-slate-200/80 hover:border-emerald-300 bg-emerald-50/10 hover:bg-emerald-50/20 transition rounded-xl p-3 flex flex-col gap-2 text-left cursor-pointer shadow-sm"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-extrabold text-slate-800 truncate max-w-[120px]">
-                            {c.author_name}
-                          </span>
-                          <span className="text-[8px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 flex items-center gap-1">
-                            ✓ {language === 'en' ? 'Resolved' : 'Selesai'}
-                          </span>
-                        </div>
-
-                        {c.selected_text && (
-                          <div className="bg-emerald-50/50 border-l-2 border-emerald-400 px-2 py-1 rounded text-[9px] text-emerald-800 italic truncate">
-                            "{c.selected_text}"
-                          </div>
-                        )}
-
-                        <p className="text-xs text-slate-600 leading-normal font-medium whitespace-pre-line">
-                          {c.comment_text}
-                        </p>
-                      </div>
-                    ))
-                  )
-                )}
+                      ))
+                    )
+                  )}
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="text-xs text-slate-400 italic">Error Tab</div>
-          )}
+            ) : (
+              <div className="text-xs text-slate-400 italic">Error Tab</div>
+            )}
+          </div>
         </div>
-        </div>
-        
+
         {/* Vertical Tabs Bar on the Right */}
         <div className="w-12 shrink-0 flex flex-col items-center py-4 border-l border-slate-100 bg-transparent gap-4 overflow-hidden">
           {/* Toggle Button */}
@@ -1250,14 +1227,15 @@ export function EditorSidebar({
           >
             {isExpanded ? <IconChevronRight className="h-4 w-4" /> : <IconChevronLeft className="h-4 w-4" />}
           </button>
-          
+
           {/* Vertical Tabs */}
-          <div className="flex flex-col gap-2 w-full px-1.5 flex-1">
+          <div className="flex flex-col gap-2 w-full px-1.5 flex-1 items-center">
             {[
-              { id: 'library', label: 'Library', icon: <IconBook className="h-4 w-4" /> },
-              { id: 'writing', label: 'AI Writing', icon: <IconWand className="h-4 w-4" /> },
-              { id: 'document', label: 'Stats', icon: <IconFileText className="h-4 w-4" /> },
-              ...(comments ? [{ id: 'comments', label: 'Comments', icon: <IconQuote className="h-4 w-4" /> }] : [])
+              { id: 'document', label: '', icon: <IconFileText className="h-4 w-4" /> },
+              { id: 'writing', label: '', icon: <IconWand className="h-4 w-4" /> },
+              { id: 'library', label: '', icon: <IconBook className="h-4 w-4" /> },
+
+              ...(comments ? [{ id: 'comments', label: '', icon: <IconQuote className="h-4 w-4" /> }] : [])
             ].map((item) => (
               <button
                 key={item.id}
@@ -1266,11 +1244,10 @@ export function EditorSidebar({
                   setWorkspaceTab(item.id as typeof workspaceTab);
                   if (!isExpanded) toggleExpanded(); // Auto-expand when a tab is clicked
                 }}
-                className={`w-full py-2 flex flex-col items-center justify-center gap-1 rounded-md transition relative group ${
-                  workspaceTab === item.id && isExpanded
-                    ? 'bg-indigo-100 text-indigo-700 shadow-sm'
-                    : 'bg-transparent text-slate-500 hover:bg-slate-200/50 hover:text-slate-800'
-                }`}
+                className={`w-full py-2 flex flex-col items-center justify-center gap-1 rounded-md transition relative group ${workspaceTab === item.id && isExpanded
+                  ? 'bg-indigo-100 text-indigo-700 shadow-sm'
+                  : 'bg-transparent text-slate-500 hover:bg-slate-200/50 hover:text-slate-800'
+                  }`}
                 title={item.label}
               >
                 {item.icon}
@@ -1283,76 +1260,62 @@ export function EditorSidebar({
               </button>
             ))}
           </div>
-          
-          {/* Bottom Action (if any) */}
-          {isExpanded && (
-            <button
-              type="button"
-              onClick={onInsertImageSample}
-              className="mt-auto inline-flex h-8 w-8 items-center justify-center rounded-md border border-line bg-white text-text transition hover:border-accent/30 hover:bg-accentSoft/70 shadow-sm"
-              aria-label="Insert sample image"
-              title="Insert sample image"
-            >
-              <IconDownload className="h-4 w-4 rotate-180" />
-            </button>
-          )}
         </div>
       </aside>
 
-    {/* AI History Modal popup */}
-    {isHistoryModalOpen && (
-      <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in text-slate-800">
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-2xl w-full max-w-2xl flex flex-col gap-5 animate-scale-in max-h-[85vh]">
-          {/* Modal Header */}
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
-                <IconHistory className="h-5 w-5" />
+      {/* AI History Modal popup */}
+      {isHistoryModalOpen && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in text-slate-800">
+          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-2xl w-full max-w-2xl flex flex-col gap-5 animate-scale-in max-h-[85vh]">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                  <IconHistory className="h-5 w-5" />
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="text-base font-extrabold text-slate-800">{t('ai.title')}</h3>
+                  <span className="text-xs text-slate-400">
+                    {language === 'en' ? `Total ${aiHistory.length} changes recorded` : `Total ${aiHistory.length} perubahan dicatat`}
+                  </span>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <h3 className="text-base font-extrabold text-slate-800">{t('ai.title')}</h3>
-                <span className="text-xs text-slate-400">
-                  {language === 'en' ? `Total ${aiHistory.length} changes recorded` : `Total ${aiHistory.length} perubahan dicatat`}
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              {aiHistory.length > 0 && (
+              <div className="flex items-center gap-3">
+                {aiHistory.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm(t('ai.delete_history_confirm'))) {
+                        onClearAiHistory();
+                      }
+                    }}
+                    className="text-xs font-bold text-rose-600 hover:text-rose-800 transition cursor-pointer"
+                  >
+                    {language === 'en' ? 'Clear All' : 'Bersihkan Semua'}
+                  </button>
+                )}
                 <button
-                  type="button"
-                  onClick={() => {
-                    if (confirm(t('ai.delete_history_confirm'))) {
-                      onClearAiHistory();
-                    }
-                  }}
-                  className="text-xs font-bold text-rose-600 hover:text-rose-800 transition cursor-pointer"
+                  onClick={() => setIsHistoryModalOpen(false)}
+                  className="p-1 rounded-md text-slate-400 hover:bg-slate-105 hover:text-slate-650 transition cursor-pointer"
                 >
-                  {language === 'en' ? 'Clear All' : 'Bersihkan Semua'}
+                  <IconX className="h-5 w-5" />
                 </button>
-              )}
-              <button
-                onClick={() => setIsHistoryModalOpen(false)}
-                className="p-1 rounded-md text-slate-400 hover:bg-slate-105 hover:text-slate-650 transition cursor-pointer"
-              >
-                <IconX className="h-5 w-5" />
-              </button>
+              </div>
             </div>
-          </div>
 
-          {/* Modal Body: Cards list */}
-          <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-4">
-            {aiHistory.length > 0 ? (
-              aiHistory.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 shadow-sm hover:shadow-md transition duration-205 border-l-4 border-l-indigo-505 flex flex-col gap-3"
-                >
-                  {/* Header: Tone, Model, Time, and Delete button */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-md ${
-                        item.tone === 'simplify' 
-                          ? 'bg-amber-50 text-amber-700 border border-amber-100' 
+            {/* Modal Body: Cards list */}
+            <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-4">
+              {aiHistory.length > 0 ? (
+                aiHistory.map((item) => (
+                  <div
+                    key={item.id}
+                    className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 shadow-sm hover:shadow-md transition duration-205 border-l-4 border-l-indigo-505 flex flex-col gap-3"
+                  >
+                    {/* Header: Tone, Model, Time, and Delete button */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-md ${item.tone === 'simplify'
+                          ? 'bg-amber-50 text-amber-700 border border-amber-100'
                           : item.tone === 'shorten'
                             ? 'bg-rose-50 text-rose-700 border border-rose-100'
                             : item.tone === 'expand'
@@ -1364,120 +1327,120 @@ export function EditorSidebar({
                                   : item.tone === 'abstract'
                                     ? 'bg-orange-50 text-orange-700 border border-orange-100'
                                     : 'bg-indigo-50 text-indigo-700 border border-indigo-100'
-                      }`}>
-                        {item.tone === 'simplify' 
-                          ? (language === 'en' ? 'Simplify' : 'Sederhana') 
-                          : item.tone === 'shorten'
-                            ? (language === 'en' ? 'Condense' : 'Ringkas')
-                            : item.tone === 'expand'
-                              ? (language === 'en' ? 'Elaborate' : 'Elaborasi')
-                              : item.tone === 'paraphrase'
-                                ? (language === 'en' ? 'Paraphrase' : 'Parafrase')
-                                : item.tone === 'summarize'
-                                  ? (language === 'en' ? 'Summarize' : 'Ringkasan')
-                                  : item.tone === 'abstract'
-                                    ? (language === 'en' ? 'Abstract' : 'Abstrak')
-                                    : (language === 'en' ? 'Academic' : 'Akademis')}
-                      </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white text-slate-700 border border-slate-200/60 font-mono">
-                        {item.model.replace(" (Direct)", "").replace(" (Free OR)", "").replace(" (Pro OR)", "")}
-                      </span>
-                      {item.model.toLowerCase().includes('gemini') ? (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200/60">
-                          Gemini Direct
+                          }`}>
+                          {item.tone === 'simplify'
+                            ? (language === 'en' ? 'Simplify' : 'Sederhana')
+                            : item.tone === 'shorten'
+                              ? (language === 'en' ? 'Condense' : 'Ringkas')
+                              : item.tone === 'expand'
+                                ? (language === 'en' ? 'Elaborate' : 'Elaborasi')
+                                : item.tone === 'paraphrase'
+                                  ? (language === 'en' ? 'Paraphrase' : 'Parafrase')
+                                  : item.tone === 'summarize'
+                                    ? (language === 'en' ? 'Summarize' : 'Ringkasan')
+                                    : item.tone === 'abstract'
+                                      ? (language === 'en' ? 'Abstract' : 'Abstrak')
+                                      : (language === 'en' ? 'Academic' : 'Akademis')}
                         </span>
-                      ) : item.model.toLowerCase().includes('custom') ? (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200/60">
-                          Custom Proxy
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white text-slate-700 border border-slate-200/60 font-mono">
+                          {item.model.replace(" (Direct)", "").replace(" (Free OR)", "").replace(" (Pro OR)", "")}
                         </span>
-                      ) : (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200/60">
-                          OpenRouter
-                        </span>
-                      )}
+                        {item.model.toLowerCase().includes('gemini') ? (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200/60">
+                            Gemini Direct
+                          </span>
+                        ) : item.model.toLowerCase().includes('custom') ? (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200/60">
+                            Custom Proxy
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200/60">
+                            OpenRouter
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-slate-400 font-medium font-mono">{item.savedAt}</span>
+                        <button
+                          type="button"
+                          onClick={() => onDeleteAiHistoryEntry(item.id)}
+                          className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                          title={language === 'en' ? 'Delete entry' : 'Hapus entri'}
+                        >
+                          <IconTrash className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                       <span className="text-xs text-slate-400 font-medium font-mono">{item.savedAt}</span>
+
+                    {/* Preview Area: Original vs AI Result */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                      <div className="flex flex-col gap-1.5 bg-white p-3 rounded-xl border border-slate-100 text-left">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{language === 'en' ? 'Original Draft:' : 'Draf Asli:'}</span>
+                        <p className="text-slate-500 italic leading-relaxed">"{item.originalText}"</p>
+                      </div>
+                      <div className="flex flex-col gap-1.5 bg-indigo-50/10 p-3 rounded-xl border border-indigo-100/40 text-left">
+                        <span className="text-[9px] font-bold text-indigo-500 uppercase tracking-wider">{language === 'en' ? 'AI Polished Result:' : 'Hasil Poles AI:'}</span>
+                        <p className="text-slate-700 font-semibold leading-relaxed">"{item.improvedText}"</p>
+                      </div>
+                    </div>
+
+                    {/* Actions bar */}
+                    <div className="flex items-center justify-end gap-2 border-t border-slate-100/60 pt-3">
                       <button
                         type="button"
-                        onClick={() => onDeleteAiHistoryEntry(item.id)}
-                        className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
-                        title={language === 'en' ? 'Delete entry' : 'Hapus entri'}
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(item.improvedText);
+                            alert(language === 'en' ? 'Copied to clipboard!' : 'Disalin ke clipboard!');
+                          } catch (err) {
+                            console.error('Failed to copy text:', err);
+                          }
+                        }}
+                        className="px-4 py-2 border border-slate-200 hover:bg-slate-50 hover:text-slate-800 text-slate-655 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5"
                       >
-                        <IconTrash className="h-4 w-4" />
+                        <IconCopy className="h-4 w-4" />
+                        {language === 'en' ? 'Copy' : 'Salin'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onInsertSynthesizedText(item.improvedText);
+                          setIsHistoryModalOpen(false);
+                        }}
+                        className="px-4.5 py-2.5 bg-indigo-650 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
+                      >
+                        <IconCheck className="h-4 w-4" />
+                        {language === 'en' ? 'Apply to Canvas' : 'Terapkan ke Canvas'}
                       </button>
                     </div>
                   </div>
-
-                  {/* Preview Area: Original vs AI Result */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                    <div className="flex flex-col gap-1.5 bg-white p-3 rounded-xl border border-slate-100 text-left">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{language === 'en' ? 'Original Draft:' : 'Draf Asli:'}</span>
-                      <p className="text-slate-500 italic leading-relaxed">"{item.originalText}"</p>
-                    </div>
-                    <div className="flex flex-col gap-1.5 bg-indigo-50/10 p-3 rounded-xl border border-indigo-100/40 text-left">
-                      <span className="text-[9px] font-bold text-indigo-500 uppercase tracking-wider">{language === 'en' ? 'AI Polished Result:' : 'Hasil Poles AI:'}</span>
-                      <p className="text-slate-700 font-semibold leading-relaxed">"{item.improvedText}"</p>
-                    </div>
-                  </div>
-
-                  {/* Actions bar */}
-                  <div className="flex items-center justify-end gap-2 border-t border-slate-100/60 pt-3">
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        try {
-                          await navigator.clipboard.writeText(item.improvedText);
-                          alert(language === 'en' ? 'Copied to clipboard!' : 'Disalin ke clipboard!');
-                        } catch (err) {
-                          console.error('Failed to copy text:', err);
-                        }
-                      }}
-                      className="px-4 py-2 border border-slate-200 hover:bg-slate-50 hover:text-slate-800 text-slate-655 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5"
-                    >
-                      <IconCopy className="h-4 w-4" />
-                      {language === 'en' ? 'Copy' : 'Salin'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onInsertSynthesizedText(item.improvedText);
-                        setIsHistoryModalOpen(false);
-                      }}
-                      className="px-4.5 py-2.5 bg-indigo-650 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
-                    >
-                      <IconCheck className="h-4 w-4" />
-                      {language === 'en' ? 'Apply to Canvas' : 'Terapkan ke Canvas'}
-                    </button>
-                  </div>
+                ))
+              ) : (
+                <div className="py-16 text-center flex flex-col items-center justify-center gap-2">
+                  <IconHistory className="h-12 w-12 text-slate-300" />
+                  <span className="text-sm font-semibold text-slate-500">{t('ai.no_history')}</span>
+                  <span className="text-xs text-slate-400 text-center">
+                    {language === 'en'
+                      ? 'Use the AI assistant to polish your writing and its changes will appear here.'
+                      : 'Gunakan asisten AI untuk memoles tulisan Anda dan catatannya akan muncul di sini.'
+                    }
+                  </span>
                 </div>
-              ))
-            ) : (
-              <div className="py-16 text-center flex flex-col items-center justify-center gap-2">
-                <IconHistory className="h-12 w-12 text-slate-300" />
-                <span className="text-sm font-semibold text-slate-500">{t('ai.no_history')}</span>
-                <span className="text-xs text-slate-400 text-center">
-                  {language === 'en' 
-                    ? 'Use the AI assistant to polish your writing and its changes will appear here.'
-                    : 'Gunakan asisten AI untuk memoles tulisan Anda dan catatannya akan muncul di sini.'
-                  }
-                </span>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
 
-          {/* Modal Footer */}
-          <div className="flex items-center justify-end border-t border-slate-100 pt-3 shrink-0">
-            <button
-              onClick={() => setIsHistoryModalOpen(false)}
-              className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer"
-            >
-              {language === 'en' ? 'Close' : 'Tutup'}
-            </button>
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end border-t border-slate-100 pt-3 shrink-0">
+              <button
+                onClick={() => setIsHistoryModalOpen(false)}
+                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer"
+              >
+                {language === 'en' ? 'Close' : 'Tutup'}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    )}
-  </>
-);
+      )}
+    </>
+  );
 }
