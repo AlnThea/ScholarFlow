@@ -18,6 +18,9 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 - Membuat direktori `components/editor/modals/` untuk memecah komponen modal portal.
 
 **Perubahan terbaru:**
+- pp/shared/[id]/page.tsx: Mengekstrak SharedSidebar dan SharedBubbleMenu ke komponen modular, mengurangi ukuran file dari 3.189 baris menjadi ~2.260 baris.
+- Mengganti SuggestionModal yang duplikat dengan impor komponen yang sudah ada.
+- Membuat hooks/use-shared-document-sync.ts sebagai fondasi untuk memisahkan logika sinkronisasi realtime.
 - Mengekstrak **Dashboard View & Admin Panel** (>1.100 baris kode) ke dalam components/editor/dashboard-view.tsx.
 - Menggantikan kode dashboard di dalam ditor-layout.tsx dengan komponen <DashboardView />.
 - Memastikan semua _props_ dikirimkan dengan benar tanpa merusak fungsionalitas.

@@ -24,7 +24,9 @@ Sesuai instruksi khusus: **Tidak boleh ada penghapusan fitur atau logika yang se
 ## 📝 TODO (BELUM DIMULAI)
 
 ### 2. `app/shared/[id]/page.tsx` (3.189 baris)
-- [ ] *Analisis dan pecah logika sinkronisasi / tampilan kolaborasi (Read-only & Co-Editor) ke dalam komponen atau hooks terpisah.*
+- [x] Ekstrak SharedSidebar dan SharedBubbleMenu ke komponen terpisah.
+- [x] Ganti SuggestionModal inline dengan komponen modular.
+- [x] Buat hooks/use-shared-document-sync.ts untuk menampung logika sinkronisasi (Tinggal dipasang menggantikan blok useEffect di page.tsx).
 
 ### 3. `components/editor/scholar-editor.tsx` (2.219 baris)
 - [ ] *Pisahkan fungsionalitas toolbar TipTap, logika bubble menu, atau floating menu ke file terpisah.*
