@@ -18,6 +18,7 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 - Membuat direktori `components/editor/modals/` untuk memecah komponen modal portal.
 
 **Perubahan terbaru:**
+- components/editor/scholar-editor.tsx: Mengekstrak ~150 baris fungsi utilitas murni ke lib/editor/editor-utils.tsx.
 - pp/shared/[id]/page.tsx: Mengekstrak SharedSidebar dan SharedBubbleMenu ke komponen modular, mengurangi ukuran file dari 3.189 baris menjadi ~2.260 baris.
 - Mengganti SuggestionModal yang duplikat dengan impor komponen yang sudah ada.
 - Membuat hooks/use-shared-document-sync.ts sebagai fondasi untuk memisahkan logika sinkronisasi realtime.

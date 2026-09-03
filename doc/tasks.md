@@ -29,7 +29,8 @@ Sesuai instruksi khusus: **Tidak boleh ada penghapusan fitur atau logika yang se
 - [x] Buat hooks/use-shared-document-sync.ts untuk menampung logika sinkronisasi (Tinggal dipasang menggantikan blok useEffect di page.tsx).
 
 ### 3. `components/editor/scholar-editor.tsx` (2.219 baris)
-- [ ] *Pisahkan fungsionalitas toolbar TipTap, logika bubble menu, atau floating menu ke file terpisah.*
+- [x] Ekstrak fungsi-fungsi helper murni (200+ baris) ke lib/editor/editor-utils.tsx.
+- [ ] *Ekstrak state management AI dan Dokumen ke Custom Hooks (use-editor-ai, use-editor-document).*
 
 ### 4. `components/editor/editorjs-editor.tsx` (2.136 baris)
 - [ ] *Pisahkan integrasi editor bawaan dan tools pendukung.*
