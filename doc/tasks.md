@@ -36,7 +36,7 @@ Sesuai instruksi khusus: **Tidak boleh ada penghapusan fitur atau logika yang se
 - [x] Ekstrak Custom EditorJS Tools (MathBlockTool, SanitizerTools) ke lib/editor/editor-tools.ts.
 
 ### 5. `components/editor/editor-sidebar.tsx` (1.446 baris)
-- [ ] *Pecah sub-panel (seperti Tab AI, Tab Writing, Tab Format) ke komponennya masing-masing.*
+- [x] Mengekstrak 4 sub-panel (Library, Writing, Document, Comments) ke komponen modular masing-masing.
 
 ### 6. `components/editor/minimal-sidebar.tsx` (1.384 baris)
 - [ ] *Ekstrak helper navigasi atau UI untuk mode Zen / mode minimalis.*

@@ -18,6 +18,7 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 - Membuat direktori `components/editor/modals/` untuk memecah komponen modal portal.
 
 **Perubahan terbaru:**
+- components/editor/editor-sidebar.tsx: Mengekstrak 4 sub-panel (Library, Writing, Document, Comments) ke komponen modular terpisah, memangkas ukuran dari 1.446 baris menjadi ~661 baris.
 - components/editor/editorjs-editor.tsx: Mengekstrak Custom EditorJS Tools dan helpers (~280 baris) ke lib/editor/editor-tools.ts.
 - components/editor/scholar-editor.tsx: Mengekstrak ~150 baris fungsi utilitas murni ke lib/editor/editor-utils.tsx.
 - pp/shared/[id]/page.tsx: Mengekstrak SharedSidebar dan SharedBubbleMenu ke komponen modular, mengurangi ukuran file dari 3.189 baris menjadi ~2.260 baris.
