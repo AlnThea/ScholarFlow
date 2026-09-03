@@ -33,7 +33,7 @@ Sesuai instruksi khusus: **Tidak boleh ada penghapusan fitur atau logika yang se
 - [ ] *Ekstrak state management AI dan Dokumen ke Custom Hooks (use-editor-ai, use-editor-document).*
 
 ### 4. `components/editor/editorjs-editor.tsx` (2.136 baris)
-- [ ] *Pisahkan integrasi editor bawaan dan tools pendukung.*
+- [x] Ekstrak Custom EditorJS Tools (MathBlockTool, SanitizerTools) ke lib/editor/editor-tools.ts.
 
 ### 5. `components/editor/editor-sidebar.tsx` (1.446 baris)
 - [ ] *Pecah sub-panel (seperti Tab AI, Tab Writing, Tab Format) ke komponennya masing-masing.*
