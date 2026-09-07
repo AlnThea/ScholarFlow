@@ -60,6 +60,8 @@ const STORAGE_KEY = 'scholarflow.editor.content.v1';
 const CITATION_LIBRARY_KEY = 'scholarflow.editor.citation-library.v1';
 const CITATION_HISTORY_KEY = 'scholarflow.editor.citation-history.v1';
 const AI_HISTORY_KEY = 'scholarflow.editor.ai-history.v1';
+import { useEditorDocument } from '@/hooks/use-editor-document';
+import { useEditorAi } from '@/hooks/use-editor-ai';
 import { extractTextFromContent, countWords, downloadFile, findMostRelevantSentence, HighlightedAbstract, findMostUniqueWord, getContentComparisonString } from '@/lib/editor/editor-utils';
 export function ScholarEditor() {
   const { language, t } = useLanguage();
@@ -70,30 +72,30 @@ export function ScholarEditor() {
   const activePlanId = profile?.subscription_plan || 'free';
   const [hydrated, setHydrated] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
-  const [selectedText, setSelectedText] = useState('');
-  const [improvedResult, setImprovedResult] = useState<ImproveWritingResponse | null>(null);
+//   const [selectedText, setSelectedText] = useState('');
+//   const [improvedResult, setImprovedResult] = useState<ImproveWritingResponse | null>(null);
   const [contentBeforeApply, setContentBeforeApply] = useState<any>(null);
   const [isApplied, setIsApplied] = useState(false);
-  const [selectedAiModel, setSelectedAiModel] = useState('gemini');
-  const [selectedAiTone, setSelectedAiTone] = useState('academic');
+//   const [selectedAiModel, setSelectedAiModel] = useState('gemini');
+//   const [selectedAiTone, setSelectedAiTone] = useState('academic');
 
   // Document system state
-  const [documents, setDocuments] = useState<DocumentListItem[]>([]);
-  const [currentDocument, setCurrentDocument] = useState<DocumentEntry | null>(null);
-  const [isDocLoading, setIsDocLoading] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<string>(language === 'en' ? 'Saved to Cloud' : 'Tersimpan ke Cloud');
-  const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const loadedDocumentIdRef = useRef<string | null>(null);
-  const lastSavedContentRef = useRef<string>('');
+//   const [documents, setDocuments] = useState<DocumentListItem[]>([]);
+//   const [currentDocument, setCurrentDocument] = useState<DocumentEntry | null>(null);
+//   const [isDocLoading, setIsDocLoading] = useState(false);
+//   const [saveStatus, setSaveStatus] = useState<string>(language === 'en' ? 'Saved to Cloud' : 'Tersimpan ke Cloud');
+//   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
+//   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+//   const loadedDocumentIdRef = useRef<string | null>(null);
+//   const lastSavedContentRef = useRef<string>('');
   const [citationResults, setCitationResults] = useState<CitationCandidate[]>([]);
   const [citationLibrary, setCitationLibrary] = useState<Record<string, CitationCandidate>>({});
   const [citationHistory, setCitationHistory] = useState<CitationHistoryEntry[]>([]);
-  const [aiHistory, setAiHistory] = useState<AiHistoryEntry[]>([]);
-  const [aiError, setAiError] = useState<string | null>(null);
+//   const [aiHistory, setAiHistory] = useState<AiHistoryEntry[]>([]);
+//   const [aiError, setAiError] = useState<string | null>(null);
   const [citationError, setCitationError] = useState<string | null>(null);
   const [citationNote, setCitationNote] = useState<string | null>(null);
-  const [isImproving, setIsImproving] = useState(false);
+//   const [isImproving, setIsImproving] = useState(false);
   const [isSearchingCitations, setIsSearchingCitations] = useState(false);
   const citationInsertTimeoutRef = useRef<number | null>(null);
   const [activeModalCitation, setActiveModalCitation] = useState<{ refId: string; label: string; citedSentence: string } | null>(null);
@@ -103,11 +105,11 @@ export function ScholarEditor() {
   const [isResolvingPdf, setIsResolvingPdf] = useState(false);
   const [translatedCitedSentence, setTranslatedCitedSentence] = useState<string>('');
   const [isTranslating, setIsTranslating] = useState(false);
-  const [aiModels, setAiModels] = useState<AIModel[]>([]);
-  const [isSynthesizing, setIsSynthesizing] = useState(false);
-  const [synthesizedText, setSynthesizedText] = useState<string | null>(null);
-  const [synthesizeError, setSynthesizeError] = useState<string | null>(null);
-  const [synthesizeDisclaimer, setSynthesizeDisclaimer] = useState<string | null>(null);
+//   const [aiModels, setAiModels] = useState<AIModel[]>([]);
+//   const [isSynthesizing, setIsSynthesizing] = useState(false);
+//   const [synthesizedText, setSynthesizedText] = useState<string | null>(null);
+//   const [synthesizeError, setSynthesizeError] = useState<string | null>(null);
+//   const [synthesizeDisclaimer, setSynthesizeDisclaimer] = useState<string | null>(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
@@ -349,7 +351,7 @@ export function ScholarEditor() {
     }, 3000);
   }, []);
 
-  const [aiProviders, setAiProviders] = useState<AIProvider[]>([]);
+//   const [aiProviders, setAiProviders] = useState<AIProvider[]>([]);
 
   useEffect(() => {
     fetchAIModels().then(data => {
@@ -364,59 +366,59 @@ export function ScholarEditor() {
     });
   }, []);
 
-  const triggerDebouncedSave = useCallback((docId: string, titleToSave: string, contentToSave: any, settingsToSave?: any) => {
-    if (!user?.id) return;
-
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-
-    debounceTimeoutRef.current = setTimeout(async () => {
-      setSaveStatus(language === 'en' ? 'Saving...' : 'Menyimpan...');
-      let alignments = {};
-      try {
-        alignments = JSON.parse(localStorage.getItem('scholarflow.editorjs.alignments.v1') || '{}');
-      } catch (e) {
-        console.warn('Failed to parse alignments from localStorage:', e);
-      }
-
-      const activeSettings = settingsToSave || currentDocument?.settings || {};
-      const finalSettings = {
-        ...activeSettings,
-        alignments
-      };
-
-      const updates: any = {
-        title: titleToSave,
-        content: contentToSave,
-        settings: finalSettings
-      };
-      try {
-        const res = await updateDocument(docId, user.id, updates);
-        if (res.success) {
-          setSaveStatus(language === 'en' ? 'Saved to Cloud' : 'Tersimpan ke Cloud');
-          localStorage.removeItem(`scholarflow.offline_backup.${docId}`);
-          
-          // Refresh list to update title/timestamps
-          const list = await fetchDocuments(user.id);
-          setDocuments(list);
-        } else {
-          localStorage.setItem(
-            `scholarflow.offline_backup.${docId}`,
-            JSON.stringify({ ...updates, id: docId, user_id: user.id })
-          );
-          setSaveStatus('Disimpan Lokal (Offline)');
-        }
-      } catch (err) {
-        console.error('Error saving document:', err);
-        localStorage.setItem(
-          `scholarflow.offline_backup.${docId}`,
-          JSON.stringify({ ...updates, id: docId, user_id: user.id })
-        );
-        setSaveStatus('Disimpan Lokal (Offline)');
-      }
-    }, 1500);
-  }, [user, language, currentDocument]);
+//   const triggerDebouncedSave = useCallback((docId: string, titleToSave: string, contentToSave: any, settingsToSave?: any) => {
+//     if (!user?.id) return;
+// 
+//     if (debounceTimeoutRef.current) {
+//       clearTimeout(debounceTimeoutRef.current);
+//     }
+// 
+//     debounceTimeoutRef.current = setTimeout(async () => {
+//       setSaveStatus(language === 'en' ? 'Saving...' : 'Menyimpan...');
+//       let alignments = {};
+//       try {
+//         alignments = JSON.parse(localStorage.getItem('scholarflow.editorjs.alignments.v1') || '{}');
+//       } catch (e) {
+//         console.warn('Failed to parse alignments from localStorage:', e);
+//       }
+// 
+//       const activeSettings = settingsToSave || currentDocument?.settings || {};
+//       const finalSettings = {
+//         ...activeSettings,
+//         alignments
+//       };
+// 
+//       const updates: any = {
+//         title: titleToSave,
+//         content: contentToSave,
+//         settings: finalSettings
+//       };
+//       try {
+//         const res = await updateDocument(docId, user.id, updates);
+//         if (res.success) {
+//           setSaveStatus(language === 'en' ? 'Saved to Cloud' : 'Tersimpan ke Cloud');
+//           localStorage.removeItem(`scholarflow.offline_backup.${docId}`);
+//           
+//           // Refresh list to update title/timestamps
+//           const list = await fetchDocuments(user.id);
+//           setDocuments(list);
+//         } else {
+//           localStorage.setItem(
+//             `scholarflow.offline_backup.${docId}`,
+//             JSON.stringify({ ...updates, id: docId, user_id: user.id })
+//           );
+//           setSaveStatus('Disimpan Lokal (Offline)');
+//         }
+//       } catch (err) {
+//         console.error('Error saving document:', err);
+//         localStorage.setItem(
+//           `scholarflow.offline_backup.${docId}`,
+//           JSON.stringify({ ...updates, id: docId, user_id: user.id })
+//         );
+//         setSaveStatus('Disimpan Lokal (Offline)');
+//       }
+//     }, 1500);
+//   }, [user, language, currentDocument]);
 
   useEffect(() => {
     const docId = params?.id as string | undefined;
@@ -501,65 +503,65 @@ export function ScholarEditor() {
     }
   }, [user?.id, params?.id, currentDocument?.id, triggerDebouncedSave, language]);
 
-  const handleUpdateAIModel = useCallback(async (id: string, updates: Partial<AIModel>) => {
-    try {
-      const updated = await updateAIModel(id, updates);
-      setAiModels((prev) => prev.map(m => m.id === id ? (updated || { ...m, ...updates }) : m));
-    } catch (err) {
-      console.warn('AI Model DB update failed, using local state:', err);
-      setAiModels((prev) => prev.map(m => m.id === id ? { ...m, ...updates, updated_at: new Date().toISOString() } : m));
-    }
-  }, []);
+//   const handleUpdateAIModel = useCallback(async (id: string, updates: Partial<AIModel>) => {
+//     try {
+//       const updated = await updateAIModel(id, updates);
+//       setAiModels((prev) => prev.map(m => m.id === id ? (updated || { ...m, ...updates }) : m));
+//     } catch (err) {
+//       console.warn('AI Model DB update failed, using local state:', err);
+//       setAiModels((prev) => prev.map(m => m.id === id ? { ...m, ...updates, updated_at: new Date().toISOString() } : m));
+//     }
+//   }, []);
 
-  const handleCreateAIModel = useCallback(async (model: Omit<AIModel, 'updated_at'>) => {
-    try {
-      const created = await createAIModel(model);
-      setAiModels((prev) => [...prev, created || { ...model, updated_at: new Date().toISOString() }]);
-    } catch (err) {
-      console.warn('AI Model DB create failed, using local state:', err);
-      setAiModels((prev) => [...prev, { ...model, updated_at: new Date().toISOString() }]);
-    }
-  }, []);
+//   const handleCreateAIModel = useCallback(async (model: Omit<AIModel, 'updated_at'>) => {
+//     try {
+//       const created = await createAIModel(model);
+//       setAiModels((prev) => [...prev, created || { ...model, updated_at: new Date().toISOString() }]);
+//     } catch (err) {
+//       console.warn('AI Model DB create failed, using local state:', err);
+//       setAiModels((prev) => [...prev, { ...model, updated_at: new Date().toISOString() }]);
+//     }
+//   }, []);
 
-  const handleDeleteAIModel = useCallback(async (id: string) => {
-    try {
-      await deleteAIModel(id);
-      setAiModels((prev) => prev.filter(m => m.id !== id));
-    } catch (err) {
-      console.warn('AI Model DB delete failed, using local state:', err);
-      setAiModels((prev) => prev.filter(m => m.id !== id));
-    }
-  }, []);
+//   const handleDeleteAIModel = useCallback(async (id: string) => {
+//     try {
+//       await deleteAIModel(id);
+//       setAiModels((prev) => prev.filter(m => m.id !== id));
+//     } catch (err) {
+//       console.warn('AI Model DB delete failed, using local state:', err);
+//       setAiModels((prev) => prev.filter(m => m.id !== id));
+//     }
+//   }, []);
 
-  const handleUpdateAIProvider = useCallback(async (id: string, updates: Partial<AIProvider>) => {
-    try {
-      const updated = await updateAIProvider(id, updates);
-      setAiProviders((prev) => prev.map(p => p.id === id ? (updated || { ...p, ...updates }) : p));
-    } catch (err) {
-      console.warn('AI Provider DB update failed, using local state:', err);
-      setAiProviders((prev) => prev.map(p => p.id === id ? { ...p, ...updates, updated_at: new Date().toISOString() } : p));
-    }
-  }, []);
+//   const handleUpdateAIProvider = useCallback(async (id: string, updates: Partial<AIProvider>) => {
+//     try {
+//       const updated = await updateAIProvider(id, updates);
+//       setAiProviders((prev) => prev.map(p => p.id === id ? (updated || { ...p, ...updates }) : p));
+//     } catch (err) {
+//       console.warn('AI Provider DB update failed, using local state:', err);
+//       setAiProviders((prev) => prev.map(p => p.id === id ? { ...p, ...updates, updated_at: new Date().toISOString() } : p));
+//     }
+//   }, []);
 
-  const handleCreateAIProvider = useCallback(async (provider: Omit<AIProvider, 'updated_at'>) => {
-    try {
-      const created = await createAIProvider(provider);
-      setAiProviders((prev) => [...prev, created || { ...provider, updated_at: new Date().toISOString() }]);
-    } catch (err) {
-      console.warn('AI Provider DB create failed, using local state:', err);
-      setAiProviders((prev) => [...prev, { ...provider, updated_at: new Date().toISOString() }]);
-    }
-  }, []);
+//   const handleCreateAIProvider = useCallback(async (provider: Omit<AIProvider, 'updated_at'>) => {
+//     try {
+//       const created = await createAIProvider(provider);
+//       setAiProviders((prev) => [...prev, created || { ...provider, updated_at: new Date().toISOString() }]);
+//     } catch (err) {
+//       console.warn('AI Provider DB create failed, using local state:', err);
+//       setAiProviders((prev) => [...prev, { ...provider, updated_at: new Date().toISOString() }]);
+//     }
+//   }, []);
 
-  const handleDeleteAIProvider = useCallback(async (id: string) => {
-    try {
-      await deleteAIProvider(id);
-      setAiProviders((prev) => prev.filter(p => p.id !== id));
-    } catch (err) {
-      console.warn('AI Provider DB delete failed, using local state:', err);
-      setAiProviders((prev) => prev.filter(p => p.id !== id));
-    }
-  }, []);
+//   const handleDeleteAIProvider = useCallback(async (id: string) => {
+//     try {
+//       await deleteAIProvider(id);
+//       setAiProviders((prev) => prev.filter(p => p.id !== id));
+//     } catch (err) {
+//       console.warn('AI Provider DB delete failed, using local state:', err);
+//       setAiProviders((prev) => prev.filter(p => p.id !== id));
+//     }
+//   }, []);
 
   // EditorJS Ref and Stats state
   const editorJsRef = useRef<EditorJsMethods | null>(null);
@@ -569,6 +571,61 @@ export function ScholarEditor() {
     citationCount: 0
   });
   const [activeReferenceIds, setActiveReferenceIds] = useState<string[]>([]);
+
+  const {
+    documents,
+    currentDocument,
+    setCurrentDocument,
+    isDocLoading,
+    saveStatus,
+    isSetupModalOpen,
+    setIsSetupModalOpen,
+    loadedDocumentIdRef,
+    lastSavedContentRef,
+    triggerDebouncedSave,
+    handleSelectDocument,
+    handleCreateDocument,
+    handleDeleteDocument,
+    handleRenameDocument,
+    handleCreateFolder,
+    handleAssignFolder,
+    handleChangeCitationStyle,
+    handleChangeDocumentSettings
+  } = useEditorDocument(showToast, hydrated);
+
+  const {
+    selectedText, setSelectedText,
+    improvedResult, setImprovedResult,
+    selectedAiModel, setSelectedAiModel,
+    selectedAiTone, setSelectedAiTone,
+    aiModels, setAiModels,
+    aiProviders, setAiProviders,
+    aiHistory, setAiHistory,
+    aiError, setAiError,
+    isImproving, setIsImproving,
+    isSynthesizing, setIsSynthesizing,
+    synthesizedText, setSynthesizedText,
+    synthesizeError, setSynthesizeError,
+    synthesizeDisclaimer, setSynthesizeDisclaimer,
+    handleUpdateAIModel, handleCreateAIModel, handleDeleteAIModel,
+    handleUpdateAIProvider, handleCreateAIProvider, handleDeleteAIProvider,
+    handleSynthesizeReview,
+    runImproveWriting, runParaphrase, runSummarize, runGenerateAbstract,
+    handleParafrasePlagiat, applyImprovedText,
+    deleteAiHistoryEntry, clearAiHistory
+  } = useEditorAi(
+    language,
+    currentDocument,
+    citationLibrary,
+    activeReferenceIds,
+    setActiveSidebarTab,
+    editorJsRef,
+    setContentBeforeApply,
+    setIsApplied,
+    setSavedAt,
+    hydrated
+  );
+
 
   // Cancel pending save on switch or unmount
   useEffect(() => {
@@ -717,102 +774,102 @@ export function ScholarEditor() {
     }
   }, [currentDocument]);
 
-  const handleSelectDocument = useCallback(async (id: string) => {
-    if (!id) {
-      router.push('/dashboard');
-      return;
-    }
-    if (id === currentDocument?.id) {
-      return;
-    }
-    setIsDocLoading(true);
-    router.push(`/editor/${id}`);
-  }, [router, currentDocument]);
+//   const handleSelectDocument = useCallback(async (id: string) => {
+//     if (!id) {
+//       router.push('/dashboard');
+//       return;
+//     }
+//     if (id === currentDocument?.id) {
+//       return;
+//     }
+//     setIsDocLoading(true);
+//     router.push(`/editor/${id}`);
+//   }, [router, currentDocument]);
 
-  const handleCreateDocument = useCallback(async (
-    title: string = 'Untitled Document', 
-    settings: Partial<DocumentSettings> = {}
-  ) => {
-    if (!user?.id) return;
-    const initialBlocks = getTemplateBlocks(settings.templateId, language, title);
+//   const handleCreateDocument = useCallback(async (
+//     title: string = 'Untitled Document', 
+//     settings: Partial<DocumentSettings> = {}
+//   ) => {
+//     if (!user?.id) return;
+//     const initialBlocks = getTemplateBlocks(settings.templateId, language, title);
+// 
+//     setIsDocLoading(true);
+//     try {
+//       const newDoc = await createDocument(user.id, title, {
+//         time: Date.now(),
+//         blocks: initialBlocks,
+//         version: "2.29.0"
+//       }, settings);
+//       if (newDoc) {
+//         setDocuments((prev) => [newDoc, ...prev]);
+//         lastSavedContentRef.current = getContentComparisonString(newDoc.content);
+//         setCurrentDocument(newDoc);
+//         setIsSetupModalOpen(false);
+//         router.push(`/editor/${newDoc.id}`);
+//       } else {
+//         setIsDocLoading(false);
+//       }
+//     } catch (err) {
+//       console.error('Error creating document:', err);
+//       setIsDocLoading(false);
+//     }
+//   }, [user, language]);
 
-    setIsDocLoading(true);
-    try {
-      const newDoc = await createDocument(user.id, title, {
-        time: Date.now(),
-        blocks: initialBlocks,
-        version: "2.29.0"
-      }, settings);
-      if (newDoc) {
-        setDocuments((prev) => [newDoc, ...prev]);
-        lastSavedContentRef.current = getContentComparisonString(newDoc.content);
-        setCurrentDocument(newDoc);
-        setIsSetupModalOpen(false);
-        router.push(`/editor/${newDoc.id}`);
-      } else {
-        setIsDocLoading(false);
-      }
-    } catch (err) {
-      console.error('Error creating document:', err);
-      setIsDocLoading(false);
-    }
-  }, [user, language]);
+//   const handleDeleteDocument = useCallback(async (id: string) => {
+//     if (!user?.id) return;
+//     try {
+//       const docTitle = documents.find(d => d.id === id)?.title || '';
+//       const res = await deleteDocument(id, user.id);
+//       if (res.success) {
+//         const updatedList = documents.filter((doc) => doc.id !== id);
+//         setDocuments(updatedList);
+// 
+//         if (currentDocument?.id === id) {
+//           if (updatedList.length > 0) {
+//             const detail = await fetchDocumentById(updatedList[0].id, user.id);
+//             if (detail) {
+//               setCurrentDocument(detail);
+//             }
+//           } else {
+//             setCurrentDocument(null);
+//           }
+//         }
+//         showToast(
+//           language === 'en' 
+//             ? `Document "${docTitle}" has been deleted.` 
+//             : `Dokumen "${docTitle}" berhasil dihapus.`,
+//           'success'
+//         );
+//       } else {
+//         showToast(
+//           language === 'en' 
+//             ? 'Failed to delete document.' 
+//             : 'Gagal menghapus dokumen.',
+//           'error'
+//         );
+//       }
+//     } catch (err) {
+//       console.error('Error deleting document:', err);
+//       showToast(
+//         language === 'en' 
+//           ? 'Error occurred while deleting document.' 
+//           : 'Terjadi kesalahan saat menghapus dokumen.',
+//         'error'
+//       );
+//     }
+//   }, [user, documents, currentDocument, language, showToast]);
 
-  const handleDeleteDocument = useCallback(async (id: string) => {
-    if (!user?.id) return;
-    try {
-      const docTitle = documents.find(d => d.id === id)?.title || '';
-      const res = await deleteDocument(id, user.id);
-      if (res.success) {
-        const updatedList = documents.filter((doc) => doc.id !== id);
-        setDocuments(updatedList);
-
-        if (currentDocument?.id === id) {
-          if (updatedList.length > 0) {
-            const detail = await fetchDocumentById(updatedList[0].id, user.id);
-            if (detail) {
-              setCurrentDocument(detail);
-            }
-          } else {
-            setCurrentDocument(null);
-          }
-        }
-        showToast(
-          language === 'en' 
-            ? `Document "${docTitle}" has been deleted.` 
-            : `Dokumen "${docTitle}" berhasil dihapus.`,
-          'success'
-        );
-      } else {
-        showToast(
-          language === 'en' 
-            ? 'Failed to delete document.' 
-            : 'Gagal menghapus dokumen.',
-          'error'
-        );
-      }
-    } catch (err) {
-      console.error('Error deleting document:', err);
-      showToast(
-        language === 'en' 
-          ? 'Error occurred while deleting document.' 
-          : 'Terjadi kesalahan saat menghapus dokumen.',
-        'error'
-      );
-    }
-  }, [user, documents, currentDocument, language, showToast]);
-
-  const handleRenameDocument = useCallback((title: string) => {
-    if (!currentDocument || !user?.id) return;
-    
-    const updatedDoc = { ...currentDocument, title };
-    setCurrentDocument(updatedDoc);
-    setDocuments((prev) =>
-      prev.map((doc) => (doc.id === currentDocument.id ? { ...doc, title } : doc))
-    );
-
-    triggerDebouncedSave(currentDocument.id, title, currentDocument.content, currentDocument.settings);
-  }, [currentDocument, user, triggerDebouncedSave]);
+//   const handleRenameDocument = useCallback((title: string) => {
+//     if (!currentDocument || !user?.id) return;
+//     
+//     const updatedDoc = { ...currentDocument, title };
+//     setCurrentDocument(updatedDoc);
+//     setDocuments((prev) =>
+//       prev.map((doc) => (doc.id === currentDocument.id ? { ...doc, title } : doc))
+//     );
+// 
+//     triggerDebouncedSave(currentDocument.id, title, currentDocument.content, currentDocument.settings);
+//   }, [currentDocument, user, triggerDebouncedSave]);
 
   const handleContentChange = useCallback((content: any) => {
     if (!currentDocument || !user?.id) return;
@@ -849,51 +906,51 @@ export function ScholarEditor() {
     return currentDocument?.settings?.folder_assignments || {};
   }, [currentDocument]);
 
-  const handleCreateFolder = useCallback((folderName: string) => {
-    if (!currentDocument) return;
-    const currentFolders = currentDocument.settings?.folders || (language === 'en'
-      ? ['Introduction', 'Literature Review', 'Methodology', 'Results & Discussion']
-      : ['Pendahuluan', 'Tinjauan Pustaka', 'Metodologi', 'Hasil & Diskusi']);
-    if (currentFolders.includes(folderName)) return;
-    const updatedFolders = [...currentFolders, folderName];
-    
-    const updatedSettings = { ...currentDocument.settings, folders: updatedFolders };
-    const updatedDoc = { ...currentDocument, settings: updatedSettings };
-    setCurrentDocument(updatedDoc);
-    
-    triggerDebouncedSave(currentDocument.id, currentDocument.title, currentDocument.content, updatedSettings);
-  }, [currentDocument, triggerDebouncedSave]);
+//   const handleCreateFolder = useCallback((folderName: string) => {
+//     if (!currentDocument) return;
+//     const currentFolders = currentDocument.settings?.folders || (language === 'en'
+//       ? ['Introduction', 'Literature Review', 'Methodology', 'Results & Discussion']
+//       : ['Pendahuluan', 'Tinjauan Pustaka', 'Metodologi', 'Hasil & Diskusi']);
+//     if (currentFolders.includes(folderName)) return;
+//     const updatedFolders = [...currentFolders, folderName];
+//     
+//     const updatedSettings = { ...currentDocument.settings, folders: updatedFolders };
+//     const updatedDoc = { ...currentDocument, settings: updatedSettings };
+//     setCurrentDocument(updatedDoc);
+//     
+//     triggerDebouncedSave(currentDocument.id, currentDocument.title, currentDocument.content, updatedSettings);
+//   }, [currentDocument, triggerDebouncedSave]);
 
-  const handleAssignFolder = useCallback((referenceId: string, folderName: string) => {
-    if (!currentDocument) return;
-    const currentAssignments = currentDocument.settings?.folder_assignments || {};
-    const updatedAssignments = { ...currentAssignments, [referenceId]: folderName };
-    
-    const updatedSettings = { ...currentDocument.settings, folder_assignments: updatedAssignments };
-    const updatedDoc = { ...currentDocument, settings: updatedSettings };
-    setCurrentDocument(updatedDoc);
-    
-    triggerDebouncedSave(currentDocument.id, currentDocument.title, currentDocument.content, updatedSettings);
-  }, [currentDocument, triggerDebouncedSave]);
+//   const handleAssignFolder = useCallback((referenceId: string, folderName: string) => {
+//     if (!currentDocument) return;
+//     const currentAssignments = currentDocument.settings?.folder_assignments || {};
+//     const updatedAssignments = { ...currentAssignments, [referenceId]: folderName };
+//     
+//     const updatedSettings = { ...currentDocument.settings, folder_assignments: updatedAssignments };
+//     const updatedDoc = { ...currentDocument, settings: updatedSettings };
+//     setCurrentDocument(updatedDoc);
+//     
+//     triggerDebouncedSave(currentDocument.id, currentDocument.title, currentDocument.content, updatedSettings);
+//   }, [currentDocument, triggerDebouncedSave]);
 
-  const handleChangeCitationStyle = useCallback((style: string) => {
-    if (!currentDocument) return;
-    
-    const updatedSettings = { ...currentDocument.settings, citationStyle: style };
-    const updatedDoc = { ...currentDocument, settings: updatedSettings };
-    setCurrentDocument(updatedDoc);
-    
-    triggerDebouncedSave(currentDocument.id, currentDocument.title, currentDocument.content, updatedSettings);
-  }, [currentDocument, triggerDebouncedSave]);
+//   const handleChangeCitationStyle = useCallback((style: string) => {
+//     if (!currentDocument) return;
+//     
+//     const updatedSettings = { ...currentDocument.settings, citationStyle: style };
+//     const updatedDoc = { ...currentDocument, settings: updatedSettings };
+//     setCurrentDocument(updatedDoc);
+//     
+//     triggerDebouncedSave(currentDocument.id, currentDocument.title, currentDocument.content, updatedSettings);
+//   }, [currentDocument, triggerDebouncedSave]);
 
-  const handleChangeDocumentSettings = useCallback((newSettings: DocumentSettings) => {
-    if (!currentDocument) return;
-    
-    const updatedDoc = { ...currentDocument, settings: newSettings };
-    setCurrentDocument(updatedDoc);
-    
-    triggerDebouncedSave(currentDocument.id, currentDocument.title, currentDocument.content, newSettings);
-  }, [currentDocument, triggerDebouncedSave]);
+//   const handleChangeDocumentSettings = useCallback((newSettings: DocumentSettings) => {
+//     if (!currentDocument) return;
+//     
+//     const updatedDoc = { ...currentDocument, settings: newSettings };
+//     setCurrentDocument(updatedDoc);
+//     
+//     triggerDebouncedSave(currentDocument.id, currentDocument.title, currentDocument.content, newSettings);
+//   }, [currentDocument, triggerDebouncedSave]);
 
   useEffect(() => {
     setHydrated(true);
@@ -1249,41 +1306,41 @@ export function ScholarEditor() {
     );
   }, [citationResults]);
 
-  const handleSynthesizeReview = useCallback(async () => {
-    const uniqueActiveIds = Array.from(new Set(activeReferenceIds));
-    if (uniqueActiveIds.length === 0) return;
-    
-    setIsSynthesizing(true);
-    setSynthesizeError(null);
-    setSynthesizedText(null);
-    setSynthesizeDisclaimer(null);
-    
-    try {
-      const referencesData = uniqueActiveIds
-        .map(id => {
-          const candidate = citationLibrary[id];
-          if (!candidate) return null;
-          return {
-            title: candidate.title,
-            authors: candidate.authors,
-            year: candidate.year,
-            source: candidate.source,
-            label: candidate.citation_label
-          };
-        })
-        .filter(Boolean);
-        
-      const response = await synthesizeLiteratureReview(referencesData as any[], selectedAiModel, language);
-      setSynthesizedText(response.synthesized_text);
-      if (response.disclaimer) {
-        setSynthesizeDisclaimer(response.disclaimer);
-      }
-    } catch (error: any) {
-      setSynthesizeError(error.message || (language === 'en' ? 'Failed to synthesize literature review.' : 'Gagal mensintesis tinjauan pustaka.'));
-    } finally {
-      setIsSynthesizing(false);
-    }
-  }, [citationLibrary, activeReferenceIds, selectedAiModel, language]);
+//   const handleSynthesizeReview = useCallback(async () => {
+//     const uniqueActiveIds = Array.from(new Set(activeReferenceIds));
+//     if (uniqueActiveIds.length === 0) return;
+//     
+//     setIsSynthesizing(true);
+//     setSynthesizeError(null);
+//     setSynthesizedText(null);
+//     setSynthesizeDisclaimer(null);
+//     
+//     try {
+//       const referencesData = uniqueActiveIds
+//         .map(id => {
+//           const candidate = citationLibrary[id];
+//           if (!candidate) return null;
+//           return {
+//             title: candidate.title,
+//             authors: candidate.authors,
+//             year: candidate.year,
+//             source: candidate.source,
+//             label: candidate.citation_label
+//           };
+//         })
+//         .filter(Boolean);
+//         
+//       const response = await synthesizeLiteratureReview(referencesData as any[], selectedAiModel, language);
+//       setSynthesizedText(response.synthesized_text);
+//       if (response.disclaimer) {
+//         setSynthesizeDisclaimer(response.disclaimer);
+//       }
+//     } catch (error: any) {
+//       setSynthesizeError(error.message || (language === 'en' ? 'Failed to synthesize literature review.' : 'Gagal mensintesis tinjauan pustaka.'));
+//     } finally {
+//       setIsSynthesizing(false);
+//     }
+//   }, [citationLibrary, activeReferenceIds, selectedAiModel, language]);
 
   const handleInsertSynthesizedText = useCallback((text: string) => {
     editorJsRef.current?.insertText(text);
@@ -1292,174 +1349,174 @@ export function ScholarEditor() {
 
   const statusLabel = saveStatus;
 
-  const runImproveWriting = useCallback(async () => {
-    if (!selectedText.trim()) return;
+//   const runImproveWriting = useCallback(async () => {
+//     if (!selectedText.trim()) return;
+// 
+//     setActiveSidebarTab('writing');
+//     setIsImproving(true);
+//     setAiError(null);
+// 
+//     try {
+//       const response = await improveWriting(selectedText, selectedAiTone, selectedAiModel, language);
+//       setImprovedResult(response);
+//       setContentBeforeApply(currentDocument?.content);
+//       setIsApplied(false);
+//       setAiHistory((current) =>
+//         addAiHistoryEntry(current, {
+//           id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
+//           originalText: selectedText,
+//           improvedText: response.improved_text,
+//           tone: selectedAiTone,
+//           model: selectedAiModel,
+//           savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+//         })
+//       );
+//     } catch (error) {
+//       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
+//       setAiError(message);
+//       setImprovedResult(null);
+//     } finally {
+//       setIsImproving(false);
+//     }
+//   }, [selectedText, selectedAiModel, selectedAiTone, setAiHistory, currentDocument, language]);
 
-    setActiveSidebarTab('writing');
-    setIsImproving(true);
-    setAiError(null);
+//   const runParaphrase = useCallback(async () => {
+//     if (!selectedText.trim()) return;
+// 
+//     setActiveSidebarTab('writing');
+//     setIsImproving(true);
+//     setAiError(null);
+// 
+//     try {
+//       const response = await improveWriting(selectedText, 'paraphrase', selectedAiModel, language);
+//       setImprovedResult(response);
+//       setContentBeforeApply(currentDocument?.content);
+//       setIsApplied(false);
+//       setAiHistory((current) =>
+//         addAiHistoryEntry(current, {
+//           id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
+//           originalText: selectedText,
+//           improvedText: response.improved_text,
+//           tone: 'paraphrase',
+//           model: selectedAiModel,
+//           savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+//         })
+//       );
+//     } catch (error) {
+//       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
+//       setAiError(message);
+//       setImprovedResult(null);
+//     } finally {
+//       setIsImproving(false);
+//     }
+//   }, [selectedText, selectedAiModel, setAiHistory, currentDocument, language]);
 
-    try {
-      const response = await improveWriting(selectedText, selectedAiTone, selectedAiModel, language);
-      setImprovedResult(response);
-      setContentBeforeApply(currentDocument?.content);
-      setIsApplied(false);
-      setAiHistory((current) =>
-        addAiHistoryEntry(current, {
-          id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
-          originalText: selectedText,
-          improvedText: response.improved_text,
-          tone: selectedAiTone,
-          model: selectedAiModel,
-          savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        })
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
-      setAiError(message);
-      setImprovedResult(null);
-    } finally {
-      setIsImproving(false);
-    }
-  }, [selectedText, selectedAiModel, selectedAiTone, setAiHistory, currentDocument, language]);
+//   const runSummarize = useCallback(async () => {
+//     if (!selectedText.trim()) return;
+// 
+//     setActiveSidebarTab('writing');
+//     setIsImproving(true);
+//     setAiError(null);
+// 
+//     try {
+//       const response = await improveWriting(selectedText, 'summarize', selectedAiModel, language);
+//       setImprovedResult(response);
+//       setContentBeforeApply(currentDocument?.content);
+//       setIsApplied(false);
+//       setAiHistory((current) =>
+//         addAiHistoryEntry(current, {
+//           id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
+//           originalText: selectedText,
+//           improvedText: response.improved_text,
+//           tone: 'summarize',
+//           model: selectedAiModel,
+//           savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+//         })
+//       );
+//     } catch (error) {
+//       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
+//       setAiError(message);
+//       setImprovedResult(null);
+//     } finally {
+//       setIsImproving(false);
+//     }
+//   }, [selectedText, selectedAiModel, setAiHistory, currentDocument, language]);
 
-  const runParaphrase = useCallback(async () => {
-    if (!selectedText.trim()) return;
+//   const runGenerateAbstract = useCallback(async () => {
+//     setActiveSidebarTab('writing');
+//     setIsImproving(true);
+//     setAiError(null);
+// 
+//     try {
+//       const fullText = extractTextFromContent(currentDocument?.content);
+//       if (!fullText.trim()) {
+//         throw new Error(language === 'en' ? 'Document is empty. Please write some content before generating abstract.' : 'Dokumen kosong. Silakan tulis isi dokumen sebelum membuat abstrak.');
+//       }
+//       const response = await generateAbstract(fullText, selectedAiModel, language);
+//       setImprovedResult({
+//         original_text: 'Document Context',
+//         improved_text: response.abstract_text,
+//         tone: 'academic',
+//         disclaimer: response.disclaimer || 'Abstract generated based on document context.'
+//       });
+//       setContentBeforeApply(currentDocument?.content);
+//       setIsApplied(false);
+//       setAiHistory((current) =>
+//         addAiHistoryEntry(current, {
+//           id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
+//           originalText: 'Document Context',
+//           improvedText: response.abstract_text,
+//           tone: 'abstract',
+//           model: selectedAiModel,
+//           savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+//         })
+//       );
+//     } catch (error) {
+//       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
+//       setAiError(message);
+//       setImprovedResult(null);
+//     } finally {
+//       setIsImproving(false);
+//     }
+//   }, [currentDocument, selectedAiModel, setAiHistory, language]);
 
-    setActiveSidebarTab('writing');
-    setIsImproving(true);
-    setAiError(null);
+//   const handleParafrasePlagiat = useCallback(async (sentence: string) => {
+//     setActiveSidebarTab('writing');
+//     setSelectedText(sentence);
+//     setIsImproving(true);
+//     setAiError(null);
+// 
+//     try {
+//       const response = await improveWriting(sentence, selectedAiTone, selectedAiModel, language);
+//       setImprovedResult(response);
+//       setContentBeforeApply(currentDocument?.content);
+//       setIsApplied(false);
+//       setAiHistory((current) =>
+//         addAiHistoryEntry(current, {
+//           id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
+//           originalText: sentence,
+//           improvedText: response.improved_text,
+//           tone: selectedAiTone,
+//           model: selectedAiModel,
+//           savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+//         })
+//       );
+//     } catch (error) {
+//       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
+//       setAiError(message);
+//       setImprovedResult(null);
+//     } finally {
+//       setIsImproving(false);
+//     }
+//   }, [selectedAiModel, selectedAiTone, setAiHistory, currentDocument, language]);
 
-    try {
-      const response = await improveWriting(selectedText, 'paraphrase', selectedAiModel, language);
-      setImprovedResult(response);
-      setContentBeforeApply(currentDocument?.content);
-      setIsApplied(false);
-      setAiHistory((current) =>
-        addAiHistoryEntry(current, {
-          id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
-          originalText: selectedText,
-          improvedText: response.improved_text,
-          tone: 'paraphrase',
-          model: selectedAiModel,
-          savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        })
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
-      setAiError(message);
-      setImprovedResult(null);
-    } finally {
-      setIsImproving(false);
-    }
-  }, [selectedText, selectedAiModel, setAiHistory, currentDocument, language]);
-
-  const runSummarize = useCallback(async () => {
-    if (!selectedText.trim()) return;
-
-    setActiveSidebarTab('writing');
-    setIsImproving(true);
-    setAiError(null);
-
-    try {
-      const response = await improveWriting(selectedText, 'summarize', selectedAiModel, language);
-      setImprovedResult(response);
-      setContentBeforeApply(currentDocument?.content);
-      setIsApplied(false);
-      setAiHistory((current) =>
-        addAiHistoryEntry(current, {
-          id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
-          originalText: selectedText,
-          improvedText: response.improved_text,
-          tone: 'summarize',
-          model: selectedAiModel,
-          savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        })
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
-      setAiError(message);
-      setImprovedResult(null);
-    } finally {
-      setIsImproving(false);
-    }
-  }, [selectedText, selectedAiModel, setAiHistory, currentDocument, language]);
-
-  const runGenerateAbstract = useCallback(async () => {
-    setActiveSidebarTab('writing');
-    setIsImproving(true);
-    setAiError(null);
-
-    try {
-      const fullText = extractTextFromContent(currentDocument?.content);
-      if (!fullText.trim()) {
-        throw new Error(language === 'en' ? 'Document is empty. Please write some content before generating abstract.' : 'Dokumen kosong. Silakan tulis isi dokumen sebelum membuat abstrak.');
-      }
-      const response = await generateAbstract(fullText, selectedAiModel, language);
-      setImprovedResult({
-        original_text: 'Document Context',
-        improved_text: response.abstract_text,
-        tone: 'academic',
-        disclaimer: response.disclaimer || 'Abstract generated based on document context.'
-      });
-      setContentBeforeApply(currentDocument?.content);
-      setIsApplied(false);
-      setAiHistory((current) =>
-        addAiHistoryEntry(current, {
-          id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
-          originalText: 'Document Context',
-          improvedText: response.abstract_text,
-          tone: 'abstract',
-          model: selectedAiModel,
-          savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        })
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
-      setAiError(message);
-      setImprovedResult(null);
-    } finally {
-      setIsImproving(false);
-    }
-  }, [currentDocument, selectedAiModel, setAiHistory, language]);
-
-  const handleParafrasePlagiat = useCallback(async (sentence: string) => {
-    setActiveSidebarTab('writing');
-    setSelectedText(sentence);
-    setIsImproving(true);
-    setAiError(null);
-
-    try {
-      const response = await improveWriting(sentence, selectedAiTone, selectedAiModel, language);
-      setImprovedResult(response);
-      setContentBeforeApply(currentDocument?.content);
-      setIsApplied(false);
-      setAiHistory((current) =>
-        addAiHistoryEntry(current, {
-          id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
-          originalText: sentence,
-          improvedText: response.improved_text,
-          tone: selectedAiTone,
-          model: selectedAiModel,
-          savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        })
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
-      setAiError(message);
-      setImprovedResult(null);
-    } finally {
-      setIsImproving(false);
-    }
-  }, [selectedAiModel, selectedAiTone, setAiHistory, currentDocument, language]);
-
-  const applyImprovedText = useCallback(() => {
-    if (!improvedResult) return;
-    setContentBeforeApply(currentDocument?.content);
-    editorJsRef.current?.insertText(improvedResult.improved_text);
-    setIsApplied(true);
-    setSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-  }, [improvedResult, currentDocument]);
+//   const applyImprovedText = useCallback(() => {
+//     if (!improvedResult) return;
+//     setContentBeforeApply(currentDocument?.content);
+//     editorJsRef.current?.insertText(improvedResult.improved_text);
+//     setIsApplied(true);
+//     setSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+//   }, [improvedResult, currentDocument]);
 
   const runCitationSearchForQuery = useCallback(async (query: string) => {
     const normalizedQuery = query.trim();
@@ -1546,13 +1603,13 @@ export function ScholarEditor() {
     [runCitationSearchForQuery],
   );
 
-  const deleteAiHistoryEntry = useCallback((id: string) => {
-    setAiHistory((current) => current.filter((item) => item.id !== id));
-  }, []);
+//   const deleteAiHistoryEntry = useCallback((id: string) => {
+//     setAiHistory((current) => current.filter((item) => item.id !== id));
+//   }, []);
 
-  const clearAiHistory = useCallback(() => {
-    setAiHistory([]);
-  }, []);
+//   const clearAiHistory = useCallback(() => {
+//     setAiHistory([]);
+//   }, []);
 
   const insertCitationCandidate = useCallback(
     (candidate: CitationCandidate, skipEditorInsert = false) => {
