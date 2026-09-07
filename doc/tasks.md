@@ -38,11 +38,12 @@ Sesuai instruksi khusus: **Tidak boleh ada penghapusan fitur atau logika yang se
 ### 5. `components/editor/editor-sidebar.tsx` (1.446 baris)
 - [x] Mengekstrak 4 sub-panel (Library, Writing, Document, Comments) ke komponen modular masing-masing.
 
+
 ### 6. `components/editor/minimal-sidebar.tsx` (1.384 baris)
 - [ ] *Ekstrak helper navigasi atau UI untuk mode Zen / mode minimalis.*
 
 ### 7. `lib/editor/citation-export-word.ts` (1.041 baris)
-- [ ] *Pisahkan proses penyiapan HTML (HTML parser) dari generator MHTML/Blob final.*
+- [x] *Pisahkan proses penyiapan HTML (HTML parser) dari generator MHTML/Blob final.*
 
 ### 8. `components/editor/document-setup-modal.tsx` (839 baris)
-- [ ] *Pecah masing-masing "step" wizard (Step 1, Step 2, Step 3) ke dalam komponen view terpisah.*
+- [x] *Pecah masing-masing "step" wizard (Step 1, Step 2, Step 3) ke dalam komponen view terpisah.*
