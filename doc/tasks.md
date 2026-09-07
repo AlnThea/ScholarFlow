@@ -40,7 +40,7 @@ Sesuai instruksi khusus: **Tidak boleh ada penghapusan fitur atau logika yang se
 
 
 ### 6. `components/editor/minimal-sidebar.tsx` (1.384 baris)
-- [ ] *Ekstrak helper navigasi atau UI untuk mode Zen / mode minimalis.*
+- [x] *Ekstrak helper navigasi atau UI untuk mode Zen / mode minimalis.*
 
 ### 7. `lib/editor/citation-export-word.ts` (1.041 baris)
 - [x] *Pisahkan proses penyiapan HTML (HTML parser) dari generator MHTML/Blob final.*
