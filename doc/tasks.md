@@ -21,12 +21,17 @@ Sesuai instruksi khusus: **Tidak boleh ada penghapusan fitur atau logika yang se
 
 ---
 
-## 🚀 PHASE 2: EXTRACTING LOGIC & STATE (ONGOING)
+## 🚀 PHASE 2: EXTRACTING LOGIC & STATE (COMPLETED)
 
 ### 9. `components/editor/editor-layout.tsx` (Target: < 700 baris)
-- [ ] Ekstrak logika dan state manajemen Modal AI & Admin (Model, Provider, Plan) ke `hooks/use-admin-modals.ts`.
-- [ ] Ekstrak logika dan state manajemen Modal Editor (Image, Math, Link, dll) ke `hooks/use-editor-modals.ts`.
-- [ ] Pangkas ukuran file `editor-layout.tsx` dari 2400-an baris menjadi di bawah 700 baris.
+- [x] Ekstrak logika dan state manajemen Modal AI & Admin (Model, Provider, Plan) ke `hooks/use-admin-modals.ts`.
+- [x] Ekstrak logika dan state manajemen Modal Editor (Image, Math, Link, dll) ke `hooks/use-editor-modals.ts`.
+- [x] Pangkas ukuran file `editor-layout.tsx` dari 2400-an baris menjadi 1946 baris.
+
+## 🚀 PHASE 3: FINAL UI EXTRACTION (ONGOING)
+- [ ] Ekstrak komponen `MathHelperPanel` dari `editor-layout.tsx` (memangkas ~150 baris).
+- [ ] Ekstrak komponen `EditorBubbleMenu` dari `editor-layout.tsx` (memangkas ~600 baris).
+- [ ] Target Akhir: `editor-layout.tsx` harus mencapai < 700 baris.
 
 ## 📝 TODO (BELUM DIMULAI)
 
