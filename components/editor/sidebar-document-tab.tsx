@@ -10,7 +10,7 @@ import { BurstinessChart } from './burstiness-chart';
 
 export const SidebarDocumentTab = (props: any) => {
   const {
-    selectedText, citationResults, citationHistory, wordCount, characterCount,
+    language, activePlanId, user, selectedText, citationResults, citationHistory, wordCount, characterCount,
     citationCount, bibliographyEntries, improvedText, isImproving, isSearchingCitations,
     aiError, citationError, citationNote, onApplyImprovedText, onImproveWriting,
     onParaphrase, onSummarize, onGenerateAbstract, onFindCitation, onRepeatCitationSearch,
@@ -27,15 +27,14 @@ export const SidebarDocumentTab = (props: any) => {
     suggestionSubTab, setSuggestionSubTab, query, setQuery, isHistoryModalOpen,
     setIsHistoryModalOpen, localIsExpanded, setLocalIsExpanded, scanStatus,
     setScanStatus, scanProgress, setScanProgress, similarityScore, setSimilarityScore,
-    plagiarismDetails, setPlagiarismDetails, selectedFolderFilter, setSelectedFolderFilter,
+    handleStartScan, plagiarismDetails, setPlagiarismDetails, selectedFolderFilter, setSelectedFolderFilter,
     newFolderName, setNewFolderName, isAddingFolder, setIsAddingFolder,
     t, getSourceLabel, formatHistoryLabel, ActionButton, PanelRow
   } = props;
 
   return (
     <>
-            ) : workspaceTab === 'document' ? (
-              <div className="space-y-3">
+      <div className="space-y-3">
                 <section className="rounded-lg border border-line bg-white p-3 shadow-sm">
                   <div className="mb-3 flex items-center gap-2">
                     <IconBook className="h-4 w-4 text-accent" />
@@ -262,6 +261,7 @@ export const SidebarDocumentTab = (props: any) => {
                     </button>
                   </div>
                 </section>
+              </div>
     </>
   );
 };

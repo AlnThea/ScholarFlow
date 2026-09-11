@@ -160,7 +160,8 @@ function formatHistoryLabel(entry: CitationHistoryEntry) {
   return `${entry.resultCount} result${entry.resultCount === 1 ? '' : 's'}`;
 }
 
-export function EditorSidebar({
+export function EditorSidebar(props: SidebarProps) {
+  const {
   selectedText,
   citationResults,
   citationHistory,
@@ -217,7 +218,7 @@ export function EditorSidebar({
   onResolveComment,
   onCommentClick,
   activeTab
-}: SidebarProps) {
+} = props;
   const { language, t } = useLanguage();
   const { user } = useAuth();
   const [workspaceTab, setWorkspaceTab] = useState<'library' | 'writing' | 'document' | 'comments'>('document');
@@ -318,23 +319,6 @@ export function EditorSidebar({
   };
 
 
-  const filteredCollections = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    let items = bibliographyEntries;
-
-    // Filter by folder selection
-    if (selectedFolderFilter !== 'all') {
-      items = items.filter(
-        (entry) => folderAssignments[entry.referenceId] === selectedFolderFilter
-      );
-    }
-
-    if (!q) return items;
-    return items.filter((entry) => {
-      const haystack = `${entry.label} ${entry.formatted}`.toLowerCase();
-      return haystack.includes(q);
-    });
-  }, [bibliographyEntries, query, selectedFolderFilter, folderAssignments]);
 
   useEffect(() => {
     if (citationResults.length === 0) return;
@@ -373,7 +357,7 @@ export function EditorSidebar({
           selectedFolderFilter={selectedFolderFilter} setSelectedFolderFilter={setSelectedFolderFilter}
           newFolderName={newFolderName} setNewFolderName={setNewFolderName}
           isAddingFolder={isAddingFolder} setIsAddingFolder={setIsAddingFolder}
-          t={t} getSourceLabel={getSourceLabel} formatHistoryLabel={formatHistoryLabel}
+          language={language} activePlanId={activePlanId} user={user} t={t} getSourceLabel={getSourceLabel} formatHistoryLabel={formatHistoryLabel}
           ActionButton={ActionButton} PanelRow={PanelRow} />
           ) : workspaceTab === 'writing' ? (
             <SidebarWritingTab {...props}
@@ -390,10 +374,10 @@ export function EditorSidebar({
           selectedFolderFilter={selectedFolderFilter} setSelectedFolderFilter={setSelectedFolderFilter}
           newFolderName={newFolderName} setNewFolderName={setNewFolderName}
           isAddingFolder={isAddingFolder} setIsAddingFolder={setIsAddingFolder}
-          t={t} getSourceLabel={getSourceLabel} formatHistoryLabel={formatHistoryLabel}
+          language={language} activePlanId={activePlanId} user={user} t={t} getSourceLabel={getSourceLabel} formatHistoryLabel={formatHistoryLabel}
           ActionButton={ActionButton} PanelRow={PanelRow} />
           ) : workspaceTab === 'document' ? (
-            <SidebarDocumentTab {...props}
+            <SidebarDocumentTab {...props} handleStartScan={handleStartScan}
           workspaceTab={workspaceTab} setWorkspaceTab={setWorkspaceTab}
           commentFilterTab={commentFilterTab} setCommentFilterTab={setCommentFilterTab}
           suggestionSubTab={suggestionSubTab} setSuggestionSubTab={setSuggestionSubTab}
@@ -407,7 +391,7 @@ export function EditorSidebar({
           selectedFolderFilter={selectedFolderFilter} setSelectedFolderFilter={setSelectedFolderFilter}
           newFolderName={newFolderName} setNewFolderName={setNewFolderName}
           isAddingFolder={isAddingFolder} setIsAddingFolder={setIsAddingFolder}
-          t={t} getSourceLabel={getSourceLabel} formatHistoryLabel={formatHistoryLabel}
+          language={language} activePlanId={activePlanId} user={user} t={t} getSourceLabel={getSourceLabel} formatHistoryLabel={formatHistoryLabel}
           ActionButton={ActionButton} PanelRow={PanelRow} />
           ) : workspaceTab === 'comments' ? (
             <SidebarCommentsTab {...props}
@@ -424,9 +408,9 @@ export function EditorSidebar({
           selectedFolderFilter={selectedFolderFilter} setSelectedFolderFilter={setSelectedFolderFilter}
           newFolderName={newFolderName} setNewFolderName={setNewFolderName}
           isAddingFolder={isAddingFolder} setIsAddingFolder={setIsAddingFolder}
-          t={t} getSourceLabel={getSourceLabel} formatHistoryLabel={formatHistoryLabel}
+          language={language} activePlanId={activePlanId} user={user} t={t} getSourceLabel={getSourceLabel} formatHistoryLabel={formatHistoryLabel}
           ActionButton={ActionButton} PanelRow={PanelRow} />
-          </div>
+          ) : null}
         </div>
 
         {/* Vertical Tabs Bar on the Right */}

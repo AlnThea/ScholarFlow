@@ -1246,6 +1246,7 @@ export function EditorLayout({
     const handleSelectionChange = () => {
       let hasLink = false;
       let hasHighlight = false;
+      let hasCode = false;
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
         const editorContainer = document.getElementById('editorjs-holder');
@@ -1264,12 +1265,15 @@ export function EditorLayout({
           if (node.tagName === 'MARK') {
             hasHighlight = true;
           }
-          if (hasLink && hasHighlight) break;
+          if (node.tagName === 'CODE') {
+            hasCode = true;
+          }
+          if (hasLink && hasHighlight && hasCode) break;
           node = node.parentElement;
         }
 
-        // 2. Check focusNode parent if anchorNode didn't find both
-        if (!hasLink || !hasHighlight) {
+        // 2. Check focusNode parent if anchorNode didn't find all
+        if (!hasLink || !hasHighlight || !hasCode) {
           let focusParent = selection.focusNode
             ? (selection.focusNode.nodeType === Node.TEXT_NODE
               ? selection.focusNode.parentElement
@@ -1283,13 +1287,16 @@ export function EditorLayout({
             if (node.tagName === 'MARK') {
               hasHighlight = true;
             }
-            if (hasLink && hasHighlight) break;
+            if (node.tagName === 'CODE') {
+              hasCode = true;
+            }
+            if (hasLink && hasHighlight && hasCode) break;
             node = node.parentElement;
           }
         }
 
-        // 3. Check if selection range spans across/encloses an A or MARK tag
-        if (!hasLink || !hasHighlight) {
+        // 3. Check if selection range spans across/encloses tags
+        if (!hasLink || !hasHighlight || !hasCode) {
           try {
             const range = selection.getRangeAt(0);
             const fragment = range.cloneContents();
@@ -1300,6 +1307,9 @@ export function EditorLayout({
             }
             if (!hasHighlight && tempDiv.querySelector('mark')) {
               hasHighlight = true;
+            }
+            if (!hasCode && tempDiv.querySelector('code')) {
+              hasCode = true;
             }
           } catch (e) {
             // ignore range extraction issues
@@ -1313,7 +1323,7 @@ export function EditorLayout({
         italic: document.queryCommandState('italic'),
         underline: document.queryCommandState('underline'),
         strikethrough: document.queryCommandState('strikeThrough'),
-        code: document.queryCommandState('insertHTML'),
+        code: hasCode,
         superscript: document.queryCommandState('superscript'),
         subscript: document.queryCommandState('subscript'),
         link: hasLink,
@@ -1521,7 +1531,7 @@ export function EditorLayout({
           {/* LaTeX Math Helper Panel */}
           {isMathHelperOpen && (
             <div
-              className={`fixed ${showRightSidebar ? (isRightSidebarExpanded ? 'right-[380px]' : 'right-20') : 'right-4'} top-40 w-80 bg-white/95 border border-slate-200/80 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] z-40 p-4 flex flex-col gap-3 h-[500px] max-h-[60vh] animate-fade-in`}
+              className={`fixed ${showRightSidebar ? (isRightSidebarExpanded ? 'right-[380px]' : 'right-20') : 'right-4'} top-40 w-80 bg-white/95 border border-slate-200/80 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] z-50 p-4 flex flex-col gap-3 h-[500px] max-h-[60vh] animate-fade-in`}
             >
               {/* Math Helper Toast notification inside the helper panel */}
               {mathToast && (

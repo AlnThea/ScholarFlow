@@ -116,6 +116,37 @@ export function ScholarEditor() {
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const showToast = useCallback((text: string, type: 'success' | 'error' | 'info' = 'success') => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    setToastMessage({ text, type });
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastMessage(null);
+    }, 3000);
+  }, []);
+
+  const {
+    documents,
+    currentDocument,
+    setCurrentDocument,
+    isDocLoading,
+    saveStatus,
+    isSetupModalOpen,
+    setIsSetupModalOpen,
+    loadedDocumentIdRef,
+    lastSavedContentRef,
+    triggerDebouncedSave,
+    handleSelectDocument,
+    handleCreateDocument,
+    handleDeleteDocument,
+    handleRenameDocument,
+    handleCreateFolder,
+    handleAssignFolder,
+    handleChangeCitationStyle,
+    handleChangeDocumentSettings
+  } = useEditorDocument(showToast, hydrated);
+
+
+
   // Comments and Notifications State
   const [comments, setComments] = useState<DocumentComment[]>([]);
   const [notifications, setNotifications] = useState<DocumentNotification[]>([]);
@@ -127,6 +158,274 @@ export function ScholarEditor() {
   const processedAcceptedSuggestionsRef = useRef<Set<string>>(new Set());
   const acceptedLocallyRef = useRef<Set<string>>(new Set());
   const suggestionsInitializedRef = useRef<boolean>(false);
+
+
+  // Auto-sync comment highlights onto editor canvas whenever comments update
+  useEffect(() => {
+    if (comments && comments.length > 0) {
+      const timer = setTimeout(() => {
+        editorJsRef.current?.syncCommentMarks?.(comments);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [comments]);
+
+  const handleMarkNotificationRead = async (id: string) => {
+    try {
+      const success = await markNotificationAsRead(id);
+      if (success) {
+        setNotifications(prev =>
+          prev.map(n => n.id === id ? { ...n, read: true } : n)
+        );
+      }
+    } catch (err) {
+      console.error('Failed to mark notification read:', err);
+    }
+  };
+
+  const handleMarkAllNotificationsRead = async () => {
+    if (!user?.id) return;
+    try {
+      const success = await markAllNotificationsAsRead(user.id);
+      if (success) {
+        setNotifications(prev =>
+          prev.map(n => ({ ...n, read: true }))
+        );
+      }
+    } catch (err) {
+      console.error('Failed to mark all notifications read:', err);
+    }
+  };
+
+  const handleResolveComment = async (id: string) => {
+    try {
+      const success = await resolveComment(id);
+      if (success) {
+        editorJsRef.current?.highlightAndRemoveCommentMark(id);
+        setComments(prev =>
+          prev.map(c => c.id === id ? { ...c, resolved: true } : c)
+        );
+      }
+    } catch (err) {
+      console.error('Failed to resolve comment:', err);
+    }
+  };
+
+  const handleCommentClick = useCallback((c: DocumentComment) => {
+    if (c.id) {
+      editorJsRef.current?.scrollToCommentMark(c.id);
+    }
+    if (c.block_id) {
+      const blockEl = window.document.querySelector(`[data-id="${c.block_id}"]`);
+      if (blockEl) {
+        blockEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        blockEl.classList.add('bg-indigo-50/50');
+        setTimeout(() => {
+          blockEl.classList.remove('bg-indigo-50/50');
+        }, 2000);
+      }
+    }
+  }, []);
+
+  const handleNotificationClick = useCallback(async (notif: DocumentNotification) => {
+    if (currentDocument?.id !== notif.document_id) {
+      
+      router.push(`/editor/${notif.document_id}`);
+    }
+    
+    setActiveSidebarTab('comments');
+    
+    try {
+      const comms = await fetchComments(notif.document_id);
+      setComments(comms);
+      setTimeout(() => {
+        if (comms.length > 0) {
+          const activeComms = comms.filter(c => !c.resolved);
+          if (activeComms.length > 0) {
+            const lastComm = activeComms[activeComms.length - 1];
+            handleCommentClick(lastComm);
+          }
+        }
+      }, 500);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [currentDocument?.id, router, handleCommentClick]);
+  
+
+//   const [aiProviders, setAiProviders] = useState<AIProvider[]>([]);
+
+  useEffect(() => {
+    fetchAIModels().then(data => {
+      setAiModels(data);
+    }).catch(err => {
+      console.error("Failed to load AI models:", err);
+    });
+    fetchAIProviders().then(data => {
+      setAiProviders(data);
+    }).catch(err => {
+      console.error("Failed to load AI providers:", err);
+    });
+  }, []);
+
+//   const triggerDebouncedSave = useCallback((docId: string, titleToSave: string, contentToSave: any, settingsToSave?: any) => {
+//     if (!user?.id) return;
+// 
+//     if (debounceTimeoutRef.current) {
+//       clearTimeout(debounceTimeoutRef.current);
+//     }
+// 
+//     debounceTimeoutRef.current = setTimeout(async () => {
+//       setSaveStatus(language === 'en' ? 'Saving...' : 'Menyimpan...');
+//       let alignments = {};
+//       try {
+//         alignments = JSON.parse(localStorage.getItem('scholarflow.editorjs.alignments.v1') || '{}');
+//       } catch (e) {
+//         console.warn('Failed to parse alignments from localStorage:', e);
+//       }
+// 
+//       const activeSettings = settingsToSave || currentDocument?.settings || {};
+//       const finalSettings = {
+//         ...activeSettings,
+//         alignments
+//       };
+// 
+//       const updates: any = {
+//         title: titleToSave,
+//         content: contentToSave,
+//         settings: finalSettings
+//       };
+//       try {
+//         const res = await updateDocument(docId, user.id, updates);
+//         if (res.success) {
+//           setSaveStatus(language === 'en' ? 'Saved to Cloud' : 'Tersimpan ke Cloud');
+//           localStorage.removeItem(`scholarflow.offline_backup.${docId}`);
+//           
+//           // Refresh list to update title/timestamps
+//           const list = await fetchDocuments(user.id);
+//           setDocuments(list);
+//         } else {
+//           localStorage.setItem(
+//             `scholarflow.offline_backup.${docId}`,
+//             JSON.stringify({ ...updates, id: docId, user_id: user.id })
+//           );
+//           setSaveStatus('Disimpan Lokal (Offline)');
+//         }
+//       } catch (err) {
+//         console.error('Error saving document:', err);
+//         localStorage.setItem(
+//           `scholarflow.offline_backup.${docId}`,
+//           JSON.stringify({ ...updates, id: docId, user_id: user.id })
+//         );
+//         setSaveStatus('Disimpan Lokal (Offline)');
+//       }
+//     }, 1500);
+//   }, [user, language, currentDocument]);
+
+
+//   const handleUpdateAIModel = useCallback(async (id: string, updates: Partial<AIModel>) => {
+//     try {
+//       const updated = await updateAIModel(id, updates);
+//       setAiModels((prev) => prev.map(m => m.id === id ? (updated || { ...m, ...updates }) : m));
+//     } catch (err) {
+//       console.warn('AI Model DB update failed, using local state:', err);
+//       setAiModels((prev) => prev.map(m => m.id === id ? { ...m, ...updates, updated_at: new Date().toISOString() } : m));
+//     }
+//   }, []);
+
+//   const handleCreateAIModel = useCallback(async (model: Omit<AIModel, 'updated_at'>) => {
+//     try {
+//       const created = await createAIModel(model);
+//       setAiModels((prev) => [...prev, created || { ...model, updated_at: new Date().toISOString() }]);
+//     } catch (err) {
+//       console.warn('AI Model DB create failed, using local state:', err);
+//       setAiModels((prev) => [...prev, { ...model, updated_at: new Date().toISOString() }]);
+//     }
+//   }, []);
+
+//   const handleDeleteAIModel = useCallback(async (id: string) => {
+//     try {
+//       await deleteAIModel(id);
+//       setAiModels((prev) => prev.filter(m => m.id !== id));
+//     } catch (err) {
+//       console.warn('AI Model DB delete failed, using local state:', err);
+//       setAiModels((prev) => prev.filter(m => m.id !== id));
+//     }
+//   }, []);
+
+//   const handleUpdateAIProvider = useCallback(async (id: string, updates: Partial<AIProvider>) => {
+//     try {
+//       const updated = await updateAIProvider(id, updates);
+//       setAiProviders((prev) => prev.map(p => p.id === id ? (updated || { ...p, ...updates }) : p));
+//     } catch (err) {
+//       console.warn('AI Provider DB update failed, using local state:', err);
+//       setAiProviders((prev) => prev.map(p => p.id === id ? { ...p, ...updates, updated_at: new Date().toISOString() } : p));
+//     }
+//   }, []);
+
+//   const handleCreateAIProvider = useCallback(async (provider: Omit<AIProvider, 'updated_at'>) => {
+//     try {
+//       const created = await createAIProvider(provider);
+//       setAiProviders((prev) => [...prev, created || { ...provider, updated_at: new Date().toISOString() }]);
+//     } catch (err) {
+//       console.warn('AI Provider DB create failed, using local state:', err);
+//       setAiProviders((prev) => [...prev, { ...provider, updated_at: new Date().toISOString() }]);
+//     }
+//   }, []);
+
+//   const handleDeleteAIProvider = useCallback(async (id: string) => {
+//     try {
+//       await deleteAIProvider(id);
+//       setAiProviders((prev) => prev.filter(p => p.id !== id));
+//     } catch (err) {
+//       console.warn('AI Provider DB delete failed, using local state:', err);
+//       setAiProviders((prev) => prev.filter(p => p.id !== id));
+//     }
+//   }, []);
+
+  // EditorJS Ref and Stats state
+  const editorJsRef = useRef<EditorJsMethods | null>(null);
+  const [editorJsStats, setEditorJsStats] = useState({
+    wordCount: 0,
+    characterCount: 0,
+    citationCount: 0
+  });
+  const [activeReferenceIds, setActiveReferenceIds] = useState<string[]>([]);
+
+
+  const {
+    selectedText, setSelectedText,
+    improvedResult, setImprovedResult,
+    selectedAiModel, setSelectedAiModel,
+    selectedAiTone, setSelectedAiTone,
+    aiModels, setAiModels,
+    aiProviders, setAiProviders,
+    aiHistory, setAiHistory,
+    aiError, setAiError,
+    isImproving, setIsImproving,
+    isSynthesizing, setIsSynthesizing,
+    synthesizedText, setSynthesizedText,
+    synthesizeError, setSynthesizeError,
+    synthesizeDisclaimer, setSynthesizeDisclaimer,
+    handleUpdateAIModel, handleCreateAIModel, handleDeleteAIModel,
+    handleUpdateAIProvider, handleCreateAIProvider, handleDeleteAIProvider,
+    handleSynthesizeReview,
+    runImproveWriting, runParaphrase, runSummarize, runGenerateAbstract,
+    handleParafrasePlagiat, applyImprovedText,
+    deleteAiHistoryEntry, clearAiHistory
+  } = useEditorAi(
+    language,
+    currentDocument,
+    citationLibrary,
+    activeReferenceIds,
+    setActiveSidebarTab,
+    editorJsRef,
+    setContentBeforeApply,
+    setIsApplied,
+    setSavedAt,
+    hydrated
+  );
+
 
   // Poll comments and notifications
   useEffect(() => {
@@ -251,390 +550,10 @@ export function ScholarEditor() {
     };
   }, [currentDocument?.id, user?.id, user?.email, user?.user_metadata?.full_name]);
 
-  // Auto-sync comment highlights onto editor canvas whenever comments update
-  useEffect(() => {
-    if (comments && comments.length > 0) {
-      const timer = setTimeout(() => {
-        editorJsRef.current?.syncCommentMarks?.(comments);
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [comments]);
 
-  const handleMarkNotificationRead = async (id: string) => {
-    try {
-      const success = await markNotificationAsRead(id);
-      if (success) {
-        setNotifications(prev =>
-          prev.map(n => n.id === id ? { ...n, read: true } : n)
-        );
-      }
-    } catch (err) {
-      console.error('Failed to mark notification read:', err);
-    }
-  };
-
-  const handleMarkAllNotificationsRead = async () => {
-    if (!user?.id) return;
-    try {
-      const success = await markAllNotificationsAsRead(user.id);
-      if (success) {
-        setNotifications(prev =>
-          prev.map(n => ({ ...n, read: true }))
-        );
-      }
-    } catch (err) {
-      console.error('Failed to mark all notifications read:', err);
-    }
-  };
-
-  const handleResolveComment = async (id: string) => {
-    try {
-      const success = await resolveComment(id);
-      if (success) {
-        editorJsRef.current?.highlightAndRemoveCommentMark(id);
-        setComments(prev =>
-          prev.map(c => c.id === id ? { ...c, resolved: true } : c)
-        );
-      }
-    } catch (err) {
-      console.error('Failed to resolve comment:', err);
-    }
-  };
-
-  const handleCommentClick = useCallback((c: DocumentComment) => {
-    if (c.id) {
-      editorJsRef.current?.scrollToCommentMark(c.id);
-    }
-    if (c.block_id) {
-      const blockEl = window.document.querySelector(`[data-id="${c.block_id}"]`);
-      if (blockEl) {
-        blockEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        blockEl.classList.add('bg-indigo-50/50');
-        setTimeout(() => {
-          blockEl.classList.remove('bg-indigo-50/50');
-        }, 2000);
-      }
-    }
-  }, []);
-
-  const handleNotificationClick = useCallback(async (notif: DocumentNotification) => {
-    if (currentDocument?.id !== notif.document_id) {
-      setIsDocLoading(true);
-      router.push(`/editor/${notif.document_id}`);
-    }
-    
-    setActiveSidebarTab('comments');
-    
-    try {
-      const comms = await fetchComments(notif.document_id);
-      setComments(comms);
-      setTimeout(() => {
-        if (comms.length > 0) {
-          const activeComms = comms.filter(c => !c.resolved);
-          if (activeComms.length > 0) {
-            const lastComm = activeComms[activeComms.length - 1];
-            handleCommentClick(lastComm);
-          }
-        }
-      }, 500);
-    } catch (err) {
-      console.error(err);
-    }
-  }, [currentDocument?.id, router, handleCommentClick]);
-  
-  const showToast = useCallback((text: string, type: 'success' | 'error' | 'info' = 'success') => {
-    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-    setToastMessage({ text, type });
-    toastTimeoutRef.current = setTimeout(() => {
-      setToastMessage(null);
-    }, 3000);
-  }, []);
-
-//   const [aiProviders, setAiProviders] = useState<AIProvider[]>([]);
-
-  useEffect(() => {
-    fetchAIModels().then(data => {
-      setAiModels(data);
-    }).catch(err => {
-      console.error("Failed to load AI models:", err);
-    });
-    fetchAIProviders().then(data => {
-      setAiProviders(data);
-    }).catch(err => {
-      console.error("Failed to load AI providers:", err);
-    });
-  }, []);
-
-//   const triggerDebouncedSave = useCallback((docId: string, titleToSave: string, contentToSave: any, settingsToSave?: any) => {
-//     if (!user?.id) return;
-// 
-//     if (debounceTimeoutRef.current) {
-//       clearTimeout(debounceTimeoutRef.current);
-//     }
-// 
-//     debounceTimeoutRef.current = setTimeout(async () => {
-//       setSaveStatus(language === 'en' ? 'Saving...' : 'Menyimpan...');
-//       let alignments = {};
-//       try {
-//         alignments = JSON.parse(localStorage.getItem('scholarflow.editorjs.alignments.v1') || '{}');
-//       } catch (e) {
-//         console.warn('Failed to parse alignments from localStorage:', e);
-//       }
-// 
-//       const activeSettings = settingsToSave || currentDocument?.settings || {};
-//       const finalSettings = {
-//         ...activeSettings,
-//         alignments
-//       };
-// 
-//       const updates: any = {
-//         title: titleToSave,
-//         content: contentToSave,
-//         settings: finalSettings
-//       };
-//       try {
-//         const res = await updateDocument(docId, user.id, updates);
-//         if (res.success) {
-//           setSaveStatus(language === 'en' ? 'Saved to Cloud' : 'Tersimpan ke Cloud');
-//           localStorage.removeItem(`scholarflow.offline_backup.${docId}`);
-//           
-//           // Refresh list to update title/timestamps
-//           const list = await fetchDocuments(user.id);
-//           setDocuments(list);
-//         } else {
-//           localStorage.setItem(
-//             `scholarflow.offline_backup.${docId}`,
-//             JSON.stringify({ ...updates, id: docId, user_id: user.id })
-//           );
-//           setSaveStatus('Disimpan Lokal (Offline)');
-//         }
-//       } catch (err) {
-//         console.error('Error saving document:', err);
-//         localStorage.setItem(
-//           `scholarflow.offline_backup.${docId}`,
-//           JSON.stringify({ ...updates, id: docId, user_id: user.id })
-//         );
-//         setSaveStatus('Disimpan Lokal (Offline)');
-//       }
-//     }, 1500);
-//   }, [user, language, currentDocument]);
-
-  useEffect(() => {
-    const docId = params?.id as string | undefined;
-    
-    if (docId) {
-      if (currentDocument?.id !== docId) {
-        setIsDocLoading(true);
-        fetchDocumentById(docId, user?.id || '').then(detail => {
-          if (detail) {
-            // Check for newer offline backup in localStorage
-            const offlineKey = `scholarflow.offline_backup.${docId}`;
-            const offlineRaw = localStorage.getItem(offlineKey);
-            if (offlineRaw) {
-              try {
-                const offlineData = JSON.parse(offlineRaw);
-                const merged = {
-                  ...detail,
-                  title: offlineData.title || detail.title,
-                  content: offlineData.content || detail.content,
-                  settings: offlineData.settings || detail.settings,
-                };
-                setCurrentDocument(merged);
-                if (merged.settings?.alignments) {
-                  localStorage.setItem('scholarflow.editorjs.alignments.v1', JSON.stringify(merged.settings.alignments));
-                }
-                lastSavedContentRef.current = getContentComparisonString(merged.content);
-                setSaveStatus('Menggunakan Cadangan Offline');
-                
-                // Try to sync to cloud if currently online
-                if (typeof navigator !== 'undefined' && navigator.onLine) {
-                  triggerDebouncedSave(docId, merged.title, merged.content, merged.settings);
-                }
-                return;
-              } catch (e) {
-                console.error('Failed to parse offline backup:', e);
-              }
-            }
-            setCurrentDocument(detail);
-            if (detail.settings?.alignments) {
-              localStorage.setItem('scholarflow.editorjs.alignments.v1', JSON.stringify(detail.settings.alignments));
-            }
-            lastSavedContentRef.current = getContentComparisonString(detail.content);
-          }
-        }).catch(err => {
-          console.warn('Failed to sync document from URL path:', err);
-          // If offline and fetchDocumentById fails, fallback to offline backup if available
-          const offlineKey = `scholarflow.offline_backup.${docId}`;
-          const offlineRaw = localStorage.getItem(offlineKey);
-          if (offlineRaw) {
-            try {
-              const offlineData = JSON.parse(offlineRaw);
-              const fallbackDoc: DocumentEntry = {
-                id: docId,
-                user_id: user?.id || '',
-                title: offlineData.title || 'Untitled (Offline)',
-                content: offlineData.content || { blocks: [] },
-                settings: offlineData.settings || {},
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              };
-              setCurrentDocument(fallbackDoc);
-              if (fallbackDoc.settings?.alignments) {
-                localStorage.setItem('scholarflow.editorjs.alignments.v1', JSON.stringify(fallbackDoc.settings.alignments));
-              }
-              lastSavedContentRef.current = getContentComparisonString(fallbackDoc.content);
-              setSaveStatus(language === 'en' ? 'Sync Failed (Offline)' : 'Gagal Sinkronisasi (Offline)');
-            } catch (e) {
-              console.error('Failed to parse offline backup on failure fallback:', e);
-            }
-          }
-        }).finally(() => {
-          setIsDocLoading(false);
-        });
-      } else {
-        setIsDocLoading(false);
-      }
-    } else {
-      if (currentDocument) {
-        setCurrentDocument(null);
-      }
-      setIsDocLoading(false);
-    }
-  }, [user?.id, params?.id, currentDocument?.id, triggerDebouncedSave, language]);
-
-//   const handleUpdateAIModel = useCallback(async (id: string, updates: Partial<AIModel>) => {
-//     try {
-//       const updated = await updateAIModel(id, updates);
-//       setAiModels((prev) => prev.map(m => m.id === id ? (updated || { ...m, ...updates }) : m));
-//     } catch (err) {
-//       console.warn('AI Model DB update failed, using local state:', err);
-//       setAiModels((prev) => prev.map(m => m.id === id ? { ...m, ...updates, updated_at: new Date().toISOString() } : m));
-//     }
-//   }, []);
-
-//   const handleCreateAIModel = useCallback(async (model: Omit<AIModel, 'updated_at'>) => {
-//     try {
-//       const created = await createAIModel(model);
-//       setAiModels((prev) => [...prev, created || { ...model, updated_at: new Date().toISOString() }]);
-//     } catch (err) {
-//       console.warn('AI Model DB create failed, using local state:', err);
-//       setAiModels((prev) => [...prev, { ...model, updated_at: new Date().toISOString() }]);
-//     }
-//   }, []);
-
-//   const handleDeleteAIModel = useCallback(async (id: string) => {
-//     try {
-//       await deleteAIModel(id);
-//       setAiModels((prev) => prev.filter(m => m.id !== id));
-//     } catch (err) {
-//       console.warn('AI Model DB delete failed, using local state:', err);
-//       setAiModels((prev) => prev.filter(m => m.id !== id));
-//     }
-//   }, []);
-
-//   const handleUpdateAIProvider = useCallback(async (id: string, updates: Partial<AIProvider>) => {
-//     try {
-//       const updated = await updateAIProvider(id, updates);
-//       setAiProviders((prev) => prev.map(p => p.id === id ? (updated || { ...p, ...updates }) : p));
-//     } catch (err) {
-//       console.warn('AI Provider DB update failed, using local state:', err);
-//       setAiProviders((prev) => prev.map(p => p.id === id ? { ...p, ...updates, updated_at: new Date().toISOString() } : p));
-//     }
-//   }, []);
-
-//   const handleCreateAIProvider = useCallback(async (provider: Omit<AIProvider, 'updated_at'>) => {
-//     try {
-//       const created = await createAIProvider(provider);
-//       setAiProviders((prev) => [...prev, created || { ...provider, updated_at: new Date().toISOString() }]);
-//     } catch (err) {
-//       console.warn('AI Provider DB create failed, using local state:', err);
-//       setAiProviders((prev) => [...prev, { ...provider, updated_at: new Date().toISOString() }]);
-//     }
-//   }, []);
-
-//   const handleDeleteAIProvider = useCallback(async (id: string) => {
-//     try {
-//       await deleteAIProvider(id);
-//       setAiProviders((prev) => prev.filter(p => p.id !== id));
-//     } catch (err) {
-//       console.warn('AI Provider DB delete failed, using local state:', err);
-//       setAiProviders((prev) => prev.filter(p => p.id !== id));
-//     }
-//   }, []);
-
-  // EditorJS Ref and Stats state
-  const editorJsRef = useRef<EditorJsMethods | null>(null);
-  const [editorJsStats, setEditorJsStats] = useState({
-    wordCount: 0,
-    characterCount: 0,
-    citationCount: 0
-  });
-  const [activeReferenceIds, setActiveReferenceIds] = useState<string[]>([]);
-
-  const {
-    documents,
-    currentDocument,
-    setCurrentDocument,
-    isDocLoading,
-    saveStatus,
-    isSetupModalOpen,
-    setIsSetupModalOpen,
-    loadedDocumentIdRef,
-    lastSavedContentRef,
-    triggerDebouncedSave,
-    handleSelectDocument,
-    handleCreateDocument,
-    handleDeleteDocument,
-    handleRenameDocument,
-    handleCreateFolder,
-    handleAssignFolder,
-    handleChangeCitationStyle,
-    handleChangeDocumentSettings
-  } = useEditorDocument(showToast, hydrated);
-
-  const {
-    selectedText, setSelectedText,
-    improvedResult, setImprovedResult,
-    selectedAiModel, setSelectedAiModel,
-    selectedAiTone, setSelectedAiTone,
-    aiModels, setAiModels,
-    aiProviders, setAiProviders,
-    aiHistory, setAiHistory,
-    aiError, setAiError,
-    isImproving, setIsImproving,
-    isSynthesizing, setIsSynthesizing,
-    synthesizedText, setSynthesizedText,
-    synthesizeError, setSynthesizeError,
-    synthesizeDisclaimer, setSynthesizeDisclaimer,
-    handleUpdateAIModel, handleCreateAIModel, handleDeleteAIModel,
-    handleUpdateAIProvider, handleCreateAIProvider, handleDeleteAIProvider,
-    handleSynthesizeReview,
-    runImproveWriting, runParaphrase, runSummarize, runGenerateAbstract,
-    handleParafrasePlagiat, applyImprovedText,
-    deleteAiHistoryEntry, clearAiHistory
-  } = useEditorAi(
-    language,
-    currentDocument,
-    citationLibrary,
-    activeReferenceIds,
-    setActiveSidebarTab,
-    editorJsRef,
-    setContentBeforeApply,
-    setIsApplied,
-    setSavedAt,
-    hydrated
-  );
 
 
   // Cancel pending save on switch or unmount
-  useEffect(() => {
-    return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-    };
-  }, [currentDocument?.id]);
 
   // Prevent closing the tab when save status is "Menyimpan..."
   useEffect(() => {
@@ -719,24 +638,6 @@ export function ScholarEditor() {
   }, [user]);
 
   // Load documents list from Supabase on start
-  useEffect(() => {
-    if (!hydrated || !user?.id) return;
-
-    const loadDocs = async () => {
-      try {
-        const list = await fetchDocuments(user.id);
-        setDocuments(list);
-        
-        // Do not auto-select or auto-create a document.
-        // Leave currentDocument as null to show the Dashboard first.
-        setCurrentDocument(null);
-      } catch (err) {
-        console.error('Error loading documents:', err);
-      }
-    };
-
-    void loadDocs();
-  }, [hydrated, user]);
 
   // Dynamic content renderer on switch
   useEffect(() => {

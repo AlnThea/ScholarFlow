@@ -301,7 +301,7 @@ export function generateWordHtml(
     }
   }
 
-  let bodyContent = \`<h1>\${title}</h1>\`;
+  let bodyContent = `<h1>${title}</h1>`;
 
   const cleanedBlocks: EditorBlock[] = [];
   for (let i = 0; i < blocks.length; i++) {
@@ -338,20 +338,20 @@ export function generateWordHtml(
         const level = block.data.level || 2;
         let alignStyle = '';
         if (block.id && alignments[block.id]) {
-          alignStyle = \` style="text-align: \${alignments[block.id]};"\`;
+          alignStyle = ` style="text-align: ${alignments[block.id]};"`;
         }
-        bodyContent += \`<h\${level}\${alignStyle}>\${processTextHtml(block.data.text || '')}</h\${level}>\`;
+        bodyContent += `<h${level}${alignStyle}>${processTextHtml(block.data.text || '')}</h${level}>`;
         break;
       }
       case 'list': {
         const tag = block.data.style === 'ordered' ? 'ol' : 'ul';
-        bodyContent += \`<\${tag}>\`;
+        bodyContent += `<${tag}>`;
         if (block.data.items) {
           block.data.items.forEach((item) => {
-            bodyContent += \`<li>\${processTextHtml(item)}</li>\`;
+            bodyContent += `<li>${processTextHtml(item)}</li>`;
           });
         }
-        bodyContent += \`</\${tag}>\`;
+        bodyContent += `</${tag}>`;
         break;
       }
       case 'table': {
@@ -362,9 +362,9 @@ export function generateWordHtml(
             row.forEach((cell) => {
               const cleanCell = processTextHtml(cell);
               if (rIndex === 0) {
-                bodyContent += \`<th>\${cleanCell}</th>\`;
+                bodyContent += `<th>${cleanCell}</th>`;
               } else {
-                bodyContent += \`<td>\${cleanCell}</td>\`;
+                bodyContent += `<td>${cleanCell}</td>`;
               }
             });
             bodyContent += '</tr>';
@@ -377,12 +377,12 @@ export function generateWordHtml(
         const url = block.data.file?.url || block.data.url || '';
         const caption = block.data.caption || '';
         if (url) {
-          bodyContent += \`
+          bodyContent += `
             <div class="document-image-container">
-              <img class="document-image" src="\${url}" alt="\${caption}" />
-              \${caption ? \`<div class="image-caption">\${caption}</div>\` : ''}
+              <img class="document-image" src="${url}" alt="${caption}" />
+              ${caption ? `<div class="image-caption">${caption}</div>` : ''}
             </div>
-          \`;
+          `;
         }
         break;
       }
@@ -393,9 +393,9 @@ export function generateWordHtml(
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
-          bodyContent += \`
-            <pre style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-left: 4px solid #6c757d; padding: 10px; font-family: 'Courier New', Courier, monospace; font-size: 10pt; line-height: 1.2; white-space: pre-wrap; margin-top: 12pt; margin-bottom: 12pt;">\${escapedCode}</pre>
-          \`;
+          bodyContent += `
+            <pre style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-left: 4px solid #6c757d; padding: 10px; font-family: 'Courier New', Courier, monospace; font-size: 10pt; line-height: 1.2; white-space: pre-wrap; margin-top: 12pt; margin-bottom: 12pt;">${escapedCode}</pre>
+          `;
         }
         break;
       }
@@ -403,12 +403,12 @@ export function generateWordHtml(
         const formula = block.data.formula || '';
         if (formula) {
           const encodedFormula = encodeURIComponent(formula);
-          const url = \`https://latex.codecogs.com/png.image?\\dpi{150}\\bg{white}\${encodedFormula}\`;
-          bodyContent += \`
+          const url = `https://latex.codecogs.com/png.image?\\dpi{150}\\bg{white}${encodedFormula}`;
+          bodyContent += `
             <div class="math-block" style="text-align: center; margin: 12pt 0;">
-              <img src="\${url}" alt="\${formula}" />
+              <img src="${url}" alt="${formula}" />
             </div>
-          \`;
+          `;
         }
         break;
       }
@@ -416,9 +416,9 @@ export function generateWordHtml(
       default: {
         let alignStyle = '';
         if (block.id && alignments[block.id]) {
-          alignStyle = \` style="text-align: \${alignments[block.id]};"\`;
+          alignStyle = ` style="text-align: ${alignments[block.id]};"`;
         }
-        bodyContent += \`<p\${alignStyle}>\${processTextHtml(block.data.text || '')}</p>\`;
+        bodyContent += `<p${alignStyle}>${processTextHtml(block.data.text || '')}</p>`;
         break;
       }
     }
@@ -426,14 +426,14 @@ export function generateWordHtml(
 
   if (bibliography && bibliography.length > 0) {
     const bibTitle = language === 'en' ? 'REFERENCES' : 'DAFTAR PUSTAKA';
-    bodyContent += \`<div class="bibliography-title">\${bibTitle}</div>\`;
+    bodyContent += `<div class="bibliography-title">${bibTitle}</div>`;
     bibliography.forEach((entry) => {
-      const cleanEntry = entry.replace(/<\\/?(?!i\\b)[^>]+(>|$)/g, '');
-      bodyContent += \`<div class="bibliography-entry">\${cleanEntry}</div>\`;
+      const cleanEntry = entry.replace(/<\/?(?!i\b)[^>]+(>|$)/g, '');
+      bodyContent += `<div class="bibliography-entry">${cleanEntry}</div>`;
     });
   }
 
-  return \`\${htmlHeader}\${bodyContent}\${htmlFooter}\`;
+  return `${htmlHeader}${bodyContent}${htmlFooter}`;
 }
 
 export async function generateWordMhtml(
@@ -454,7 +454,7 @@ export async function generateWordMhtml(
     }
   }
 
-  let bodyContent = \`<h1>\${title}</h1>\`;
+  let bodyContent = `<h1>${title}</h1>`;
   
   const attachedImages: Array<{
     location: string;
@@ -475,12 +475,12 @@ export async function generateWordMhtml(
       for (const span of Array.from(mathSpans)) {
         const formula = span.getAttribute('data-formula') || '';
         const encodedFormula = encodeURIComponent(formula);
-        const url = \`https://latex.codecogs.com/png.image?\\dpi{110}\\bg{white}\${encodedFormula}\`;
+        const url = `https://latex.codecogs.com/png.image?\\dpi{110}\\bg{white}${encodedFormula}`;
         
         const imgData = await getBase64FromUrl(url);
         if (imgData) {
           const ext = 'png';
-          const location = \`file:///C:/inline_math_\${imageCounter}.\${ext}\`;
+          const location = `file:///C:/inline_math_${imageCounter}.${ext}`;
           attachedImages.push({
             location,
             mimeType: imgData.mimeType,
@@ -519,7 +519,7 @@ export async function generateWordMhtml(
         }
         
         const spanEl = document.createElement('span');
-        spanEl.setAttribute('style', \`background-color: \${bgColor};\`);
+        spanEl.setAttribute('style', `background-color: ${bgColor};`);
         
         while (mark.firstChild) {
           spanEl.appendChild(mark.firstChild);
@@ -569,20 +569,20 @@ export async function generateWordMhtml(
         const level = block.data.level || 2;
         let alignStyle = '';
         if (block.id && alignments[block.id]) {
-          alignStyle = \` style="text-align: \${alignments[block.id]};"\`;
+          alignStyle = ` style="text-align: ${alignments[block.id]};"`;
         }
-        bodyContent += \`<h\${level}\${alignStyle}>\${await processTextHtmlMhtml(block.data.text || '')}</h\${level}>\`;
+        bodyContent += `<h${level}${alignStyle}>${await processTextHtmlMhtml(block.data.text || '')}</h${level}>`;
         break;
       }
       case 'list': {
         const tag = block.data.style === 'ordered' ? 'ol' : 'ul';
-        bodyContent += \`<\${tag}>\`;
+        bodyContent += `<${tag}>`;
         if (block.data.items) {
           for (const item of block.data.items) {
-            bodyContent += \`<li>\${await processTextHtmlMhtml(item)}</li>\`;
+            bodyContent += `<li>${await processTextHtmlMhtml(item)}</li>`;
           }
         }
-        bodyContent += \`</\${tag}>\`;
+        bodyContent += `</${tag}>`;
         break;
       }
       case 'table': {
@@ -594,9 +594,9 @@ export async function generateWordMhtml(
             for (const cell of row) {
               const cleanCell = await processTextHtmlMhtml(cell);
               if (rIndex === 0) {
-                bodyContent += \`<th>\${cleanCell}</th>\`;
+                bodyContent += `<th>${cleanCell}</th>`;
               } else {
-                bodyContent += \`<td>\${cleanCell}</td>\`;
+                bodyContent += `<td>${cleanCell}</td>`;
               }
             }
             bodyContent += '</tr>';
@@ -612,7 +612,7 @@ export async function generateWordMhtml(
           const imgData = await getBase64FromUrl(url);
           if (imgData) {
             const ext = imgData.mimeType.split('/')[1] || 'png';
-            const location = \`file:///C:/image_\${imageCounter}.\${ext}\`;
+            const location = `file:///C:/image_${imageCounter}.${ext}`;
             attachedImages.push({
               location,
               mimeType: imgData.mimeType,
@@ -624,15 +624,15 @@ export async function generateWordMhtml(
             const dims = getImageDimensions(imgData.base64Data, imgData.mimeType);
             if (dims && dims.width > 0) {
               const calculatedHeight = Math.round(576 * (dims.height / dims.width));
-              heightAttr = \`height="\${calculatedHeight}"\`;
+              heightAttr = `height="${calculatedHeight}"`;
             }
 
-            bodyContent += \`
+            bodyContent += `
               <div class="document-image-container">
-                <img class="document-image" src="\${location}" alt="\${caption}" width="576" \${heightAttr} style="max-width: 100%; height: auto;" />
-                \${caption ? \`<div class="image-caption">\${caption}</div>\` : ''}
+                <img class="document-image" src="${location}" alt="${caption}" width="576" ${heightAttr} style="max-width: 100%; height: auto;" />
+                ${caption ? `<div class="image-caption">${caption}</div>` : ''}
               </div>
-            \`;
+            `;
           } else {
             let heightAttr = '';
             if (url.startsWith('data:')) {
@@ -643,16 +643,16 @@ export async function generateWordMhtml(
                 const dims = getImageDimensions(base64Data, mimeType);
                 if (dims && dims.width > 0) {
                   const calculatedHeight = Math.round(576 * (dims.height / dims.width));
-                  heightAttr = \`height="\${calculatedHeight}"\`;
+                  heightAttr = `height="${calculatedHeight}"`;
                 }
               }
             }
-            bodyContent += \`
+            bodyContent += `
               <div class="document-image-container">
-                <img class="document-image" src="\${url}" alt="\${caption}" width="576" \${heightAttr} style="max-width: 100%; height: auto;" />
-                \${caption ? \`<div class="image-caption">\${caption}</div>\` : ''}
+                <img class="document-image" src="${url}" alt="${caption}" width="576" ${heightAttr} style="max-width: 100%; height: auto;" />
+                ${caption ? `<div class="image-caption">${caption}</div>` : ''}
               </div>
-            \`;
+            `;
           }
         }
         break;
@@ -664,9 +664,9 @@ export async function generateWordMhtml(
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
-          bodyContent += \`
-            <pre style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-left: 4px solid #6c757d; padding: 10px; font-family: 'Courier New', Courier, monospace; font-size: 10pt; line-height: 1.2; white-space: pre-wrap; margin-top: 12pt; margin-bottom: 12pt;">\${escapedCode}</pre>
-          \`;
+          bodyContent += `
+            <pre style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-left: 4px solid #6c757d; padding: 10px; font-family: 'Courier New', Courier, monospace; font-size: 10pt; line-height: 1.2; white-space: pre-wrap; margin-top: 12pt; margin-bottom: 12pt;">${escapedCode}</pre>
+          `;
         }
         break;
       }
@@ -674,12 +674,12 @@ export async function generateWordMhtml(
         const formula = block.data.formula || '';
         if (formula) {
           const encodedFormula = encodeURIComponent(formula);
-          const url = \`https://latex.codecogs.com/png.image?\\dpi{150}\\bg{white}\${encodedFormula}\`;
+          const url = `https://latex.codecogs.com/png.image?\\dpi{150}\\bg{white}${encodedFormula}`;
           
           const imgData = await getBase64FromUrl(url);
           if (imgData) {
             const ext = 'png';
-            const location = \`file:///C:/math_\${imageCounter}.\${ext}\`;
+            const location = `file:///C:/math_${imageCounter}.${ext}`;
             attachedImages.push({
               location,
               mimeType: imgData.mimeType,
@@ -692,24 +692,24 @@ export async function generateWordMhtml(
             if (dims && dims.width > 0) {
               const width = Math.min(dims.width, 576);
               const height = Math.round(width * (dims.height / dims.width));
-              bodyContent += \`
+              bodyContent += `
                 <div class="math-block" style="text-align: center; margin: 12pt 0;">
-                  <img src="\${location}" width="\${width}" height="\${height}" alt="\${formula}" />
+                  <img src="${location}" width="${width}" height="${height}" alt="${formula}" />
                 </div>
-              \`;
+              `;
             } else {
-              bodyContent += \`
+              bodyContent += `
                 <div class="math-block" style="text-align: center; margin: 12pt 0;">
-                  <img src="\${location}" alt="\${formula}" />
+                  <img src="${location}" alt="${formula}" />
                 </div>
-              \`;
+              `;
             }
           } else {
-            bodyContent += \`
+            bodyContent += `
               <div class="math-block" style="text-align: center; margin: 12pt 0;">
-                <img src="\${url}" alt="\${formula}" />
+                <img src="${url}" alt="${formula}" />
               </div>
-            \`;
+            `;
           }
         }
         break;
@@ -718,9 +718,9 @@ export async function generateWordMhtml(
       default: {
         let alignStyle = '';
         if (block.id && alignments[block.id]) {
-          alignStyle = \` style="text-align: \${alignments[block.id]};"\`;
+          alignStyle = ` style="text-align: ${alignments[block.id]};"`;
         }
-        bodyContent += \`<p\${alignStyle}>\${await processTextHtmlMhtml(block.data.text || '')}</p>\`;
+        bodyContent += `<p${alignStyle}>${await processTextHtmlMhtml(block.data.text || '')}</p>`;
         break;
       }
     }
@@ -728,34 +728,34 @@ export async function generateWordMhtml(
 
   if (bibliography && bibliography.length > 0) {
     const bibTitle = language === 'en' ? 'REFERENCES' : 'DAFTAR PUSTAKA';
-    bodyContent += \`<div class="bibliography-title">\${bibTitle}</div>\`;
+    bodyContent += `<div class="bibliography-title">${bibTitle}</div>`;
     for (const entry of bibliography) {
-      const cleanEntry = entry.replace(/<\\/?(?!i\\b)[^>]+(>|$)/g, '');
+      const cleanEntry = entry.replace(/<\/?(?!i\b)[^>]+(>|$)/g, '');
       const formattedEntry = await processTextHtmlMhtml(cleanEntry);
-      bodyContent += \`<div class="bibliography-entry">\${formattedEntry}</div>\`;
+      bodyContent += `<div class="bibliography-entry">${formattedEntry}</div>`;
     }
   }
 
-  const htmlContent = \`\${htmlHeader}\${bodyContent}\${htmlFooter}\`;
+  const htmlContent = `${htmlHeader}${bodyContent}${htmlFooter}`;
   
   const boundary = '----=_NextPart_ScholarFlow_Draft';
-  let mhtml = \`MIME-Version: 1.0\\r\\n\`;
-  mhtml += \`Content-Type: multipart/related; boundary="\${boundary}"; type="text/html"\\r\\n\\r\\n\`;
+  let mhtml = `MIME-Version: 1.0\\r\\n`;
+  mhtml += `Content-Type: multipart/related; boundary="${boundary}"; type="text/html"\\r\\n\\r\\n`;
 
-  mhtml += \`--\${boundary}\\r\\n\`;
-  mhtml += \`Content-Type: text/html; charset="utf-8"\\r\\n\`;
-  mhtml += \`Content-Location: file:///C:/document.html\\r\\n\\r\\n\`;
-  mhtml += htmlContent + \`\\r\\n\\r\\n\`;
+  mhtml += `--${boundary}\\r\\n`;
+  mhtml += `Content-Type: text/html; charset="utf-8"\\r\\n`;
+  mhtml += `Content-Location: file:///C:/document.html\\r\\n\\r\\n`;
+  mhtml += htmlContent + `\\r\\n\\r\\n`;
 
   for (const img of attachedImages) {
-    mhtml += \`--\${boundary}\\r\\n\`;
-    mhtml += \`Content-Type: \${img.mimeType}\\r\\n\`;
-    mhtml += \`Content-Transfer-Encoding: base64\\r\\n\`;
-    mhtml += \`Content-Location: \${img.location}\\r\\n\\r\\n\`;
-    mhtml += img.base64Data + \`\\r\\n\\r\\n\`;
+    mhtml += `--${boundary}\\r\\n`;
+    mhtml += `Content-Type: ${img.mimeType}\\r\\n`;
+    mhtml += `Content-Transfer-Encoding: base64\\r\\n`;
+    mhtml += `Content-Location: ${img.location}\\r\\n\\r\\n`;
+    mhtml += img.base64Data + `\\r\\n\\r\\n`;
   }
 
-  mhtml += \`--\${boundary}--\\r\\n\`;
+  mhtml += `--${boundary}--\\r\\n`;
 
   return mhtml;
 }

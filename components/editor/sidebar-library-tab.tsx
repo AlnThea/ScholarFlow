@@ -10,7 +10,7 @@ import { BurstinessChart } from './burstiness-chart';
 
 export const SidebarLibraryTab = (props: any) => {
   const {
-    selectedText, citationResults, citationHistory, wordCount, characterCount,
+    language, activePlanId, user, selectedText, citationResults, citationHistory, wordCount, characterCount,
     citationCount, bibliographyEntries, improvedText, isImproving, isSearchingCitations,
     aiError, citationError, citationNote, onApplyImprovedText, onImproveWriting,
     onParaphrase, onSummarize, onGenerateAbstract, onFindCitation, onRepeatCitationSearch,
@@ -32,10 +32,26 @@ export const SidebarLibraryTab = (props: any) => {
     t, getSourceLabel, formatHistoryLabel, ActionButton, PanelRow
   } = props;
 
+  const filteredCollections = React.useMemo(() => {
+    const q = (query || '').trim().toLowerCase();
+    let items = bibliographyEntries || [];
+
+    if (selectedFolderFilter !== 'all') {
+      items = items.filter(
+        (entry: any) => folderAssignments && folderAssignments[entry.referenceId] === selectedFolderFilter
+      );
+    }
+
+    if (!q) return items;
+    return items.filter((entry: any) => {
+      const haystack = `${entry.label} ${entry.formatted}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [bibliographyEntries, query, selectedFolderFilter, folderAssignments]);
+
   return (
     <>
-            {workspaceTab === 'library' ? (
-              <div className="space-y-4">
+      <div className="space-y-4">
                 <div className="relative">
                   <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
                   <input
@@ -217,6 +233,7 @@ export const SidebarLibraryTab = (props: any) => {
                     </div>
                   )}
                 </div>
+              </div>
     </>
   );
 };

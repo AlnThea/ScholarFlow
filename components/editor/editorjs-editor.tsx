@@ -7,6 +7,8 @@ import 'katex/dist/katex.min.css';
 
 import { MathBlockTool, InlineMathSanitizerTool, CitationSanitizerTool, CustomFormatsSanitizerTool, scrambleHtmlText } from '@/lib/editor/editor-tools';
 
+const ALIGNMENT_KEY = 'scholarflow.editorjs.alignments.v1';
+
 interface EditorJsEditorProps {
   initialContent?: any;
   readOnly?: boolean;
@@ -441,7 +443,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         let isWrapped = false;
 
         while (node && node.id !== holderId && node.tagName !== 'DIV') {
-          if (node.tagName === targetTag && (!className || node.classList.contains(className))) {
+          if (node.tagName === targetTag && (!className || className.split(' ').every(c => node.classList.contains(c)))) {
             isWrapped = true;
             break;
           }

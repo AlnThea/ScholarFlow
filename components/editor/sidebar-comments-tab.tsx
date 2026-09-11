@@ -10,7 +10,7 @@ import { BurstinessChart } from './burstiness-chart';
 
 export const SidebarCommentsTab = (props: any) => {
   const {
-    selectedText, citationResults, citationHistory, wordCount, characterCount,
+    language, activePlanId, user, selectedText, citationResults, citationHistory, wordCount, characterCount,
     citationCount, bibliographyEntries, improvedText, isImproving, isSearchingCitations,
     aiError, citationError, citationNote, onApplyImprovedText, onImproveWriting,
     onParaphrase, onSummarize, onGenerateAbstract, onFindCitation, onRepeatCitationSearch,
@@ -34,8 +34,7 @@ export const SidebarCommentsTab = (props: any) => {
 
   return (
     <>
-            ) : workspaceTab === 'comments' ? (
-              <div className="space-y-4 animate-fade-in font-sans text-slate-800">
+      <div className="space-y-4 animate-fade-in font-sans text-slate-800">
                 <div className="flex flex-col gap-1 text-left">
                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
                     {language === 'en' ? 'Document Comments' : 'Komentar Dokumen'}
@@ -347,9 +346,6 @@ export const SidebarCommentsTab = (props: any) => {
                   )}
                 </div>
               </div>
-            ) : (
-              <div className="text-xs text-slate-400 italic">Error Tab</div>
-            )}
     </>
   );
 };

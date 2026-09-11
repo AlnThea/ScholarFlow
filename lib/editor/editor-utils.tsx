@@ -1,7 +1,7 @@
 import React from 'react';
 
 
-function extractTextFromContent(content: any): string {
+export function extractTextFromContent(content: any): string {
   if (!content || !content.blocks || !Array.isArray(content.blocks)) return '';
   const texts: string[] = [];
   for (const block of content.blocks) {
@@ -25,13 +25,13 @@ function extractTextFromContent(content: any): string {
   return texts.join('\n\n');
 }
 
-function countWords(text: string) {
+export function countWords(text: string) {
   const trimmed = text.trim();
   if (!trimmed) return 0;
   return trimmed.split(/\s+/).filter(Boolean).length;
 }
 
-function downloadFile(filename: string, content: string, type: string) {
+export function downloadFile(filename: string, content: string, type: string) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
@@ -41,7 +41,7 @@ function downloadFile(filename: string, content: string, type: string) {
   URL.revokeObjectURL(url);
 }
 
-function findMostRelevantSentence(abstract: string | null | undefined, query: string): string {
+export function findMostRelevantSentence(abstract: string | null | undefined, query: string): string {
   if (!abstract) return "Abstrak tidak tersedia.";
   
   // Pre-process abstract to add spaces after periods if missing (e.g. "konvensional.Sistem" -> "konvensional. Sistem")
@@ -67,7 +67,7 @@ function findMostRelevantSentence(abstract: string | null | undefined, query: st
   return bestSentence;
 }
 
-function HighlightedAbstract({ abstract, query }: { abstract: string | null | undefined; query: string }) {
+export function HighlightedAbstract({ abstract, query }: { abstract: string | null | undefined; query: string }) {
   if (!abstract) return <p className="text-slate-400 italic text-xs">Abstrak tidak tersedia.</p>;
   
   // Pre-process abstract to add spaces after periods if missing
@@ -107,7 +107,7 @@ function HighlightedAbstract({ abstract, query }: { abstract: string | null | un
   );
 }
 
-function findMostUniqueWord(sentence: string): string {
+export function findMostUniqueWord(sentence: string): string {
   if (!sentence) return "";
   const words = sentence.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"'\[\]]/g, " ").split(/\s+/);
   const stopwords = new Set([
@@ -134,7 +134,7 @@ function findMostUniqueWord(sentence: string): string {
   return bestWord || words[0] || "";
 }
 
-const getContentComparisonString = (content: any): string => {
+export const getContentComparisonString = (content: any): string => {
   if (!content) return JSON.stringify([]);
   let parsed = content;
   if (typeof content === 'string') {

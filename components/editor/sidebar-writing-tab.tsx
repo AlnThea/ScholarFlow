@@ -10,7 +10,7 @@ import { BurstinessChart } from './burstiness-chart';
 
 export const SidebarWritingTab = (props: any) => {
   const {
-    selectedText, citationResults, citationHistory, wordCount, characterCount,
+    language, activePlanId, user, selectedText, citationResults, citationHistory, wordCount, characterCount,
     citationCount, bibliographyEntries, improvedText, isImproving, isSearchingCitations,
     aiError, citationError, citationNote, onApplyImprovedText, onImproveWriting,
     onParaphrase, onSummarize, onGenerateAbstract, onFindCitation, onRepeatCitationSearch,
@@ -32,10 +32,10 @@ export const SidebarWritingTab = (props: any) => {
     t, getSourceLabel, formatHistoryLabel, ActionButton, PanelRow
   } = props;
 
+  const hasImprovedText = improvedText !== null;
   return (
     <>
-            ) : workspaceTab === 'writing' ? (
-              <div className="space-y-3">
+      <div className="space-y-3">
                 <section className="rounded-lg border border-line bg-white p-3 shadow-sm">
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -89,7 +89,7 @@ export const SidebarWritingTab = (props: any) => {
                       label={isSearchingCitations ? 'Searching...' : 'Find Citation'}
                       description="Search verified metadata for the selected claim."
                       icon={isSearchingCitations ? IconLoader2 : IconSum}
-                      onClick={handleFindCitation}
+                      onClick={onFindCitation}
                       disabled={!selectedText.trim() || isSearchingCitations}
                     />
                     <ActionButton
@@ -161,6 +161,7 @@ export const SidebarWritingTab = (props: any) => {
                     </div>
                   ) : null}
                 </section>
+              </div>
     </>
   );
 };
