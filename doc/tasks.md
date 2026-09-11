@@ -28,10 +28,14 @@ Sesuai instruksi khusus: **Tidak boleh ada penghapusan fitur atau logika yang se
 - [x] Ekstrak logika dan state manajemen Modal Editor (Image, Math, Link, dll) ke `hooks/use-editor-modals.ts`.
 - [x] Pangkas ukuran file `editor-layout.tsx` dari 2400-an baris menjadi 1946 baris.
 
-## 🚀 PHASE 3: FINAL UI EXTRACTION (ONGOING)
-- [ ] Ekstrak komponen `MathHelperPanel` dari `editor-layout.tsx` (memangkas ~150 baris).
-- [ ] Ekstrak komponen `EditorBubbleMenu` dari `editor-layout.tsx` (memangkas ~600 baris).
-- [ ] Target Akhir: `editor-layout.tsx` harus mencapai < 700 baris.
+## 🚀 PHASE 3: FINAL UI EXTRACTION (COMPLETED)
+- [x] Ekstrak komponen `MathHelperPanel` dari `editor-layout.tsx` (memangkas ~150 baris).
+- [x] Ekstrak komponen `EditorBubbleMenu` dari `editor-layout.tsx` (memangkas ~600 baris).
+
+## 🌅 PHASE 4: FINAL PURGE (< 700 LINES TARGET) (UNTUK BESOK)
+- [ ] Ekstrak definisi tipe data (seperti `EditorLayoutProps` dkk) yang memakan ~120 baris ke file `types.ts` atau file interface khusus.
+- [ ] Ekstrak dan bungkus 16 deklarasi Modal JSX di bagian paling bawah `editor-layout.tsx` ke dalam satu komponen `<EditorModalsWrapper />` (memangkas ~150 baris).
+- [ ] Finalisasi `editor-layout.tsx` agar benar-benar berada di angka 700-an baris.
 
 ## 📝 TODO (BELUM DIMULAI)
 
