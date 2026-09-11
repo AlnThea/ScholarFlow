@@ -46,6 +46,13 @@ Always keep project documentation synchronized with implementation.
 Development & Build Rules:
 - Do NOT run `npm run build` unless absolutely necessary, because the user is running `npm run dev` and building may conflict or consume excessive resources.
 
+# Coding Standards & Architecture Rules
+
+- **File Length Limits**: 
+  - Standard child components (buttons, tabs, small modals): **Under 300 lines**.
+  - Complex orchestrator/parent components (like layouts or main pages): **Maximum 500-700 lines**.
+  - Do NOT create God Components exceeding 1,000 lines. If a file gets too big, refactor it by extracting UI (to modular components) and State/Logic (to custom hooks).
+
 # Stack
 
 Frontend:
