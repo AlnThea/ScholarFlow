@@ -17,7 +17,7 @@ Sesuai instruksi khusus: **Tidak boleh ada penghapusan fitur atau logika yang se
 - [x] Buat folder `components/editor/modals/` untuk menampung modal-modal yang ada.
 - [x] Pindahkan logika, props, dan state yang sesuai dari `editor-layout.tsx` ke file-file komponen baru tersebut.
 - [x] Impor dan gunakan komponen-komponen baru tersebut di dalam `editor-layout.tsx` untuk memangkas jumlah baris kode.
-- [ ] Verifikasi bahwa tidak ada fungsionalitas yang hilang (UI, State, Fungsi tetap berjalan normal).
+- [x] Verifikasi bahwa tidak ada fungsionalitas yang hilang (UI, State, Fungsi tetap berjalan normal).
 
 ---
 
