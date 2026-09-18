@@ -1,0 +1,1 @@
+const fs = require('fs'); let content = fs.readFileSync('lib/editor/word-html-generator.ts', 'utf8'); content = content.replace(/\\\\\/g, '\'); content = content.replace(/\\\\\$\\{/g, '\$\\{'); fs.writeFileSync('lib/editor/word-html-generator.ts', content); console.log('Done');

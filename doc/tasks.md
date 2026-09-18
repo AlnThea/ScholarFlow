@@ -32,10 +32,10 @@ Sesuai instruksi khusus: **Tidak boleh ada penghapusan fitur atau logika yang se
 - [x] Ekstrak komponen `MathHelperPanel` dari `editor-layout.tsx` (memangkas ~150 baris).
 - [x] Ekstrak komponen `EditorBubbleMenu` dari `editor-layout.tsx` (memangkas ~600 baris).
 
-## 🌅 PHASE 4: FINAL PURGE (< 700 LINES TARGET) (UNTUK BESOK)
-- [ ] Ekstrak definisi tipe data (seperti `EditorLayoutProps` dkk) yang memakan ~120 baris ke file `types.ts` atau file interface khusus.
-- [ ] Ekstrak dan bungkus 16 deklarasi Modal JSX di bagian paling bawah `editor-layout.tsx` ke dalam satu komponen `<EditorModalsWrapper />` (memangkas ~150 baris).
-- [ ] Finalisasi `editor-layout.tsx` agar benar-benar berada di angka 700-an baris.
+## 🌅 PHASE 4: FINAL PURGE (< 700 LINES TARGET) (COMPLETED)
+- [x] Ekstrak definisi tipe data (seperti `EditorLayoutProps` dkk) yang memakan ~120 baris ke file `types.ts` atau file interface khusus.
+- [x] Ekstrak dan bungkus 16 deklarasi Modal JSX di bagian paling bawah `editor-layout.tsx` ke dalam satu komponen `<EditorModalsWrapper />` (memangkas ~150 baris).
+- [x] Finalisasi `editor-layout.tsx` agar benar-benar berada di angka 700-an baris.
 
 ## 📝 TODO (BELUM DIMULAI)
 
@@ -48,18 +48,20 @@ Sesuai instruksi khusus: **Tidak boleh ada penghapusan fitur atau logika yang se
 - [x] Ekstrak fungsi-fungsi helper murni (200+ baris) ke lib/editor/editor-utils.tsx.
 - [x] *Ekstrak state management AI dan Dokumen ke Custom Hooks (use-editor-ai, use-editor-document).*
 
+## 📝 TODO (UNTUK SELANJUTNYA)
+
 ### 4. `components/editor/editorjs-editor.tsx` (2.136 baris)
-- [x] Ekstrak Custom EditorJS Tools (MathBlockTool, SanitizerTools) ke lib/editor/editor-tools.ts.
+- [ ] Ekstrak Custom EditorJS Tools (MathBlockTool, SanitizerTools) ke lib/editor/editor-tools.ts.
 
 ### 5. `components/editor/editor-sidebar.tsx` (1.446 baris)
-- [x] Mengekstrak 4 sub-panel (Library, Writing, Document, Comments) ke komponen modular masing-masing.
+- [ ] Mengekstrak 4 sub-panel (Library, Writing, Document, Comments) ke komponen modular masing-masing.
 
 
 ### 6. `components/editor/minimal-sidebar.tsx` (1.384 baris)
-- [x] *Ekstrak helper navigasi atau UI untuk mode Zen / mode minimalis.*
+- [ ] *Ekstrak helper navigasi atau UI untuk mode Zen / mode minimalis.*
 
 ### 7. `lib/editor/citation-export-word.ts` (1.041 baris)
-- [x] *Pisahkan proses penyiapan HTML (HTML parser) dari generator MHTML/Blob final.*
+- [ ] *Pisahkan proses penyiapan HTML (HTML parser) dari generator MHTML/Blob final.*
 
 ### 8. `components/editor/document-setup-modal.tsx` (839 baris)
-- [x] *Pecah masing-masing "step" wizard (Step 1, Step 2, Step 3) ke dalam komponen view terpisah.*
+- [ ] *Pecah masing-masing "step" wizard (Step 1, Step 2, Step 3) ke dalam komponen view terpisah.*

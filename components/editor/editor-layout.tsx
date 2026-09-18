@@ -1,6 +1,7 @@
 // c:/web/ScholarFlow/components/editor/editor-layout.tsx
 'use client';
 
+import { EditorModalsWrapper } from './editor-modals-wrapper';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
@@ -13,16 +14,6 @@ import { DashboardView } from './dashboard-view';
 import { MathHelperPanel } from './math-helper-panel';
 import { EditorBubbleMenu } from './editor-bubble-menu';
 import { EditorJsToolbar } from './editorjs-toolbar';
-import { ImageModal } from './modals/image-modal';
-import { MathModal } from './modals/math-modal';
-import { LinkModal } from './modals/link-modal';
-import { HighlightPopover } from './modals/highlight-popover';
-import { SuggestionModal } from './modals/suggestion-modal';
-import { AlertModal } from './modals/alert-modal';
-import { ProviderModal } from './modals/provider-modal';
-import { ModelModal } from './modals/model-modal';
-import { PlanModal } from './modals/plan-modal';
-import { ExportUpgradeModal } from './modals/export-upgrade-modal';
 import { addSuggestion } from '@/lib/api/suggestions';
 import 'katex/dist/katex.min.css';
 import {
@@ -93,10 +84,6 @@ import type { BibliographyEntry } from '@/lib/editor/bibliography';
 import type { DocumentListItem, DocumentEntry } from '@/lib/api/documents';
 import dynamic from 'next/dynamic';
 
-const PricingModal = dynamic(() => import('./pricing-modal').then((mod) => mod.PricingModal), { ssr: false });
-const ShareDocumentModal = dynamic(() => import('./share-document-modal').then((mod) => mod.ShareDocumentModal), { ssr: false });
-const BackendSettingsModal = dynamic(() => import('./backend-settings-modal').then((mod) => mod.BackendSettingsModal), { ssr: false });
-const HelpModal = dynamic(() => import('./help-modal').then((mod) => mod.HelpModal), { ssr: false });
 import { exportToWordFile, exportToPdfFile } from '@/lib/editor/citation-export-word';
 
 
@@ -108,123 +95,8 @@ import { createNotification, type DocumentNotification } from '@/lib/api/comment
 import { type UserPresence } from '@/lib/api/presence';
 
 
-type EditorLayoutProps = {
-  selectedText: string;
-  citationResults: CitationCandidate[];
-  citationHistory: CitationHistoryEntry[];
-  wordCount: number;
-  characterCount: number;
-  citationCount: number;
-  bibliographyEntries: BibliographyEntry[];
-  improvedText: ImproveWritingResponse | null;
-  isImproving: boolean;
-  isSearchingCitations: boolean;
-  aiError: string | null;
-  citationError: string | null;
-  citationNote: string | null;
-  onApplyImprovedText: () => void;
-  onImproveWriting: () => void;
-  onParaphrase: () => void;
-  onSummarize: () => void;
-  onGenerateAbstract: () => void;
-  onFindCitation: () => void;
-  onRepeatCitationSearch: (query: string) => void;
-  onInsertCitation: () => void;
-  onInsertBibliography: () => void;
-  onInsertImageSample: () => void;
-  onExportBibliographyText: () => void;
-  onExportBibliographyJson: () => void;
-  onExportBibliographyBibtex: () => void;
-  onExportBibliographyRis: () => void;
-  onInsertCitationCandidate: (candidate: CitationCandidate, skipEditorInsert?: boolean) => void;
-  statusLabel: string;
-  onSelectionChange?: (text: string) => void;
-  onStatsChange?: (stats: { wordCount: number; characterCount: number; citationCount: number }) => void;
-  editorJsRef: React.RefObject<EditorJsMethods | null>;
-  onCiteClick?: (refId: string, label: string, citedSentence: string) => void;
-  activePdfUrl: string | null;
-  activePdfSearchTerm: string;
-  onClosePdf: () => void;
-
-  // Document system props
-  documents: DocumentListItem[];
-  currentDocument: DocumentEntry | null;
-  onSelectDocument: (id: string) => void;
-  onCreateDocument: () => void;
-  onDeleteDocument: (id: string) => void;
-  onRenameDocument: (title: string) => void;
-  onContentChange?: (content: any) => void;
-  selectedAiModel: string;
-  setSelectedAiModel: (model: string) => void;
-  selectedAiTone: string;
-  setSelectedAiTone: (tone: string) => void;
-  aiModels: AIModel[];
-  onUpdateAIModel: (id: string, updates: Partial<AIModel>) => Promise<void>;
-  onCreateAIModel: (model: Omit<AIModel, 'updated_at'>) => Promise<void>;
-  onDeleteAIModel: (id: string) => Promise<void>;
-  aiProviders?: AIProvider[];
-  onUpdateAIProvider?: (id: string, updates: Partial<AIProvider>) => Promise<void>;
-  onCreateAIProvider?: (provider: Omit<AIProvider, 'updated_at'>) => Promise<void>;
-  onDeleteAIProvider?: (id: string) => Promise<void>;
-  onParafrasePlagiat?: (sentence: string) => void;
-  isSynthesizing: boolean;
-  synthesizedText: string | null;
-  synthesizeError: string | null;
-  synthesizeDisclaimer: string | null;
-  onSynthesizeReview: () => void;
-  onInsertSynthesizedText: (text: string) => void;
-
-  // Final features props
-  citationStyle: string;
-  onChangeCitationStyle: (style: string) => void;
-  folders: string[];
-  folderAssignments: Record<string, string>;
-  onCreateFolder: (name: string) => void;
-  onAssignFolder: (referenceId: string, folderName: string) => void;
-
-  // AI response history props
-  aiHistory: AiHistoryEntry[];
-  onDeleteAiHistoryEntry: (id: string) => void;
-  onClearAiHistory: () => void;
-  isApplied: boolean;
-  onOpenSettings?: () => void;
-  onSaveSettings?: (settings: any) => void;
-  onAlignmentChange?: (align: string) => void;
-  notifications?: DocumentNotification[];
-  onMarkNotificationRead?: (id: string) => void;
-  onMarkAllNotificationsRead?: () => void;
-  onNotificationClick?: (notif: DocumentNotification) => void;
-  comments?: any[];
-  suggestions?: any[];
-  activeUsers?: UserPresence[];
-  onAcceptSuggestion?: (id: string) => void;
-  onRejectSuggestion?: (id: string) => void;
-  onResolveComment?: (id: string) => void;
-  onCommentClick?: (comment: any) => void;
-  activeSidebarTab?: 'library' | 'writing' | 'document' | 'comments';
-};
-
-function findMostRelevantSentence(abstract: string | null | undefined, query: string): string {
-  if (!abstract) return "Abstrak tidak tersedia.";
-  const sentences = abstract.split(/(?<=[.!?])\s+/);
-  if (sentences.length <= 1) return abstract;
-  const queryWords = new Set(query.toLowerCase().match(/[a-z0-9]+/g) ?? []);
-  if (queryWords.size === 0) return sentences[0];
-  let bestSentence = sentences[0];
-  let maxOverlap = -1;
-  for (const sentence of sentences) {
-    const sentenceWords = new Set(sentence.toLowerCase().match(/[a-z0-9]+/g) ?? []);
-    let overlap = 0;
-    for (const word of sentenceWords) {
-      if (queryWords.has(word)) overlap++;
-    }
-    if (overlap > maxOverlap) {
-      maxOverlap = overlap;
-      bestSentence = sentence;
-    }
-  }
-  return bestSentence;
-}
+import type { EditorLayoutProps } from './types';
+import { findMostRelevantSentence } from '@/lib/editor/editor-utils';
 
 
 
@@ -1069,152 +941,90 @@ export function EditorLayout({
           </div>
         </div>
       )}
-      <PricingModal
-        isOpen={isPricingOpen}
-        onClose={() => setIsPricingOpen(false)}
-      />
-      <ShareDocumentModal
-        isOpen={isShareOpen}
-        onClose={() => setIsShareOpen(false)}
-        activePlanId={activePlanId}
-        role={role}
-        documentId={currentDocument?.id}
-        documentTitle={currentDocument?.title}
-        settings={currentDocument?.settings}
-        onSaveSettings={onSaveSettings}
-      />
-      <ExportUpgradeModal
-        isOpen={mounted && isExportUpgradeModalOpen}
-        onClose={() => setIsExportUpgradeModalOpen(false)}
-        onUpgrade={() => setIsPricingOpen(true)}
-        language={language}
-      />
-      <ImageModal
-        isOpen={mounted && isImageModalOpen}
-        onClose={() => setIsImageModalOpen(false)}
-        imageUrlInput={imageUrlInput}
-        setImageUrlInput={setImageUrlInput}
-        onConfirm={handleInsertImageConfirm}
-      />
-      <MathModal
-        isOpen={mounted && isMathModalOpen}
-        onClose={() => {
-          setIsMathModalOpen(false);
-          setEditingMathCallback(null);
-          setMathFormulaInput('');
-        }}
-        mathFormulaInput={mathFormulaInput}
-        setMathFormulaInput={setMathFormulaInput}
-        onConfirm={handleInsertMathConfirm}
-        isEditing={!!editingMathCallback}
-      />
-      <LinkModal
-        isOpen={mounted && isLinkModalOpen}
-        onClose={() => {
-          setIsLinkModalOpen(false);
-          setInsertLinkCallback(null);
-          setLinkUrlInput('');
-        }}
-        linkUrlInput={linkUrlInput}
-        setLinkUrlInput={setLinkUrlInput}
-        onConfirm={handleInsertLinkConfirm}
-        onUnlink={handleUnlinkConfirm}
-        isEditing={!!insertLinkCallback?.unlink}
-        language={language}
-      />
-      <HighlightPopover
-        isOpen={mounted && showHighlightPopover}
-        onClose={() => {
-          setShowHighlightPopover(false);
-          setHighlightPopoverRect(null);
-          setHighlightTriggerSource(null);
-        }}
-        popoverRect={highlightPopoverRect}
-        onApplyHighlight={handleApplyHighlight}
-        language={language}
-      />
-      <PlanModal
-        isOpen={mounted && isPlanModalOpen}
-        onClose={() => setIsPlanModalOpen(false)}
-        selectedPlanForModal={selectedPlanForModal}
-        modalPlanState={modalPlanState}
-        setModalPlanState={setModalPlanState}
-        handleSaveModalPlan={handleSaveModalPlan}
-        savingPlanId={savingPlanId}
-      />
-      <ModelModal
-        isOpen={mounted && isModelModalOpen}
-        onClose={() => setIsModelModalOpen(false)}
-        isEn={isEn}
-        selectedModelForModal={selectedModelForModal}
-        modalModelState={modalModelState}
-        setModalModelState={setModalModelState}
-        aiProviders={aiProviders}
-        DEFAULT_PROVIDERS={DEFAULT_PROVIDERS}
-        handleOpenCreateProviderModal={handleOpenCreateProviderModal}
-        handleOpenEditProviderModal={handleOpenEditProviderModal}
-        handleTestModelConnection={handleTestModelConnection}
-        testingModelId={testingModelId}
-        handleSaveModalModel={handleSaveModalModel}
-        savingModelId={savingModelId}
-      />
-      <ProviderModal
-        isOpen={mounted && isProviderModalOpen}
-        onClose={() => setIsProviderModalOpen(false)}
-        isEn={isEn}
-        selectedProviderForModal={selectedProviderForModal}
-        modalProviderState={modalProviderState}
-        setModalProviderState={setModalProviderState}
-        handleSaveModalProvider={handleSaveModalProvider}
-      />
-      {/* Modal Usulan Perubahan (Mode Sugesti / Track Changes) */}
-      <SuggestionModal
-        isOpen={isSuggestionModalOpen}
-        onClose={() => setIsSuggestionModalOpen(false)}
-        selectedText={selectedTextForSuggestion}
-        newText={newTextForSuggestion}
-        setNewText={setNewTextForSuggestion}
-        onConfirm={() => {
-          const sugId = `sug-${Date.now()}`;
-          const authorName = profile?.full_name || user?.email?.split('@')[0] || 'Collaborator';
-          editorJsRef.current?.addSuggestionMark?.(sugId, selectedTextForSuggestion, newTextForSuggestion, authorName);
-          if (currentDocument?.id) {
-            addSuggestion(currentDocument.id, selectedTextForSuggestion, newTextForSuggestion, authorName, sugId, user?.id);
-            if (activeUsers && activeUsers.length > 0) {
-              activeUsers.filter(u => u.user_id && u.user_id !== user?.id).forEach(coUser => {
-                createNotification(
-                  currentDocument.id,
-                  coUser.user_id,
-                  authorName,
-                  language === 'en'
-                    ? `proposed a suggestion: "${(newTextForSuggestion || selectedTextForSuggestion).slice(0, 30)}${(newTextForSuggestion || selectedTextForSuggestion).length > 30 ? '...' : ''}"`
-                    : `mengusulkan perubahan: "${(newTextForSuggestion || selectedTextForSuggestion).slice(0, 30)}${(newTextForSuggestion || selectedTextForSuggestion).length > 30 ? '...' : ''}"`
-                );
-              });
-            }
-          }
-          setIsSuggestionModalOpen(false);
-        }}
-        language={language}
-      />
-
-      {/* Custom React Alert & Confirm Modal Portal */}
-      <AlertModal
-        state={mounted && alertModalState && alertModalState.isOpen ? alertModalState : null}
-        onClose={() => setAlertModalState(null)}
-      />
-
-      {/* Backend & Database Provider Architecture Modal */}
-      <BackendSettingsModal
-        isOpen={isBackendModalOpen}
-        onClose={() => setIsBackendModalOpen(false)}
-        onToast={(msg) => setMathToast(msg)}
-      />
-
-      {/* Interactive Help & Documentation Modal */}
-      <HelpModal
-        isOpen={isHelpOpen}
-        onClose={() => setIsHelpOpen(false)}
+      <EditorModalsWrapper
+          isPricingOpen={isPricingOpen}
+          setIsPricingOpen={setIsPricingOpen}
+          isShareOpen={isShareOpen}
+          setIsShareOpen={setIsShareOpen}
+          activePlanId={activePlanId}
+          role={role}
+          currentDocument={currentDocument}
+          onSaveSettings={onSaveSettings}
+          mounted={mounted}
+          isExportUpgradeModalOpen={isExportUpgradeModalOpen}
+          setIsExportUpgradeModalOpen={setIsExportUpgradeModalOpen}
+          language={language}
+          isImageModalOpen={isImageModalOpen}
+          setIsImageModalOpen={setIsImageModalOpen}
+          imageUrlInput={imageUrlInput}
+          setImageUrlInput={setImageUrlInput}
+          handleInsertImageConfirm={handleInsertImageConfirm}
+          isMathModalOpen={isMathModalOpen}
+          setIsMathModalOpen={setIsMathModalOpen}
+          setEditingMathCallback={setEditingMathCallback}
+          setMathFormulaInput={setMathFormulaInput}
+          mathFormulaInput={mathFormulaInput}
+          handleInsertMathConfirm={handleInsertMathConfirm}
+          editingMathCallback={editingMathCallback}
+          isLinkModalOpen={isLinkModalOpen}
+          setIsLinkModalOpen={setIsLinkModalOpen}
+          setInsertLinkCallback={setInsertLinkCallback}
+          setLinkUrlInput={setLinkUrlInput}
+          linkUrlInput={linkUrlInput}
+          handleInsertLinkConfirm={handleInsertLinkConfirm}
+          handleUnlinkConfirm={handleUnlinkConfirm}
+          insertLinkCallback={insertLinkCallback}
+          showHighlightPopover={showHighlightPopover}
+          setShowHighlightPopover={setShowHighlightPopover}
+          setHighlightPopoverRect={setHighlightPopoverRect}
+          setHighlightTriggerSource={setHighlightTriggerSource}
+          highlightPopoverRect={highlightPopoverRect}
+          handleApplyHighlight={handleApplyHighlight}
+          isPlanModalOpen={isPlanModalOpen}
+          setIsPlanModalOpen={setIsPlanModalOpen}
+          selectedPlanForModal={selectedPlanForModal}
+          modalPlanState={modalPlanState}
+          setModalPlanState={setModalPlanState}
+          handleSaveModalPlan={handleSaveModalPlan}
+          savingPlanId={savingPlanId}
+          isModelModalOpen={isModelModalOpen}
+          setIsModelModalOpen={setIsModelModalOpen}
+          isEn={isEn}
+          selectedModelForModal={selectedModelForModal}
+          modalModelState={modalModelState}
+          setModalModelState={setModalModelState}
+          aiProviders={aiProviders}
+          DEFAULT_PROVIDERS={DEFAULT_PROVIDERS}
+          handleOpenCreateProviderModal={handleOpenCreateProviderModal}
+          handleOpenEditProviderModal={handleOpenEditProviderModal}
+          handleTestModelConnection={handleTestModelConnection}
+          testingModelId={testingModelId}
+          handleSaveModalModel={handleSaveModalModel}
+          savingModelId={savingModelId}
+          isProviderModalOpen={isProviderModalOpen}
+          setIsProviderModalOpen={setIsProviderModalOpen}
+          selectedProviderForModal={selectedProviderForModal}
+          modalProviderState={modalProviderState}
+          setModalProviderState={setModalProviderState}
+          handleSaveModalProvider={handleSaveModalProvider}
+          isSuggestionModalOpen={isSuggestionModalOpen}
+          setIsSuggestionModalOpen={setIsSuggestionModalOpen}
+          selectedTextForSuggestion={selectedTextForSuggestion}
+          newTextForSuggestion={newTextForSuggestion}
+          setNewTextForSuggestion={setNewTextForSuggestion}
+          profile={profile}
+          user={user}
+          editorJsRef={editorJsRef}
+          addSuggestion={addSuggestion}
+          activeUsers={activeUsers}
+          createNotification={createNotification}
+          alertModalState={alertModalState}
+          setAlertModalState={setAlertModalState}
+          isBackendModalOpen={isBackendModalOpen}
+          setIsBackendModalOpen={setIsBackendModalOpen}
+          setMathToast={setMathToast}
+          isHelpOpen={isHelpOpen}
+          setIsHelpOpen={setIsHelpOpen}
       />
     </div>
   );

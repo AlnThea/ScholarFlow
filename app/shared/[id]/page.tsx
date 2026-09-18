@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import { fetchSharedDocument, updateSharedDocument, type DocumentEntry } from '@/lib/api/documents';
 import { fetchComments, addComment, createNotification, isValidUuid } from '@/lib/api/comments';
 import { fetchCitationLibrary } from '@/lib/api/citation-library';
+import { useSharedDocumentSync } from '@/hooks/use-shared-document-sync';
 import { updatePresence, fetchActivePresence, leavePresence, type UserPresence } from '@/lib/api/presence';
 import { fetchSuggestions, addSuggestion, updateSuggestionStatus, DocumentSuggestion } from '@/lib/api/suggestions';
 import { formatBibliographyCandidate } from '@/lib/editor/bibliography';
@@ -60,6 +61,7 @@ import {
 
 export default function SharedDocumentPage() {
   const { user, profile } = useAuth();
+  const role = profile?.role ?? 'user';
   const params = useParams();
   const rawId = params?.id as string | undefined;
 
@@ -69,15 +71,20 @@ export default function SharedDocumentPage() {
     return rawId.startsWith('doc-') ? rawId.substring(4) : rawId;
   }, [rawId]);
 
-  const [document, setDocument] = useState<DocumentEntry | null>(null);
-  const language = document?.settings?.citationLocale?.startsWith('id') ? 'id' : 'en';
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Editor states
+
+  // Hook for Document Synchronization
+  const {
+    document, setDocument, loading, error, saveStatus, setSaveStatus,
+    citationLibrary, comments, setComments, suggestions, setSuggestions,
+    activeUsers, hasPendingRemoteUpdate, setHasPendingRemoteUpdate,
+    pendingRemoteContent, setPendingRemoteContent, acceptedLocallyRef,
+    handleContentChange, handleTitleChange
+  } = useSharedDocumentSync(docId, user, profile, isCoEditor, 'en', editorJsRef, showToast);
+  const language = document?.settings?.citationLocale?.startsWith('id') ? 'id' : 'en';
+
   const [activeReferenceIds, setActiveReferenceIds] = useState<string[]>([]);
-  const [citationLibrary, setCitationLibrary] = useState<Record<string, CitationCandidate>>({});
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'offline'>('saved');
   const [isPricingOpen, setIsPricingOpen] = useState(false);
 
   // Toolbar & Format states
@@ -187,9 +194,6 @@ export default function SharedDocumentPage() {
   const [citationError, setCitationError] = useState<string | null>(null);
 
   // Comments & Presence & Suggestion States
-  const [comments, setComments] = useState<any[]>([]);
-  const [activeUsers, setActiveUsers] = useState<UserPresence[]>([]);
-  const [suggestions, setSuggestions] = useState<DocumentSuggestion[]>([]);
   const [suggestionSubTab, setSuggestionSubTab] = useState<'active' | 'history'>('active');
   const [showCommentsSidebar, setShowCommentsSidebar] = useState(false);
   const [commentSubTab, setCommentSubTab] = useState<'active' | 'resolved'>('active');
@@ -482,83 +486,9 @@ export default function SharedDocumentPage() {
   };
 
   const editorJsRef = useRef<any>(null);
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedContentRef = useRef<string>('');
   const [hasPendingRemoteUpdate, setHasPendingRemoteUpdate] = useState<boolean>(false);
-  const [pendingRemoteContent, setPendingRemoteContent] = useState<any>(null);
-  const processedAcceptedSuggestionsRef = useRef<Set<string>>(new Set());
-  const acceptedLocallyRef = useRef<Set<string>>(new Set());
   const suggestionsInitializedRef = useRef<boolean>(false);
-
-  // Fetch document details and citation library on mount
-  useEffect(() => {
-    if (!docId) {
-      setLoading(false);
-      setError('Invalid Document ID');
-      return;
-    }
-
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const [docDetail, libData, commentsData, suggestionsData] = await Promise.all([
-          fetchSharedDocument(docId),
-          fetchCitationLibrary().catch(() => ({})),
-          fetchComments(docId).catch(() => []),
-          fetchSuggestions(docId).catch(() => [])
-        ]);
-
-        if (!docDetail) {
-          setError('Document not found or share link is invalid');
-        } else {
-          // Pre-sanitize the content to replace old blur styling with our new style to avoid flash of blur
-          if (docDetail.content && Array.isArray(docDetail.content.blocks)) {
-            docDetail.content.blocks = docDetail.content.blocks.map((block: any) => {
-              if (block.type === 'paragraph' && typeof block.data?.text === 'string') {
-                const textStr = block.data.text;
-                if (textStr.includes('sf-bibliography-blur') || textStr.includes('filter: blur') || textStr.includes('filter:blur')) {
-                  // Extract inner bibliography text if wrapped in old div
-                  let inner = textStr;
-                  const divMatch = textStr.match(/<div[^>]*>([\s\S]*?)<\/div>/);
-                  if (divMatch) {
-                    inner = divMatch[1];
-                  }
-
-                  // Re-wrap in the new blurred + fade-out visual lock container
-                  block.data.text = `
-                    <div class="sf-bibliography-fade-container" style="position: relative; max-height: 55px; overflow: hidden; user-select: none; pointer-events: none; margin-top: 15px; line-height: 1.6;">
-                      <div class="sf-bibliography-blur" style="filter: blur(3px); opacity: 0.35;">
-                        ${inner}
-                      </div>
-                      <div class="sf-fade-overlay" style="position: absolute; bottom: 0; left: 0; right: 0; height: 45px; background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%); pointer-events: none;"></div>
-                    </div>
-                  `;
-                }
-              }
-              return block;
-            });
-          }
-          setDocument(docDetail);
-          setComments(commentsData);
-          setSuggestions(suggestionsData);
-          if (docDetail.settings?.alignments) {
-            localStorage.setItem('scholarflow.editorjs.alignments.v1', JSON.stringify(docDetail.settings.alignments));
-          }
-          setCitationLibrary(libData);
-          lastSavedContentRef.current = getContentComparisonString(docDetail.content);
-          suggestionsData.filter((s: DocumentSuggestion) => s.status === 'accepted').forEach((s: DocumentSuggestion) => processedAcceptedSuggestionsRef.current.add(s.id));
-          suggestionsInitializedRef.current = true;
-        }
-      } catch (err) {
-        console.error('Failed to load shared document:', err);
-        setError('Error Loading Document');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, [docId]);
 
   // Poll comments, suggestions, and document content every 5 seconds for live sync
   useEffect(() => {
@@ -634,67 +564,6 @@ export default function SharedDocumentPage() {
       return () => clearTimeout(timer);
     }
   }, [comments]);
-
-  // Save document handler for Co-Editor mode
-  const triggerDebouncedSave = useCallback((titleToSave: string, contentToSave: any, settingsToSave?: any) => {
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-
-    debounceTimeoutRef.current = setTimeout(async () => {
-      setSaveStatus('saving');
-      let alignments = {};
-      try {
-        alignments = JSON.parse(localStorage.getItem('scholarflow.editorjs.alignments.v1') || '{}');
-      } catch (e) {
-        console.warn('Failed to parse alignments from localStorage:', e);
-      }
-
-      const activeSettings = settingsToSave || document?.settings || {};
-      const finalSettings = {
-        ...activeSettings,
-        alignments
-      };
-
-      try {
-        const updates: any = {
-          title: titleToSave,
-          content: contentToSave,
-          settings: finalSettings
-        };
-        const res = await updateSharedDocument(docId, updates);
-        if (res.success) {
-          setSaveStatus('saved');
-        } else {
-          setSaveStatus('offline');
-        }
-      } catch (err) {
-        console.error('Failed to save document:', err);
-        setSaveStatus('offline');
-      }
-    }, 1500);
-  }, [docId, document]);
-
-  const handleContentChange = useCallback((newContent: any) => {
-    if (!document) return;
-
-    // Compare content structures to avoid infinite loop or redundant saves
-    const contentString = getContentComparisonString(newContent);
-    if (contentString === lastSavedContentRef.current) {
-      return;
-    }
-
-    lastSavedContentRef.current = contentString;
-    setDocument((prev) => prev ? { ...prev, content: newContent } : null);
-    triggerDebouncedSave(document.title, newContent, document.settings);
-  }, [document, triggerDebouncedSave]);
-
-  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!document) return;
-    const newTitle = e.target.value;
-    setDocument((prev) => prev ? { ...prev, title: newTitle } : null);
-    triggerDebouncedSave(newTitle, document.content, document.settings);
-  }, [document, triggerDebouncedSave]);
 
   // Compute references based on active IDs reported by the editor
   const bibliographyEntries = useMemo(() => {

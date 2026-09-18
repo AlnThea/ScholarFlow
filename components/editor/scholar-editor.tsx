@@ -142,33 +142,21 @@ export function ScholarEditor() {
     handleCreateFolder,
     handleAssignFolder,
     handleChangeCitationStyle,
-    handleChangeDocumentSettings
-  } = useEditorDocument(showToast, hydrated);
+    handleChangeDocumentSettings,
+    comments, setComments,
+    notifications, setNotifications,
+    activeUsers, setActiveUsers,
+    suggestions, setSuggestions,
+    activeSidebarTab, setActiveSidebarTab,
+    hasPendingRemoteUpdate, setHasPendingRemoteUpdate,
+    pendingRemoteContent, setPendingRemoteContent,
+    processedAcceptedSuggestionsRef, acceptedLocallyRef, suggestionsInitializedRef
+  } = useEditorDocument(showToast, hydrated, editorJsRef);
 
 
 
-  // Comments and Notifications State
-  const [comments, setComments] = useState<DocumentComment[]>([]);
-  const [notifications, setNotifications] = useState<DocumentNotification[]>([]);
-  const [activeUsers, setActiveUsers] = useState<UserPresence[]>([]);
-  const [suggestions, setSuggestions] = useState<DocumentSuggestion[]>([]);
-  const [activeSidebarTab, setActiveSidebarTab] = useState<'library' | 'writing' | 'document' | 'comments' | undefined>(undefined);
-  const [hasPendingRemoteUpdate, setHasPendingRemoteUpdate] = useState<boolean>(false);
-  const [pendingRemoteContent, setPendingRemoteContent] = useState<any>(null);
-  const processedAcceptedSuggestionsRef = useRef<Set<string>>(new Set());
-  const acceptedLocallyRef = useRef<Set<string>>(new Set());
-  const suggestionsInitializedRef = useRef<boolean>(false);
 
 
-  // Auto-sync comment highlights onto editor canvas whenever comments update
-  useEffect(() => {
-    if (comments && comments.length > 0) {
-      const timer = setTimeout(() => {
-        editorJsRef.current?.syncCommentMarks?.(comments);
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [comments]);
 
   const handleMarkNotificationRead = async (id: string) => {
     try {
@@ -428,127 +416,7 @@ export function ScholarEditor() {
 
 
   // Poll comments and notifications
-  useEffect(() => {
-    if (!user?.id) return;
 
-    const loadCommentsAndNotifications = async () => {
-      try {
-        const notifs = await fetchNotifications(user.id);
-        setNotifications(notifs);
-        if (currentDocument?.id) {
-          const comms = await fetchComments(currentDocument.id);
-          setComments(comms);
-        }
-      } catch (err) {
-        console.error('Error fetching comments/notifications:', err);
-      }
-    };
-    loadCommentsAndNotifications();
-
-    const pollFn = async () => {
-      if (typeof window !== 'undefined' && window.document.hidden) return;
-      try {
-        const notifs = await fetchNotifications(user.id);
-        setNotifications(notifs);
-        if (currentDocument?.id) {
-          const [comms, docDetail] = await Promise.all([
-            fetchComments(currentDocument.id),
-            fetchDocumentById(currentDocument.id, user.id).catch(() => null)
-          ]);
-          setComments(comms);
-        }
-      } catch (err) {
-        console.error('Error polling comments/notifications:', err);
-      }
-    };
-
-    const handleVisibility = () => {
-      if (typeof window !== 'undefined' && !window.document.hidden) {
-        pollFn();
-      }
-    };
-
-    if (typeof window !== 'undefined') {
-      window.document.addEventListener('visibilitychange', handleVisibility);
-    }
-    const interval = setInterval(pollFn, 5000);
-
-    return () => {
-      clearInterval(interval);
-      if (typeof window !== 'undefined') {
-        window.document.removeEventListener('visibilitychange', handleVisibility);
-      }
-    };
-  }, [user?.id, currentDocument?.id]);
-
-  // Presence Heartbeat Effect for Owner
-  useEffect(() => {
-    if (!currentDocument?.id || !user?.id) return;
-    const authorName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Pemilik Dokumen';
-
-    const updateAndFetch = async () => {
-      if (typeof window !== 'undefined' && window.document.hidden) return;
-      await updatePresence(currentDocument.id, user.id, authorName, 'owner');
-      const active = await fetchActivePresence(currentDocument.id);
-      setActiveUsers(active);
-      const sugs = await fetchSuggestions(currentDocument.id);
-
-      if (!suggestionsInitializedRef.current) {
-        sugs.filter(s => s.status === 'accepted').forEach(s => processedAcceptedSuggestionsRef.current.add(s.id));
-        suggestionsInitializedRef.current = true;
-      } else {
-        const newlyAcceptedRemote = sugs.find(s =>
-          s.status === 'accepted' &&
-          !processedAcceptedSuggestionsRef.current.has(s.id) &&
-          !acceptedLocallyRef.current.has(s.id)
-        );
-
-        if (newlyAcceptedRemote) {
-          sugs.filter(s => s.status === 'accepted').forEach(s => processedAcceptedSuggestionsRef.current.add(s.id));
-          const docDetail = await fetchDocumentById(currentDocument.id, user.id).catch(() => null);
-          if (docDetail && docDetail.content) {
-            setPendingRemoteContent(docDetail.content);
-            setHasPendingRemoteUpdate(true);
-          }
-        }
-      }
-
-      setSuggestions(sugs);
-    };
-    updateAndFetch();
-
-    const handleVisibilityPresence = () => {
-      if (typeof window !== 'undefined' && !window.document.hidden) {
-        updateAndFetch();
-      }
-    };
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === `scholarflow_presence_${currentDocument.id}`) {
-        fetchActivePresence(currentDocument.id).then(setActiveUsers);
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    if (typeof window !== 'undefined') {
-      window.document.addEventListener('visibilitychange', handleVisibilityPresence);
-    }
-
-    const handleUnload = () => {
-      leavePresence(currentDocument.id, user.id);
-    };
-    window.addEventListener('beforeunload', handleUnload);
-
-    const interval = setInterval(updateAndFetch, 5000);
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('beforeunload', handleUnload);
-      if (typeof window !== 'undefined') {
-        window.document.removeEventListener('visibilitychange', handleVisibilityPresence);
-      }
-      leavePresence(currentDocument.id, user.id);
-    };
-  }, [currentDocument?.id, user?.id, user?.email, user?.user_metadata?.full_name]);
 
 
 

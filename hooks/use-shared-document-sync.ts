@@ -89,14 +89,14 @@ export function useSharedDocumentSync({
                   if (divMatch) {
                     inner = divMatch[1];
                   }
-                  block.data.text = \`
+                  block.data.text = `
                     <div class="sf-bibliography-fade-container" style="position: relative; max-height: 55px; overflow: hidden; user-select: none; pointer-events: none; margin-top: 15px; line-height: 1.6;">
                       <div class="sf-bibliography-blur" style="filter: blur(3px); opacity: 0.35;">
-                        \${inner}
+                        ${inner}
                       </div>
                       <div class="sf-fade-overlay" style="position: absolute; bottom: 0; left: 0; right: 0; height: 45px; background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%); pointer-events: none;"></div>
                     </div>
-                  \`;
+                  `;
                 }
               }
               return block;
@@ -155,8 +155,8 @@ export function useSharedDocumentSync({
             if (oldComm && !oldComm.resolved && newComm && newComm.resolved) {
               showToast(
                 language === 'id'
-                  ? \`Komentar "\${oldComm.comment_text.slice(0, 25)}\${oldComm.comment_text.length > 25 ? '...' : ''}" telah selesai ditinjau oleh pemilik!\`
-                  : \`Comment "\${oldComm.comment_text.slice(0, 25)}\${oldComm.comment_text.length > 25 ? '...' : ''}" was resolved by the owner!\`,
+                  ? `Komentar "${oldComm.comment_text.slice(0, 25)}${oldComm.comment_text.length > 25 ? '...' : ''}" telah selesai ditinjau oleh pemilik!`
+                  : `Comment "${oldComm.comment_text.slice(0, 25)}${oldComm.comment_text.length > 25 ? '...' : ''}" was resolved by the owner!`,
                 'info'
               );
               editorJsRef.current?.highlightAndRemoveCommentMark(oldComm.id);
@@ -193,7 +193,7 @@ export function useSharedDocumentSync({
   useEffect(() => {
     if (!docId) return;
     const authorName = profile?.full_name || user?.email?.split('@')[0] || (language === 'id' ? 'Tamu' : 'Guest');
-    const userId = user?.id || \`co-editor-\${docId}\`;
+    const userId = user?.id || `co-editor-${docId}`;
 
     const updateAndFetch = async () => {
       if (typeof window !== 'undefined' && window.document.hidden) return;
@@ -210,7 +210,7 @@ export function useSharedDocumentSync({
     };
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === \`scholarflow_presence_\${docId}\`) {
+      if (e.key === `scholarflow_presence_${docId}`) {
         fetchActivePresence(docId).then(setActiveUsers);
       }
     };
