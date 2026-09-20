@@ -76,8 +76,8 @@ Completed Gemini Multi-API Key Failover Pool, 100% UI bilingual i18n, and modal 
 - Complete remaining UI pages & user-facing feature modules.
 - **[Completed] Distraction-Free Zen Mode** (Hide left sidebar completely when collapsed for maximum editor workspace).
 - **[Completed] Burstiness & Sentence Length Analyzer** (Debounced Real-time UI Sidebar panel with Recharts to detect AI patterns vs human variance).
-- **My Library (Centralized Reference Manager)** (Dashboard page untuk kelola referensi & import RIS/PDF).
-- **Bibliometric Analysis** (Dashboard page + ECharts Network Graph MVP).
+- **[Completed] My Library (Centralized Reference Manager)** (Dashboard page untuk kelola referensi & import RIS/PDF).
+- **[Completed] Bibliometric Analysis** (Dashboard page + ECharts Network Graph MVP).
 
 ## Do Not Work On Yet
 - SPSS / PSPP (Strategy decided: "AI Output Interpreter" - user uploads output tables, AI interprets and drafts academic narrative to editor. Do not build a full SPSS clone).

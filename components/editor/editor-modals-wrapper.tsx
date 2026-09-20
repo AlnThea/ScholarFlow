@@ -219,7 +219,7 @@ export function EditorModalsWrapper(props: any) {
           if (currentDocument?.id) {
             addSuggestion(currentDocument.id, selectedTextForSuggestion, newTextForSuggestion, authorName, sugId, user?.id);
             if (activeUsers && activeUsers.length > 0) {
-              activeUsers.filter(u => u.user_id && u.user_id !== user?.id).forEach(coUser => {
+              activeUsers.filter((u: any) => u.user_id && u.user_id !== user?.id).forEach((coUser: any) => {
                 createNotification(
                   currentDocument.id,
                   coUser.user_id,

@@ -161,7 +161,7 @@ export default function BibliometricPage() {
     handleNodeHover(node);
   }, [handleNodeHover]);
 
-  const fgRef = useRef<any>();
+  const fgRef = useRef<any>(null);
 
   const handleNodeDragEnd = useCallback((node: any) => {
     // Unpin node completely so d3-force releases it
@@ -261,9 +261,9 @@ export default function BibliometricPage() {
               <h3 className="font-bold text-lg mb-2 text-gray-800 dark:text-white">Publication Timeline</h3>
               <p className="text-sm text-gray-500 mb-6">Trends of your library documents by publication year.</p>
               
-              {Object.keys(graphData.yearCounts).length > 0 ? (
+              {Object.keys(graphData.yearCounts || {}).length > 0 ? (
                 <div className="flex items-end gap-2 h-40 mt-2 border-b border-gray-200 dark:border-gray-700 pb-2">
-                  {Object.entries(graphData.yearCounts)
+                  {Object.entries(graphData.yearCounts || {})
                     .sort(([a], [b]) => Number(a) - Number(b))
                     .map(([year, count]) => (
                     <div key={year} className="flex flex-col items-center flex-1 group h-full">
@@ -273,7 +273,7 @@ export default function BibliometricPage() {
                       >
                         <div 
                           className="w-full max-w-[40px] bg-indigo-500 rounded-t-sm group-hover:bg-indigo-600 transition-colors relative flex justify-center"
-                          style={{ height: `${(count as number / graphData.maxYearCount) * 100}%`, minHeight: '4px' }}
+                          style={{ height: `${(count as number / (graphData.maxYearCount || 1)) * 100}%`, minHeight: '4px' }}
                         >
                           {/* Permanent Number Label */}
                           <span className="absolute -top-6 text-xs font-bold text-gray-700 dark:text-gray-200 whitespace-nowrap">

@@ -1,4 +1,3 @@
-// c:/web/ScholarFlow/components/editor/scholar-editor.tsx
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -62,7 +61,11 @@ const CITATION_HISTORY_KEY = 'scholarflow.editor.citation-history.v1';
 const AI_HISTORY_KEY = 'scholarflow.editor.ai-history.v1';
 import { useEditorDocument } from '@/hooks/use-editor-document';
 import { useEditorAi } from '@/hooks/use-editor-ai';
+import { useEditorCitation } from '@/hooks/use-editor-citation';
 import { extractTextFromContent, countWords, downloadFile, findMostRelevantSentence, HighlightedAbstract, findMostUniqueWord, getContentComparisonString } from '@/lib/editor/editor-utils';
+import { CitationDetailsModal } from './citation-details-modal';
+import { EditorToast } from './editor-toast';
+import { RemoteUpdateBanner } from './remote-update-banner';
 export function ScholarEditor() {
   const { language, t } = useLanguage();
   const { user, profile } = useAuth();
@@ -72,44 +75,9 @@ export function ScholarEditor() {
   const activePlanId = profile?.subscription_plan || 'free';
   const [hydrated, setHydrated] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
-//   const [selectedText, setSelectedText] = useState('');
-//   const [improvedResult, setImprovedResult] = useState<ImproveWritingResponse | null>(null);
   const [contentBeforeApply, setContentBeforeApply] = useState<any>(null);
   const [isApplied, setIsApplied] = useState(false);
-//   const [selectedAiModel, setSelectedAiModel] = useState('gemini');
-//   const [selectedAiTone, setSelectedAiTone] = useState('academic');
 
-  // Document system state
-//   const [documents, setDocuments] = useState<DocumentListItem[]>([]);
-//   const [currentDocument, setCurrentDocument] = useState<DocumentEntry | null>(null);
-//   const [isDocLoading, setIsDocLoading] = useState(false);
-//   const [saveStatus, setSaveStatus] = useState<string>(language === 'en' ? 'Saved to Cloud' : 'Tersimpan ke Cloud');
-//   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
-//   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-//   const loadedDocumentIdRef = useRef<string | null>(null);
-//   const lastSavedContentRef = useRef<string>('');
-  const [citationResults, setCitationResults] = useState<CitationCandidate[]>([]);
-  const [citationLibrary, setCitationLibrary] = useState<Record<string, CitationCandidate>>({});
-  const [citationHistory, setCitationHistory] = useState<CitationHistoryEntry[]>([]);
-//   const [aiHistory, setAiHistory] = useState<AiHistoryEntry[]>([]);
-//   const [aiError, setAiError] = useState<string | null>(null);
-  const [citationError, setCitationError] = useState<string | null>(null);
-  const [citationNote, setCitationNote] = useState<string | null>(null);
-//   const [isImproving, setIsImproving] = useState(false);
-  const [isSearchingCitations, setIsSearchingCitations] = useState(false);
-  const citationInsertTimeoutRef = useRef<number | null>(null);
-  const [activeModalCitation, setActiveModalCitation] = useState<{ refId: string; label: string; citedSentence: string } | null>(null);
-  const [activePdfUrl, setActivePdfUrl] = useState<string | null>(null);
-  const [activePdfSearchTerm, setActivePdfSearchTerm] = useState<string>('');
-  const [resolvedPdfUrl, setResolvedPdfUrl] = useState<string | null>(null);
-  const [isResolvingPdf, setIsResolvingPdf] = useState(false);
-  const [translatedCitedSentence, setTranslatedCitedSentence] = useState<string>('');
-  const [isTranslating, setIsTranslating] = useState(false);
-//   const [aiModels, setAiModels] = useState<AIModel[]>([]);
-//   const [isSynthesizing, setIsSynthesizing] = useState(false);
-//   const [synthesizedText, setSynthesizedText] = useState<string | null>(null);
-//   const [synthesizeError, setSynthesizeError] = useState<string | null>(null);
-//   const [synthesizeDisclaimer, setSynthesizeDisclaimer] = useState<string | null>(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
@@ -241,7 +209,6 @@ export function ScholarEditor() {
   }, [currentDocument?.id, router, handleCommentClick]);
   
 
-//   const [aiProviders, setAiProviders] = useState<AIProvider[]>([]);
 
   useEffect(() => {
     fetchAIModels().then(data => {
@@ -256,122 +223,14 @@ export function ScholarEditor() {
     });
   }, []);
 
-//   const triggerDebouncedSave = useCallback((docId: string, titleToSave: string, contentToSave: any, settingsToSave?: any) => {
-//     if (!user?.id) return;
-// 
-//     if (debounceTimeoutRef.current) {
-//       clearTimeout(debounceTimeoutRef.current);
-//     }
-// 
-//     debounceTimeoutRef.current = setTimeout(async () => {
-//       setSaveStatus(language === 'en' ? 'Saving...' : 'Menyimpan...');
-//       let alignments = {};
-//       try {
-//         alignments = JSON.parse(localStorage.getItem('scholarflow.editorjs.alignments.v1') || '{}');
-//       } catch (e) {
-//         console.warn('Failed to parse alignments from localStorage:', e);
-//       }
-// 
-//       const activeSettings = settingsToSave || currentDocument?.settings || {};
-//       const finalSettings = {
-//         ...activeSettings,
-//         alignments
-//       };
-// 
-//       const updates: any = {
-//         title: titleToSave,
-//         content: contentToSave,
-//         settings: finalSettings
-//       };
-//       try {
-//         const res = await updateDocument(docId, user.id, updates);
-//         if (res.success) {
-//           setSaveStatus(language === 'en' ? 'Saved to Cloud' : 'Tersimpan ke Cloud');
-//           localStorage.removeItem(`scholarflow.offline_backup.${docId}`);
-//           
-//           // Refresh list to update title/timestamps
-//           const list = await fetchDocuments(user.id);
-//           setDocuments(list);
-//         } else {
-//           localStorage.setItem(
-//             `scholarflow.offline_backup.${docId}`,
-//             JSON.stringify({ ...updates, id: docId, user_id: user.id })
-//           );
-//           setSaveStatus('Disimpan Lokal (Offline)');
-//         }
-//       } catch (err) {
-//         console.error('Error saving document:', err);
-//         localStorage.setItem(
-//           `scholarflow.offline_backup.${docId}`,
-//           JSON.stringify({ ...updates, id: docId, user_id: user.id })
-//         );
-//         setSaveStatus('Disimpan Lokal (Offline)');
-//       }
-//     }, 1500);
-//   }, [user, language, currentDocument]);
 
 
-//   const handleUpdateAIModel = useCallback(async (id: string, updates: Partial<AIModel>) => {
-//     try {
-//       const updated = await updateAIModel(id, updates);
-//       setAiModels((prev) => prev.map(m => m.id === id ? (updated || { ...m, ...updates }) : m));
-//     } catch (err) {
-//       console.warn('AI Model DB update failed, using local state:', err);
-//       setAiModels((prev) => prev.map(m => m.id === id ? { ...m, ...updates, updated_at: new Date().toISOString() } : m));
-//     }
-//   }, []);
 
-//   const handleCreateAIModel = useCallback(async (model: Omit<AIModel, 'updated_at'>) => {
-//     try {
-//       const created = await createAIModel(model);
-//       setAiModels((prev) => [...prev, created || { ...model, updated_at: new Date().toISOString() }]);
-//     } catch (err) {
-//       console.warn('AI Model DB create failed, using local state:', err);
-//       setAiModels((prev) => [...prev, { ...model, updated_at: new Date().toISOString() }]);
-//     }
-//   }, []);
 
-//   const handleDeleteAIModel = useCallback(async (id: string) => {
-//     try {
-//       await deleteAIModel(id);
-//       setAiModels((prev) => prev.filter(m => m.id !== id));
-//     } catch (err) {
-//       console.warn('AI Model DB delete failed, using local state:', err);
-//       setAiModels((prev) => prev.filter(m => m.id !== id));
-//     }
-//   }, []);
 
-//   const handleUpdateAIProvider = useCallback(async (id: string, updates: Partial<AIProvider>) => {
-//     try {
-//       const updated = await updateAIProvider(id, updates);
-//       setAiProviders((prev) => prev.map(p => p.id === id ? (updated || { ...p, ...updates }) : p));
-//     } catch (err) {
-//       console.warn('AI Provider DB update failed, using local state:', err);
-//       setAiProviders((prev) => prev.map(p => p.id === id ? { ...p, ...updates, updated_at: new Date().toISOString() } : p));
-//     }
-//   }, []);
 
-//   const handleCreateAIProvider = useCallback(async (provider: Omit<AIProvider, 'updated_at'>) => {
-//     try {
-//       const created = await createAIProvider(provider);
-//       setAiProviders((prev) => [...prev, created || { ...provider, updated_at: new Date().toISOString() }]);
-//     } catch (err) {
-//       console.warn('AI Provider DB create failed, using local state:', err);
-//       setAiProviders((prev) => [...prev, { ...provider, updated_at: new Date().toISOString() }]);
-//     }
-//   }, []);
 
-//   const handleDeleteAIProvider = useCallback(async (id: string) => {
-//     try {
-//       await deleteAIProvider(id);
-//       setAiProviders((prev) => prev.filter(p => p.id !== id));
-//     } catch (err) {
-//       console.warn('AI Provider DB delete failed, using local state:', err);
-//       setAiProviders((prev) => prev.filter(p => p.id !== id));
-//     }
-//   }, []);
 
-  // EditorJS Ref and Stats state
   const editorJsRef = useRef<EditorJsMethods | null>(null);
   const [editorJsStats, setEditorJsStats] = useState({
     wordCount: 0,
@@ -415,99 +274,12 @@ export function ScholarEditor() {
   );
 
 
-  // Poll comments and notifications
 
 
 
 
 
-  // Cancel pending save on switch or unmount
 
-  // Prevent closing the tab when save status is "Menyimpan..."
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (saveStatus === 'Menyimpan...' || saveStatus === 'Saving...') {
-        e.preventDefault();
-        e.returnValue = ''; // Standard trigger for modern browsers
-        return '';
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [saveStatus]);
-
-  // Synchronize offline backups when internet comes back online
-  useEffect(() => {
-    const handleOnline = async () => {
-      if (!user?.id) return;
-      
-      console.log('App is online. Checking for offline backups to sync...');
-      setSaveStatus('Menyinkronkan...');
-      
-      let syncCount = 0;
-      let hasError = false;
-      const keysToSync: string[] = [];
-      
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('scholarflow.offline_backup.')) {
-          keysToSync.push(key);
-        }
-      }
-      
-      for (const key of keysToSync) {
-        const docId = key.replace('scholarflow.offline_backup.', '');
-        try {
-          const rawData = localStorage.getItem(key);
-          if (rawData) {
-            const data = JSON.parse(rawData);
-            const updates = {
-              title: data.title,
-              content: data.content,
-              ...(data.settings ? { settings: data.settings } : {})
-            };
-            const res = await updateDocument(docId, user.id, updates);
-            if (res.success) {
-              localStorage.removeItem(key);
-              syncCount++;
-            } else {
-              hasError = true;
-            }
-          }
-        } catch (e) {
-          console.error('Failed to sync offline backup for key:', key, e);
-          hasError = true;
-        }
-      }
-      
-      if (syncCount > 0) {
-        try {
-          const list = await fetchDocuments(user.id);
-          setDocuments(list);
-        } catch (err) {
-          console.error('Failed to refresh document list after sync:', err);
-        }
-      }
-      
-      if (hasError) {
-        setSaveStatus(language === 'en' ? 'Sync Failed' : 'Gagal Sinkronisasi');
-      } else {
-        setSaveStatus(language === 'en' ? 'Saved to Cloud' : 'Tersimpan ke Cloud');
-      }
-    };
-
-    window.addEventListener('online', handleOnline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-    };
-  }, [user]);
-
-  // Load documents list from Supabase on start
-
-  // Dynamic content renderer on switch
   useEffect(() => {
     if (!currentDocument || !editorJsRef.current) return;
     if (currentDocument.id !== loadedDocumentIdRef.current) {
@@ -543,107 +315,13 @@ export function ScholarEditor() {
     }
   }, [currentDocument]);
 
-//   const handleSelectDocument = useCallback(async (id: string) => {
-//     if (!id) {
-//       router.push('/dashboard');
-//       return;
-//     }
-//     if (id === currentDocument?.id) {
-//       return;
-//     }
-//     setIsDocLoading(true);
-//     router.push(`/editor/${id}`);
-//   }, [router, currentDocument]);
 
-//   const handleCreateDocument = useCallback(async (
-//     title: string = 'Untitled Document', 
-//     settings: Partial<DocumentSettings> = {}
-//   ) => {
-//     if (!user?.id) return;
-//     const initialBlocks = getTemplateBlocks(settings.templateId, language, title);
-// 
-//     setIsDocLoading(true);
-//     try {
-//       const newDoc = await createDocument(user.id, title, {
-//         time: Date.now(),
-//         blocks: initialBlocks,
-//         version: "2.29.0"
-//       }, settings);
-//       if (newDoc) {
-//         setDocuments((prev) => [newDoc, ...prev]);
-//         lastSavedContentRef.current = getContentComparisonString(newDoc.content);
-//         setCurrentDocument(newDoc);
-//         setIsSetupModalOpen(false);
-//         router.push(`/editor/${newDoc.id}`);
-//       } else {
-//         setIsDocLoading(false);
-//       }
-//     } catch (err) {
-//       console.error('Error creating document:', err);
-//       setIsDocLoading(false);
-//     }
-//   }, [user, language]);
 
-//   const handleDeleteDocument = useCallback(async (id: string) => {
-//     if (!user?.id) return;
-//     try {
-//       const docTitle = documents.find(d => d.id === id)?.title || '';
-//       const res = await deleteDocument(id, user.id);
-//       if (res.success) {
-//         const updatedList = documents.filter((doc) => doc.id !== id);
-//         setDocuments(updatedList);
-// 
-//         if (currentDocument?.id === id) {
-//           if (updatedList.length > 0) {
-//             const detail = await fetchDocumentById(updatedList[0].id, user.id);
-//             if (detail) {
-//               setCurrentDocument(detail);
-//             }
-//           } else {
-//             setCurrentDocument(null);
-//           }
-//         }
-//         showToast(
-//           language === 'en' 
-//             ? `Document "${docTitle}" has been deleted.` 
-//             : `Dokumen "${docTitle}" berhasil dihapus.`,
-//           'success'
-//         );
-//       } else {
-//         showToast(
-//           language === 'en' 
-//             ? 'Failed to delete document.' 
-//             : 'Gagal menghapus dokumen.',
-//           'error'
-//         );
-//       }
-//     } catch (err) {
-//       console.error('Error deleting document:', err);
-//       showToast(
-//         language === 'en' 
-//           ? 'Error occurred while deleting document.' 
-//           : 'Terjadi kesalahan saat menghapus dokumen.',
-//         'error'
-//       );
-//     }
-//   }, [user, documents, currentDocument, language, showToast]);
 
-//   const handleRenameDocument = useCallback((title: string) => {
-//     if (!currentDocument || !user?.id) return;
-//     
-//     const updatedDoc = { ...currentDocument, title };
-//     setCurrentDocument(updatedDoc);
-//     setDocuments((prev) =>
-//       prev.map((doc) => (doc.id === currentDocument.id ? { ...doc, title } : doc))
-//     );
-// 
-//     triggerDebouncedSave(currentDocument.id, title, currentDocument.content, currentDocument.settings);
-//   }, [currentDocument, user, triggerDebouncedSave]);
 
   const handleContentChange = useCallback((content: any) => {
     if (!currentDocument || !user?.id) return;
 
-    // Check if user has reverted the content to the state before application
     if (isApplied && contentBeforeApply) {
       const cleanNew = content?.blocks || [];
       const cleanBefore = contentBeforeApply?.blocks || [];
@@ -655,7 +333,6 @@ export function ScholarEditor() {
     const updatedDoc = { ...currentDocument, content };
     setCurrentDocument(updatedDoc);
 
-    // Compare content structures to avoid redundant cloud updates on load or rendering
     const contentString = getContentComparisonString(content);
     if (contentString === lastSavedContentRef.current) {
       return;
@@ -675,734 +352,53 @@ export function ScholarEditor() {
     return currentDocument?.settings?.folder_assignments || {};
   }, [currentDocument]);
 
-//   const handleCreateFolder = useCallback((folderName: string) => {
-//     if (!currentDocument) return;
-//     const currentFolders = currentDocument.settings?.folders || (language === 'en'
-//       ? ['Introduction', 'Literature Review', 'Methodology', 'Results & Discussion']
-//       : ['Pendahuluan', 'Tinjauan Pustaka', 'Metodologi', 'Hasil & Diskusi']);
-//     if (currentFolders.includes(folderName)) return;
-//     const updatedFolders = [...currentFolders, folderName];
-//     
-//     const updatedSettings = { ...currentDocument.settings, folders: updatedFolders };
-//     const updatedDoc = { ...currentDocument, settings: updatedSettings };
-//     setCurrentDocument(updatedDoc);
-//     
-//     triggerDebouncedSave(currentDocument.id, currentDocument.title, currentDocument.content, updatedSettings);
-//   }, [currentDocument, triggerDebouncedSave]);
 
-//   const handleAssignFolder = useCallback((referenceId: string, folderName: string) => {
-//     if (!currentDocument) return;
-//     const currentAssignments = currentDocument.settings?.folder_assignments || {};
-//     const updatedAssignments = { ...currentAssignments, [referenceId]: folderName };
-//     
-//     const updatedSettings = { ...currentDocument.settings, folder_assignments: updatedAssignments };
-//     const updatedDoc = { ...currentDocument, settings: updatedSettings };
-//     setCurrentDocument(updatedDoc);
-//     
-//     triggerDebouncedSave(currentDocument.id, currentDocument.title, currentDocument.content, updatedSettings);
-//   }, [currentDocument, triggerDebouncedSave]);
 
-//   const handleChangeCitationStyle = useCallback((style: string) => {
-//     if (!currentDocument) return;
-//     
-//     const updatedSettings = { ...currentDocument.settings, citationStyle: style };
-//     const updatedDoc = { ...currentDocument, settings: updatedSettings };
-//     setCurrentDocument(updatedDoc);
-//     
-//     triggerDebouncedSave(currentDocument.id, currentDocument.title, currentDocument.content, updatedSettings);
-//   }, [currentDocument, triggerDebouncedSave]);
 
-//   const handleChangeDocumentSettings = useCallback((newSettings: DocumentSettings) => {
-//     if (!currentDocument) return;
-//     
-//     const updatedDoc = { ...currentDocument, settings: newSettings };
-//     setCurrentDocument(updatedDoc);
-//     
-//     triggerDebouncedSave(currentDocument.id, currentDocument.title, currentDocument.content, newSettings);
-//   }, [currentDocument, triggerDebouncedSave]);
 
   useEffect(() => {
     setHydrated(true);
   }, []);
 
-  // Load citation library: Supabase (global) + localStorage fallback
-  useEffect(() => {
-    if (!hydrated || !user?.id) return;
-
-    // 1. Try loading from Supabase global library first
-    fetchCitationLibrary(user.id).then((supabaseLibrary) => {
-      if (Object.keys(supabaseLibrary).length > 0) {
-        setCitationLibrary(supabaseLibrary);
-        // Sync to localStorage as local cache
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem(CITATION_LIBRARY_KEY, JSON.stringify(supabaseLibrary));
-        }
-        return;
-      }
-
-      // 2. Fallback: load from localStorage if Supabase is empty
-      if (typeof window === 'undefined') return;
-      const stored = window.localStorage.getItem(CITATION_LIBRARY_KEY);
-      if (!stored) return;
-      try {
-        const parsed = JSON.parse(stored) as Record<string, CitationCandidate>;
-        setCitationLibrary(parsed);
-      } catch {
-        window.localStorage.removeItem(CITATION_LIBRARY_KEY);
-      }
-    });
-  }, [hydrated, user?.id]);
-
-  // Resolving direct PDF url in background when citation modal is opened
-  useEffect(() => {
-    if (!activeModalCitation) {
-      setResolvedPdfUrl(null);
-      setIsResolvingPdf(false);
-      return;
-    }
-
-    const candidate = citationLibrary[activeModalCitation.refId];
-    if (!candidate) return;
-
-    // Use existing pdf_url immediately if available
-    if (candidate.pdf_url) {
-      setResolvedPdfUrl(candidate.pdf_url);
-    } else {
-      setResolvedPdfUrl(null);
-    }
-
-    const targetUrl = candidate.url || (candidate.doi ? `https://doi.org/${candidate.doi}` : null);
-    if (!targetUrl) return;
-
-    setIsResolvingPdf(true);
-    fetch(`/api/citations/resolve-pdf?url=${encodeURIComponent(targetUrl)}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.pdf_url) {
-          setResolvedPdfUrl(data.pdf_url);
-          // Update local library cache so it resolves instantly next time
-          setCitationLibrary((current) => {
-            const existing = current[activeModalCitation.refId];
-            if (existing && !existing.pdf_url) {
-              const updated = {
-                ...current,
-                [activeModalCitation.refId]: { ...existing, pdf_url: data.pdf_url }
-              };
-              // Persist to localStorage
-              if (typeof window !== 'undefined') {
-                window.localStorage.setItem(CITATION_LIBRARY_KEY, JSON.stringify(updated));
-              }
-              return updated;
-            }
-            return current;
-          });
-        }
-      })
-      .catch(() => {})
-      .finally(() => {
-        setIsResolvingPdf(false);
-      });
-  }, [activeModalCitation, citationLibrary]);
-
-  // Translate cited sentence in background when modal is opened for cross-lingual matching
-  useEffect(() => {
-    if (!activeModalCitation) {
-      setTranslatedCitedSentence('');
-      setIsTranslating(false);
-      return;
-    }
-
-    const candidate = citationLibrary[activeModalCitation.refId];
-    if (!candidate || !candidate.abstract) {
-      setTranslatedCitedSentence(activeModalCitation.citedSentence);
-      return;
-    }
-
-    const citedText = activeModalCitation.citedSentence;
-    const abstractText = candidate.abstract;
-
-    // Heuristic helper to check if text is English
-    const detectIsEnglish = (text: string): boolean => {
-      const englishWords = new Set(['the', 'of', 'and', 'to', 'for', 'is', 'with', 'that', 'this', 'by', 'in', 'on', 'at']);
-      const words = text.toLowerCase().match(/[a-z]+/g) ?? [];
-      let englishCount = 0;
-      for (const word of words) {
-        if (englishWords.has(word)) englishCount++;
-      }
-      return englishCount / Math.max(words.length, 1) > 0.05 || englishCount >= 2;
-    };
-
-    const isAbstractEnglish = detectIsEnglish(abstractText);
-    const isQueryEnglish = detectIsEnglish(citedText);
-
-    if (isAbstractEnglish && !isQueryEnglish) {
-      setIsTranslating(true);
-      fetch(`/api/citations/translate?text=${encodeURIComponent(citedText)}&target=en`)
-        .then((res) => res.json())
-        .then((data) => {
-          setTranslatedCitedSentence(data.translatedText || citedText);
-        })
-        .catch((err) => {
-          console.error('Translation failed:', err);
-          setTranslatedCitedSentence(citedText);
-        })
-        .finally(() => {
-          setIsTranslating(false);
-        });
-    } else if (!isAbstractEnglish && isQueryEnglish) {
-      setIsTranslating(true);
-      fetch(`/api/citations/translate?text=${encodeURIComponent(citedText)}&target=id`)
-        .then((res) => res.json())
-        .then((data) => {
-          setTranslatedCitedSentence(data.translatedText || citedText);
-        })
-        .catch((err) => {
-          console.error('Translation failed:', err);
-          setTranslatedCitedSentence(citedText);
-        })
-        .finally(() => {
-          setIsTranslating(false);
-        });
-    } else {
-      setTranslatedCitedSentence(citedText);
-    }
-  }, [activeModalCitation, citationLibrary]);
-
-  useEffect(() => {
-    if (!hydrated || typeof window === 'undefined') return;
-    const storedHistory = window.localStorage.getItem(CITATION_HISTORY_KEY);
-    if (!storedHistory) return;
-
-    try {
-      const parsed = JSON.parse(storedHistory) as CitationHistoryEntry[];
-      setCitationHistory(Array.isArray(parsed) ? parsed : []);
-    } catch {
-      window.localStorage.removeItem(CITATION_HISTORY_KEY);
-    }
-  }, [hydrated]);
-
-  useEffect(() => {
-    if (!hydrated || typeof window === 'undefined') return;
-    window.localStorage.setItem(CITATION_LIBRARY_KEY, JSON.stringify(citationLibrary));
-  }, [citationLibrary, hydrated]);
-
-  useEffect(() => {
-    if (!hydrated || typeof window === 'undefined') return;
-    window.localStorage.setItem(CITATION_HISTORY_KEY, JSON.stringify(citationHistory));
-  }, [citationHistory, hydrated]);
-
-  useEffect(() => {
-    if (!hydrated || typeof window === 'undefined') return;
-    const storedAiHistory = window.localStorage.getItem(AI_HISTORY_KEY);
-    if (!storedAiHistory) return;
-
-    try {
-      const parsed = JSON.parse(storedAiHistory) as AiHistoryEntry[];
-      setAiHistory(Array.isArray(parsed) ? parsed : []);
-    } catch {
-      window.localStorage.removeItem(AI_HISTORY_KEY);
-    }
-  }, [hydrated]);
-
-  useEffect(() => {
-    if (!hydrated || typeof window === 'undefined') return;
-    window.localStorage.setItem(AI_HISTORY_KEY, JSON.stringify(aiHistory));
-  }, [aiHistory, hydrated]);
-
-  useEffect(() => {
-    return () => {
-      if (citationInsertTimeoutRef.current !== null) {
-        window.clearTimeout(citationInsertTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const wordCount = editorJsStats.wordCount;
-  const characterCount = editorJsStats.characterCount;
-  const citationCount = editorJsStats.citationCount;
-
-  const bibliographyEntries = useMemo(() => {
-    const uniqueActiveIds = Array.from(new Set(activeReferenceIds));
-    const style = currentDocument?.settings?.citationStyle || 'apa';
-    const lang = currentDocument?.settings?.citationLocale || 'en-US';
-    
-    return uniqueActiveIds
-      .map((id) => {
-        const candidate = citationLibrary[id];
-        if (!candidate) return null;
-        return {
-          referenceId: id,
-          label: candidate.citation_label,
-          formatted: formatBibliographyCandidate(candidate, style, lang)
-        };
-      })
-      .filter(Boolean) as Array<{ referenceId: string; label: string; formatted: string }>;
-  }, [citationLibrary, activeReferenceIds, currentDocument?.settings?.citationStyle, currentDocument?.settings?.citationLocale]);
-
-  // Sync bibliography entries to EditorJS in real-time
-  useEffect(() => {
-    if (!hydrated) return;
-    const entries = bibliographyEntries.map((e) => ({
-      label: e.label,
-      formatted: e.formatted,
-    }));
-    const timer = setTimeout(() => {
-      editorJsRef.current?.upsertBibliography(entries, activePlanId === 'free');
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [bibliographyEntries, hydrated, activePlanId]);
-
-  const insertCitation = useCallback(() => {
-    editorJsRef.current?.insertCitationSearch();
-  }, []);
-
-  const insertBibliography = useCallback(() => {
-    const text = bibliographyEntries.length > 0
-      ? "Bibliography:\n" + bibliographyEntries.map((entry, i) => `${i + 1}. ${entry.formatted}`).join('\n')
-      : "Bibliography:\nInsert verified citation candidates first, then generate the bibliography.";
-    editorJsRef.current?.insertBibliographyText(text);
-  }, [bibliographyEntries]);
-
-  const insertImage = useCallback(
-    (url: string) => {
-      if (url) editorJsRef.current?.insertImage(url);
-    },
-    [],
-  );
-
-  const insertSampleImage = useCallback(() => {
-    insertImage('https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1200&q=80');
-  }, [insertImage]);
-
-
-
-  const exportBibliographyText = useCallback(() => {
-    if (activePlanId === 'free') {
-      setWarningMessage("🔒 Fitur Ekspor Daftar Pustaka (.bib, .ris, .txt, .json) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing.");
-      return;
-    }
-    downloadFile(
-      'scholarflow-bibliography.txt',
-      serializeBibliographyText(bibliographyEntries),
-      'text/plain;charset=utf-8',
-    );
-  }, [bibliographyEntries, activePlanId]);
-
-  const exportBibliographyJson = useCallback(() => {
-    if (activePlanId === 'free') {
-      setWarningMessage("🔒 Fitur Ekspor Daftar Pustaka (.bib, .ris, .txt, .json) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing.");
-      return;
-    }
-    downloadFile(
-      'scholarflow-bibliography.json',
-      JSON.stringify(bibliographyEntries, null, 2),
-      'application/json;charset=utf-8',
-    );
-  }, [bibliographyEntries, activePlanId]);
-
-  const exportBibliographyBibtex = useCallback(() => {
-    if (activePlanId === 'free') {
-      setWarningMessage("🔒 Fitur Ekspor Daftar Pustaka (.bib, .ris, .txt, .json) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing.");
-      return;
-    }
-    const uniqueActiveIds = Array.from(new Set(activeReferenceIds));
-    let bibtexContent = '';
-    uniqueActiveIds.forEach((id) => {
-      const candidate = citationLibrary[id];
-      if (!candidate) return;
-      const key = candidate.citation_label.replace(/\s+/g, '').replace(/[^a-zA-Z0-9]/g, '');
-      const authors = candidate.authors.join(' and ');
-      
-      bibtexContent += `@article{${key},\n`;
-      bibtexContent += `  author = {${authors}},\n`;
-      bibtexContent += `  title = {${candidate.title}},\n`;
-      bibtexContent += `  journal = {${candidate.source}},\n`;
-      if (candidate.year) bibtexContent += `  year = {${candidate.year}},\n`;
-      if (candidate.doi) bibtexContent += `  doi = {${candidate.doi}},\n`;
-      if (candidate.url) bibtexContent += `  url = {${candidate.url}},\n`;
-      bibtexContent += `}\n\n`;
-    });
-    
-    downloadFile(
-      'scholarflow-bibliography.bib',
-      bibtexContent || '% No bibliography entries available.',
-      'text/plain;charset=utf-8',
-    );
-  }, [citationLibrary, activeReferenceIds, activePlanId]);
-
-  const exportBibliographyRis = useCallback(() => {
-    if (activePlanId === 'free') {
-      setWarningMessage("🔒 Fitur Ekspor Daftar Pustaka (.bib, .ris, .txt, .json) khusus untuk pengguna paket Pro Writer. Silakan upgrade akun Anda di menu Pricing.");
-      return;
-    }
-    const uniqueActiveIds = Array.from(new Set(activeReferenceIds));
-    let risContent = '';
-    uniqueActiveIds.forEach((id) => {
-      const candidate = citationLibrary[id];
-      if (!candidate) return;
-      risContent += `TY  - JOUR\n`;
-      candidate.authors.forEach((author) => {
-        risContent += `AU  - ${author}\n`;
-      });
-      risContent += `TI  - ${candidate.title}\n`;
-      risContent += `JO  - ${candidate.source}\n`;
-      if (candidate.year) risContent += `PY  - ${candidate.year}\n`;
-      if (candidate.url) risContent += `UR  - ${candidate.url}\n`;
-      if (candidate.doi) risContent += `DO  - ${candidate.doi}\n`;
-      risContent += `ER  - \n\n`;
-    });
-    
-    downloadFile(
-      'scholarflow-bibliography.ris',
-      risContent || '% No bibliography entries available.',
-      'text/plain;charset=utf-8',
-    );
-  }, [citationLibrary, activeReferenceIds, activePlanId]);
-
-  const exportCitationText = useCallback(() => {
-    downloadFile(
-      'scholarflow-citations.txt',
-      serializeCitationCandidatesText(citationResults),
-      'text/plain;charset=utf-8',
-    );
-  }, [citationResults]);
-
-  const exportCitationJson = useCallback(() => {
-    downloadFile(
-      'scholarflow-citations.json',
-      JSON.stringify(citationResults, null, 2),
-      'application/json;charset=utf-8',
-    );
-  }, [citationResults]);
-
-//   const handleSynthesizeReview = useCallback(async () => {
-//     const uniqueActiveIds = Array.from(new Set(activeReferenceIds));
-//     if (uniqueActiveIds.length === 0) return;
-//     
-//     setIsSynthesizing(true);
-//     setSynthesizeError(null);
-//     setSynthesizedText(null);
-//     setSynthesizeDisclaimer(null);
-//     
-//     try {
-//       const referencesData = uniqueActiveIds
-//         .map(id => {
-//           const candidate = citationLibrary[id];
-//           if (!candidate) return null;
-//           return {
-//             title: candidate.title,
-//             authors: candidate.authors,
-//             year: candidate.year,
-//             source: candidate.source,
-//             label: candidate.citation_label
-//           };
-//         })
-//         .filter(Boolean);
-//         
-//       const response = await synthesizeLiteratureReview(referencesData as any[], selectedAiModel, language);
-//       setSynthesizedText(response.synthesized_text);
-//       if (response.disclaimer) {
-//         setSynthesizeDisclaimer(response.disclaimer);
-//       }
-//     } catch (error: any) {
-//       setSynthesizeError(error.message || (language === 'en' ? 'Failed to synthesize literature review.' : 'Gagal mensintesis tinjauan pustaka.'));
-//     } finally {
-//       setIsSynthesizing(false);
-//     }
-//   }, [citationLibrary, activeReferenceIds, selectedAiModel, language]);
-
-  const handleInsertSynthesizedText = useCallback((text: string) => {
-    editorJsRef.current?.insertText(text);
-    setSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-  }, []);
-
-  const statusLabel = saveStatus;
-
-//   const runImproveWriting = useCallback(async () => {
-//     if (!selectedText.trim()) return;
-// 
-//     setActiveSidebarTab('writing');
-//     setIsImproving(true);
-//     setAiError(null);
-// 
-//     try {
-//       const response = await improveWriting(selectedText, selectedAiTone, selectedAiModel, language);
-//       setImprovedResult(response);
-//       setContentBeforeApply(currentDocument?.content);
-//       setIsApplied(false);
-//       setAiHistory((current) =>
-//         addAiHistoryEntry(current, {
-//           id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
-//           originalText: selectedText,
-//           improvedText: response.improved_text,
-//           tone: selectedAiTone,
-//           model: selectedAiModel,
-//           savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-//         })
-//       );
-//     } catch (error) {
-//       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
-//       setAiError(message);
-//       setImprovedResult(null);
-//     } finally {
-//       setIsImproving(false);
-//     }
-//   }, [selectedText, selectedAiModel, selectedAiTone, setAiHistory, currentDocument, language]);
-
-//   const runParaphrase = useCallback(async () => {
-//     if (!selectedText.trim()) return;
-// 
-//     setActiveSidebarTab('writing');
-//     setIsImproving(true);
-//     setAiError(null);
-// 
-//     try {
-//       const response = await improveWriting(selectedText, 'paraphrase', selectedAiModel, language);
-//       setImprovedResult(response);
-//       setContentBeforeApply(currentDocument?.content);
-//       setIsApplied(false);
-//       setAiHistory((current) =>
-//         addAiHistoryEntry(current, {
-//           id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
-//           originalText: selectedText,
-//           improvedText: response.improved_text,
-//           tone: 'paraphrase',
-//           model: selectedAiModel,
-//           savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-//         })
-//       );
-//     } catch (error) {
-//       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
-//       setAiError(message);
-//       setImprovedResult(null);
-//     } finally {
-//       setIsImproving(false);
-//     }
-//   }, [selectedText, selectedAiModel, setAiHistory, currentDocument, language]);
-
-//   const runSummarize = useCallback(async () => {
-//     if (!selectedText.trim()) return;
-// 
-//     setActiveSidebarTab('writing');
-//     setIsImproving(true);
-//     setAiError(null);
-// 
-//     try {
-//       const response = await improveWriting(selectedText, 'summarize', selectedAiModel, language);
-//       setImprovedResult(response);
-//       setContentBeforeApply(currentDocument?.content);
-//       setIsApplied(false);
-//       setAiHistory((current) =>
-//         addAiHistoryEntry(current, {
-//           id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
-//           originalText: selectedText,
-//           improvedText: response.improved_text,
-//           tone: 'summarize',
-//           model: selectedAiModel,
-//           savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-//         })
-//       );
-//     } catch (error) {
-//       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
-//       setAiError(message);
-//       setImprovedResult(null);
-//     } finally {
-//       setIsImproving(false);
-//     }
-//   }, [selectedText, selectedAiModel, setAiHistory, currentDocument, language]);
-
-//   const runGenerateAbstract = useCallback(async () => {
-//     setActiveSidebarTab('writing');
-//     setIsImproving(true);
-//     setAiError(null);
-// 
-//     try {
-//       const fullText = extractTextFromContent(currentDocument?.content);
-//       if (!fullText.trim()) {
-//         throw new Error(language === 'en' ? 'Document is empty. Please write some content before generating abstract.' : 'Dokumen kosong. Silakan tulis isi dokumen sebelum membuat abstrak.');
-//       }
-//       const response = await generateAbstract(fullText, selectedAiModel, language);
-//       setImprovedResult({
-//         original_text: 'Document Context',
-//         improved_text: response.abstract_text,
-//         tone: 'academic',
-//         disclaimer: response.disclaimer || 'Abstract generated based on document context.'
-//       });
-//       setContentBeforeApply(currentDocument?.content);
-//       setIsApplied(false);
-//       setAiHistory((current) =>
-//         addAiHistoryEntry(current, {
-//           id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
-//           originalText: 'Document Context',
-//           improvedText: response.abstract_text,
-//           tone: 'abstract',
-//           model: selectedAiModel,
-//           savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-//         })
-//       );
-//     } catch (error) {
-//       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
-//       setAiError(message);
-//       setImprovedResult(null);
-//     } finally {
-//       setIsImproving(false);
-//     }
-//   }, [currentDocument, selectedAiModel, setAiHistory, language]);
-
-//   const handleParafrasePlagiat = useCallback(async (sentence: string) => {
-//     setActiveSidebarTab('writing');
-//     setSelectedText(sentence);
-//     setIsImproving(true);
-//     setAiError(null);
-// 
-//     try {
-//       const response = await improveWriting(sentence, selectedAiTone, selectedAiModel, language);
-//       setImprovedResult(response);
-//       setContentBeforeApply(currentDocument?.content);
-//       setIsApplied(false);
-//       setAiHistory((current) =>
-//         addAiHistoryEntry(current, {
-//           id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
-//           originalText: sentence,
-//           improvedText: response.improved_text,
-//           tone: selectedAiTone,
-//           model: selectedAiModel,
-//           savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-//         })
-//       );
-//     } catch (error) {
-//       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
-//       setAiError(message);
-//       setImprovedResult(null);
-//     } finally {
-//       setIsImproving(false);
-//     }
-//   }, [selectedAiModel, selectedAiTone, setAiHistory, currentDocument, language]);
-
-//   const applyImprovedText = useCallback(() => {
-//     if (!improvedResult) return;
-//     setContentBeforeApply(currentDocument?.content);
-//     editorJsRef.current?.insertText(improvedResult.improved_text);
-//     setIsApplied(true);
-//     setSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-//   }, [improvedResult, currentDocument]);
-
-  const runCitationSearchForQuery = useCallback(async (query: string) => {
-    const normalizedQuery = query.trim();
-    if (!normalizedQuery) return;
-
-    setIsSearchingCitations(true);
-    setCitationError(null);
-    setCitationNote(null);
-    setAiError(null);
-
-    try {
-      const response = await searchCitations(normalizedQuery, 15);
-      
-      // Apply active document setup filters to search results
-      let filtered = response.results;
-      if (currentDocument?.settings) {
-        const settings = currentDocument.settings;
-
-        // 1. Filter by Publish Year
-        if (settings.publishYear === '5_years') {
-          const currentYear = new Date().getFullYear();
-          filtered = filtered.filter(
-            (c) => c.year !== null && c.year >= currentYear - 5
-          );
-        } else if (settings.publishYear === 'custom') {
-          const start = settings.publishYearStart ?? 0;
-          const end = settings.publishYearEnd ?? new Date().getFullYear();
-          filtered = filtered.filter(
-            (c) => c.year !== null && c.year >= start && c.year <= end
-          );
-        }
-
-        // 2. Filter by Impact Factor (approximated by citation count ranking)
-        if (settings.impactFactor === '0.25+') {
-          filtered = filtered.filter((c) => c.cited_by_count >= 2);
-        } else if (settings.impactFactor === '3+') {
-          filtered = filtered.filter((c) => c.cited_by_count >= 20);
-        } else if (settings.impactFactor === '10+') {
-          filtered = filtered.filter((c) => c.cited_by_count >= 100);
-        }
-
-        // 3. Filter by Limit Collection
-        if (settings.limitCollection === 'journals') {
-          filtered = filtered.filter(
-            (c) => c.journal !== null && c.journal.trim() !== ''
-          );
-        } else if (settings.limitCollection === 'proceedings') {
-          filtered = filtered.filter(
-            (c) => c.journal === null || !c.journal.toLowerCase().includes('journal')
-          );
-        }
-      }
-
-      setCitationResults(filtered);
-      setCitationNote(response.note);
-      setCitationHistory((current) =>
-        addCitationHistoryEntry(current, {
-          query: normalizedQuery,
-          resultCount: filtered.length,
-          note: response.note,
-          savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        }),
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to search citations.';
-      setCitationError(message);
-      setCitationResults([]);
-      setCitationNote(null);
-    } finally {
-      setIsSearchingCitations(false);
-    }
-  }, [currentDocument]);
-
-  const runCitationSearch = useCallback(async () => {
-    if (!selectedText.trim()) return;
-
-    await runCitationSearchForQuery(selectedText);
-  }, [runCitationSearchForQuery, selectedText]);
-
-  const repeatCitationSearch = useCallback(
-    (query: string) => {
-      void runCitationSearchForQuery(query);
-    },
-    [runCitationSearchForQuery],
-  );
-
-//   const deleteAiHistoryEntry = useCallback((id: string) => {
-//     setAiHistory((current) => current.filter((item) => item.id !== id));
-//   }, []);
-
-//   const clearAiHistory = useCallback(() => {
-//     setAiHistory([]);
-//   }, []);
-
-  const insertCitationCandidate = useCallback(
-    (candidate: CitationCandidate, skipEditorInsert = false) => {
-      // 1. Selalu sisipkan label sitasi secara inline dengan referenceId jika tidak di-skip
-      if (!skipEditorInsert) {
-        editorJsRef.current?.insertCitation(candidate.citation_label, candidate.reference_id);
-      }
-
-      // 2. Perbarui state library & sinkronisasi ke localStorage
-      setCitationLibrary((current) => {
-        if (current[candidate.reference_id]) return current;
-        const newLibrary = { ...current, [candidate.reference_id]: candidate };
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem('scholarflow_citation_library', JSON.stringify(newLibrary));
-        }
-        return newLibrary;
-      });
-
-      // 4. Simpan ke Supabase global library (fire & forget)
-      if (user?.id) {
-        saveCitationToLibrary(candidate, user.id).catch(() => {});
-      }
-    },
-    [user],
+  const {
+    citationResults,
+    citationLibrary,
+    citationHistory,
+    citationError,
+    citationNote,
+    isSearchingCitations,
+    activeModalCitation,
+    setActiveModalCitation,
+    activePdfUrl,
+    setActivePdfUrl,
+    activePdfSearchTerm,
+    setActivePdfSearchTerm,
+    resolvedPdfUrl,
+    isResolvingPdf,
+    translatedCitedSentence,
+    isTranslating,
+    bibliographyEntries,
+    insertCitation,
+    insertBibliography,
+    exportBibliographyText,
+    exportBibliographyJson,
+    exportBibliographyBibtex,
+    exportBibliographyRis,
+    exportCitationText,
+    exportCitationJson,
+    runCitationSearch,
+    repeatCitationSearch,
+    insertCitationCandidate
+  } = useEditorCitation(
+    user,
+    hydrated,
+    currentDocument,
+    activeReferenceIds,
+    activePlanId,
+    editorJsRef,
+    setWarningMessage,
+    setAiError,
+    selectedText
   );
   const isUrlDocLoading = params?.id && !currentDocument;
   if (isUrlDocLoading) {
@@ -1623,200 +619,42 @@ export function ScholarEditor() {
         activeSidebarTab={activeSidebarTab}
       />
 
-      {/* Floating Signal Banner for Remote Document Updates */}
-      {hasPendingRemoteUpdate && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 bg-slate-900/95 text-white backdrop-blur-md text-xs font-semibold rounded-full shadow-2xl border border-amber-500/40 animate-pulse transition-all">
-          <span className="flex items-center gap-2 text-amber-400">
-            <IconSparkles className="w-4 h-4 text-amber-400" />
-            <span>
-              {language === 'en'
-                ? 'Latest document revision has been accepted!'
-                : 'Revisi usulan dokumen terbaru telah diterima!'}
-            </span>
-          </span>
-          <button
-            type="button"
-            onClick={() => {
-              if (pendingRemoteContent) {
-                const parsed = typeof pendingRemoteContent === 'string' ? JSON.parse(pendingRemoteContent) : pendingRemoteContent;
-                lastSavedContentRef.current = getContentComparisonString(pendingRemoteContent);
-                setCurrentDocument(prev => prev ? { ...prev, content: JSON.stringify(pendingRemoteContent) } : prev);
-                editorJsRef.current?.renderContent?.(parsed);
-                setHasPendingRemoteUpdate(false);
-                setPendingRemoteContent(null);
-                showToast(
-                  language === 'en'
-                    ? 'Canvas editor successfully updated to latest version!'
-                    : 'Canvas editor berhasil diperbarui ke versi terbaru!',
-                  'success'
-                );
-              }
-            }}
-            className="px-3.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-full transition shadow-xs cursor-pointer flex items-center gap-1.5"
-          >
-            <IconRefresh className="w-3.5 h-3.5" />
-            {language === 'en' ? 'Update Editor' : 'Perbarui Editor'}
-          </button>
-        </div>
-      )}
+      <RemoteUpdateBanner
+        hasPendingRemoteUpdate={hasPendingRemoteUpdate}
+        language={language}
+        onUpdate={() => {
+          if (pendingRemoteContent) {
+            const parsed = typeof pendingRemoteContent === 'string' ? JSON.parse(pendingRemoteContent) : pendingRemoteContent;
+            lastSavedContentRef.current = getContentComparisonString(pendingRemoteContent);
+            setCurrentDocument(prev => prev ? { ...prev, content: JSON.stringify(pendingRemoteContent) } : prev);
+            editorJsRef.current?.renderContent?.(parsed);
+            setHasPendingRemoteUpdate(false);
+            setPendingRemoteContent(null);
+            showToast(
+              language === 'en'
+                ? 'Canvas editor successfully updated to latest version!'
+                : 'Canvas editor berhasil diperbarui ke versi terbaru!',
+              'success'
+            );
+          }
+        }}
+      />
 
-      {/* Citation Details Modal */}
-      {activeModalCitation && (() => {
-        const candidate = citationLibrary[activeModalCitation.refId];
-        const citedSentence = activeModalCitation.citedSentence;
-        return (
-          <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)] max-w-xl w-full max-h-[85vh] overflow-hidden flex flex-col transform transition-all scale-100">
-              {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
-                  <h3 className="text-sm font-bold text-slate-800">{language === 'en' ? 'Journal Citation Details' : 'Detail Sitasi Jurnal'}</h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveModalCitation(null)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition"
-                  aria-label={language === 'en' ? 'Close' : 'Tutup'}
-                >
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                </button>
-              </div>
-
-              {/* Body */}
-              <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-5">
-                {candidate ? (
-                  <>
-                    {/* Title */}
-                    <div className="flex flex-col gap-1">
-                      <h4 className="text-base font-bold text-slate-800 leading-snug">
-                        {candidate.title}
-                      </h4>
-                      <p className="text-xs font-semibold text-slate-505 mt-1">
-                        {candidate.authors.join(', ')}
-                      </p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
-                        {candidate.journal ? `${candidate.journal} · ` : ''}{candidate.year || 'N/A'} · Source: {candidate.source}
-                      </p>
-                    </div>
-
-                    {/* Cited claim in the editor */}
-                    {citedSentence && (
-                      <div className="bg-slate-50 border-l-4 border-indigo-500 p-4 rounded-r-xl text-slate-650">
-                        <span className="block text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-1.5 flex items-center gap-1">
-                          <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2H4c-1.25 0-2 .75-2 2v4c0 1.25.75 2 2 2h4c0 2.5-1.75 4.5-4 5v2m14 3c3 0 7-1 7-8V5c0-1.25-.75-2-2-2h-4c-1.25 0-2 .75-2 2v4c0 1.25.75 2 2 2h4c0 2.5-1.75 4.5-4 5v2"></path>
-                          </svg>
-                          {language === 'en' ? 'Your Claim/Statement:' : 'Klaim/Pernyataan Anda:'}
-                        </span>
-                        <p className="italic font-medium text-xs text-slate-600">"{citedSentence}"</p>
-                      </div>
-                    )}                    {/* Matched text in Journal */}
-                    <div className="flex flex-col gap-2">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{language === 'en' ? 'Relevant Quote from Journal (Matching Snippet):' : 'Kutipan Terkait dari Jurnal (Matching Snippet):'}</span>
-                      <div className="p-4 rounded-xl bg-indigo-50/50 border border-indigo-100/80 text-xs leading-relaxed text-indigo-950 font-medium italic min-h-[4rem] flex items-center justify-center">
-                        {isTranslating ? (
-                          <span className="text-[11px] text-slate-400 font-medium animate-pulse flex items-center gap-1.5 justify-center py-2 w-full">
-                            <svg className="animate-spin h-3.5 w-3.5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            {language === 'en' ? 'Translating & matching cross-lingual quotes...' : 'Menerjemahkan & mencocokkan kutipan lintas bahasa...'}
-                          </span>
-                        ) : (
-                          `"${findMostRelevantSentence(candidate.abstract, translatedCitedSentence || citedSentence || '')}"`
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Full Abstract with Highlight */}
-                    {candidate.abstract && (
-                      <div className="flex flex-col gap-2">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{language === 'en' ? 'Full Journal Abstract:' : 'Abstrak Lengkap Jurnal:'}</span>
-                        <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/30">
-                          <HighlightedAbstract abstract={candidate.abstract} query={translatedCitedSentence || citedSentence || ''} />
-                        </div>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="py-8 text-center text-slate-400 text-xs">
-                    {language === 'en' ? 'Citation detail information not found in local library.' : 'Informasi detail sitasi tidak ditemukan di pustaka lokal.'}
-                  </div>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setActiveModalCitation(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
-                >
-                  {language === 'en' ? 'Close' : 'Tutup'}
-                </button>
-                {isResolvingPdf && !resolvedPdfUrl && (
-                  <span className="text-[10px] text-slate-400 font-medium animate-pulse mr-2 flex items-center gap-1.5">
-                    <svg className="animate-spin h-3.5 w-3.5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Mencari PDF...
-                  </span>
-                )}
-                {resolvedPdfUrl && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const relevantSentence = findMostRelevantSentence(candidate?.abstract, translatedCitedSentence || citedSentence || '');
-                      const rawSearchTerm = relevantSentence || citedSentence || '';
-                      
-                      // Clean brackets and quotes, and limit to first 25 words to avoid PDF line wrap issues
-                      let cleanSentence = rawSearchTerm
-                        .replace(/[\[\]"']/g, "")
-                        .replace(/\s+/g, " ")
-                        .trim();
-                      
-                      const words = cleanSentence.split(" ");
-                      if (words.length > 25) {
-                        cleanSentence = words.slice(0, 25).join(" ");
-                      }
-                      
-                      setActivePdfUrl(resolvedPdfUrl);
-                      setActivePdfSearchTerm(cleanSentence);
-                      setActiveModalCitation(null);
-                    }}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-semibold shadow-sm transition animate-fade-in"
-                  >
-                    Buka PDF di Sidebar
-                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                      <line x1="9" y1="3" x2="9" y2="21"></line>
-                    </svg>
-                  </button>
-                )}
-                {candidate?.url && (
-                  <button
-                    type="button"
-                    onClick={() => window.open(candidate.url!, '_blank', 'noopener,noreferrer')}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-xs font-semibold shadow-sm transition"
-                  >
-                    Buka Web Jurnal
-                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                      <polyline points="15 3 21 3 21 9"></polyline>
-                      <line x1="10" y1="14" x2="21" y2="3"></line>
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      })()}
+      <CitationDetailsModal
+        language={language}
+        activeModalCitation={activeModalCitation}
+        candidate={activeModalCitation ? citationLibrary[activeModalCitation.refId] : undefined}
+        isTranslating={isTranslating}
+        translatedCitedSentence={translatedCitedSentence}
+        isResolvingPdf={isResolvingPdf}
+        resolvedPdfUrl={resolvedPdfUrl}
+        onClose={() => setActiveModalCitation(null)}
+        onOpenPdf={(url, term) => {
+          setActivePdfUrl(url);
+          setActivePdfSearchTerm(term);
+          setActiveModalCitation(null);
+        }}
+      />
       <DocumentSetupModal
         isOpen={isSetupModalOpen}
         onClose={() => setIsSetupModalOpen(false)}
@@ -1867,30 +705,7 @@ export function ScholarEditor() {
         </div>
       )}
 
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-[10200] flex items-center gap-3 bg-white/95 border border-slate-100 p-4 rounded-xl shadow-xl animate-slide-up max-w-sm font-sans">
-          <div className={`p-2 rounded-lg ${
-            toastMessage.type === 'success' ? 'bg-emerald-50 text-emerald-600' :
-            toastMessage.type === 'error' ? 'bg-red-50 text-red-600' :
-            'bg-blue-50 text-blue-600'
-          }`}>
-            {toastMessage.type === 'success' && <IconCheck className="h-4.5 w-4.5" />}
-            {toastMessage.type === 'error' && <IconAlertCircle className="h-4.5 w-4.5" />}
-            {toastMessage.type === 'info' && <IconInfoCircle className="h-4.5 w-4.5" />}
-          </div>
-          <div className="flex flex-col gap-0.5 min-w-0">
-            <span className="text-[11px] font-bold text-slate-800">
-              {toastMessage.type === 'success' ? (language === 'en' ? 'Success' : 'Berhasil') :
-               toastMessage.type === 'error' ? (language === 'en' ? 'Error' : 'Gagal') :
-               (language === 'en' ? 'Info' : 'Informasi')}
-            </span>
-            <p className="text-[10px] text-slate-500 font-medium leading-tight truncate max-w-[200px]">
-              {toastMessage.text}
-            </p>
-          </div>
-        </div>
-      )}
+      <EditorToast toastMessage={toastMessage} language={language} />
     </>
   );
 }

@@ -1,13 +1,20 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDataService, CitationCandidate } from "@/lib/services";
+import { ReferenceModal } from "./reference-modal";
+import { parseRISContent } from "@/lib/utils/ris-parser";
 
 export default function LibraryPage() {
   const { dataService } = useDataService();
   const [searchQuery, setSearchQuery] = useState("");
   const [library, setLibrary] = useState<CitationCandidate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingRef, setEditingRef] = useState<CitationCandidate | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadLibrary();
@@ -41,6 +48,69 @@ export default function LibraryPage() {
     }
   };
 
+  const handleSaveRef = async (ref: CitationCandidate) => {
+    try {
+      // In a real app we need user ID, here we assume it's handled by dataService or we pass a mock
+      const userId = "current-user"; // Replace with actual user ID if available in context
+      const res = await dataService.saveCitationToLibrary(ref);
+      if (res.success) {
+        setLibrary(prev => {
+          const exists = prev.findIndex(c => c.reference_id === ref.reference_id);
+          if (exists >= 0) {
+            const next = [...prev];
+            next[exists] = ref;
+            return next;
+          }
+          return [ref, ...prev];
+        });
+        setIsModalOpen(false);
+      } else {
+        alert("Failed to save: " + res.error);
+      }
+    } catch (error) {
+      console.error("Failed to save citation:", error);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.name.endsWith('.ris')) {
+      try {
+        const text = await file.text();
+        const parsed = parseRISContent(text);
+        
+        const referenceId = parsed.doi ? parsed.doi.toLowerCase() : `ris-${Date.now()}`;
+        const shortTitle = parsed.title?.split(' ').slice(0, 2).join(' ') || "Untitled";
+        const citationLabel = `[${shortTitle} ${parsed.year || new Date().getFullYear()}]`;
+
+        const candidate: CitationCandidate = {
+          source: 'custom',
+          title: parsed.title || "Untitled",
+          authors: parsed.authors || ["Unknown"],
+          year: parsed.year || new Date().getFullYear(),
+          doi: parsed.doi || "",
+          url: parsed.url || "",
+          reference_id: referenceId,
+          abstract: `RIS Entry details: Journal: ${parsed.journal || 'N/A'}. URL: ${parsed.url || 'N/A'}.`,
+        };
+
+        await handleSaveRef(candidate);
+      } catch (err) {
+        console.error("Error parsing RIS:", err);
+        alert("Failed to parse RIS file");
+      }
+    } else {
+      alert("Only .RIS files are currently supported for import.");
+    }
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const filteredLibrary = library.filter(item => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
@@ -65,10 +135,26 @@ export default function LibraryPage() {
             </p>
           </div>
           <div className="flex space-x-3">
-            <button className="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-medium border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors shadow-sm">
-              Import .RIS / BibTeX
+            <input 
+              type="file" 
+              accept=".ris" 
+              className="hidden" 
+              ref={fileInputRef} 
+              onChange={handleFileUpload} 
+            />
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              className="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-medium border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors shadow-sm"
+            >
+              Import .RIS
             </button>
-            <button className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors shadow-sm flex items-center">
+            <button 
+              onClick={() => {
+                setEditingRef(null);
+                setIsModalOpen(true);
+              }}
+              className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors shadow-sm flex items-center"
+            >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
@@ -162,7 +248,13 @@ export default function LibraryPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 p-1">
+                          <button 
+                            onClick={() => {
+                              setEditingRef(item);
+                              setIsModalOpen(true);
+                            }}
+                            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 p-1"
+                          >
                             Edit
                           </button>
                           <button 
@@ -189,6 +281,13 @@ export default function LibraryPage() {
         </div>
 
       </div>
+
+      <ReferenceModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveRef}
+        initialData={editingRef}
+      />
     </div>
   );
 }

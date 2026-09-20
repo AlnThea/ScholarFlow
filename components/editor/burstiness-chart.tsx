@@ -74,7 +74,7 @@ export function BurstinessChart({ content }: { content: string }) {
             <YAxis tick={{fontSize: 9, fill: '#94a3b8'}} tickLine={false} axisLine={false} />
             <Tooltip 
               contentStyle={{ borderRadius: '8px', fontSize: '11px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-              formatter={(value: number) => [`${value} ${isEn ? 'words' : 'kata'}`, isEn ? 'Length' : 'Panjang']}
+              formatter={(value: any) => [`${value} ${isEn ? 'words' : 'kata'}`, isEn ? 'Length' : 'Panjang']}
               labelFormatter={(label) => `${isEn ? 'Sentence' : 'Kalimat ke-'}${isEn ? ' ' : ''}${label}`}
             />
             <ReferenceLine y={metrics.averageSentenceLength} stroke="#cbd5e1" strokeDasharray="3 3" />

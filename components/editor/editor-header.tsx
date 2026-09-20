@@ -16,8 +16,8 @@ export type EditorHeaderProps = {
   language: 'en' | 'id';
   activePlanId: string;
   bibliographyEntries: any[];
-  exportToWordFile: (title: string, blocks: any[], bibs: any[], lang: string, isPro: boolean) => Promise<void>;
-  exportToPdfFile: (title: string, blocks: any[], bibs: any[], lang: string, isPro: boolean) => Promise<void>;
+  exportToWordFile: (title: string, blocks: any[], bibliography: string[], language?: 'en' | 'id', isPro?: boolean) => Promise<void>;
+  exportToPdfFile: (title: string, blocks: any[], bibliography: string[], language?: 'en' | 'id', isPro?: boolean) => Promise<void>;
   onExportBibliographyText: () => void;
   onExportBibliographyJson: () => void;
   onExportBibliographyBibtex: () => void;

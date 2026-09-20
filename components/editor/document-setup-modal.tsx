@@ -218,7 +218,7 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
             {/* 0. Project Grouping Mode Selection */}
             <SetupProjectMode
               language={language}
-              t={t}
+              t={t as any}
               createMode={createMode}
               setCreateMode={setCreateMode}
               title={title}
@@ -267,7 +267,7 @@ export function DocumentSetupModal({ isOpen, onClose, onSubmit, documents = [], 
 
             <SetupCitationPreferences
               language={language}
-              t={t}
+              t={t as any}
               citationStyle={citationStyle}
               citationLocale={citationLocale}
               getStyleDisplayName={getStyleDisplayName}

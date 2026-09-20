@@ -83,7 +83,7 @@ export default function SettingsPage() {
       }
 
       setSaveStatus('success');
-      if (refreshAuth) refreshAuth(); // refresh context
+      // if (refreshAuth) refreshAuth(); // refresh context
       
       setTimeout(() => setSaveStatus('idle'), 3000);
     } catch (error: any) {

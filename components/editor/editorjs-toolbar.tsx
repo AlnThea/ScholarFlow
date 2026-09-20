@@ -38,7 +38,7 @@ type EditorToolbarProps = {
   onInsertCitation: () => void;
   setImageUrlInput: (val: string) => void;
   setIsImageModalOpen: (val: boolean) => void;
-  handleHighlightButtonClick: (e: React.MouseEvent, source: string) => void;
+  handleHighlightButtonClick: (e: React.MouseEvent<HTMLButtonElement>, source: 'toolbar' | 'bubble') => void;
   setMathFormulaInput: (val: string) => void;
   selectedText: string;
   setIsMathModalOpen: (val: boolean) => void;

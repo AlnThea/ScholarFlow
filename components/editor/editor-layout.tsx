@@ -5,7 +5,7 @@ import { EditorModalsWrapper } from './editor-modals-wrapper';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
-import { EditorJsEditor, type EditorJsMethods } from './editorjs-editor';
+import { EditorJsEditor } from './editorjs-editor';
 import { EditorSidebar } from './editor-sidebar';
 import { Switch } from './editor-switch';
 import { KatexPreview } from './katex-preview';
@@ -16,62 +16,7 @@ import { EditorBubbleMenu } from './editor-bubble-menu';
 import { EditorJsToolbar } from './editorjs-toolbar';
 import { addSuggestion } from '@/lib/api/suggestions';
 import 'katex/dist/katex.min.css';
-import {
-  IconArrowBackUp,
-  IconArrowForwardUp,
-  IconDots,
-  IconCreditCard,
-  IconMenu,
-  IconBold,
-  IconItalic,
-  IconUnderline,
-  IconStrikethrough,
-  IconCode,
-  IconSuperscript,
-  IconSubscript,
-  IconLink,
-  IconHighlight,
-  IconPhoto,
-  IconTable,
-  IconMath,
-  IconSum,
-  IconAt,
-  IconAlignLeft,
-  IconAlignCenter,
-  IconAlignRight,
-  IconAlignJustified,
-  IconSearch,
-  IconSparkles,
-  IconCheck,
-  IconExternalLink,
-  IconQuote,
-  IconHeart,
-  IconFile,
-  IconFilePlus,
-  IconBook,
-  IconLoader,
-  IconLanguage,
-  IconDeviceFloppy,
-  IconShare,
-  IconFileWord,
-  IconLayoutSidebarRightCollapse,
-  IconCalculator,
-  IconFolder,
-  IconFolderOpen,
-  IconChevronDown,
-  IconDownload,
-  IconFileText,
-  IconBraces,
-  IconDatabase,
-  IconSun,
-  IconMoon,
-  IconX,
-  IconSettings,
-  IconBell,
-  IconWifi,
-  IconRefresh,
-  IconWifiOff
-} from '@tabler/icons-react';
+
 import { useDataService } from '@/lib/services';
 
 import { MinimalSidebar } from './minimal-sidebar';
@@ -102,6 +47,7 @@ import { findMostRelevantSentence } from '@/lib/editor/editor-utils';
 
 import { useAdminModals } from '@/hooks/use-admin-modals';
 import { useEditorModals } from '@/hooks/use-editor-modals';
+import { useEditorLayoutLogic } from '@/hooks/use-editor-layout-logic';
 export function EditorLayout({
   statusLabel,
   selectedText,
@@ -191,114 +137,76 @@ export function EditorLayout({
   onCommentClick,
   activeSidebarTab
 }: EditorLayoutProps) {
-  const { language, setLanguage, t } = useLanguage();
-  const isEn = language === 'en';
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(!currentDocument);
-  const [showRightSidebar, setShowRightSidebar] = useState(true);
+  const {
+    mounted,
+    setMounted,
+    isDarkMode,
+    setIsDarkMode,
+    toggleDarkMode,
+    dashboardExpandedProjects,
+    setDashboardExpandedProjects,
+    language,
+    setLanguage,
+    t,
+    isEn,
+    isSidebarExpanded,
+    setIsSidebarExpanded,
+    toggleSidebar,
+    showRightSidebar,
+    setShowRightSidebar,
+    expandedCardId,
+    setExpandedCardId,
+    currentBlockType,
+    setCurrentBlockType,
+    currentAlignment,
+    setCurrentAlignment,
+    editorMode,
+    setEditorMode,
+    selectedTextForSuggestion,
+    setSelectedTextForSuggestion,
+    newTextForSuggestion,
+    setNewTextForSuggestion,
+    isPricingOpen,
+    setIsPricingOpen,
+    isHelpOpen,
+    setIsHelpOpen,
+    mathToast,
+    setMathToast,
+    backendType,
+    isMathHelperOpen,
+    setIsMathHelperOpen,
+    groupedDocs,
+    profile,
+    user,
+    role,
+    activePlanId,
+    pathname,
+    router,
+    activeDashboardTab,
+    handleSetDashboardTab,
+    bubbleMenuRect,
+    setBubbleMenuRect,
+    showBubbleMenu,
+    setShowBubbleMenu,
+    bubbleMode,
+    setBubbleMode,
+    activeFormats,
+    setActiveFormats,
+    currentFontSize,
+    setCurrentFontSize,
+    isRightSidebarExpanded,
+    setIsRightSidebarExpanded,
+    handleToggleRightSidebarExpanded,
+    bubbleSearchQuery,
+    setBubbleSearchQuery,
+    getBtnClass
+  } = useEditorLayoutLogic({
+    currentDocument,
+    documents,
+    selectedText,
+    onSelectionChange,
+  });
 
-  const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
-  const [currentBlockType, setCurrentBlockType] = useState('paragraph');
-  const [currentAlignment, setCurrentAlignment] = useState('left');
-  const [editorMode, setEditorMode] = useState<'edit' | 'suggest'>('edit');
-  const [selectedTextForSuggestion, setSelectedTextForSuggestion] = useState('');
-  const [newTextForSuggestion, setNewTextForSuggestion] = useState('');
-  const [isPricingOpen, setIsPricingOpen] = useState(false);
-  const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const { backendType } = useDataService();
-  const [isMathHelperOpen, setIsMathHelperOpen] = useState(false);
-
-
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    // Theme loading
-    const localTheme = window.localStorage.getItem('sf-theme');
-    if (localTheme === 'dark') {
-      setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
-    } else {
-      setIsDarkMode(false);
-      document.documentElement.classList.remove('dark');
-    }
-
-    // Trigger pricing modal from locked bibliography banner click
-    const handleTriggerPricing = () => {
-      setIsPricingOpen(true);
-    };
-    window.addEventListener('sf-trigger-pricing', handleTriggerPricing);
-    return () => {
-      window.removeEventListener('sf-trigger-pricing', handleTriggerPricing);
-    };
-  }, []);
-
-  const toggleDarkMode = () => {
-    if (isDarkMode) {
-      document.documentElement.classList.remove('dark');
-      window.localStorage.setItem('sf-theme', 'light');
-      setIsDarkMode(false);
-    } else {
-      document.documentElement.classList.add('dark');
-      window.localStorage.setItem('sf-theme', 'dark');
-      setIsDarkMode(true);
-    }
-  };
-
-  const groupedDocs = React.useMemo(() => {
-    const projects: Record<string, { id: string; name: string; type: string; docs: DocumentListItem[] }> = {};
-    const independent: DocumentListItem[] = [];
-
-    documents.forEach((doc) => {
-      const settings = doc.settings;
-      if (settings?.projectId && settings?.projectName) {
-        const pId = settings.projectId;
-        if (!projects[pId]) {
-          projects[pId] = {
-            id: pId,
-            name: settings.projectName,
-            type: settings.projectType || 'independent',
-            docs: []
-          };
-        }
-        projects[pId].docs.push(doc);
-      } else {
-        independent.push(doc);
-      }
-    });
-
-    return {
-      projects: Object.values(projects),
-      independent
-    };
-  }, [documents]);
-
-  const { profile, user } = useAuth();
-  const role = profile?.role ?? 'user';
-  const activePlanId = profile?.subscription_plan || 'free';
-  const pathname = usePathname();
-  const router = useRouter();
-
-  const activeDashboardTab = useMemo(() => {
-    if (pathname === '/billing') return 'billing';
-    if (pathname === '/admin/pricing') return 'admin-pricing';
-    if (pathname === '/admin/models') return 'admin-models';
-    if (pathname === '/admin/gateways') return 'admin-gateways';
-    return 'user';
-  }, [pathname]);
-
-  const handleSetDashboardTab = (tab: 'user' | 'admin' | 'billing' | 'admin-pricing' | 'admin-models' | 'admin-gateways') => {
-    if (tab === 'billing') {
-      router.push('/billing');
-    } else if (tab === 'admin' || tab === 'admin-pricing') {
-      router.push('/admin/pricing');
-    } else if (tab === 'admin-models') {
-      router.push('/admin/models');
-    } else if (tab === 'admin-gateways') {
-      router.push('/admin/gateways');
-    } else {
-      router.push('/dashboard');
-    }
-  };
   const adminModals = useAdminModals({
     activeDashboardTab,
     aiModels,
@@ -316,45 +224,26 @@ export function EditorLayout({
     loadingAdminPlans,
     gatewaysList,
     togglingGatewayId,
-    alertModalState, showAlertModal, showConfirmModal,
+    alertModalState, setAlertModalState, showAlertModal, showConfirmModal,
     savingModelId, editModelStates,
     isModelModalOpen, setIsModelModalOpen,
-    selectedModelForModal, modalModelState,
+    selectedModelForModal, modalModelState, setModalModelState,
     handleOpenEditModelModal, handleOpenCreateModelModal,
     testingModelId, handleTestModelConnection,
     handleSaveModalModel, handleDeleteModel, handleToggleModelStatus,
     isProviderModalOpen, setIsProviderModalOpen,
-    selectedProviderForModal, modalProviderState,
+    selectedProviderForModal, modalProviderState, setModalProviderState,
     handleOpenCreateProviderModal, handleOpenEditProviderModal,
     handleSaveModalProvider, handleDeleteProvider,
     handleToggleGateway, handleSavePlan,
     isPlanModalOpen, setIsPlanModalOpen,
-    selectedPlanForModal, modalPlanState,
+    selectedPlanForModal, modalPlanState, setModalPlanState,
     handleOpenEditModal, handleOpenCreateModal,
     handleSaveModalPlan, handleDeletePlan,
     editStates, setEditStates, savingPlanId
   } = adminModals;
 
-    const IconFilePdf = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className={props.className}
-      viewBox="0 0 24 24"
-      strokeWidth="2"
-      stroke="currentColor"
-      fill="none"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-      <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-      <path d="M5 12v-7a2 2 0 0 1 2 -2h7l5 5v4" />
-      <path d="M5 18h1.5a1.5 1.5 0 0 0 0 -3h-1.5v6" />
-      <path d="M17 18h-3v-3h3" />
-      <path d="M14 18h3" />
-      <path d="M10 15v6h1a2 2 0 0 0 2 -2v-2a2 2 0 0 0 -2 -2h-1z" />
-    </svg>
-  );
+
 
   const editorModals = useEditorModals({ editorJsRef });
 
@@ -379,230 +268,6 @@ export function EditorLayout({
     isShareOpen, setIsShareOpen,
     isBackendModalOpen, setIsBackendModalOpen
   } = editorModals;
-
-  // States to manage the custom text selection bubble menu
-  const [bubbleMenuRect, setBubbleMenuRect] = useState<DOMRect | null>(null);
-  const [showBubbleMenu, setShowBubbleMenu] = useState(false);
-  // 'format' = default mode, 'citation' = showing citation results inline
-  const [bubbleMode, setBubbleMode] = useState<'format' | 'citation'>('format');
-  const bubbleModeRef = useRef(bubbleMode);
-  useEffect(() => {
-    bubbleModeRef.current = bubbleMode;
-  }, [bubbleMode]);
-
-  // Active state for inline formatting commands (e.g. bold, italic)
-  const [activeFormats, setActiveFormats] = useState({
-    bold: false,
-    italic: false,
-    underline: false,
-    strikethrough: false,
-    code: false,
-    superscript: false,
-    subscript: false,
-    link: false,
-    highlight: false,
-  });
-  const [currentFontSize, setCurrentFontSize] = useState<string>('');
-
-  const [isRightSidebarExpanded, setIsRightSidebarExpanded] = useState<boolean>(true);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const rightSaved = localStorage.getItem('right-sidebar-expanded');
-      if (rightSaved !== null) {
-        setIsRightSidebarExpanded(rightSaved === 'true');
-      }
-    }
-  }, []);
-
-  const handleToggleRightSidebarExpanded = () => {
-    setIsRightSidebarExpanded(prev => {
-      const next = !prev;
-      localStorage.setItem('right-sidebar-expanded', String(next));
-      return next;
-    });
-  };
-
-  const [bubbleSearchQuery, setBubbleSearchQuery] = useState('');
-
-  // Auto-collapse sidebar (Zen Mode) when entering a document
-  useEffect(() => {
-    if (currentDocument) {
-      setIsSidebarExpanded(false);
-    } else {
-      setIsSidebarExpanded(true); // Auto-expand in dashboard
-    }
-  }, [currentDocument?.id]);
-
-  useEffect(() => {
-    if (bubbleMode === 'citation') {
-      setBubbleSearchQuery(selectedText);
-    }
-  }, [bubbleMode, selectedText]);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('sidebar-expanded');
-    if (saved !== null && !currentDocument) {
-      setIsSidebarExpanded(saved === 'true');
-    }
-
-    // Selection change handler to sync toolbar states and show bubble menu
-    const handleSelectionChange = () => {
-      let hasLink = false;
-      let hasHighlight = false;
-      let hasCode = false;
-      const selection = window.getSelection();
-      if (selection && selection.rangeCount > 0) {
-        const editorContainer = document.getElementById('editorjs-holder');
-
-        // 1. Check anchorNode parent
-        let anchorParent = selection.anchorNode
-          ? (selection.anchorNode.nodeType === Node.TEXT_NODE
-            ? selection.anchorNode.parentElement
-            : selection.anchorNode as HTMLElement)
-          : null;
-        let node = anchorParent;
-        while (node && editorContainer && editorContainer.contains(node)) {
-          if (node.tagName === 'A') {
-            hasLink = true;
-          }
-          if (node.tagName === 'MARK') {
-            hasHighlight = true;
-          }
-          if (node.tagName === 'CODE') {
-            hasCode = true;
-          }
-          if (hasLink && hasHighlight && hasCode) break;
-          node = node.parentElement;
-        }
-
-        // 2. Check focusNode parent if anchorNode didn't find all
-        if (!hasLink || !hasHighlight || !hasCode) {
-          let focusParent = selection.focusNode
-            ? (selection.focusNode.nodeType === Node.TEXT_NODE
-              ? selection.focusNode.parentElement
-              : selection.focusNode as HTMLElement)
-            : null;
-          node = focusParent;
-          while (node && editorContainer && editorContainer.contains(node)) {
-            if (node.tagName === 'A') {
-              hasLink = true;
-            }
-            if (node.tagName === 'MARK') {
-              hasHighlight = true;
-            }
-            if (node.tagName === 'CODE') {
-              hasCode = true;
-            }
-            if (hasLink && hasHighlight && hasCode) break;
-            node = node.parentElement;
-          }
-        }
-
-        // 3. Check if selection range spans across/encloses tags
-        if (!hasLink || !hasHighlight || !hasCode) {
-          try {
-            const range = selection.getRangeAt(0);
-            const fragment = range.cloneContents();
-            const tempDiv = document.createElement('div');
-            tempDiv.appendChild(fragment);
-            if (!hasLink && tempDiv.querySelector('a')) {
-              hasLink = true;
-            }
-            if (!hasHighlight && tempDiv.querySelector('mark')) {
-              hasHighlight = true;
-            }
-            if (!hasCode && tempDiv.querySelector('code')) {
-              hasCode = true;
-            }
-          } catch (e) {
-            // ignore range extraction issues
-          }
-        }
-      }
-
-      // 1. Sync format active states
-      setActiveFormats({
-        bold: document.queryCommandState('bold'),
-        italic: document.queryCommandState('italic'),
-        underline: document.queryCommandState('underline'),
-        strikethrough: document.queryCommandState('strikeThrough'),
-        code: hasCode,
-        superscript: document.queryCommandState('superscript'),
-        subscript: document.queryCommandState('subscript'),
-        link: hasLink,
-        highlight: hasHighlight,
-      });
-
-      // 2. Display custom bubble menu if text selection is active inside EditorJS
-
-      // Sync active font size state
-      if (selection && selection.anchorNode) {
-        const parentEl = selection.anchorNode.nodeType === Node.ELEMENT_NODE
-          ? (selection.anchorNode as HTMLElement)
-          : selection.anchorNode.parentElement;
-        if (parentEl) {
-          let currentEl: HTMLElement | null = parentEl;
-          let foundSize = '';
-          const editorContainer = document.getElementById('editorjs-holder');
-          while (currentEl && editorContainer && editorContainer.contains(currentEl)) {
-            if (currentEl.style.fontSize) {
-              foundSize = currentEl.style.fontSize;
-              break;
-            }
-            currentEl = currentEl.parentElement;
-          }
-          setCurrentFontSize(foundSize);
-        }
-      } else {
-        setCurrentFontSize('');
-      }
-
-      if (!selection || selection.isCollapsed || !selection.toString().trim()) {
-        if (bubbleModeRef.current === 'citation') return;
-        setShowBubbleMenu(false);
-        onSelectionChange?.('');
-        return;
-      }
-
-      const anchorNode = selection.anchorNode;
-      if (!anchorNode) return;
-      const editorContainer = document.getElementById('editorjs-holder');
-      if (!editorContainer || !editorContainer.contains(anchorNode)) {
-        if (bubbleModeRef.current === 'citation') return;
-        setShowBubbleMenu(false);
-        onSelectionChange?.('');
-        return;
-      }
-
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-      const text = selection.toString().trim();
-      setBubbleMenuRect(rect);
-      onSelectionChange?.(text);
-    };
-
-    document.addEventListener('selectionchange', handleSelectionChange);
-    return () => {
-      document.removeEventListener('selectionchange', handleSelectionChange);
-    };
-  }, [onSelectionChange]);
-
-  const toggleSidebar = () => {
-    setIsSidebarExpanded(prev => {
-      const next = !prev;
-      localStorage.setItem('sidebar-expanded', String(next));
-      return next;
-    });
-  };
-
-  // Class helper to apply clean active/inactive formatting toolbar button states
-  const getBtnClass = (isActive: boolean) => {
-    return `p-1.5 rounded transition ${isActive
-      ? 'bg-indigo-100/80 text-indigo-700 font-bold'
-      : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'
-      }`;
-  };
 
   const isAnyModalOpen = isPlanModalOpen || isModelModalOpen || isImageModalOpen || isMathModalOpen;
 
@@ -749,7 +414,7 @@ export function EditorLayout({
             activeFormats={activeFormats}
             editorJsRef={editorJsRef}
             handleHighlightButtonClick={handleHighlightButtonClick}
-            t={t}
+            t={t as any}
             language={language}
             activePlanId={activePlanId}
             aiError={aiError}

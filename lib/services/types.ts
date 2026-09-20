@@ -126,11 +126,10 @@ export interface IDataService {
     updates: Partial<Omit<UserProfile, 'id' | 'created_at'>>
   ): Promise<ServiceResponse>;
 
-  // Citation Library Operations
-  getCitationLibrary(userId: string): Promise<Record<string, CitationCandidate>>;
-  saveCitationToLibrary(candidate: CitationCandidate, userId: string): Promise<ServiceResponse>;
-  deleteCitationFromLibrary(referenceId: string, userId: string): Promise<ServiceResponse>;
-  isCitationInLibrary(referenceId: string, userId: string): Promise<boolean>;
+  getCitationLibrary(): Promise<Record<string, CitationCandidate>>;
+  saveCitationToLibrary(candidate: CitationCandidate): Promise<ServiceResponse>;
+  deleteCitationFromLibrary(referenceId: string): Promise<ServiceResponse>;
+  isCitationInLibrary(referenceId: string): Promise<boolean>;
 
   // Catalog Pricing Operations
   getPricingPlans(): Promise<PricingPlan[]>;

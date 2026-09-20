@@ -21,7 +21,7 @@ const getContentComparisonString = (content: any) => {
 export interface UseSharedDocumentSyncOptions {
   docId: string;
   language: 'id' | 'en';
-  isCoEditor: boolean;
+  
   user: any;
   profile: any;
   showToast: (msg: string, type: 'success' | 'error' | 'info') => void;
@@ -31,7 +31,7 @@ export interface UseSharedDocumentSyncOptions {
 export function useSharedDocumentSync({
   docId,
   language,
-  isCoEditor,
+  
   user,
   profile,
   showToast,
@@ -43,6 +43,10 @@ export function useSharedDocumentSync({
 
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'offline'>('saved');
   const [citationLibrary, setCitationLibrary] = useState<Record<string, CitationCandidate>>({});
+  
+  const isCoEditor = useMemo(() => {
+    return document?.settings?.sharePermission === 'edit';
+  }, [document]);
   
   const [comments, setComments] = useState<DocumentComment[]>([]);
   const [suggestions, setSuggestions] = useState<DocumentSuggestion[]>([]);
@@ -235,7 +239,7 @@ export function useSharedDocumentSync({
       }
       leavePresence(docId, userId);
     };
-  }, [docId, user?.id, profile?.full_name, user?.email, isCoEditor, language]);
+  }, [docId, user?.id, profile?.full_name, user?.email,  language]);
 
   // Save document handler for Co-Editor mode
   const triggerDebouncedSave = useCallback((titleToSave: string, contentToSave: any, settingsToSave?: any) => {
@@ -308,6 +312,7 @@ export function useSharedDocumentSync({
     suggestions,
     setSuggestions,
     activeUsers,
+    setActiveUsers,
     hasPendingRemoteUpdate,
     setHasPendingRemoteUpdate,
     pendingRemoteContent,
@@ -315,5 +320,6 @@ export function useSharedDocumentSync({
     acceptedLocallyRef,
     handleContentChange,
     handleTitleChange,
+    triggerDebouncedSave
   };
 }
