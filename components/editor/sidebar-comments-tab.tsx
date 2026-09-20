@@ -1,4 +1,5 @@
 import React from 'react';
+import { DocumentSuggestion } from '@/lib/api/suggestions';
 import {
   IconBook, IconCheck, IconDownload, IconExternalLink, IconFileText,
   IconFilter, IconFolderOpen, IconLoader2, IconCirclePlus, IconQuote,
@@ -59,7 +60,7 @@ export const SidebarCommentsTab = (props: any) => {
                     <span>{language === 'en' ? 'Active' : 'Komentar'}</span>
                     <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${commentFilterTab === 'active' ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-200/60 text-slate-600'
                       }`}>
-                      {comments.filter(c => !c.resolved).length}
+                      {comments.filter((c: any) => !c.resolved).length}
                     </span>
                   </button>
 
@@ -85,7 +86,7 @@ export const SidebarCommentsTab = (props: any) => {
                     <span>{language === 'en' ? 'Resolved' : 'Selesai'}</span>
                     <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${commentFilterTab === 'resolved' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-200/60 text-slate-600'
                       }`}>
-                      {comments.filter(c => c.resolved).length}
+                      {comments.filter((c: any) => c.resolved).length}
                     </span>
                   </button>
                 </div>
@@ -104,7 +105,7 @@ export const SidebarCommentsTab = (props: any) => {
                       <span>💡 {language === 'en' ? 'Active' : 'Aktif'}</span>
                       <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${suggestionSubTab === 'active' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'bg-slate-200/60 text-slate-600'
                         }`}>
-                        {suggestions.filter(s => s.status === 'pending').length}
+                        {suggestions.filter((s: any) => s.status === 'pending').length}
                       </span>
                     </button>
 
@@ -119,7 +120,7 @@ export const SidebarCommentsTab = (props: any) => {
                       <span>📜 {language === 'en' ? 'History' : 'Riwayat'}</span>
                       <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${suggestionSubTab === 'history' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'bg-slate-200/60 text-slate-600'
                         }`}>
-                        {suggestions.filter(s => s.status === 'accepted' || s.status === 'rejected').length}
+                        {suggestions.filter((s: any) => s.status === 'accepted' || s.status === 'rejected').length}
                       </span>
                     </button>
                   </div>
@@ -127,12 +128,12 @@ export const SidebarCommentsTab = (props: any) => {
 
                 <div className="flex flex-col gap-3 max-h-[calc(100vh-360px)] overflow-y-auto pr-1">
                   {commentFilterTab === 'active' ? (
-                    comments.filter(c => !c.resolved).length === 0 ? (
+                    comments.filter((c: any) => !c.resolved).length === 0 ? (
                       <div className="text-center py-12 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-xs text-slate-400 font-medium italic">
                         {language === 'en' ? 'No active comments' : 'Tidak ada komentar aktif'}
                       </div>
                     ) : (
-                      comments.filter(c => !c.resolved).map((c) => (
+                      comments.filter((c: any) => !c.resolved).map((c: any) => (
                         <div
                           key={c.id}
                           onClick={() => onCommentClick?.(c)}
@@ -183,9 +184,9 @@ export const SidebarCommentsTab = (props: any) => {
                         ? suggestions
                         : (() => {
                           const holder = typeof window !== 'undefined' ? window.document.getElementById('editorjs-holder') : null;
-                          const sugList: Array<DocumentSuggestion> = [];
+                          const sugList: DocumentSuggestion[] = [];
                           if (holder) {
-                            const map = new Map<string, DocumentSuggestion>();
+                            const map = new Map<string, any>();
                             holder.querySelectorAll('del[data-suggestion-id], .sf-suggestion-del').forEach((del) => {
                               const sugId = del.getAttribute('data-suggestion-id') || 'sug';
                               const author = del.getAttribute('data-author') || 'Collaborator';
@@ -208,8 +209,8 @@ export const SidebarCommentsTab = (props: any) => {
                         })();
 
                       const filteredSugList = suggestionSubTab === 'active'
-                        ? allSugList.filter(s => s.status === 'pending')
-                        : allSugList.filter(s => s.status === 'accepted' || s.status === 'rejected');
+                        ? allSugList.filter((s: any) => s.status === 'pending')
+                        : allSugList.filter((s: any) => s.status === 'accepted' || s.status === 'rejected');
 
                       if (filteredSugList.length === 0) {
                         return (
@@ -221,7 +222,7 @@ export const SidebarCommentsTab = (props: any) => {
                         );
                       }
 
-                      return filteredSugList.map((sug) => {
+                      return filteredSugList.map((sug: any) => {
                         const authorName = sug.author_name || sug.author || (language === 'en' ? 'Collaborator' : 'Kolaborator');
                         const deletedText = sug.selected_text || sug.old_text;
                         const replacementText = sug.suggested_text || sug.new_text;
@@ -311,12 +312,12 @@ export const SidebarCommentsTab = (props: any) => {
                       });
                     })()
                   ) : (
-                    comments.filter(c => c.resolved).length === 0 ? (
+                    comments.filter((c: any) => c.resolved).length === 0 ? (
                       <div className="text-center py-12 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-xs text-slate-400 font-medium italic">
                         {language === 'en' ? 'No resolved comments' : 'Belum ada komentar selesai'}
                       </div>
                     ) : (
-                      comments.filter(c => c.resolved).map((c) => (
+                      comments.filter((c: any) => c.resolved).map((c: any) => (
                         <div
                           key={c.id}
                           onClick={() => onCommentClick?.(c)}

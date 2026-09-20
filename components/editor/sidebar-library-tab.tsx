@@ -139,7 +139,7 @@ export const SidebarLibraryTab = (props: any) => {
                           <input
                             type="text"
                             value={newFolderName}
-                            onChange={(e) => setNewFolderName(e.target.value)}
+                            onChange={(e: any) => setNewFolderName(e.target.value)}
                             placeholder="Nama folder baru..."
                             className="flex-1 px-2 py-1 text-xs border border-line bg-white rounded-md outline-none focus:border-indigo-500 transition"
                           />
@@ -162,13 +162,13 @@ export const SidebarLibraryTab = (props: any) => {
 
                       <select
                         value={selectedFolderFilter}
-                        onChange={(e) => setSelectedFolderFilter(e.target.value)}
+                        onChange={(e: any) => setSelectedFolderFilter(e.target.value)}
                         className="w-full border border-line rounded-lg px-2.5 py-1.5 text-xs text-slate-700 bg-white outline-none focus:border-indigo-500 transition cursor-pointer"
                       >
                         <option value="all">Semua Referensi ({bibliographyEntries.length})</option>
-                        {folders.map((f) => {
+                        {folders.map((f: any) => {
                           const count = bibliographyEntries.filter(
-                            (e) => folderAssignments[e.referenceId] === f
+                            (e: any) => folderAssignments[e.referenceId] === f
                           ).length;
                           return (
                             <option key={f} value={f}>
@@ -181,7 +181,7 @@ export const SidebarLibraryTab = (props: any) => {
                   )}
 
                   {filteredCollections.length > 0 ? (
-                    filteredCollections.map((entry, index) => (
+                    filteredCollections.map((entry: any, index: number) => (
                       <article
                         key={entry.referenceId}
                         className="rounded-lg border border-line bg-white p-3 shadow-sm"
@@ -212,11 +212,11 @@ export const SidebarLibraryTab = (props: any) => {
                               <span className="text-[10px] text-slate-500 font-bold">Folder:</span>
                               <select
                                 value={folderAssignments[entry.referenceId] || ''}
-                                onChange={(e) => onAssignFolder(entry.referenceId, e.target.value)}
+                                onChange={(e: any) => onAssignFolder(entry.referenceId, e.target.value)}
                                 className="border border-slate-200 rounded px-1.5 py-0.5 text-[10px] text-slate-600 bg-white outline-none cursor-pointer focus:border-indigo-500 transition max-w-[150px]"
                               >
                                 <option value="">Tanpa Folder</option>
-                                {folders.map((f) => (
+                                {folders.map((f: any) => (
                                   <option key={f} value={f}>
                                     📁 {f}
                                   </option>

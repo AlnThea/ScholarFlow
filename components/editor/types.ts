@@ -7,7 +7,7 @@ import type { DocumentListItem, DocumentEntry } from '@/lib/api/documents';
 import type { AIModel, AIProvider } from '@/lib/api/ai-models';
 import type { DocumentNotification } from '@/lib/api/comments';
 import type { UserPresence } from '@/lib/api/presence';
-import type { EditorJsMethods } from './editorjs-editor';
+import type { EditorJsMethods } from '@/hooks/use-editorjs-methods';
 import React from 'react';
 
 export type EditorLayoutProps = {

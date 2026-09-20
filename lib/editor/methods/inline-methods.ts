@@ -43,7 +43,7 @@ export function buildInlineMethods(props: EditorJsMethodsProps) {
             let isWrapped = false;
     
             while (node && node.id !== holderId && node.tagName !== 'DIV') {
-              if (node.tagName === targetTag && (!className || className.split(' ').every(c => node.classList.contains(c)))) {
+              if (node.tagName === targetTag && (!className || className.split(' ').every(c => node?.classList.contains(c)))) {
                 isWrapped = true;
                 break;
               }

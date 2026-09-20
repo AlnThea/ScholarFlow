@@ -38,3 +38,5 @@ export function buildEditorJsMethods(props: EditorJsMethodsProps) {
     ...buildCommentMethods(props),
   };
 }
+
+export type EditorJsMethods = ReturnType<typeof buildEditorJsMethods>;

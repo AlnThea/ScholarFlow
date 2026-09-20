@@ -197,7 +197,3 @@ export function EditorBubbleMenu(props: EditorBubbleMenuProps) {
     </>
   );
 }
-
-import { FormatMenu } from './bubble-menu/format-menu';
-import { CitationMenu } from './bubble-menu/citation-menu';
-

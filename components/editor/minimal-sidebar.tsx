@@ -107,15 +107,17 @@ export function MinimalSidebar({
 
   React.useEffect(() => {
     if (activeView === 'library') {
-      fetchCitationLibrary()
-        .then((entries) => {
+      if (user?.id) {
+        fetchCitationLibrary(user.id)
+          .then((entries) => {
           setLibraryEntries(entries);
         })
         .catch((err) => {
           console.error('Error fetching library:', err);
         });
+      }
     }
-  }, [activeView]);
+  }, [activeView, user?.id]);
 
   const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -230,7 +232,7 @@ export function MinimalSidebar({
   const handleDeleteLibraryItem = async (refId: string) => {
     if (!confirm(language === 'en' ? 'Delete this PDF reference from your library?' : 'Hapus rujukan PDF ini dari library Anda?')) return;
     try {
-      const res = await deleteCitationFromLibrary(refId);
+      const res = await deleteCitationFromLibrary(refId, user?.id || '');
       if (res.success) {
         setLibraryEntries((prev) => {
           const next = { ...prev };
@@ -318,12 +320,12 @@ export function MinimalSidebar({
           setActiveView={setActiveView}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          onCreateDocument={onCreateDocument}
+          onCreateDocument={onCreateDocument as any}
           filteredDocs={filteredDocs}
           groupedDocs={groupedDocs}
           expandedProjects={expandedProjects}
           setExpandedProjects={setExpandedProjects}
-          currentDocumentId={currentDocumentId}
+          currentDocumentId={currentDocumentId || undefined}
           onSelectDocument={onSelectDocument}
           onDeleteDocument={onDeleteDocument}
           setDocumentToDelete={setDocumentToDelete}
@@ -367,8 +369,8 @@ export function MinimalSidebar({
           language={language}
           setActiveView={setActiveView}
           onSelectDocument={onSelectDocument}
-          onSelectAdminTab={onSelectAdminTab}
-          activeDashboardTab={activeDashboardTab}
+          onSelectAdminTab={onSelectAdminTab as any}
+          activeDashboardTab={activeDashboardTab as any}
           onOpenBackendSettings={onOpenBackendSettings}
         />
       )}

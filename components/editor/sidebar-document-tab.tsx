@@ -201,7 +201,7 @@ export const SidebarDocumentTab = (props: any) => {
                         <div className="flex flex-col gap-2">
                           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider text-left">Kalimat dengan Kemiripan Tinggi:</span>
 
-                          {plagiarismDetails.map((item, idx) => (
+                          {plagiarismDetails.map((item: any, idx: number) => (
                             <div key={idx} className="border border-slate-100 rounded-lg p-2.5 bg-slate-50/50 flex flex-col gap-1.5 text-left">
                               <div className="flex justify-between items-center text-[9px] text-slate-400 font-semibold">
                                 <span className="text-rose-600 uppercase tracking-wider">{item.similarity}% match</span>

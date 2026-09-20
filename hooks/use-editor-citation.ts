@@ -5,7 +5,7 @@ import { addCitationHistoryEntry, type CitationHistoryEntry } from '@/lib/editor
 import { formatBibliographyCandidate, serializeBibliographyText } from '@/lib/editor/bibliography';
 import { serializeCitationCandidatesText } from '@/lib/editor/citation-export';
 import { downloadFile } from '@/lib/editor/editor-utils';
-import type { EditorJsMethods } from '@/components/editor/editorjs-editor';
+import type { EditorJsMethods } from '@/hooks/use-editorjs-methods';
 import type { DocumentEntry } from '@/lib/api/documents';
 
 const CITATION_LIBRARY_KEY = 'scholarflow.editor.citation-library.v1';

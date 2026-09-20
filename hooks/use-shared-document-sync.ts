@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { fetchSharedDocument, updateSharedDocument, DocumentEntry } from '@/lib/api/documents';
 import { fetchComments, DocumentComment } from '@/lib/api/comments';
 import { fetchCitationLibrary } from '@/lib/api/citation-library';
@@ -75,7 +75,7 @@ export function useSharedDocumentSync({
         setLoading(true);
         const [docDetail, libData, commentsData, suggestionsData] = await Promise.all([
           fetchSharedDocument(docId),
-          fetchCitationLibrary().catch(() => ({})),
+          fetchCitationLibrary(user?.id || "").catch(() => ({})),
           fetchComments(docId).catch(() => []),
           fetchSuggestions(docId).catch(() => [])
         ]);

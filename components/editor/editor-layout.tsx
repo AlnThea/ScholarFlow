@@ -289,8 +289,8 @@ export function EditorLayout({
         onSelectDocument={onSelectDocument}
         onCreateDocument={onCreateDocument}
         onDeleteDocument={onDeleteDocument}
-        onSelectAdminTab={handleSetDashboardTab}
-        activeDashboardTab={activeDashboardTab}
+        onSelectAdminTab={handleSetDashboardTab as any}
+        activeDashboardTab={activeDashboardTab as any}
         className={isAnyModalOpen ? 'select-none pointer-events-none' : ''}
         isDarkMode={isDarkMode}
         onToggleDarkMode={toggleDarkMode}

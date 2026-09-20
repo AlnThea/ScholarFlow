@@ -1,6 +1,6 @@
 import React from 'react';
 import { IconFilePlus, IconFolder, IconFolderOpen, IconChevronDown, IconFile } from '@tabler/icons-react';
-import { DocumentListItem } from '@/types/document';
+import { DocumentListItem } from '@/lib/api/documents';
 
 interface SidebarDocumentsViewProps {
   language: 'en' | 'id';

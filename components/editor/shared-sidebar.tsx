@@ -5,7 +5,12 @@ export const SharedSidebar = (props: any) => {
   const {
     showCommentsSidebar, setShowCommentsSidebar, language, isCoEditor, activeUsers,
     sidebarTab, setSidebarTab, comments, onResolveComment, suggestions,
-    onAcceptSuggestion, onRejectSuggestion, user
+    onAcceptSuggestion, onRejectSuggestion, user,
+    document, setDocument, lastSavedContentRef, getContentComparisonString,
+    updateSharedDocument, docId, editorJsRef, isValidUuid, profile,
+    createNotification, updateSuggestionStatus, fetchSuggestions, setSuggestions,
+    commentSubTab, setCommentSubTab, suggestionSubTab, setSuggestionSubTab,
+    acceptedLocallyRef, processedAcceptedSuggestionsRef
   } = props;
 
   return (
@@ -50,7 +55,7 @@ export const SharedSidebar = (props: any) => {
                   <span>{language === 'id' ? 'Komentar' : 'Comments'}</span>
                   <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${commentSubTab === 'active' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'
                     }`}>
-                    {comments.filter(c => !c.resolved).length}
+                    {comments.filter((c: any) => !c.resolved).length}
                   </span>
                 </button>
 
@@ -74,7 +79,7 @@ export const SharedSidebar = (props: any) => {
                   <span>{language === 'id' ? 'Selesai' : 'Resolved'}</span>
                   <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${commentSubTab === 'resolved' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'
                     }`}>
-                    ✓ {comments.filter(c => c.resolved).length}
+                    ✓ {comments.filter((c: any) => c.resolved).length}
                   </span>
                 </button>
               </div>
@@ -93,7 +98,7 @@ export const SharedSidebar = (props: any) => {
                     <span>💡 {language === 'id' ? 'Aktif' : 'Active'}</span>
                     <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${suggestionSubTab === 'active' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'
                       }`}>
-                      {suggestions.filter(s => s.status === 'pending').length}
+                      {suggestions.filter((s: any) => s.status === 'pending').length}
                     </span>
                   </button>
 
@@ -108,7 +113,7 @@ export const SharedSidebar = (props: any) => {
                     <span>📜 {language === 'id' ? 'Riwayat' : 'History'}</span>
                     <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${suggestionSubTab === 'history' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'
                       }`}>
-                      {suggestions.filter(s => s.status === 'accepted' || s.status === 'rejected').length}
+                      {suggestions.filter((s: any) => s.status === 'accepted' || s.status === 'rejected').length}
                     </span>
                   </button>
                 </div>
@@ -118,7 +123,7 @@ export const SharedSidebar = (props: any) => {
             {/* Comments List */}
             <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3.5 bg-slate-50/30">
               {commentSubTab === 'active' ? (
-                comments.filter(c => !c.resolved).length === 0 ? (
+                comments.filter((c: any) => !c.resolved).length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                     <div className="p-3 rounded-2xl bg-indigo-50 text-indigo-400 mb-3">
                       <IconMessage className="h-6 w-6" />
@@ -131,7 +136,7 @@ export const SharedSidebar = (props: any) => {
                     </p>
                   </div>
                 ) : (
-                  comments.filter(c => !c.resolved).map((c) => (
+                  comments.filter((c: any) => !c.resolved).map((c: any) => (
                     <div
                       key={c.id}
                       onClick={() => {
@@ -173,8 +178,8 @@ export const SharedSidebar = (props: any) => {
               ) : (commentSubTab as string) === 'suggestions' ? (
                 (() => {
                   const filteredSugList = suggestionSubTab === 'active'
-                    ? suggestions.filter(s => s.status === 'pending')
-                    : suggestions.filter(s => s.status === 'accepted' || s.status === 'rejected');
+                    ? suggestions.filter((s: any) => s.status === 'pending')
+                    : suggestions.filter((s: any) => s.status === 'accepted' || s.status === 'rejected');
 
                   if (filteredSugList.length === 0) {
                     return (
@@ -196,7 +201,7 @@ export const SharedSidebar = (props: any) => {
                     );
                   }
 
-                  return filteredSugList.map((sug) => {
+                  return filteredSugList.map((sug: any) => {
                     const authorName = sug.author_name || sug.author || (language === 'id' ? 'Kolaborator' : 'Collaborator');
                     const deletedText = sug.selected_text || sug.old_text;
                     const replacementText = sug.suggested_text || sug.new_text;
@@ -316,7 +321,7 @@ export const SharedSidebar = (props: any) => {
                                         if (changed) {
                                           const updatedContentStr = JSON.stringify(rawContent);
                                           lastSavedContentRef.current = getContentComparisonString(rawContent);
-                                          setDocument(prev => prev ? { ...prev, content: updatedContentStr } : prev);
+                                          setDocument((prev: any) => prev ? { ...prev, content: updatedContentStr } : prev);
                                           updateSharedDocument(docId, { title: document.title || 'Untitled', content: updatedContentStr, settings: document.settings });
                                           setTimeout(() => {
                                             editorJsRef.current?.renderContent?.(rawContent);
@@ -353,7 +358,7 @@ export const SharedSidebar = (props: any) => {
                   });
                 })()
               ) : (
-                comments.filter(c => c.resolved).length === 0 ? (
+                comments.filter((c: any) => c.resolved).length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                     <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-400 mb-3">
                       <IconCheck className="h-6 w-6" />
@@ -366,7 +371,7 @@ export const SharedSidebar = (props: any) => {
                     </p>
                   </div>
                 ) : (
-                  comments.filter(c => c.resolved).map((c) => (
+                  comments.filter((c: any) => c.resolved).map((c: any) => (
                     <div
                       key={c.id}
                       className="border border-slate-200/60 bg-white/70 rounded-2xl p-3.5 flex flex-col gap-2 text-left opacity-80 hover:opacity-100 transition shadow-sm"

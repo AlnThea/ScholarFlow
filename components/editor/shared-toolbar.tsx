@@ -288,7 +288,7 @@ export function SharedToolbar({
               }`}
             title="Bantuan Rumus LaTeX (Math Helper)"
             onMouseDown={(e) => e.preventDefault()}
-            onClick={() => setIsMathHelperOpen(prev => !prev)}
+            onClick={() => setIsMathHelperOpen((prev: any) => !prev)}
           >
             <IconCalculator className="h-4 w-4 text-indigo-500" />
           </button>

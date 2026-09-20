@@ -400,6 +400,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           import('@editorjs/image'),
           import('@editorjs/table'),
           import('@editorjs/code'),
+          // @ts-ignore
           import('editorjs-undo')
         ]).then(([headerMod, listMod, imageMod, tableMod, codeMod, undoMod]) => {
           if (!isMounted) return;

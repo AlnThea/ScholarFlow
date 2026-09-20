@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { IconX, IconCheck, IconTrash, IconSparkles, IconInfoCircle, IconRefresh, IconLanguage } from '@tabler/icons-react';
+import { IconX, IconCheck, IconTrash, IconSparkles, IconInfoCircle, IconRefresh, IconLanguage, IconBold, IconItalic, IconUnderline, IconStrikethrough, IconCode, IconLink, IconHighlight, IconLoader, IconQuote, IconExternalLink, IconSearch, IconMessage, IconSum } from '@tabler/icons-react';
 
 export const SharedBubbleMenu = (props: any) => {
   const {
@@ -8,7 +8,14 @@ export const SharedBubbleMenu = (props: any) => {
     isCoEditor, isAiLoading, setShowBubbleMenu, handleAiImprovement,
     aiTargetLanguage, setAiTargetLanguage, setBubbleMode, bubbleMode,
     newCommentText, setNewCommentText, handleAddComment,
-    handleOpenSuggestionModal
+    handleOpenSuggestionModal,
+    editorJsRef, activeFormats, getBtnClass, handleHighlightButtonClick,
+    selectedAiModel, setSelectedAiModel, selectedAiTone, setSelectedAiTone,
+    isImproving, handleImproveText, setBubbleSearchQuery, runCitationSearchForQuery,
+    editorMode, setSelectedTextForSuggestion, setNewTextForSuggestion,
+    setIsSuggestionModalOpen, isSearchingCitations, citationError, citationResults,
+    setCitationLibrary, profile, user, newCommentAuthor, setNewCommentAuthor,
+    isSubmittingComment, setIsSubmittingComment, addComment, document, setComments, createNotification
   } = props;
 
   return (
@@ -316,7 +323,7 @@ export const SharedBubbleMenu = (props: any) => {
                 {/* Results List */}
                 {!isSearchingCitations && citationResults.length > 0 && (
                   <div className="flex flex-col gap-2.5 p-3 max-h-[300px] overflow-y-auto bg-slate-50/50">
-                    {citationResults.map((candidate) => (
+                    {citationResults.map((candidate: any) => (
                       <div
                         key={candidate.reference_id}
                         className="rounded-xl border border-slate-200/80 bg-white p-3 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col gap-2 text-left"
@@ -347,7 +354,7 @@ export const SharedBubbleMenu = (props: any) => {
                               } else {
                                 editorJsRef.current?.insertCitation(candidate.citation_label, candidate.reference_id);
                               }
-                              setCitationLibrary(prev => ({
+                              setCitationLibrary((prev: any) => ({
                                 ...prev,
                                 [candidate.reference_id]: candidate
                               }));
@@ -483,7 +490,7 @@ export const SharedBubbleMenu = (props: any) => {
                           editorJsRef.current?.addCommentMark(added.id, author);
 
                           // Update comments list
-                          setComments(prev => [...prev, added]);
+                          setComments((prev: any) => [...prev, added]);
 
                           // 2. Trigger notification for owner
                           await createNotification(

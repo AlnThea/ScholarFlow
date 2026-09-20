@@ -84,7 +84,7 @@ export function useAdminModals({
   useEffect(() => {
     if (aiModels && aiModels.length > 0) {
       const initial: Record<string, any> = {};
-      aiModels.forEach((m) => {
+      aiModels.forEach((m: AIModel) => {
         initial[m.id] = {
           name: m.name,
           model_id: m.model_id,

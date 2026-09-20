@@ -127,7 +127,7 @@ export interface IDataService {
   ): Promise<ServiceResponse>;
 
   getCitationLibrary(): Promise<Record<string, CitationCandidate>>;
-  saveCitationToLibrary(candidate: CitationCandidate): Promise<ServiceResponse>;
+  saveCitationToLibrary(candidate: CitationCandidate, userId?: string): Promise<ServiceResponse>;
   deleteCitationFromLibrary(referenceId: string): Promise<ServiceResponse>;
   isCitationInLibrary(referenceId: string): Promise<boolean>;
 

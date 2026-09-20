@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useParams } from 'next/navigation';
 import { improveWriting, type ImproveWritingResponse, synthesizeLiteratureReview, generateAbstract } from '@/lib/api/ai';
 import { fetchAIModels, updateAIModel, createAIModel, deleteAIModel, type AIModel, fetchAIProviders, createAIProvider, updateAIProvider, deleteAIProvider, type AIProvider } from '@/lib/api/ai-models';
-import EditorJsEditor, { type EditorJsMethods } from './editorjs-editor';
+import EditorJsEditor from './editorjs-editor';
+import type { EditorJsMethods } from '@/lib/editor/editor-tools';
 import { EditorLayout } from './editor-layout';
 import { searchCitations, type CitationCandidate } from '@/lib/api/citations';
 import { fetchCitationLibrary, saveCitationToLibrary } from '@/lib/api/citation-library';
@@ -91,6 +92,14 @@ export function ScholarEditor() {
       setToastMessage(null);
     }, 3000);
   }, []);
+
+  const editorJsRef = useRef<EditorJsMethods | null>(null);
+  const [editorJsStats, setEditorJsStats] = useState({
+    wordCount: 0,
+    characterCount: 0,
+    citationCount: 0
+  });
+  const [activeReferenceIds, setActiveReferenceIds] = useState<string[]>([]);
 
   const {
     documents,
@@ -231,14 +240,50 @@ export function ScholarEditor() {
 
 
 
-  const editorJsRef = useRef<EditorJsMethods | null>(null);
-  const [editorJsStats, setEditorJsStats] = useState({
-    wordCount: 0,
-    characterCount: 0,
-    citationCount: 0
-  });
-  const [activeReferenceIds, setActiveReferenceIds] = useState<string[]>([]);
 
+
+  const setAiErrorRef = useRef<(msg: string | null) => void>(() => {});
+  
+  const {
+    citationResults,
+    citationLibrary,
+    citationHistory,
+    citationError,
+    citationNote,
+    isSearchingCitations,
+    activeModalCitation,
+    setActiveModalCitation,
+    activePdfUrl,
+    setActivePdfUrl,
+    activePdfSearchTerm,
+    setActivePdfSearchTerm,
+    resolvedPdfUrl,
+    isResolvingPdf,
+    translatedCitedSentence,
+    isTranslating,
+    bibliographyEntries,
+    insertCitation,
+    insertBibliography,
+    exportBibliographyText,
+    exportBibliographyJson,
+    exportBibliographyBibtex,
+    exportBibliographyRis,
+    exportCitationText,
+    exportCitationJson,
+    runCitationSearch,
+    repeatCitationSearch,
+    insertCitationCandidate
+  } = useEditorCitation(
+    user,
+    hydrated,
+    currentDocument,
+    activeReferenceIds,
+    activePlanId,
+    editorJsRef as any,
+    setWarningMessage,
+    (msg) => setAiErrorRef.current(msg),
+    '' // selectedText will be passed as empty initially
+  );
 
   const {
     selectedText, setSelectedText,
@@ -272,6 +317,7 @@ export function ScholarEditor() {
     setSavedAt,
     hydrated
   );
+  setAiErrorRef.current = setAiError;
 
 
 
@@ -360,46 +406,7 @@ export function ScholarEditor() {
     setHydrated(true);
   }, []);
 
-  const {
-    citationResults,
-    citationLibrary,
-    citationHistory,
-    citationError,
-    citationNote,
-    isSearchingCitations,
-    activeModalCitation,
-    setActiveModalCitation,
-    activePdfUrl,
-    setActivePdfUrl,
-    activePdfSearchTerm,
-    setActivePdfSearchTerm,
-    resolvedPdfUrl,
-    isResolvingPdf,
-    translatedCitedSentence,
-    isTranslating,
-    bibliographyEntries,
-    insertCitation,
-    insertBibliography,
-    exportBibliographyText,
-    exportBibliographyJson,
-    exportBibliographyBibtex,
-    exportBibliographyRis,
-    exportCitationText,
-    exportCitationJson,
-    runCitationSearch,
-    repeatCitationSearch,
-    insertCitationCandidate
-  } = useEditorCitation(
-    user,
-    hydrated,
-    currentDocument,
-    activeReferenceIds,
-    activePlanId,
-    editorJsRef,
-    setWarningMessage,
-    setAiError,
-    selectedText
-  );
+
   const isUrlDocLoading = params?.id && !currentDocument;
   if (isUrlDocLoading) {
     return (
@@ -414,6 +421,21 @@ export function ScholarEditor() {
       </div>
     );
   }
+
+  const wordCount = editorJsStats.wordCount;
+  const characterCount = editorJsStats.characterCount;
+  const citationCount = editorJsStats.citationCount;
+  const statusLabel = saveStatus;
+
+  const insertSampleImage = () => {
+    // Implement sample image insertion if needed
+  };
+
+  const handleInsertSynthesizedText = () => {
+    if (synthesizedText && editorJsRef.current) {
+      (editorJsRef.current as any).insertHtmlAtCursor?.(synthesizedText);
+    }
+  };
 
   return (
     <>
@@ -485,7 +507,7 @@ export function ScholarEditor() {
             });
           }
         }}
-        editorJsRef={editorJsRef}
+        editorJsRef={editorJsRef as any}
         onCiteClick={(refId, label, citedSentence) => {
           setActiveModalCitation({ refId, label, citedSentence });
         }}
@@ -642,7 +664,7 @@ export function ScholarEditor() {
 
       <CitationDetailsModal
         language={language}
-        activeModalCitation={activeModalCitation}
+        activeModalCitation={activeModalCitation as any}
         candidate={activeModalCitation ? citationLibrary[activeModalCitation.refId] : undefined}
         isTranslating={isTranslating}
         translatedCitedSentence={translatedCitedSentence}

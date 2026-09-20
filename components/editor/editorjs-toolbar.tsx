@@ -22,7 +22,7 @@ import {
   IconAlignJustified,
   IconCalculator
 } from '@tabler/icons-react';
-import type { EditorJsMethods } from './editorjs-editor';
+import type { EditorJsMethods } from '@/hooks/use-editorjs-methods';
 
 type EditorToolbarProps = {
   language: string;

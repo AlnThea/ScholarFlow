@@ -18,6 +18,9 @@ import { SharedSidebar } from '@/components/editor/shared-sidebar';
 import { SharedBubbleMenu } from '@/components/editor/shared-bubble-menu';
 import { PricingModal } from '@/components/editor/pricing-modal';
 import { SuggestionModal } from '@/components/editor/modals/suggestion-modal';
+import { LinkModal } from '@/components/editor/modals/link-modal';
+import { MathModal } from '@/components/editor/modals/math-modal';
+import { MathHelperPanel } from '@/components/editor/math-helper-panel';
 import { useSharedEditorLogic } from '@/hooks/use-shared-editor-logic';
 import { CitationDetailsModal } from '@/components/editor/modals/citation-details-modal';
 import { SharedToolbar } from '@/components/editor/shared-toolbar';
@@ -94,7 +97,7 @@ export default function SharedDocumentPage() {
     activeUsers, setActiveUsers, hasPendingRemoteUpdate, setHasPendingRemoteUpdate,
     pendingRemoteContent, setPendingRemoteContent, acceptedLocallyRef,
     handleContentChange, handleTitleChange
-  } = useSharedDocumentSync(docId, user, profile, false, 'en', editorJsRef, showToast);
+  } = useSharedDocumentSync({ docId, user, profile, language: 'en', editorJsRef, showToast });
 
   const language = document?.settings?.citationLocale?.startsWith('id') ? 'id' : 'en';
   const isCoEditor = document?.settings?.sharePermission === 'edit';
@@ -144,7 +147,7 @@ export default function SharedDocumentPage() {
   const onAcceptSuggestion = async (id: string) => {};
   const onRejectSuggestion = async (id: string) => {};
   const triggerDebouncedSave = (title: string, contentStr: string, settings: any) => {
-    updateSharedDocument(docId, title, contentStr, settings);
+    updateSharedDocument(docId, { title, content: JSON.parse(contentStr), settings });
   };
 
   // Render Loading Screen
@@ -560,7 +563,7 @@ export default function SharedDocumentPage() {
         linkUrlInput={linkUrlInput}
         setLinkUrlInput={setLinkUrlInput}
         onConfirm={handleInsertLinkConfirm}
-        onUnlink={insertLinkCallback?.unlink ? handleUnlinkConfirm : undefined}
+        onUnlink={insertLinkCallback?.unlink ? handleUnlinkConfirm : () => {}}
         isEditing={!!insertLinkCallback?.unlink}
         language={language as "en" | "id"}
       />
@@ -752,4 +755,4 @@ export default function SharedDocumentPage() {
     </div>
   );
 }
-
+
