@@ -3,6 +3,16 @@
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
 ## 🚀 [Unreleased]
+
+### 🏗️ Massive Architecture Refactoring & Type-Safety
+- **Refactored**: Pemecahan secara masif komponen-komponen raksasa (seperti `page.tsx`, `editor-layout.tsx`, `use-editorjs-methods.ts`, dll) hingga berukuran `< 700 baris`. Arsitektur kini sangat modular.
+- **Fixed**: Perbaikan 100% kompilasi TypeScript (*Type-Safe*).
+
+### 🎨 Enterprise Dashboard Redesign
+- **Redesigned**: Antarmuka User Dashboard (`app/dashboard/page.tsx`) dirombak menjadi kelas Enterprise (dengan *Metrics Cards*, *Quick Access* ber-grid elegan, dan animasi *hover* transisi yang mulus).
+
+### 🔗 Sidebar Integration Fix
+- **Fixed**: Perbaikan integrasi *Sidebar* dengan halaman *My Library* dan *Bibliometric Analysis*. Navigasi di luar *editor* konsisten dan bebas dari URL 404.
 ### ✨ Distraction-Free Zen Mode Layout
 - **Added**: Upgraded the Left Sidebar (`MinimalSidebar`) to completely hide (`w-0`) when collapsed instead of shrinking to `w-16`. A floating Hamburger menu appears on the document header to toggle it, providing a fully immersive, distraction-free writing canvas for the user.
 

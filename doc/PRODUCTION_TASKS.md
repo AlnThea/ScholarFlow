@@ -127,21 +127,21 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
 ---
 
 ### 📊 EPIC 6: Bibliometric Analysis & Research Discovery
-- [ ] **6.1 Bibliometric Dashboard UI**
-  - [ ] Halaman utama pencarian bibliometrik di `/app/dashboard/bibliometric/page.tsx`.
-- [ ] **6.2 OpenAlex Metadata Fetcher API**
-  - [ ] Endpoint API `/api/bibliometric/search` untuk menarik metadata literatur.
-- [ ] **6.3 Network & Trend Visualization**
-  - [ ] Integrasi `echarts-for-react` (Keyword Network) dan `recharts` (Timeline).
-- [ ] **6.4 Editor Export Bridge**
-  - [ ] Fitur "Export Insight to Editor" (AI Summary) & Save to Library.
+- [x] **6.1 Bibliometric Dashboard UI**
+  - [x] Halaman utama pencarian bibliometrik di `/app/dashboard/bibliometric/page.tsx`.
+- [x] **6.2 OpenAlex Metadata Fetcher API**
+  - [x] Endpoint API `/api/bibliometric/search` untuk menarik metadata literatur.
+- [x] **6.3 Network & Trend Visualization**
+  - [x] Integrasi `echarts-for-react` (Keyword Network) dan `recharts` (Timeline).
+- [x] **6.4 Editor Export Bridge**
+  - [x] Fitur "Export Insight to Editor" (AI Summary) & Save to Library.
 
 ---
 
 ### 📚 EPIC 7: Centralized Library Management ("My Library")
-- [ ] **7.1 Library Dashboard UI**
-  - [ ] Halaman utama manajemen pustaka di `/app/dashboard/library/page.tsx` dengan layout tabel/list modern.
-- [ ] **7.2 CRUD Operations & Metadata Sync**
-  - [ ] Fitur Edit, Delete, dan pengelompokan referensi.
-- [ ] **7.3 Bulk Import & PDF Upload**
-  - [ ] Integrasi import file `.ris` / `BibTeX` dan upload PDF untuk ekstraksi metadata otomatis.
+- [x] **7.1 Library Dashboard UI**
+  - [x] Halaman utama manajemen pustaka di `/app/dashboard/library/page.tsx` dengan layout tabel/list modern.
+- [x] **7.2 CRUD Operations & Metadata Sync**
+  - [x] Fitur Edit, Delete, dan pengelompokan referensi.
+- [x] **7.3 Bulk Import & PDF Upload**
+  - [x] Integrasi import file `.ris` / `BibTeX` dan upload PDF untuk ekstraksi metadata otomatis.

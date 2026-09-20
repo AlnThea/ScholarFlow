@@ -221,7 +221,7 @@ export default function DashboardPage() {
               </button>
 
               <Link 
-                href="/library"
+                href="/dashboard/library"
                 className="group flex flex-col p-5 bg-white/90 backdrop-blur-md border border-slate-200/80 rounded-2xl hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 text-left"
               >
                 <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 border border-blue-100">
@@ -236,7 +236,7 @@ export default function DashboardPage() {
               </Link>
 
               <Link 
-                href="/analytics"
+                href="/dashboard/bibliometric"
                 className="group flex flex-col p-5 bg-white/90 backdrop-blur-md border border-slate-200/80 rounded-2xl hover:border-purple-500 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 text-left"
               >
                 <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 border border-purple-100">
