@@ -9,7 +9,11 @@ import { useLanguage } from '@/components/i18n/language-context';
 import { DocumentSetupModal } from '@/components/editor/document-setup-modal';
 import { MinimalSidebar } from '@/components/editor/minimal-sidebar';
 import type { DocumentListItem } from '@/lib/services/types';
-import { IconPlus, IconFileText, IconClock, IconSearch, IconFolder, IconBook } from '@tabler/icons-react';
+import { 
+  IconPlus, IconFileText, IconClock, IconSearch, IconFolder, 
+  IconBook, IconChartBar, IconBooks, IconDotsVertical, 
+  IconSparkles, IconActivity, IconFileDescription
+} from '@tabler/icons-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 
@@ -98,6 +102,13 @@ export default function DashboardPage() {
   const activePlanId = profile?.subscription_plan || 'free';
   const greetingName = profile?.full_name || user.email?.split('@')[0] || 'Scholar';
 
+  // Metrics Logic
+  const totalDocs = documents.length;
+  const activeProjects = new Set(documents.filter(d => d.settings?.projectName).map(d => d.settings?.projectName)).size;
+  const lastEdited = documents.length > 0 
+    ? new Date(Math.max(...documents.map(d => new Date(d.updated_at).getTime()))).toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', { month: 'short', day: 'numeric' }) 
+    : '-';
+
   return (
     <div className="flex h-screen w-full bg-slate-50 overflow-hidden font-sans selection:bg-indigo-100 selection:text-indigo-900">
       
@@ -120,24 +131,24 @@ export default function DashboardPage() {
       />
 
       {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 overflow-y-auto ${sidebarExpanded ? 'pl-0' : 'pl-0'}`}>
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 overflow-y-auto ${sidebarExpanded ? 'pl-0' : 'pl-0'} bg-gradient-to-br from-slate-50 to-slate-100/50`}>
         
         {/* Top Navbar */}
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
-          <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-xl border-b border-white/20 shadow-sm transition-all duration-300">
+          <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <h1 className="text-lg font-bold text-slate-700">
+              <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600">
                 {t('navbar.dashboard')}
               </h1>
             </div>
             <div className="flex items-center gap-4">
               <button 
                 onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
-                className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-md transition border border-slate-200"
+                className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-white rounded-md transition-all duration-300 border border-slate-200 hover:shadow-sm"
               >
                 {language === 'en' ? 'EN' : 'ID'}
               </button>
-              <div className="w-8 h-8 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full border-2 border-white shadow-sm flex items-center justify-center text-white text-xs font-bold">
+              <div className="w-9 h-9 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full border-2 border-white shadow-md flex items-center justify-center text-white text-sm font-bold cursor-pointer hover:scale-105 transition-transform">
                 {greetingName.charAt(0).toUpperCase()}
               </div>
             </div>
@@ -145,57 +156,134 @@ export default function DashboardPage() {
         </header>
 
         {/* Dashboard Content */}
-        <main className="max-w-6xl w-full mx-auto px-6 py-12">
+        <main className="max-w-6xl w-full mx-auto px-6 py-10 transition-all duration-300">
           {/* Welcome Section */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
             <div>
-              <h2 className="text-3xl font-bold text-slate-800 mb-2 tracking-tight">
-                {language === 'en' ? `Welcome back, ${greetingName}!` : `Selamat datang, ${greetingName}!`}
+              <h2 className="text-3xl font-extrabold text-slate-800 mb-2 tracking-tight flex items-center gap-2">
+                {language === 'en' ? `Welcome back, ${greetingName}` : `Selamat datang, ${greetingName}`}
+                <span className="text-2xl animate-wave origin-[70%_70%] inline-block">👋</span>
               </h2>
-              <p className="text-slate-500 font-medium">
-                {language === 'en' ? 'What are we researching today?' : 'Apa yang akan kita teliti hari ini?'}
+              <p className="text-slate-500 font-medium text-sm md:text-base">
+                {language === 'en' ? 'Ready to accelerate your academic research today?' : 'Siap untuk mempercepat riset akademik Anda hari ini?'}
               </p>
             </div>
-            <button 
-              onClick={() => setIsSetupModalOpen(true)}
-              className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-md shadow-indigo-200 transition-all active:scale-95"
-            >
-              <IconPlus className="w-5 h-5" />
-              {t('setup.create')}
-            </button>
+          </div>
+
+          {/* Statistics/Metrics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+            <div className="bg-white/80 backdrop-blur-md border border-white/40 shadow-sm hover:shadow-md transition-all duration-300 rounded-2xl p-6 flex items-center gap-5">
+              <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                <IconFileDescription className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-500 mb-0.5">Total Documents</p>
+                <h4 className="text-2xl font-bold text-slate-800">{isLoadingDocs ? '-' : totalDocs}</h4>
+              </div>
+            </div>
+            <div className="bg-white/80 backdrop-blur-md border border-white/40 shadow-sm hover:shadow-md transition-all duration-300 rounded-2xl p-6 flex items-center gap-5">
+              <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
+                <IconFolder className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-500 mb-0.5">Active Projects</p>
+                <h4 className="text-2xl font-bold text-slate-800">{isLoadingDocs ? '-' : activeProjects}</h4>
+              </div>
+            </div>
+            <div className="bg-white/80 backdrop-blur-md border border-white/40 shadow-sm hover:shadow-md transition-all duration-300 rounded-2xl p-6 flex items-center gap-5">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                <IconActivity className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-500 mb-0.5">Last Edited</p>
+                <h4 className="text-xl font-bold text-slate-800">{isLoadingDocs ? '-' : lastEdited}</h4>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Action Links */}
+          <div className="mb-10">
+            <h3 className="text-base font-bold text-slate-800 mb-4 px-1">Quick Access</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <button 
+                onClick={() => setIsSetupModalOpen(true)}
+                className="group flex flex-col p-5 bg-white/90 backdrop-blur-md border border-slate-200/80 rounded-2xl hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300 text-left"
+              >
+                <div className="w-10 h-10 rounded-lg bg-indigo-600 text-white flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 shadow-md">
+                  <IconPlus className="w-5 h-5" />
+                </div>
+                <span className="font-bold text-slate-800 mb-1 group-hover:text-indigo-600 transition-colors">
+                  {language === 'en' ? 'New Document' : 'Mulai Dokumen Baru'}
+                </span>
+                <span className="text-xs text-slate-500">
+                  {language === 'en' ? 'Start a new research paper or article' : 'Mulai jurnal atau artikel baru'}
+                </span>
+              </button>
+
+              <Link 
+                href="/library"
+                className="group flex flex-col p-5 bg-white/90 backdrop-blur-md border border-slate-200/80 rounded-2xl hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 text-left"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 border border-blue-100">
+                  <IconBooks className="w-5 h-5" />
+                </div>
+                <span className="font-bold text-slate-800 mb-1 group-hover:text-blue-600 transition-colors">
+                  {language === 'en' ? 'My Library' : 'Buka My Library'}
+                </span>
+                <span className="text-xs text-slate-500">
+                  {language === 'en' ? 'Manage your references and sources' : 'Kelola referensi dan sumber'}
+                </span>
+              </Link>
+
+              <Link 
+                href="/analytics"
+                className="group flex flex-col p-5 bg-white/90 backdrop-blur-md border border-slate-200/80 rounded-2xl hover:border-purple-500 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 text-left"
+              >
+                <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 border border-purple-100">
+                  <IconChartBar className="w-5 h-5" />
+                </div>
+                <span className="font-bold text-slate-800 mb-1 group-hover:text-purple-600 transition-colors">
+                  {language === 'en' ? 'Bibliometric Analysis' : 'Analisis Bibliometrik'}
+                </span>
+                <span className="text-xs text-slate-500">
+                  {language === 'en' ? 'Discover trends and insights' : 'Temukan tren dan wawasan riset'}
+                </span>
+              </Link>
+            </div>
           </div>
 
           {/* Search & Filters */}
-          <div className="flex items-center gap-4 mb-8">
-            <div className="relative flex-1 max-w-md">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 px-1">
+            <h3 className="text-base font-bold text-slate-800">Recent Documents</h3>
+            <div className="relative w-full md:w-auto md:min-w-[300px]">
               <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input 
                 type="text" 
                 placeholder={language === 'en' ? 'Search documents...' : 'Cari dokumen...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400 text-slate-700 font-medium"
+                className="w-full pl-9 pr-4 py-2 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400 text-slate-700 font-medium shadow-sm hover:border-slate-300"
               />
             </div>
           </div>
 
           {/* Document Grid */}
           {isLoadingDocs ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="flex items-center gap-2 text-slate-400">
-                <IconClock className="w-5 h-5 animate-pulse" />
+            <div className="flex items-center justify-center py-20 bg-white/50 rounded-2xl border border-slate-200/60 border-dashed">
+              <div className="flex items-center gap-3 text-slate-400">
+                <IconActivity className="w-5 h-5 animate-pulse text-indigo-500" />
                 <span className="text-sm font-medium">Loading documents...</span>
               </div>
             </div>
           ) : filteredDocs.length === 0 ? (
-            <div className="bg-white border border-slate-200 border-dashed rounded-2xl p-12 flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-                <IconFileText className="w-8 h-8 text-slate-300" />
+            <div className="bg-white/80 backdrop-blur-md border border-slate-200 border-dashed rounded-3xl p-14 flex flex-col items-center justify-center text-center shadow-sm">
+              <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-5 border border-indigo-100">
+                <IconSparkles className="w-10 h-10 text-indigo-400" />
               </div>
-              <h3 className="text-lg font-bold text-slate-700 mb-1">
+              <h3 className="text-xl font-bold text-slate-800 mb-2">
                 {searchQuery ? (language === 'en' ? 'No documents found' : 'Dokumen tidak ditemukan') : (language === 'en' ? 'No documents yet' : 'Belum ada dokumen')}
               </h3>
-              <p className="text-slate-500 text-sm max-w-sm mb-6">
+              <p className="text-slate-500 text-sm max-w-md mb-8">
                 {searchQuery 
                   ? (language === 'en' ? 'Try adjusting your search query.' : 'Coba sesuaikan kata kunci pencarian Anda.')
                   : (language === 'en' ? 'Create your first academic document and let our AI assist your writing.' : 'Buat dokumen akademik pertama Anda dan biarkan AI kami membantu penulisan Anda.')
@@ -204,9 +292,9 @@ export default function DashboardPage() {
               {!searchQuery && (
                 <button 
                   onClick={() => setIsSetupModalOpen(true)}
-                  className="inline-flex items-center gap-2 bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-lg font-semibold shadow-sm transition-all text-sm"
+                  className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-md shadow-indigo-200 transition-all active:scale-95"
                 >
-                  <IconPlus className="w-4 h-4" />
+                  <IconPlus className="w-5 h-5" />
                   {t('setup.create')}
                 </button>
               )}
@@ -214,43 +302,46 @@ export default function DashboardPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {filteredDocs.map(doc => (
-                <Link 
-                  href={`/editor/${doc.id}`} 
-                  key={doc.id}
-                  className="group bg-white border border-slate-200 rounded-xl p-5 hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-500/5 transition-all flex flex-col h-48 relative overflow-hidden cursor-pointer"
-                >
-                  {/* Type Badge */}
-                  <div className="absolute top-0 right-0 bg-slate-50 border-l border-b border-slate-100 px-2.5 py-1 rounded-bl-lg text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                    {doc.settings?.projectType === 'jurnal' ? <IconBook className="w-3 h-3" /> : <IconFolder className="w-3 h-3" />}
-                    {doc.settings?.projectType || 'Single'}
-                  </div>
-
-                  <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center mb-3">
-                    <IconFileText className="w-5 h-5" />
-                  </div>
-                  
-                  <h3 className="font-bold text-slate-800 text-base leading-snug line-clamp-2 mb-1 group-hover:text-indigo-600 transition-colors">
-                    {doc.title || 'Untitled Document'}
-                  </h3>
-                  
-                  {doc.settings?.projectName && (
-                    <p className="text-xs font-medium text-slate-500 truncate mb-auto">
-                      {doc.settings.projectName}
-                    </p>
-                  )}
-                  
-                  <div className="mt-auto pt-4 flex items-center justify-between border-t border-slate-50">
-                    <div className="flex items-center gap-1.5 text-slate-400">
-                      <IconClock className="w-3.5 h-3.5" />
-                      <span className="text-[11px] font-medium">
-                        {new Date(doc.updated_at).toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                <div key={doc.id} className="group relative">
+                  <Link 
+                    href={`/editor/${doc.id}`} 
+                    className="block bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl p-5 hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300 flex flex-col h-[210px] overflow-hidden"
+                  >
+                    {/* Status Badge */}
+                    <div className="absolute top-4 right-4 flex items-center gap-2">
+                      <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border border-slate-200/60 shadow-sm">
+                        Draft
                       </span>
                     </div>
-                    <div className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded uppercase">
-                      {doc.settings?.citationStyle || 'APA'}
+
+                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-50 to-indigo-100/50 text-indigo-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-indigo-100/50">
+                      {doc.settings?.projectType === 'jurnal' ? <IconBook className="w-6 h-6" /> : <IconFileText className="w-6 h-6" />}
                     </div>
-                  </div>
-                </Link>
+                    
+                    <h3 className="font-bold text-slate-800 text-base leading-snug line-clamp-2 mb-1 group-hover:text-indigo-600 transition-colors">
+                      {doc.title || 'Untitled Document'}
+                    </h3>
+                    
+                    {doc.settings?.projectName && (
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 truncate mb-auto mt-1">
+                        <IconFolder className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">{doc.settings.projectName}</span>
+                      </div>
+                    )}
+                    
+                    <div className="mt-auto pt-4 flex items-center justify-between border-t border-slate-100">
+                      <div className="flex items-center gap-1.5 text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                        <IconClock className="w-3.5 h-3.5" />
+                        <span className="text-[10px] font-bold uppercase tracking-wide">
+                          {new Date(doc.updated_at).toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                      </div>
+                      <div className="text-[10px] font-extrabold text-indigo-500 bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100/50 uppercase tracking-widest shadow-sm">
+                        {doc.settings?.citationStyle || 'APA'}
+                      </div>
+                    </div>
+                  </Link>
+                </div>
               ))}
             </div>
           )}
