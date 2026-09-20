@@ -4,12 +4,14 @@ import React, { useState, useEffect, useRef } from "react";
 import { useDataService, CitationCandidate } from "@/lib/services";
 import { ReferenceModal } from "./reference-modal";
 import { parseRISContent } from "@/lib/utils/ris-parser";
+import { MinimalSidebar } from "@/components/editor/minimal-sidebar";
 
 export default function LibraryPage() {
   const { dataService } = useDataService();
   const [searchQuery, setSearchQuery] = useState("");
   const [library, setLibrary] = useState<CitationCandidate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
   
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -121,7 +123,16 @@ export default function LibraryPage() {
   });
 
   return (
-    <div className="flex flex-col w-full h-full p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="flex h-screen w-full bg-slate-50 overflow-hidden font-sans">
+      <MinimalSidebar
+        isExpanded={sidebarExpanded}
+        onToggle={() => setSidebarExpanded(!sidebarExpanded)}
+        documents={[]}
+        currentDocumentId={null}
+        activeDashboardTab="library"
+      />
+      <div className="flex-1 flex flex-col h-full overflow-y-auto bg-gray-50 dark:bg-gray-900">
+        <div className="flex flex-col w-full p-8 min-h-full">
       <div className="max-w-6xl mx-auto w-full space-y-6">
         
         {/* Header Section */}
@@ -288,6 +299,8 @@ export default function LibraryPage() {
         onSave={handleSaveRef}
         initialData={editingRef}
       />
+        </div>
+      </div>
     </div>
   );
 }

@@ -107,7 +107,7 @@ export function SidebarMainView({
 
                 {/* Documents list sub-menu trigger */}
                 <button
-                  className="flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left text-slate-650 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 group"
+                  className={`flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left transition-all duration-200 group cursor-pointer ${!currentDocumentId && activeDashboardTab === "library" ? "text-indigo-700 bg-indigo-50/70 font-semibold" : "text-slate-650 hover:bg-slate-100/80 hover:text-slate-900"}`}
                   onClick={() => {
                     onSelectDocument?.(''); // exit editor to dashboard
                     onSelectAdminTab?.('user'); // switch dashboard tab to user documents list
@@ -139,7 +139,7 @@ export function SidebarMainView({
                   className="flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left text-slate-650 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 group"
                   onClick={() => setActiveView('library')}
                 >
-                  <IconBook className="h-[18px] w-[18px] mt-0.5 text-slate-400 flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
+                  <IconBook className={`h-[18px] w-[18px] mt-0.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${!currentDocumentId && activeDashboardTab === "library" ? "text-indigo-600" : "text-slate-400"}`} />
                   <div className="flex flex-col min-w-0 flex-1">
                     <span className="text-xs font-bold">
                       {language === 'en' ? 'Library' : 'Perpustakaan'}
