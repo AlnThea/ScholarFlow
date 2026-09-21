@@ -80,6 +80,35 @@ export function MinimalSidebar({
   const [openSubmenu, setOpenSubmenu] = React.useState<string | null>(null);
   const [activeView, setActiveView] = React.useState<'main' | 'documents' | 'library' | 'settings'>('main');
 
+  const [internalDarkMode, setInternalDarkMode] = React.useState(false);
+  
+  React.useEffect(() => {
+    if (onToggleDarkMode === undefined && typeof window !== 'undefined') {
+      const isDark = document.documentElement.classList.contains('dark') || 
+                     window.localStorage.getItem('sf-theme') === 'dark';
+      setInternalDarkMode(isDark);
+      if (isDark) document.documentElement.classList.add('dark');
+    }
+  }, [onToggleDarkMode]);
+
+  const effectiveIsDarkMode = onToggleDarkMode !== undefined ? isDarkMode : internalDarkMode;
+
+  const handleToggleDarkMode = () => {
+    if (onToggleDarkMode) {
+      onToggleDarkMode();
+    } else {
+      if (internalDarkMode) {
+        document.documentElement.classList.remove('dark');
+        window.localStorage.setItem('sf-theme', 'light');
+        setInternalDarkMode(false);
+      } else {
+        document.documentElement.classList.add('dark');
+        window.localStorage.setItem('sf-theme', 'dark');
+        setInternalDarkMode(true);
+      }
+    }
+  };
+
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname;
@@ -413,11 +442,11 @@ export function MinimalSidebar({
             {/* Dark Mode toggle */}
             <button
               type="button"
-              onClick={onToggleDarkMode}
+              onClick={handleToggleDarkMode}
               className="flex items-center justify-center flex-1 py-2 px-1 rounded-lg border border-slate-200/85 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all duration-200 group cursor-pointer text-xs font-bold"
               title={language === 'en' ? 'Toggle Theme' : 'Ubah Tema'}
             >
-              {isDarkMode ? (
+              {effectiveIsDarkMode ? (
                 <>
                   <IconSun className="h-[15px] w-[15px] text-amber-500 shrink-0" />
                   <span className="ml-1 text-[10px] leading-none">{language === 'en' ? 'Light' : 'Terang'}</span>
@@ -461,11 +490,11 @@ export function MinimalSidebar({
 
             {/* Dark Mode toggle (collapsed) */}
             <button
-              onClick={onToggleDarkMode}
+              onClick={handleToggleDarkMode}
               className="flex items-center justify-center w-full aspect-square rounded-lg bg-transparent text-slate-400 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 relative group"
               title={language === 'en' ? 'Toggle Theme' : 'Ubah Tema'}
             >
-              {isDarkMode ? (
+              {effectiveIsDarkMode ? (
                 <IconSun className="h-5 w-5 text-amber-500 transition-transform duration-200 group-hover:scale-105" />
               ) : (
                 <IconMoon className="h-5 w-5 text-indigo-500 transition-transform duration-200 group-hover:scale-105" />

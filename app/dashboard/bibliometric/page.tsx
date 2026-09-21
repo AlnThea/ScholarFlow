@@ -4,11 +4,13 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import dynamic from "next/dynamic";
 import { useDataService, CitationCandidate } from "@/lib/services";
 import { MinimalSidebar } from '@/components/editor/minimal-sidebar';
+import { useRouter } from 'next/navigation';
 
 // Dynamically import ForceGraph2D with no SSR
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
 export default function BibliometricPage() {
+  const router = useRouter();
   const { dataService } = useDataService();
   const [library, setLibrary] = useState<CitationCandidate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -231,6 +233,14 @@ export default function BibliometricPage() {
         documents={[]}
         currentDocumentId={null}
         activeDashboardTab="bibliometric"
+        onSelectDocument={(id) => {
+          if (!id) router.push('/dashboard');
+          else router.push(`/editor/${id}`);
+        }}
+        onSelectAdminTab={(tab) => {
+          if (tab === 'billing') router.push('/billing');
+          else if (tab.startsWith('admin')) router.push('/admin');
+        }}
       />
       <div className="flex-1 flex flex-col h-full overflow-y-auto bg-gray-50 dark:bg-gray-900">
         <div className="flex flex-col w-full p-8 min-h-full">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconFilePlus, IconFolder, IconFolderOpen, IconChevronDown, IconFile } from '@tabler/icons-react';
+import { IconFilePlus, IconFolder, IconFolderOpen, IconChevronDown, IconFile, IconLoader2 } from '@tabler/icons-react';
 import { DocumentListItem } from '@/lib/api/documents';
 
 interface SidebarDocumentsViewProps {
@@ -40,6 +40,16 @@ export function SidebarDocumentsView({
   onDeleteDocument,
   setDocumentToDelete,
 }: SidebarDocumentsViewProps) {
+  const [loadingDoc, setLoadingDoc] = React.useState<string | null>(null);
+
+  const handleSelect = (id: string) => {
+    if (id !== currentDocumentId) {
+      setLoadingDoc(id);
+      onSelectDocument?.(id);
+      setTimeout(() => setLoadingDoc(null), 800);
+    }
+  };
+
   return (
     <>
       {/* Header Row */}
@@ -172,13 +182,17 @@ export function SidebarDocumentsView({
                           }`}
                         >
                           <button
-                            onClick={() => doc.id !== currentDocumentId && onSelectDocument?.(doc.id)}
+                            onClick={() => handleSelect(doc.id)}
                             className={`flex-1 flex items-center gap-2 text-left truncate mr-2 font-medium ${
                               doc.id === currentDocumentId ? 'cursor-default' : 'cursor-pointer'
                             }`}
                             title={doc.title}
                           >
-                            <IconFile className={`h-3.5 w-3.5 shrink-0 ${doc.id === currentDocumentId ? 'text-indigo-600' : 'text-slate-400'}`} />
+                            {loadingDoc === doc.id ? (
+                              <IconLoader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-indigo-500" />
+                            ) : (
+                              <IconFile className={`h-3.5 w-3.5 shrink-0 ${doc.id === currentDocumentId ? 'text-indigo-600' : 'text-slate-400'}`} />
+                            )}
                             <span className="truncate">{doc.settings?.projectPart || doc.title}</span>
                           </button>
                           {onDeleteDocument && (
@@ -232,13 +246,17 @@ export function SidebarDocumentsView({
                       }`}
                     >
                       <button
-                        onClick={() => doc.id !== currentDocumentId && onSelectDocument?.(doc.id)}
+                        onClick={() => handleSelect(doc.id)}
                         className={`flex-1 flex items-center gap-2 text-left truncate mr-2 font-medium ${
                           doc.id === currentDocumentId ? 'cursor-default' : 'cursor-pointer'
                         }`}
                         title={doc.title}
                       >
-                        <IconFile className={`h-3.5 w-3.5 shrink-0 ${doc.id === currentDocumentId ? 'text-indigo-600' : 'text-slate-400'}`} />
+                        {loadingDoc === doc.id ? (
+                          <IconLoader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-indigo-500" />
+                        ) : (
+                          <IconFile className={`h-3.5 w-3.5 shrink-0 ${doc.id === currentDocumentId ? 'text-indigo-600' : 'text-slate-400'}`} />
+                        )}
                         <span className="truncate">{doc.title}</span>
                       </button>
                       {onDeleteDocument && (

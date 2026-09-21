@@ -7,7 +7,8 @@ import {
   IconHelpCircle, 
   IconCreditCard,
   IconSparkles,
-  IconLayoutDashboard
+  IconLayoutDashboard,
+  IconLoader2
 } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { SidebarLogo } from './sidebar-logo';
@@ -35,6 +36,13 @@ export function SidebarMainView({
 }) {
   const router = useRouter();
   const Logo = () => <SidebarLogo />;
+  const [loadingItem, setLoadingItem] = React.useState<string | null>(null);
+
+  const handleAction = (item: string, action: () => void) => {
+    setLoadingItem(item);
+    action();
+    setTimeout(() => setLoadingItem(null), 800);
+  };
 
   return (
     <>
@@ -86,15 +94,19 @@ export function SidebarMainView({
                       ? 'text-indigo-700 bg-indigo-50/70 font-semibold'
                       : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
                   }`}
-                  onClick={() => {
+                  onClick={() => handleAction('dashboard', () => {
                     onSelectDocument?.('');
                     onSelectAdminTab?.('user');
                     setActiveView('main');
-                  }}
+                  })}
                 >
-                  <IconLayoutDashboard className={`h-[18px] w-[18px] mt-0.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${
-                    !currentDocumentId && activeDashboardTab === 'user' ? 'text-indigo-600' : 'text-slate-400'
-                  }`} />
+                  {loadingItem === 'dashboard' ? (
+                    <IconLoader2 className="h-[18px] w-[18px] mt-0.5 flex-shrink-0 animate-spin text-indigo-500" />
+                  ) : (
+                    <IconLayoutDashboard className={`h-[18px] w-[18px] mt-0.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                      !currentDocumentId && activeDashboardTab === 'user' ? 'text-indigo-600' : 'text-slate-400'
+                    }`} />
+                  )}
                   <div className="flex flex-col min-w-0">
                     <span className="text-xs font-bold">
                       {language === 'en' ? 'Dashboard' : 'Dasbor'}
@@ -108,13 +120,17 @@ export function SidebarMainView({
                 {/* Documents list sub-menu trigger */}
                 <button
                   className={`flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left transition-all duration-200 group cursor-pointer ${!currentDocumentId && activeDashboardTab === "library" ? "text-indigo-700 bg-indigo-50/70 font-semibold" : "text-slate-650 hover:bg-slate-100/80 hover:text-slate-900"}`}
-                  onClick={() => {
+                  onClick={() => handleAction('documents', () => {
                     onSelectDocument?.(''); // exit editor to dashboard
                     onSelectAdminTab?.('user'); // switch dashboard tab to user documents list
                     setActiveView('documents'); // show documents sidebar
-                  }}
+                  })}
                 >
-                  <IconFile className="h-[18px] w-[18px] mt-0.5 text-slate-400 flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
+                  {loadingItem === 'documents' ? (
+                    <IconLoader2 className="h-[18px] w-[18px] mt-0.5 flex-shrink-0 animate-spin text-indigo-500" />
+                  ) : (
+                    <IconFile className="h-[18px] w-[18px] mt-0.5 text-slate-400 flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
+                  )}
                   <div className="flex flex-col min-w-0 flex-1">
                     <span className="text-xs font-bold">
                       {language === 'en' ? 'My Documents' : 'Dokumen Saya'}
@@ -137,9 +153,13 @@ export function SidebarMainView({
                 {/* Library */}
                 <button 
                   className="flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left text-slate-650 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 group"
-                  onClick={() => setActiveView('library')}
+                  onClick={() => handleAction('library', () => setActiveView('library'))}
                 >
-                  <IconBook className={`h-[18px] w-[18px] mt-0.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${!currentDocumentId && activeDashboardTab === "library" ? "text-indigo-600" : "text-slate-400"}`} />
+                  {loadingItem === 'library' ? (
+                    <IconLoader2 className="h-[18px] w-[18px] mt-0.5 flex-shrink-0 animate-spin text-indigo-500" />
+                  ) : (
+                    <IconBook className={`h-[18px] w-[18px] mt-0.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${!currentDocumentId && activeDashboardTab === "library" ? "text-indigo-600" : "text-slate-400"}`} />
+                  )}
                   <div className="flex flex-col min-w-0 flex-1">
                     <span className="text-xs font-bold">
                       {language === 'en' ? 'Library' : 'Perpustakaan'}
@@ -158,13 +178,17 @@ export function SidebarMainView({
                       ? 'text-indigo-700 bg-indigo-50/70 font-semibold'
                       : 'text-slate-650 hover:bg-slate-100/80 hover:text-slate-900'
                   }`}
-                  onClick={() => {
+                  onClick={() => handleAction('bibliometric', () => {
                     router.push('/dashboard/bibliometric');
-                  }}
+                  })}
                 >
-                  <IconSparkles className={`h-[18px] w-[18px] mt-0.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${
-                    !currentDocumentId && activeDashboardTab === 'bibliometric' ? 'text-indigo-600' : 'text-slate-400'
-                  }`} />
+                  {loadingItem === 'bibliometric' ? (
+                    <IconLoader2 className="h-[18px] w-[18px] mt-0.5 flex-shrink-0 animate-spin text-indigo-500" />
+                  ) : (
+                    <IconSparkles className={`h-[18px] w-[18px] mt-0.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                      !currentDocumentId && activeDashboardTab === 'bibliometric' ? 'text-indigo-600' : 'text-slate-400'
+                    }`} />
+                  )}
                   <div className="flex flex-col min-w-0 flex-1">
                     <span className="text-xs font-bold">
                       {language === 'en' ? 'Bibliometric Analysis' : 'Analisis Bibliometrik'}
@@ -190,15 +214,19 @@ export function SidebarMainView({
                       ? 'text-indigo-700 bg-indigo-50/70 font-semibold'
                       : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
                   }`}
-                  onClick={() => {
+                  onClick={() => handleAction('billing', () => {
                     onSelectDocument?.('');
                     onSelectAdminTab?.('billing');
                     setActiveView('main');
-                  }}
+                  })}
                 >
-                  <IconCreditCard className={`h-[18px] w-[18px] mt-0.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${
-                    !currentDocumentId && activeDashboardTab === 'billing' ? 'text-indigo-600' : 'text-slate-400'
-                  }`} />
+                  {loadingItem === 'billing' ? (
+                    <IconLoader2 className="h-[18px] w-[18px] mt-0.5 flex-shrink-0 animate-spin text-indigo-500" />
+                  ) : (
+                    <IconCreditCard className={`h-[18px] w-[18px] mt-0.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                      !currentDocumentId && activeDashboardTab === 'billing' ? 'text-indigo-600' : 'text-slate-400'
+                    }`} />
+                  )}
                   <div className="flex flex-col min-w-0">
                     <span className="text-xs font-bold">
                       {language === 'en' ? 'Account & Billing' : 'Akun & Billing'}
@@ -220,10 +248,14 @@ export function SidebarMainView({
                 {/* Help */}
                 <button 
                   type="button"
-                  onClick={onOpenHelp}
+                  onClick={() => handleAction('help', () => { if (onOpenHelp) onOpenHelp(); })}
                   className="flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left text-slate-600 bg-transparent hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 group"
                 >
-                  <IconHelpCircle className="h-[18px] w-[18px] mt-0.5 text-slate-400 flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
+                  {loadingItem === 'help' ? (
+                    <IconLoader2 className="h-[18px] w-[18px] mt-0.5 flex-shrink-0 animate-spin text-indigo-500" />
+                  ) : (
+                    <IconHelpCircle className="h-[18px] w-[18px] mt-0.5 text-slate-400 flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
+                  )}
                   <div className="flex flex-col min-w-0">
                     <span className="text-xs font-bold">
                       {language === 'en' ? 'Help' : 'Bantuan'}
@@ -248,13 +280,17 @@ export function SidebarMainView({
               }`}
               title={language === 'en' ? 'Dashboard' : 'Dasbor'}
               aria-label={language === 'en' ? 'Dashboard' : 'Dasbor'}
-              onClick={() => {
+              onClick={() => handleAction('dashboard', () => {
                 onSelectDocument?.('');
                 onSelectAdminTab?.('user');
                 setActiveView('main');
-              }}
+              })}
             >
-              <IconLayoutDashboard className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
+              {loadingItem === 'dashboard' ? (
+                <IconLoader2 className="h-5 w-5 animate-spin text-indigo-500" />
+              ) : (
+                <IconLayoutDashboard className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
+              )}
             </button>
 
 
@@ -264,14 +300,18 @@ export function SidebarMainView({
               className="flex items-center justify-center w-full aspect-square rounded-lg bg-transparent text-slate-400 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 relative group"
               title={language === 'en' ? 'My Documents' : 'Dokumen Saya'}
               aria-label={language === 'en' ? 'My Documents' : 'Dokumen Saya'}
-              onClick={() => {
+              onClick={() => handleAction('documents', () => {
                 onSelectDocument?.('');
                 onSelectAdminTab?.('user');
                 setActiveView('documents');
                 onToggle(); // expand sidebar if collapsed to see documents list
-              }}
+              })}
             >
-              <IconFile className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
+              {loadingItem === 'documents' ? (
+                <IconLoader2 className="h-5 w-5 animate-spin text-indigo-500" />
+              ) : (
+                <IconFile className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
+              )}
             </button>
 
             {/* Library Button (collapsed) */}
@@ -279,9 +319,13 @@ export function SidebarMainView({
               className="flex items-center justify-center w-full aspect-square rounded-lg bg-transparent text-slate-400 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 relative group"
               title={language === 'en' ? 'Library' : 'Perpustakaan'}
               aria-label={language === 'en' ? 'Library' : 'Perpustakaan'}
-              onClick={() => setActiveView('library')}
+              onClick={() => handleAction('library', () => setActiveView('library'))}
             >
-              <IconBook className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
+              {loadingItem === 'library' ? (
+                <IconLoader2 className="h-5 w-5 animate-spin text-indigo-500" />
+              ) : (
+                <IconBook className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
+              )}
             </button>
 
             {/* Bibliometric Button (collapsed) */}
@@ -293,9 +337,13 @@ export function SidebarMainView({
               }`}
               title={language === 'en' ? 'Bibliometric Analysis' : 'Analisis Bibliometrik'}
               aria-label={language === 'en' ? 'Bibliometric Analysis' : 'Analisis Bibliometrik'}
-              onClick={() => router.push('/dashboard/bibliometric')}
+              onClick={() => handleAction('bibliometric', () => router.push('/dashboard/bibliometric'))}
             >
-              <IconSparkles className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
+              {loadingItem === 'bibliometric' ? (
+                <IconLoader2 className="h-5 w-5 animate-spin text-indigo-500" />
+              ) : (
+                <IconSparkles className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
+              )}
             </button>
 
             {/* Akun & Billing Button (collapsed) */}
@@ -307,24 +355,32 @@ export function SidebarMainView({
               }`}
               title={language === 'en' ? 'Account & Billing' : 'Akun & Billing'}
               aria-label={language === 'en' ? 'Account & Billing' : 'Akun & Billing'}
-              onClick={() => {
+              onClick={() => handleAction('billing', () => {
                 onSelectDocument?.('');
                 onSelectAdminTab?.('billing');
                 setActiveView('main');
-              }}
+              })}
             >
-              <IconCreditCard className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
+              {loadingItem === 'billing' ? (
+                <IconLoader2 className="h-5 w-5 animate-spin text-indigo-500" />
+              ) : (
+                <IconCreditCard className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
+              )}
             </button>
 
             {/* Help Button (collapsed) */}
             <button
               type="button"
-              onClick={onOpenHelp}
+              onClick={() => handleAction('help', () => { if (onOpenHelp) onOpenHelp(); })}
               className="flex items-center justify-center w-full aspect-square rounded-lg bg-transparent text-slate-400 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 relative group"
               title="Help"
               aria-label="Help"
             >
-              <IconHelpCircle className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
+              {loadingItem === 'help' ? (
+                <IconLoader2 className="h-5 w-5 animate-spin text-indigo-500" />
+              ) : (
+                <IconHelpCircle className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
+              )}
             </button>
           </nav>
         )}

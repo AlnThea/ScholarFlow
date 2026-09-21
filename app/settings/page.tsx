@@ -107,7 +107,10 @@ export default function SettingsPage() {
         onToggle={() => setSidebarExpanded(!sidebarExpanded)}
         documents={[]}
         currentDocumentId={null}
-        onSelectDocument={(id) => router.push(`/editor/${id}`)}
+        onSelectDocument={(id) => {
+          if (!id) router.push('/dashboard');
+          else router.push(`/editor/${id}`);
+        }}
         onCreateDocument={() => router.push('/dashboard')}
         onDeleteDocument={() => {}}
         onSelectAdminTab={(tab) => {

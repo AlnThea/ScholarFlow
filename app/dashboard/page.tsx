@@ -12,7 +12,7 @@ import type { DocumentListItem } from '@/lib/services/types';
 import { 
   IconPlus, IconFileText, IconClock, IconSearch, IconFolder, 
   IconBook, IconChartBar, IconBooks, IconDotsVertical, 
-  IconSparkles, IconActivity, IconFileDescription
+  IconSparkles, IconActivity, IconFileDescription, IconLoader2
 } from '@tabler/icons-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -33,6 +33,13 @@ export default function DashboardPage() {
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [isBackendSettingsOpen, setIsBackendSettingsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<string | null>(null);
+
+  const handleNavigate = (path: string, actionName: string) => {
+    setLoadingAction(actionName);
+    router.push(path);
+    setTimeout(() => setLoadingAction(null), 800);
+  };
 
   useEffect(() => {
     if (!loading && !user) {
@@ -118,7 +125,11 @@ export default function DashboardPage() {
         onToggle={() => setSidebarExpanded(!sidebarExpanded)}
         documents={documents}
         currentDocumentId={null}
-        onSelectDocument={(id) => router.push(`/editor/${id}`)}
+        onSelectDocument={(id) => {
+          if (id) {
+            router.push(`/editor/${id}`);
+          }
+        }}
         onCreateDocument={() => setIsSetupModalOpen(true)}
         onDeleteDocument={handleDeleteDocument}
         onSelectAdminTab={(tab) => {
@@ -220,12 +231,12 @@ export default function DashboardPage() {
                 </span>
               </button>
 
-              <Link 
-                href="/dashboard/library"
+              <button 
+                onClick={() => handleNavigate('/dashboard/library', 'library')}
                 className="group flex flex-col p-5 bg-white/90 backdrop-blur-md border border-slate-200/80 rounded-2xl hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 text-left"
               >
                 <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 border border-blue-100">
-                  <IconBooks className="w-5 h-5" />
+                  {loadingAction === 'library' ? <IconLoader2 className="w-5 h-5 animate-spin" /> : <IconBooks className="w-5 h-5" />}
                 </div>
                 <span className="font-bold text-slate-800 mb-1 group-hover:text-blue-600 transition-colors">
                   {language === 'en' ? 'My Library' : 'Buka My Library'}
@@ -233,14 +244,14 @@ export default function DashboardPage() {
                 <span className="text-xs text-slate-500">
                   {language === 'en' ? 'Manage your references and sources' : 'Kelola referensi dan sumber'}
                 </span>
-              </Link>
+              </button>
 
-              <Link 
-                href="/dashboard/bibliometric"
+              <button 
+                onClick={() => handleNavigate('/dashboard/bibliometric', 'bibliometric')}
                 className="group flex flex-col p-5 bg-white/90 backdrop-blur-md border border-slate-200/80 rounded-2xl hover:border-purple-500 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 text-left"
               >
                 <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 border border-purple-100">
-                  <IconChartBar className="w-5 h-5" />
+                  {loadingAction === 'bibliometric' ? <IconLoader2 className="w-5 h-5 animate-spin" /> : <IconChartBar className="w-5 h-5" />}
                 </div>
                 <span className="font-bold text-slate-800 mb-1 group-hover:text-purple-600 transition-colors">
                   {language === 'en' ? 'Bibliometric Analysis' : 'Analisis Bibliometrik'}
@@ -248,7 +259,7 @@ export default function DashboardPage() {
                 <span className="text-xs text-slate-500">
                   {language === 'en' ? 'Discover trends and insights' : 'Temukan tren dan wawasan riset'}
                 </span>
-              </Link>
+              </button>
             </div>
           </div>
 
@@ -303,9 +314,9 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {filteredDocs.map(doc => (
                 <div key={doc.id} className="group relative">
-                  <Link 
-                    href={`/editor/${doc.id}`} 
-                    className="block bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl p-5 hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300 flex flex-col h-[210px] overflow-hidden"
+                  <button 
+                    onClick={() => handleNavigate(`/editor/${doc.id}`, `doc_${doc.id}`)}
+                    className="w-full text-left block bg-white/90 backdrop-blur-md border border-slate-200 rounded-2xl p-5 hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300 flex flex-col h-[210px] overflow-hidden"
                   >
                     {/* Status Badge */}
                     <div className="absolute top-4 right-4 flex items-center gap-2">
@@ -315,7 +326,11 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="w-12 h-12 bg-gradient-to-br from-indigo-50 to-indigo-100/50 text-indigo-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-indigo-100/50">
-                      {doc.settings?.projectType === 'jurnal' ? <IconBook className="w-6 h-6" /> : <IconFileText className="w-6 h-6" />}
+                      {loadingAction === `doc_${doc.id}` ? (
+                        <IconLoader2 className="w-6 h-6 animate-spin" />
+                      ) : (
+                        doc.settings?.projectType === 'jurnal' ? <IconBook className="w-6 h-6" /> : <IconFileText className="w-6 h-6" />
+                      )}
                     </div>
                     
                     <h3 className="font-bold text-slate-800 text-base leading-snug line-clamp-2 mb-1 group-hover:text-indigo-600 transition-colors">
@@ -340,7 +355,7 @@ export default function DashboardPage() {
                         {doc.settings?.citationStyle || 'APA'}
                       </div>
                     </div>
-                  </Link>
+                  </button>
                 </div>
               ))}
             </div>

@@ -5,8 +5,10 @@ import { useDataService, CitationCandidate } from "@/lib/services";
 import { ReferenceModal } from "./reference-modal";
 import { parseRISContent } from "@/lib/utils/ris-parser";
 import { MinimalSidebar } from "@/components/editor/minimal-sidebar";
+import { useRouter } from 'next/navigation';
 
 export default function LibraryPage() {
+  const router = useRouter();
   const { dataService } = useDataService();
   const [searchQuery, setSearchQuery] = useState("");
   const [library, setLibrary] = useState<CitationCandidate[]>([]);
@@ -130,6 +132,14 @@ export default function LibraryPage() {
         documents={[]}
         currentDocumentId={null}
         activeDashboardTab="library"
+        onSelectDocument={(id) => {
+          if (!id) router.push('/dashboard');
+          else router.push(`/editor/${id}`);
+        }}
+        onSelectAdminTab={(tab) => {
+          if (tab === 'billing') router.push('/billing');
+          else if (tab.startsWith('admin')) router.push('/admin');
+        }}
       />
       <div className="flex-1 flex flex-col h-full overflow-y-auto bg-gray-50 dark:bg-gray-900">
         <div className="flex flex-col w-full p-8 min-h-full">
