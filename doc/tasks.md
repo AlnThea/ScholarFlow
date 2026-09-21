@@ -1,15 +1,15 @@
-# Refactoring Tasks Tracker
+﻿# Refactoring Tasks Tracker
 
 Dokumen ini digunakan untuk melacak secara spesifik proses pemecahan (refactoring) komponen-komponen raksasa di proyek ScholarFlow agar kode lebih modular, mudah dikelola, dan menghindari file dengan ribuan baris kode.
 
-> **🎉 STATUS UPDATE**: **Refactoring Phase Selesai!** 
+> **ðŸŽ‰ STATUS UPDATE**: **Refactoring Phase Selesai!** 
 > Target pemecahan komponen raksasa (seperti `page.tsx`, `editor-layout.tsx`, `use-editorjs-methods.ts`, dll) agar berukuran `< 700 baris` per file telah **TERPENUHI**.
 
 Sesuai instruksi khusus: **Tidak boleh ada penghapusan fitur atau logika yang sedang berjalan.** Proses refactoring murni memindahkan dan merapikan kode ke file (komponen) terpisah.
 
 ---
 
-## 🔄 IN PROGRESS (SEDANG BERJALAN)
+## ðŸ”„ IN PROGRESS (SEDANG BERJALAN)
 
 ### 1. `components/editor/editor-layout.tsx` (3.576 baris)
 - [x] Analisis dan petakan blok kode yang bisa diekstrak.
@@ -24,23 +24,23 @@ Sesuai instruksi khusus: **Tidak boleh ada penghapusan fitur atau logika yang se
 
 ---
 
-## 🚀 PHASE 2: EXTRACTING LOGIC & STATE (COMPLETED)
+## ðŸš€ PHASE 2: EXTRACTING LOGIC & STATE (COMPLETED)
 
 ### 9. `components/editor/editor-layout.tsx` (Target: < 700 baris)
 - [x] Ekstrak logika dan state manajemen Modal AI & Admin (Model, Provider, Plan) ke `hooks/use-admin-modals.ts`.
 - [x] Ekstrak logika dan state manajemen Modal Editor (Image, Math, Link, dll) ke `hooks/use-editor-modals.ts`.
 - [x] Pangkas ukuran file `editor-layout.tsx` dari 2400-an baris menjadi 1946 baris.
 
-## 🚀 PHASE 3: FINAL UI EXTRACTION (COMPLETED)
+## ðŸš€ PHASE 3: FINAL UI EXTRACTION (COMPLETED)
 - [x] Ekstrak komponen `MathHelperPanel` dari `editor-layout.tsx` (memangkas ~150 baris).
 - [x] Ekstrak komponen `EditorBubbleMenu` dari `editor-layout.tsx` (memangkas ~600 baris).
 
-## 🌅 PHASE 4: FINAL PURGE (< 700 LINES TARGET) (COMPLETED)
+## ðŸŒ… PHASE 4: FINAL PURGE (< 700 LINES TARGET) (COMPLETED)
 - [x] Ekstrak definisi tipe data (seperti `EditorLayoutProps` dkk) yang memakan ~120 baris ke file `types.ts` atau file interface khusus.
 - [x] Ekstrak dan bungkus 16 deklarasi Modal JSX di bagian paling bawah `editor-layout.tsx` ke dalam satu komponen `<EditorModalsWrapper />` (memangkas ~150 baris).
 - [x] Finalisasi `editor-layout.tsx` agar benar-benar berada di angka 700-an baris.
 
-## 📝 TODO (BELUM DIMULAI)
+## ðŸ“ TODO (BELUM DIMULAI)
 
 ### 2. `app/shared/[id]/page.tsx` (3.189 baris)
 - [x] Ekstrak SharedSidebar dan SharedBubbleMenu ke komponen terpisah.
@@ -51,7 +51,7 @@ Sesuai instruksi khusus: **Tidak boleh ada penghapusan fitur atau logika yang se
 - [x] Ekstrak fungsi-fungsi helper murni (200+ baris) ke lib/editor/editor-utils.tsx.
 - [x] *Ekstrak state management AI dan Dokumen ke Custom Hooks (use-editor-ai, use-editor-document).*
 
-## 📝 TODO (UNTUK SELANJUTNYA)
+## ðŸ“ TODO (UNTUK SELANJUTNYA)
 
 ### 4. `components/editor/editorjs-editor.tsx` (2.136 baris)
 - [x] Ekstrak Custom EditorJS Tools (MathBlockTool, SanitizerTools) ke lib/editor/editor-tools.ts.
@@ -68,3 +68,19 @@ Sesuai instruksi khusus: **Tidak boleh ada penghapusan fitur atau logika yang se
 
 ### 8. `components/editor/document-setup-modal.tsx` (839 baris)
 - [x] *Pecah masing-masing "step" wizard (Step 1, Step 2, Step 3) ke dalam komponen view terpisah.*
+
+## ðŸš€ NEW: Bibliometric Analysis Professional Enhancement
+Target: Meningkatkan halaman analisis bibliometrik (pp/dashboard/bibliometric/page.tsx) menjadi kelas profesional dengan fitur filtering lanjutan, pemilihan tipe analisis, dan metrik yang lebih kompleks.
+
+### Phase 1: Professional UI/UX & Filtering (Dalam Pengerjaan)
+- [x] Buat Sidebar/Panel filter untuk mengatur *Thresholding* (Minimum node occurrences, Minimum link strength).
+- [x] Tambahkan opsi rentang tahun (Year Range filter).
+- [x] Sediakan UI opsi tipe analisis (saat ini hanya keyword co-occurrence, siapkan toggle untuk *Author Co-occurrence* dll).
+- [x] Tata ulang Layout utama agar graph lebih luas dan interaktif, mencontoh aplikasi profesional (panel kiri/kanan untuk pengaturan, tengah untuk graph).
+- [x] Implementasikan state management untuk filter ke dalam fungsi generator graph.
+
+### Phase 2: Advanced Graph & Export (TODO)
+- [x] Integrasikan algoritma clustering (Label Propagation Algorithm) untuk mewarnai node berdasarkan komunitas/klaster.
+- [x] Tambahkan panel informasi/statistik jaringan saat sebuah node diklik (menampilkan metrik degree dan top connections).
+- [x] Tingkatkan fitur *Export* (tambahkan ekspor data CSV untuk nodes & edges).
+- [ ] Tambahkan fitur *Dictionary/Thesaurus* sederhana untuk menggabungkan kata bersinonim sebelum masuk ke generator graph.
