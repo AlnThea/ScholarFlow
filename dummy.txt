@@ -1,0 +1,54 @@
+import os
+
+with open('app/dashboard/bibliometric/page.tsx', 'r', encoding='utf-8') as f:
+    old_page = f.read()
+
+hook_content = '''import { useMemo } from 'react';
+import { CitationCandidate } from "@/lib/services";
+
+export function useBibliometricGraph(
+  library: CitationCandidate[],
+  minOccurrences: number,
+  minLinkStrength: number,
+  analysisType: 'keyword' | 'author',
+  yearFilter: 'all' | 'custom',
+  minYear: number,
+  maxYear: number
+) {
+  return useMemo(() => {
+    if (library.length === 0) return { nodes: [], links: [], yearCounts: {}, maxYearCount: 1 };
+
+    const stopWords = new Set([
+      "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "has", "he",
+      "in", "is", "it", "its", "of", "on", "that", "the", "to", "was", "were", "will", "with", "this", "we", "which", "their",
+      "dan", "di", "yang", "untuk", "dengan", "itu", "ini", "dalam", "pada", "dari", "ke",
+      "sebagai", "adalah", "oleh", "atau", "telah", "bisa", "dapat", "akan", "juga", "terhadap", "menggunakan"
+    ]);
+
+    const genericUnigrams = new Set([
+      "sistem", "aplikasi", "rancang", "bangun", "penelitian", "studi", "analisis", 
+      "pengembangan", "implementasi", "metode", "berbasis", "evaluasi", "pengaruh", 
+      "penerapan", "kasus", "hasil", "suatu", "sebuah", "karena", "kualitas", "tingkat",
+      "research", "study", "analysis", "method", "based", "using", "proposed", "paper", "results"
+    ]);
+
+    const entityCounts: Record<string, number> = {};
+    const cooccurrences: Record<string, number> = {};
+    const yearCounts: Record<string, number> = {};
+
+    library.forEach((item) => {
+      const itemYear = item.year ? parseInt(String(item.year)) : null;
+      if (yearFilter === 'custom' && itemYear) {
+        if (itemYear < minYear || itemYear > maxYear) return;
+      }
+
+      if (item.year) {
+        yearCounts[item.year] = (yearCounts[item.year] || 0) + 1;
+      }
+
+      let docEntities: string[] = [];
+
+      if (analysisType === 'keyword') {
+        const text = f"{item.title} {item.abstract or ''}".lower() # js to py oops, this is string inside string
+        # Actually I will just copy paste the exact useMemo block
+'''
