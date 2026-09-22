@@ -123,11 +123,12 @@ export function StripeCheckoutModal({
   };
 
   return (
+  return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 transition-all animate-fade-in font-sans">
-      <div className="bg-slate-50 border border-slate-200 rounded-3xl shadow-2xl flex flex-col md:flex-row w-full max-w-3xl overflow-hidden max-h-[90vh]">
+      <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl flex flex-col md:flex-row w-full max-w-3xl overflow-hidden max-h-[90vh]">
         
         {/* Left Side: Summary Panel */}
-        <div className="md:w-5/12 bg-indigo-900 text-white p-6 md:p-8 flex flex-col justify-between relative overflow-hidden">
+        <div className="md:w-5/12 bg-indigo-900 dark:bg-indigo-950 text-white p-6 md:p-8 flex flex-col justify-between relative overflow-hidden">
           <div className="relative z-10">
             <button 
               onClick={onClose}
@@ -178,12 +179,12 @@ export function StripeCheckoutModal({
         </div>
 
         {/* Right Side: Stripe Form Panel */}
-        <div className="flex-1 bg-white p-6 md:p-8 overflow-y-auto relative">
+        <div className="flex-1 bg-white dark:bg-slate-900 p-6 md:p-8 overflow-y-auto relative">
           
           {/* Close button for desktop */}
           <button 
             onClick={onClose}
-            className="hidden md:block absolute top-6 right-6 p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition"
+            className="hidden md:block absolute top-6 right-6 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition"
           >
             <IconX className="h-5 w-5" />
           </button>
@@ -191,14 +192,14 @@ export function StripeCheckoutModal({
           {success ? (
             /* Success Screen */
             <div className="h-full flex flex-col items-center justify-center text-center py-10 animate-fade-in gap-5">
-              <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center border-2 border-emerald-500 text-emerald-600 animate-scale-in">
+              <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/30 rounded-full flex items-center justify-center border-2 border-emerald-500 text-emerald-600 dark:text-emerald-400 animate-scale-in">
                 <IconCheck className="h-10 w-10 stroke-[3]" />
               </div>
               <div className="flex flex-col gap-2">
-                <h3 className="text-lg font-bold text-slate-800">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
                   {language === 'en' ? 'Payment Successful!' : 'Pembayaran Berhasil!'}
                 </h3>
-                <p className="text-xs text-slate-500 leading-normal max-w-sm">
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal max-w-sm">
                   {language === 'en' 
                     ? `Congratulations, your account has been successfully upgraded to **${planName}**. All pro features are now active in your workspace.` 
                     : `Selamat, akun Anda telah berhasil ditingkatkan ke **${planName}**. Semua fitur pro kini aktif di ruang kerja Anda.`}
@@ -219,42 +220,42 @@ export function StripeCheckoutModal({
             /* Stripe Form */
             <form onSubmit={handlePay} className="flex flex-col gap-5">
               <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-bold text-slate-800">
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
                   {language === 'en' ? 'Pay with Card' : 'Bayar dengan Kartu'}
                 </span>
-                <span className="text-[10px] text-slate-400">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500">
                   {language === 'en' ? 'Enter your international credit card details securely below.' : 'Masukkan detail kartu kredit internasional Anda secara aman di bawah ini.'}
                 </span>
               </div>
 
               {errorMsg && (
-                <div className="p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-xs">
+                <div className="p-3 bg-red-50 dark:bg-red-900/30 border border-red-100 dark:border-red-800/50 text-red-600 dark:text-red-400 rounded-xl text-xs">
                   {errorMsg}
                 </div>
               )}
 
               {/* Email */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Email</label>
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email</label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-500 transition"
+                  className="border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-indigo-500 transition"
                   placeholder="name@email.com"
                 />
               </div>
 
               {/* Card Details */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   {language === 'en' ? 'Card Information' : 'Informasi Kartu'}
                 </label>
-                <div className="border border-slate-200 rounded-xl overflow-hidden focus-within:border-indigo-500 transition bg-white flex flex-col">
+                <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden focus-within:border-indigo-500 transition bg-white dark:bg-slate-900 flex flex-col">
                   {/* Card Number */}
-                  <div className="flex items-center px-3 py-2.5 border-b border-slate-100">
-                    <IconCreditCard className="h-4.5 w-4.5 text-slate-400 mr-2 flex-shrink-0" />
+                  <div className="flex items-center px-3 py-2.5 border-b border-slate-100 dark:border-slate-800">
+                    <IconCreditCard className="h-4.5 w-4.5 text-slate-400 dark:text-slate-500 mr-2 flex-shrink-0" />
                     <input
                       type="text"
                       required
@@ -262,12 +263,12 @@ export function StripeCheckoutModal({
                       onChange={(e) => handleCardNumberChange(e.target.value)}
                       placeholder="1234 5678 1234 5678"
                       maxLength={19}
-                      className="w-full text-xs text-slate-700 placeholder-slate-400 outline-none bg-transparent"
+                      className="w-full text-xs text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none bg-transparent"
                     />
                   </div>
                   {/* Expiry and CVC */}
-                  <div className="flex border-t border-slate-50">
-                    <div className="w-1/2 px-3 py-2.5 border-r border-slate-100">
+                  <div className="flex border-t border-slate-50 dark:border-slate-800">
+                    <div className="w-1/2 px-3 py-2.5 border-r border-slate-100 dark:border-slate-800">
                       <input
                         type="text"
                         required
@@ -275,7 +276,7 @@ export function StripeCheckoutModal({
                         onChange={(e) => handleExpiryChange(e.target.value)}
                         placeholder="MM/YY"
                         maxLength={5}
-                        className="w-full text-xs text-slate-700 placeholder-slate-400 outline-none bg-transparent"
+                        className="w-full text-xs text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none bg-transparent"
                       />
                     </div>
                     <div className="w-1/2 px-3 py-2.5">
@@ -286,19 +287,19 @@ export function StripeCheckoutModal({
                         onChange={(e) => setCvc(e.target.value.replace(/[^0-9]/g, ''))}
                         placeholder="CVC"
                         maxLength={4}
-                        className="w-full text-xs text-slate-700 placeholder-slate-400 outline-none bg-transparent"
+                        className="w-full text-xs text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 outline-none bg-transparent"
                       />
                     </div>
                   </div>
                 </div>
-                <span className="text-[9px] text-slate-400 italic">
+                <span className="text-[9px] text-slate-400 dark:text-slate-500 italic">
                   {language === 'en' ? 'Use Stripe test card: 4242 4242 4242 4242' : 'Gunakan kartu uji Stripe: 4242 4242 4242 4242'}
                 </span>
               </div>
 
               {/* Cardholder Name */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   {language === 'en' ? 'Name on Card' : 'Nama di Kartu'}
                 </label>
                 <input
@@ -306,7 +307,7 @@ export function StripeCheckoutModal({
                   required
                   value={cardName}
                   onChange={(e) => setCardName(e.target.value)}
-                  className="border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-500 transition"
+                  className="border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-indigo-500 transition"
                   placeholder={language === 'en' ? 'Cardholder Full Name' : 'Nama Lengkap Pemilik Kartu'}
                 />
               </div>
@@ -314,13 +315,13 @@ export function StripeCheckoutModal({
               {/* Country & ZIP */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     {language === 'en' ? 'Country / Region' : 'Negara / Wilayah'}
                   </label>
                   <select
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
-                    className="border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 bg-white outline-none focus:border-indigo-500 transition"
+                    className="border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 outline-none focus:border-indigo-500 transition"
                   >
                     <option>Indonesia</option>
                     <option>Singapore</option>
@@ -330,7 +331,7 @@ export function StripeCheckoutModal({
                   </select>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     {language === 'en' ? 'ZIP / Postal Code' : 'Kode Pos'}
                   </label>
                   <input
@@ -338,7 +339,7 @@ export function StripeCheckoutModal({
                     required
                     value={zip}
                     onChange={(e) => setZip(e.target.value)}
-                    className="border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 placeholder-slate-400 outline-none focus:border-indigo-500 transition"
+                    className="border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-indigo-500 transition"
                     placeholder="12345"
                   />
                 </div>
@@ -361,16 +362,16 @@ export function StripeCheckoutModal({
               </button>
 
               {/* Info transparan Beli Putus */}
-              <div className="mt-4 p-2.5 bg-slate-50 border border-slate-100 rounded-lg text-center text-[10px] text-slate-500 leading-normal">
+              <div className="mt-4 p-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-lg text-center text-[10px] text-slate-500 dark:text-slate-400 leading-normal">
                 {language === 'en' 
                   ? 'One-time purchase for 30 days. No auto-renewal. You are in full control.' 
                   : 'Beli sekali untuk 30 hari. Tanpa perpanjangan otomatis. Anda memegang kendali penuh.'}
               </div>
 
               {/* Stripe Brand Badge */}
-              <div className="flex items-center justify-center gap-1 mt-2 text-[9px] text-slate-400 font-semibold tracking-wide uppercase">
+              <div className="flex items-center justify-center gap-1 mt-2 text-[9px] text-slate-400 dark:text-slate-500 font-semibold tracking-wide uppercase">
                 <span>Powered by</span>
-                <span className="text-indigo-500 font-bold tracking-tight">stripe</span>
+                <span className="text-indigo-500 dark:text-indigo-400 font-bold tracking-tight">stripe</span>
               </div>
             </form>
           )}

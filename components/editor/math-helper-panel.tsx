@@ -297,12 +297,13 @@ export function MathHelperPanel({
   
 
   return (
+  return (
     <>
                 {isMathHelperOpen && (
       
                   <div
       
-                    className={`fixed ${showRightSidebar ? (isRightSidebarExpanded ? 'right-[380px]' : 'right-20') : 'right-4'} top-40 w-80 bg-white/95 border border-slate-200/80 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] z-50 p-4 flex flex-col gap-3 h-[500px] max-h-[60vh] animate-fade-in`}
+                    className={`fixed ${showRightSidebar ? (isRightSidebarExpanded ? 'right-[380px]' : 'right-20') : 'right-4'} top-40 w-80 bg-white/95 dark:bg-slate-900/95 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] z-50 p-4 flex flex-col gap-3 h-[500px] max-h-[60vh] animate-fade-in`}
       
                   >
       
@@ -310,7 +311,7 @@ export function MathHelperPanel({
       
                     {mathToast && (
       
-                      <div className="absolute top-2 right-4 bg-slate-800 text-white text-[10px] font-bold px-2.5 py-1 rounded shadow-md animate-fade-in flex items-center gap-1 z-20">
+                      <div className="absolute top-2 right-4 bg-slate-800 dark:bg-slate-700 text-white text-[10px] font-bold px-2.5 py-1 rounded shadow-md animate-fade-in flex items-center gap-1 z-20">
       
                         <IconCheck className="h-3 w-3 text-emerald-400" />
       
@@ -322,13 +323,13 @@ export function MathHelperPanel({
       
       
       
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
       
                       <div className="flex flex-col">
       
-                        <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">LaTeX Math Helper</span>
+                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">LaTeX Math Helper</span>
       
-                        <span className="text-[9px] text-slate-400 italic">
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500 italic">
       
                           {language === 'en' ? 'Quick Formula Shortcuts' : 'Pintasan Rumus Cepat'}
       
@@ -342,7 +343,7 @@ export function MathHelperPanel({
       
                         onClick={() => setIsMathHelperOpen(false)}
       
-                        className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                        className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
       
                         title={language === 'en' ? 'Close Panel' : 'Tutup Panel'}
       
@@ -370,11 +371,11 @@ export function MathHelperPanel({
       
                         placeholder={language === 'en' ? 'Search symbol (e.g. sigma, integral)...' : 'Cari simbol (misal: sigma, integral)...'}
       
-                        className="w-full pl-8 pr-3 py-1.5 text-[10px] border border-slate-200 rounded-lg outline-none focus:border-indigo-500 transition font-sans text-slate-800"
+                        className="w-full pl-8 pr-3 py-1.5 text-[10px] border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-indigo-500 transition font-sans text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-800"
       
                       />
       
-                      <IconSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                      <IconSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
       
                       {mathSearchQuery && (
       
@@ -384,7 +385,7 @@ export function MathHelperPanel({
       
                           onClick={() => setMathSearchQuery('')}
       
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[10px] font-semibold"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-[10px] font-semibold"
       
                         >
       
@@ -404,7 +405,7 @@ export function MathHelperPanel({
       
                       <div
       
-                        className="flex flex-wrap items-center gap-1 py-1.5 border-b border-slate-100 text-xs font-semibold text-slate-500"
+                        className="flex flex-wrap items-center gap-1 py-1.5 border-b border-slate-100 dark:border-slate-800 text-xs font-semibold text-slate-500 dark:text-slate-400"
       
                       >
       
@@ -436,9 +437,9 @@ export function MathHelperPanel({
       
                             className={`px-2 py-1 rounded transition shrink-0 cursor-pointer ${activeMathCategory === tab.id
       
-                              ? 'bg-indigo-50 text-indigo-700 font-bold'
+                              ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 font-bold'
       
-                              : 'hover:bg-slate-100 hover:text-slate-700'
+                              : 'hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200'
       
                               }`}
       
@@ -458,17 +459,17 @@ export function MathHelperPanel({
       
                     <div className="overflow-y-auto flex-1 pr-1">
       
-                      <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500">
+                      <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500 dark:text-slate-400">
       
-                        <div className="col-span-2 text-[9px] bg-slate-50/50 p-2 rounded border border-slate-100 leading-normal mb-1">
+                        <div className="col-span-2 text-[9px] bg-slate-50/50 dark:bg-slate-800/50 p-2 rounded border border-slate-100 dark:border-slate-800 leading-normal mb-1">
       
                           {language === 'en' ? (
       
-                            <>📌 <strong className="text-slate-600">Info:</strong> If the formula input box is active, clicking a formula will insert it directly. Otherwise, it will be copied to clipboard.</>
+                            <>📌 <strong className="text-slate-600 dark:text-slate-300">Info:</strong> If the formula input box is active, clicking a formula will insert it directly. Otherwise, it will be copied to clipboard.</>
       
                           ) : (
       
-                            <>📌 <strong className="text-slate-600">Info:</strong> Jika kotak input rumus aktif, mengklik rumus akan langsung menyisipkannya. Jika tidak, rumus disalin ke clipboard.</>
+                            <>📌 <strong className="text-slate-600 dark:text-slate-300">Info:</strong> Jika kotak input rumus aktif, mengklik rumus akan langsung menyisipkannya. Jika tidak, rumus disalin ke clipboard.</>
       
                           )}
       
@@ -476,7 +477,7 @@ export function MathHelperPanel({
       
                         {filteredMathHelperItems.length === 0 ? (
       
-                          <div className="col-span-2 text-center py-6 text-slate-400 italic">
+                          <div className="col-span-2 text-center py-6 text-slate-400 dark:text-slate-500 italic">
       
                             {language === 'en' ? 'No matching symbols.' : 'Tidak ada simbol yang cocok.'}
       
@@ -548,7 +549,7 @@ export function MathHelperPanel({
       
                               }}
       
-                              className={`p-2.5 rounded border border-slate-200/80 hover:border-indigo-300 bg-white hover:bg-indigo-50/40 text-left transition cursor-pointer flex items-center justify-between gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:shadow-sm ${item.isLong ? 'col-span-2' : 'col-span-1'}`}
+                              className={`p-2.5 rounded border border-slate-200/80 dark:border-slate-700/80 hover:border-indigo-300 dark:hover:border-indigo-700 bg-white dark:bg-slate-900 hover:bg-indigo-50/40 dark:hover:bg-indigo-900/30 text-left transition cursor-pointer flex items-center justify-between gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:shadow-sm ${item.isLong ? 'col-span-2' : 'col-span-1'}`}
       
                               title={item.code}
       
@@ -556,13 +557,13 @@ export function MathHelperPanel({
       
                               <div className="flex flex-col min-w-0 flex-1">
       
-                                <span className="font-semibold text-slate-750 text-[10px]">{item.label}</span>
+                                <span className="font-semibold text-slate-750 dark:text-slate-200 text-[10px]">{item.label}</span>
       
-                                <span className="font-mono text-[8.5px] text-slate-400 truncate w-full mt-0.5">{item.code}</span>
+                                <span className="font-mono text-[8.5px] text-slate-400 dark:text-slate-500 truncate w-full mt-0.5">{item.code}</span>
       
                               </div>
       
-                              <div className="flex-shrink-0 bg-slate-50 border border-slate-100/70 rounded px-1.5 py-1 min-h-[26px] flex items-center justify-center min-w-[36px]">
+                              <div className="flex-shrink-0 bg-slate-50 dark:bg-slate-800 border border-slate-100/70 dark:border-slate-700 rounded px-1.5 py-1 min-h-[26px] flex items-center justify-center min-w-[36px]">
       
                                 <KatexPreview formula={item.code} />
       
@@ -583,6 +584,7 @@ export function MathHelperPanel({
                 )}
       
     </>
+  );
   );
 }
 
