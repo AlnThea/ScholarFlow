@@ -27,35 +27,7 @@ export const SidebarWritingTab = (props: any) => {
     suggestionSubTab, setSuggestionSubTab, query, setQuery, isHistoryModalOpen,
     setIsHistoryModalOpen, localIsExpanded, setLocalIsExpanded, scanStatus,
     setScanStatus, scanProgress, setScanProgress, similarityScore, setSimilarityScore,
-import React from 'react';
-import {
-  IconBook, IconCheck, IconDownload, IconExternalLink, IconFileText,
-  IconFilter, IconFolderOpen, IconLoader2, IconCirclePlus, IconQuote,
-  IconSearch, IconSum, IconSparkles, IconWand, IconChevronLeft,
-  IconChevronRight, IconLanguage, IconX, IconClock, IconTrash, IconCopy, IconHistory
-} from '@tabler/icons-react';
-import { BurstinessChart } from './burstiness-chart';
 
-
-export const SidebarWritingTab = (props: any) => {
-  const {
-    language, activePlanId, user, selectedText, citationResults, citationHistory, wordCount, characterCount,
-    citationCount, bibliographyEntries, improvedText, isImproving, isSearchingCitations,
-    aiError, citationError, citationNote, onApplyImprovedText, onImproveWriting,
-    onParaphrase, onSummarize, onGenerateAbstract, onFindCitation, onRepeatCitationSearch,
-    onInsertCitation, onInsertBibliography, onInsertImageSample, onExportBibliographyText,
-    onExportBibliographyJson, onExportBibliographyBibtex, onExportBibliographyRis,
-    onInsertCitationCandidate, onParafrasePlagiat, selectedAiModel, isSynthesizing,
-    synthesizedText, synthesizeError, synthesizeDisclaimer, onSynthesizeReview,
-    onInsertSynthesizedText, citationStyle, onChangeCitationStyle, folders,
-    folderAssignments, onCreateFolder, onAssignFolder, isExpanded, onToggleExpanded,
-    onClose, aiHistory, onDeleteAiHistoryEntry, onClearAiHistory, isApplied,
-    comments, suggestions, onAcceptSuggestion, onRejectSuggestion, onResolveComment,
-    onCommentClick, activeTab, 
-    workspaceTab, setWorkspaceTab, commentFilterTab, setCommentFilterTab,
-    suggestionSubTab, setSuggestionSubTab, query, setQuery, isHistoryModalOpen,
-    setIsHistoryModalOpen, localIsExpanded, setLocalIsExpanded, scanStatus,
-    setScanStatus, scanProgress, setScanProgress, similarityScore, setSimilarityScore,
     plagiarismDetails, setPlagiarismDetails, selectedFolderFilter, setSelectedFolderFilter,
     newFolderName, setNewFolderName, isAddingFolder, setIsAddingFolder,
     t, getSourceLabel, formatHistoryLabel, ActionButton, PanelRow
