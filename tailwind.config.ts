@@ -13,6 +13,16 @@ const config: Config = {
         muted: 'hsl(var(--muted) / <alpha-value>)',
         accent: 'hsl(var(--accent) / <alpha-value>)',
         accentSoft: 'hsl(var(--accent-soft) / <alpha-value>)',
+        slate: {
+          405: '#94a3b8',
+          650: '#3f4e66',
+        },
+        rose: {
+          650: '#e11d48',
+        },
+        indigo: {
+          650: '#4f46e5',
+        },
       },
       boxShadow: {
         soft: '0 24px 60px rgba(15, 23, 42, 0.08)',
