@@ -123,7 +123,6 @@ export function StripeCheckoutModal({
   };
 
   return (
-  return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 transition-all animate-fade-in font-sans">
       <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl flex flex-col md:flex-row w-full max-w-3xl overflow-hidden max-h-[90vh]">
         

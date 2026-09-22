@@ -297,7 +297,6 @@ export function MathHelperPanel({
   
 
   return (
-  return (
     <>
                 {isMathHelperOpen && (
       
@@ -584,7 +583,6 @@ export function MathHelperPanel({
                 )}
       
     </>
-  );
   );
 }
 
