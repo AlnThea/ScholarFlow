@@ -49,12 +49,12 @@ export function NodeDetailPanel({ selectedNode, onClose }: NodeDetailPanelProps)
                        </div>
                        
                        {selectedNode.neighbors && selectedNode.neighbors.length > 0 && (
-                         <div>
+                         <div className="mb-4">
                            <h4 className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider flex items-center gap-1">
                              <IconTags className="w-3.5 h-3.5 text-slate-400" />
                              Top Connections
                            </h4>
-                           <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pr-1">
+                           <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">
                              {selectedNode.neighbors.slice(0, 15).map((neighbor: string, idx: number) => (
                                <span key={idx} className="px-2.5 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-xs font-medium text-slate-600 dark:text-slate-300 shadow-sm">
                                  {neighbor}
@@ -68,10 +68,40 @@ export function NodeDetailPanel({ selectedNode, onClose }: NodeDetailPanelProps)
                            </div>
                          </div>
                        )}
+
+                       {selectedNode.documents && selectedNode.documents.length > 0 && (
+                         <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
+                           <h4 className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider flex items-center justify-between">
+                             <span>Source Documents</span>
+                             <span className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 py-0.5 px-2 rounded-full text-[10px]">
+                               {selectedNode.documents.length}
+                             </span>
+                           </h4>
+                           <div className="max-h-48 overflow-y-auto pr-1 space-y-2 custom-scrollbar">
+                             {selectedNode.documents.map((doc: any, idx: number) => (
+                               <div key={idx} className="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 shadow-sm hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors cursor-default group">
+                                 <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 line-clamp-2 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                   {doc.title || "Untitled Document"}
+                                 </div>
+                                 <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-500">
+                                   <span className="truncate max-w-[150px]">
+                                     {doc.authors && doc.authors.length > 0 
+                                       ? (Array.isArray(doc.authors) ? doc.authors.join(", ") : doc.authors) 
+                                       : "Unknown Author"}
+                                   </span>
+                                   <span className="font-medium bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-300">
+                                     {doc.year || "N/A"}
+                                   </span>
+                                 </div>
+                               </div>
+                             ))}
+                           </div>
+                         </div>
+                       )}
                        
-                       <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
-                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colors[selectedNode.group % colors.length] }}></div>
-                         <span className="text-xs font-medium text-slate-500">Cluster Group {selectedNode.group}</span>
+                       <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                         <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: colors[selectedNode.group % colors.length] }}></div>
+                         <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Cluster Group {selectedNode.group}</span>
                        </div>
                      </div>
                    </div>

@@ -51,6 +51,7 @@ export function useBibliometricGraph(
     const cooccurrences: Record<string, number> = {};
     const yearCounts: Record<string, number> = {};
     const entityYears: Record<string, number[]> = {};
+    const entityDocuments: Record<string, any[]> = {};
 
     library.forEach((item: any) => {
       // Apply Year Filter
@@ -96,7 +97,7 @@ export function useBibliometricGraph(
           docEntities = item.references.map((r: any) => String(r).trim()).filter((r: any) => r.length > 0);
         }
       } else if (analysisType === 'bibliographic-coupling') {
-        if (item.references && Array.isArray(item.references) && item.references.length > 0) {
+        if (item.references && Array.isArray(item.references)) {
           docEntities = item.references.map((r: any) => String(r).trim()).filter((r: any) => r.length > 0);
         } else if (item.reference_id) {
           docEntities = [String(item.reference_id).trim()];
@@ -117,6 +118,9 @@ export function useBibliometricGraph(
         entityCounts[w] = (entityCounts[w] || 0) + 1;
         if (!entityYears[w]) entityYears[w] = [];
         if (itemYear) entityYears[w].push(itemYear);
+        if (!entityDocuments[w]) entityDocuments[w] = [];
+        // Extract a lightweight version of the document to avoid massive memory bloat
+        entityDocuments[w].push({ id: item.id || item.reference_id, title: item.title, year: item.year, authors: item.authors });
       });
 
       if (analysisType === 'bibliographic-coupling') {
@@ -137,7 +141,8 @@ export function useBibliometricGraph(
       .map(([id, val]) => {
         const years = entityYears[id] || [];
         const avgYear = years.length > 0 ? (years.reduce((a, b) => a + b, 0) / years.length) : null;
-        return { id, val, avgYear, neighbors: [] as string[], links: [] as any[], group: 0 };
+        const documents = entityDocuments[id] || [];
+        return { id, val, avgYear, documents, neighbors: [] as string[], links: [] as any[], group: 0 };
       });
 
     const validNodeIds = new Set(validNodes.map(n => n.id));
