@@ -210,33 +210,64 @@ body {
 
 /* Dark Mode overrides for static Tailwind classes */
 .dark .bg-white,
+.dark .bg-white\/98,
 .dark .bg-white\/95,
-.dark .bg-white\/98 {
-  background-color: hsl(var(--panel)) !important;
+.dark .bg-white\/90,
+.dark .bg-white\/80,
+.dark .bg-white\/70,
+.dark .bg-white\/50,
+.dark .bg-white\/40,
+.dark .bg-white\/20,
+.dark .bg-white\/10 {
+  background-color: hsl(var(--panel) / 0.95) !important;
 }
 
 .dark .bg-slate-50,
+.dark .bg-slate-50\/80,
 .dark .bg-slate-50\/50,
-.dark .bg-slate-50\/40 {
+.dark .bg-slate-50\/40,
+.dark .bg-slate-100,
+.dark .bg-slate-100\/80,
+.dark .bg-slate-100\/50,
+.dark .bg-gray-50,
+.dark .bg-\[\#f8fafc\] {
   background-color: hsl(var(--surface)) !important;
+}
+
+.dark .from-slate-50,
+.dark .from-white,
+.dark .to-slate-100\/50,
+.dark .to-slate-50 {
+  --tw-gradient-from: hsl(var(--surface)) !important;
+  --tw-gradient-to: hsl(var(--panel)) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
 }
 
 .dark .border-slate-100,
 .dark .border-slate-200,
 .dark .border-slate-200\/50,
 .dark .border-slate-200\/60,
-.dark .border-slate-200\/80 {
+.dark .border-slate-200\/80,
+.dark .border-gray-200,
+.dark .border-gray-200\/60,
+.dark .border-white\/40,
+.dark .border-white\/20 {
   border-color: hsl(var(--line)) !important;
 }
 
 .dark .text-slate-800,
 .dark .text-slate-700,
-.dark .text-slate-900 {
+.dark .text-slate-900,
+.dark .text-gray-800,
+.dark .text-gray-700,
+.dark .text-gray-900 {
   color: hsl(var(--text)) !important;
 }
 
 .dark .text-slate-600,
-.dark .text-slate-500 {
+.dark .text-slate-500,
+.dark .text-gray-600,
+.dark .text-gray-500 {
   color: hsl(var(--muted)) !important;
 }
 
