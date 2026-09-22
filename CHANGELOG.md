@@ -15,6 +15,8 @@ All notable changes, architectural milestones, and UI improvements to the Schola
 - **Global Network Metrics Dashboard**: Implemented a floating dashboard in the bottom-left displaying Total Nodes, Total Links, Network Density, and Average Degree.
 - **Metrics Data Export**: Added `Export CSV` functionality to download raw node metrics (Occurrences, Centrality, Cluster Group, Neighbors Count) for statistical analysis in SPSS or Excel.
 - **Node Search & Auto-Zoom**: Optimized the existing search bar in the floating toolbar to trigger camera auto-panning and zoom onto targeted topics.
+- **Layout Physics Switcher**: Added UI control to dynamically change the network layout algorithms (Force-Directed/Repulsion, Circular/Radial, Grid/Matrix, and Freeze/No Physics).
+- **System-wide Bilingual & Dark Mode Refactoring**: Fully translated and styled all modals, sidebars, dashboard tabs, and payment flows to strictly support EN/ID language toggles and Tailwind dark mode classes seamlessly.
 
 ## 🚀 [Unreleased]
 

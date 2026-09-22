@@ -108,4 +108,4 @@ Target: Meningkatkan halaman analisis bibliometrik (pp/dashboard/bibliometric/p
 - [x] **Global Network Metrics & Statistics**: Buat Dasbor Metrik Jaringan yang merangkum *Total Nodes, Total Edges, Network Density*, dan metrik sentralitas global lainnya yang wajib dilaporkan dalam metodologi jurnal.
 - [x] **Node Search & Highlight**: Aktifkan fitur *Search Bar* yang memungkinkan pengguna mencari topik tertentu dengan cepat, diiringi efek visual *auto-zoom* dan *highlight* memudarkan node lain.
 - [x] **CSV/Excel Metrics Export**: Sediakan fitur pengeksporan struktur data node dan *link* (Degree, Occurrences, Centrality) murni ke dalam format CSV agar peneliti bisa mengolahnya di *software* statistik SPSS/Excel.
-- [ ] **Layout Physics Switcher**: Tambahkan opsi untuk mengubah gaya algoritma tata letak fisika jaringan (misalnya Fruchterman-Reingold, Circular, atau LinLog) untuk mengatasi graf yang kusut.
+- [x] **Layout Physics Switcher**: Tambahkan opsi untuk mengubah gaya algoritma tata letak fisika jaringan (misalnya Fruchterman-Reingold, Circular, atau LinLog) untuk mengatasi graf yang kusut.
