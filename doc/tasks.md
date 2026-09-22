@@ -1,4 +1,4 @@
-﻿# Refactoring Tasks Tracker
+# Refactoring Tasks Tracker
 
 Dokumen ini digunakan untuk melacak secara spesifik proses pemecahan (refactoring) komponen-komponen raksasa di proyek ScholarFlow agar kode lebih modular, mudah dikelola, dan menghindari file dengan ribuan baris kode.
 
@@ -79,8 +79,20 @@ Target: Meningkatkan halaman analisis bibliometrik (pp/dashboard/bibliometric/p
 - [x] Tata ulang Layout utama agar graph lebih luas dan interaktif, mencontoh aplikasi profesional (panel kiri/kanan untuk pengaturan, tengah untuk graph).
 - [x] Implementasikan state management untuk filter ke dalam fungsi generator graph.
 
-### Phase 2: Advanced Graph & Export (TODO)
+### Phase 2: Advanced Graph & Export (COMPLETED)
 - [x] Integrasikan algoritma clustering (Label Propagation Algorithm) untuk mewarnai node berdasarkan komunitas/klaster.
 - [x] Tambahkan panel informasi/statistik jaringan saat sebuah node diklik (menampilkan metrik degree dan top connections).
 - [x] Tingkatkan fitur *Export* (tambahkan ekspor data CSV untuk nodes & edges).
-- [ ] Tambahkan fitur *Dictionary/Thesaurus* sederhana untuk menggabungkan kata bersinonim sebelum masuk ke generator graph.
+- [x] Tambahkan fitur *Dictionary/Thesaurus* sederhana untuk menggabungkan kata bersinonim sebelum masuk ke generator graph.
+
+### Phase 3: Expert & Enterprise Enhancements (TODO)
+- [x] **Node Search & Focus**: Tambahkan fitur pencarian node untuk menemukan dan menyorot node spesifik dalam graf jaringan yang padat.
+- [x] **Overlay Visualization (Trend Analysis)**: Opsi pewarnaan node berdasarkan Rata-rata Tahun Publikasi (menyorot tren topik terbaru).
+- [x] **Advanced Network Metrics**: Hitung dan tampilkan skor sentralitas (seperti Betweenness Centrality) di detail panel untuk mengetahui tingkat kepentingan node.
+- [x] **Visualization Tuning**: Tambahkan kontrol pengaturan tampilan (toggle label teks, skala ukuran node, dan penyesuaian jarak tautan/gravitasi).
+
+### Phase 4: Ultimate Professional Parity (VOSviewer / CiteSpace Level)
+- [x] **Density Visualization (Heatmap)**: Mode visualisasi peta panas untuk merender graf sebagai area densitas tanpa garis penghubung, menonjolkan konsentrasi topik.
+- [x] **Time-Slicing Animation**: Fitur pemutaran (Play/Pause) pada rentang tahun untuk melihat animasi evolusi jaringan secara dinamis dari waktu ke waktu.
+- [x] **GraphML / GML Export**: Fitur ekspor graf ke standar industri (GraphML/GML) agar bisa dibaca utuh oleh Gephi, VOSviewer, atau Cytoscape.
+- [x] **Co-Citation & Bibliographic Coupling Analysis**: Tambahan tipe analisis berdasarkan referensi/daftar pustaka antar dokumen.

@@ -64,6 +64,7 @@ export type CitationCandidate = {
   abstract?: string | null;
   citation_count?: number;
   score?: number;
+  references?: string[];
   source?: 'openalex' | 'crossref' | 'custom';
 };
 

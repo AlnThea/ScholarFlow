@@ -11,6 +11,16 @@ All notable changes, architectural milestones, and UI improvements to the Schola
 ### 🎨 Enterprise Dashboard Redesign
 - **Redesigned**: Antarmuka User Dashboard (`app/dashboard/page.tsx`) dirombak menjadi kelas Enterprise (dengan *Metrics Cards*, *Quick Access* ber-grid elegan, dan animasi *hover* transisi yang mulus).
 
+### 📊 Bibliometric Network Analysis (Ultimate Professional Parity)
+- **Added**: Fitur *Node Search & Focus* dengan *camera zoom* dan penyorotan dinamis.
+- **Added**: Fitur *Overlay Visualization (Trend Analysis)* untuk mewarnai *node* berdasarkan rata-rata tahun terbit.
+- **Added**: Ekstraksi dan penghitungan *PageRank Centrality* langsung di grafik untuk mendeteksi *node* terpenting.
+- **Added**: Dukungan *Density Visualization (Heatmap)* untuk menyorot konsentrasi klaster topik tanpa garis graf.
+- **Added**: Fitur *Time-Slicing Animation* untuk menganimasikan rentang tahun evolusi graf secara otomatis (*Play/Pause*).
+- **Added**: Fungsi Ekspor *GraphML* untuk memigrasikan hasil graf ke Gephi, VOSviewer, atau Cytoscape.
+- **Added**: Mode analisis baru: *Co-Citation* dan *Bibliographic Coupling* antar dokumen (Berdasarkan Daftar Pustaka).
+- **Added**: Kontrol Visual (*Visual Tuning*) untuk *physics gravity* / tegangan antar *node* dan kontrol *scaling* ukuran teks/graf.
+
 ### 🔗 Sidebar Integration Fix
 - **Fixed**: Perbaikan integrasi *Sidebar* dengan halaman *My Library* dan *Bibliometric Analysis*. Navigasi di luar *editor* konsisten dan bebas dari URL 404.
 ### ✨ Distraction-Free Zen Mode Layout

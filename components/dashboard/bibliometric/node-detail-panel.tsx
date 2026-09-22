@@ -33,14 +33,18 @@ export function NodeDetailPanel({ selectedNode, onClose }: NodeDetailPanelProps)
                      </div>
                      
                      <div className="p-5 space-y-5">
-                       <div className="grid grid-cols-2 gap-3">
-                         <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
-                           <div className="text-2xl font-bold text-slate-700 dark:text-slate-200">{selectedNode.val}</div>
-                           <div className="text-[10px] font-medium text-slate-500 uppercase tracking-wider mt-1">Occurrences</div>
+                       <div className="grid grid-cols-3 gap-2">
+                         <div className="bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center">
+                           <div className="text-xl font-bold text-slate-700 dark:text-slate-200">{selectedNode.val}</div>
+                           <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">Occur</div>
                          </div>
-                         <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
-                           <div className="text-2xl font-bold text-slate-700 dark:text-slate-200">{selectedNode.links?.length || 0}</div>
-                           <div className="text-[10px] font-medium text-slate-500 uppercase tracking-wider mt-1">Degree (Links)</div>
+                         <div className="bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center">
+                           <div className="text-xl font-bold text-slate-700 dark:text-slate-200">{selectedNode.links?.length || 0}</div>
+                           <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">Degree</div>
+                         </div>
+                         <div className="bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center">
+                           <div className="text-xl font-bold text-indigo-600 dark:text-indigo-400">{selectedNode.centrality || 0}</div>
+                           <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">Centrality</div>
                          </div>
                        </div>
                        

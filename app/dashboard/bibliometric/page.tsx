@@ -10,7 +10,8 @@ import { MinimalSidebar } from '@/components/editor/minimal-sidebar';
 import { useRouter } from 'next/navigation';
 import { 
   IconSettings, IconFilter, IconDownload, IconZoomIn, IconMaximize, 
-  IconUsers, IconTags, IconChartBar, IconCalendarEvent, IconLoader2
+  IconUsers, IconTags, IconChartBar, IconCalendarEvent, IconLoader2,
+  IconSearch, IconX
 } from '@tabler/icons-react';
 
 // Dynamically import ForceGraph2D with no SSR
@@ -27,12 +28,41 @@ export default function BibliometricPage() {
   // Professional Analysis States
   const [minOccurrences, setMinOccurrences] = useState(2);
   const [minLinkStrength, setMinLinkStrength] = useState(1);
-  const [analysisType, setAnalysisType] = useState<'keyword' | 'author'>('keyword');
+  const [analysisType, setAnalysisType] = useState<'keyword' | 'author' | 'co-citation' | 'bibliographic-coupling'>('keyword');
+  const [dictionary, setDictionary] = useState<string>("");
   
   // Year Filter States
   const [yearFilter, setYearFilter] = useState<'all' | 'custom'>('all');
   const [minYear, setMinYear] = useState(2000);
   const [maxYear, setMaxYear] = useState(new Date().getFullYear());
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // Time-Slicing Animation Logic
+  useEffect(() => {
+    let interval: any;
+    if (isAnimating) {
+      interval = setInterval(() => {
+        setMaxYear((prev) => {
+          const next = prev + 1;
+          const currentYear = new Date().getFullYear();
+          if (next > currentYear) {
+            setIsAnimating(false);
+            return currentYear;
+          }
+          return next;
+        });
+      }, 1500);
+    }
+    return () => clearInterval(interval);
+  }, [isAnimating]);
+
+  const handleToggleAnimate = () => {
+    if (!isAnimating) {
+      setYearFilter('custom');
+      setMaxYear(minYear + 1); // Start animating from minYear + 1
+    }
+    setIsAnimating(!isAnimating);
+  };
 
   // Graph interaction states
   const [highlightNodes, setHighlightNodes] = useState(new Set());
@@ -40,6 +70,13 @@ export default function BibliometricPage() {
   const [hoverNode, setHoverNode] = useState<any>(null);
   const [selectedNode, setSelectedNode] = useState<any>(null);
   
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Visualization Tuning States
+  const [showLabels, setShowLabels] = useState(true);
+  const [nodeSizeScale, setNodeSizeScale] = useState(1.0);
+  const [chargeStrength, setChargeStrength] = useState(-30);
+
   const fgRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [graphDim, setGraphDim] = useState({ width: 800, height: 600 });
@@ -86,7 +123,14 @@ export default function BibliometricPage() {
   }, []);
 
   // Generate graph data from library based on settings
-  const graphData = useBibliometricGraph(library, minOccurrences, minLinkStrength, analysisType, yearFilter, minYear, maxYear);
+  const graphData = useBibliometricGraph(library, minOccurrences, minLinkStrength, analysisType, yearFilter, minYear, maxYear, dictionary);
+
+  useEffect(() => {
+    if (fgRef.current) {
+      fgRef.current.d3Force('charge').strength(chargeStrength);
+      fgRef.current.d3ReheatSimulation();
+    }
+  }, [chargeStrength]);
 
   const handleNodeHover = useCallback((node: any) => {
     setHighlightNodes(new Set());
@@ -104,6 +148,38 @@ export default function BibliometricPage() {
     }
     setHoverNode(node || null);
   }, []);
+
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setHighlightNodes(new Set());
+      setHighlightLinks(new Set());
+      return;
+    }
+    
+    const lowerQ = query.toLowerCase();
+    const matchedNode: any = graphData.nodes.find((n: any) => n.id.toLowerCase().includes(lowerQ));
+    
+    if (matchedNode) {
+      const newHighlightNodes = new Set();
+      const newHighlightLinks = new Set();
+      newHighlightNodes.add(matchedNode.id);
+      matchedNode.neighbors.forEach((neighbor: string) => newHighlightNodes.add(neighbor));
+      matchedNode.links.forEach((link: any) => newHighlightLinks.add(link));
+
+      setHighlightNodes(newHighlightNodes);
+      setHighlightLinks(newHighlightLinks);
+      
+      if (fgRef.current) {
+        // Move camera to node
+        fgRef.current.centerAt(matchedNode.x, matchedNode.y, 1000);
+        fgRef.current.zoom(3, 1000);
+      }
+    } else {
+      setHighlightNodes(new Set());
+      setHighlightLinks(new Set());
+    }
+  }, [graphData.nodes]);
 
   const handleNodeClick = useCallback((node: any) => {
     console.log("Node clicked!", node);
@@ -123,6 +199,8 @@ export default function BibliometricPage() {
       node.fy = null;
     }
   }, []);
+
+  const [colorMode, setColorMode] = useState<'cluster' | 'trend' | 'density'>('cluster');
 
   const exportNetworkImage = () => {
     const canvas = document.querySelector('.force-graph-container canvas, canvas') as HTMLCanvasElement;
@@ -148,22 +226,19 @@ export default function BibliometricPage() {
     if (graphData.nodes.length === 0) return;
     
     // Nodes CSV
-    let nodesCsv = "Id,Label,Weight,Group\n";
+    let nodesCsv = "Id,Label,Weight,Group,AvgYear\n";
     graphData.nodes.forEach((n: any) => {
-      nodesCsv += `"${n.id}","${n.id}",${n.val},${n.group}\n`;
+      nodesCsv += `"${n.id}","${n.id}",${n.val},${n.group},${n.avgYear}\n`;
     });
     
     // Edges CSV
     let edgesCsv = "Source,Target,Type,Weight\n";
     graphData.links.forEach((l: any) => {
-      // l.source and l.target could be objects if ForceGraph already mutated them, or strings
       const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
       const targetId = typeof l.target === 'object' ? l.target.id : l.target;
       edgesCsv += `"${sourceId}","${targetId}","Undirected",${l.value}\n`;
     });
     
-    // Download zip conceptually or just edges
-    // For simplicity, download edges as CSV
     const blob = new Blob([edgesCsv], { type: 'text/csv' });
     const link = document.createElement('a');
     link.download = `ScholarFlow_Edges_${analysisType}.csv`;
@@ -171,16 +246,82 @@ export default function BibliometricPage() {
     link.click();
   };
 
+  const exportNetworkGraphML = () => {
+    if (graphData.nodes.length === 0) return;
+    
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    xml += `<graphml xmlns="http://graphml.graphdrawing.org/xmlns">\n`;
+    xml += `  <key id="d0" for="node" attr.name="weight" attr.type="double"/>\n`;
+    xml += `  <key id="d1" for="node" attr.name="group" attr.type="int"/>\n`;
+    xml += `  <key id="d2" for="node" attr.name="avgYear" attr.type="double"/>\n`;
+    xml += `  <key id="d3" for="edge" attr.name="weight" attr.type="double"/>\n`;
+    xml += `  <graph id="G" edgedefault="undirected">\n`;
+    
+    graphData.nodes.forEach((n: any) => {
+      xml += `    <node id="${n.id}">\n`;
+      xml += `      <data key="d0">${n.val}</data>\n`;
+      xml += `      <data key="d1">${n.group}</data>\n`;
+      xml += `      <data key="d2">${n.avgYear}</data>\n`;
+      xml += `    </node>\n`;
+    });
+    
+    graphData.links.forEach((l: any, i: number) => {
+      const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
+      const targetId = typeof l.target === 'object' ? l.target.id : l.target;
+      xml += `    <edge id="e${i}" source="${sourceId}" target="${targetId}">\n`;
+      xml += `      <data key="d3">${l.value}</data>\n`;
+      xml += `    </edge>\n`;
+    });
+    
+    xml += `  </graph>\n</graphml>`;
+    
+    const blob = new Blob([xml], { type: 'application/xml' });
+    const link = document.createElement('a');
+    link.download = `ScholarFlow_Network_${analysisType}.graphml`;
+    link.href = URL.createObjectURL(blob);
+    link.click();
+  };
+
   const colors = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4", "#94a3b8"];
   
+  // Interpolate from blue (old) to green to yellow to red (new)
+  const getTrendColor = (avgYear: number) => {
+    if (!avgYear || avgYear === 0) return "#94a3b8"; // grey
+    const min = graphData.minAvgYear || 2000;
+    const max = graphData.maxAvgYear || 2024;
+    let ratio = max === min ? 0.5 : (avgYear - min) / (max - min);
+    ratio = Math.max(0, Math.min(1, ratio));
+    
+    // Simple gradient: Blue -> Yellow -> Red
+    if (ratio < 0.5) {
+      // Blue to Yellow
+      const rRatio = ratio * 2;
+      const r = Math.round(59 + (234 - 59) * rRatio); // 3b to ea
+      const g = Math.round(130 + (179 - 130) * rRatio); // 82 to b3
+      const b = Math.round(246 + (8 - 246) * rRatio); // f6 to 08
+      return `rgb(${r}, ${g}, ${b})`;
+    } else {
+      // Yellow to Red
+      const rRatio = (ratio - 0.5) * 2;
+      const r = Math.round(234 + (239 - 234) * rRatio); // ea to ef
+      const g = Math.round(179 + (68 - 179) * rRatio); // b3 to 44
+      const b = Math.round(8 + (68 - 8) * rRatio); // 08 to 44
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+  };
+
   const getNodeColor = (node: any) => {
     if (hoverNode && !highlightNodes.has(node.id)) {
       return "rgba(200, 200, 200, 0.2)";
+    }
+    if (colorMode === 'trend') {
+      return getTrendColor(node.avgYear);
     }
     return colors[node.group % colors.length];
   };
 
   const getLinkColor = (link: any) => {
+    if (colorMode === 'density') return "transparent";
     if (hoverNode && !highlightLinks.has(link)) {
       return "rgba(200, 200, 200, 0.1)";
     }
@@ -219,14 +360,21 @@ export default function BibliometricPage() {
                 className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium transition-colors"
               >
                 <IconDownload className="w-4 h-4" />
-                Export CSV
+                CSV
+              </button>
+             <button 
+                onClick={exportNetworkGraphML}
+                className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium transition-colors"
+              >
+                <IconDownload className="w-4 h-4" />
+                GraphML
               </button>
              <button 
                 onClick={exportNetworkImage}
                 className="flex items-center gap-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-lg text-sm font-medium transition-colors"
               >
                 <IconDownload className="w-4 h-4" />
-                Export Map
+                Image
               </button>
           </div>
         </header>
@@ -242,6 +390,12 @@ export default function BibliometricPage() {
             minOccurrences={minOccurrences} setMinOccurrences={setMinOccurrences}
             minLinkStrength={minLinkStrength} setMinLinkStrength={setMinLinkStrength}
             graphData={graphData} setSelectedYear={setSelectedYear}
+            dictionary={dictionary} setDictionary={setDictionary}
+            colorMode={colorMode} setColorMode={setColorMode}
+            showLabels={showLabels} setShowLabels={setShowLabels}
+            nodeSizeScale={nodeSizeScale} setNodeSizeScale={setNodeSizeScale}
+            chargeStrength={chargeStrength} setChargeStrength={setChargeStrength}
+            isAnimating={isAnimating} onToggleAnimate={handleToggleAnimate}
           />
           {/* Graph Area */}
           <div ref={containerRef} className="flex-1 bg-[#f8fafc] dark:bg-gray-950 relative flex flex-col shadow-inner min-w-0 min-h-0">
@@ -271,6 +425,26 @@ export default function BibliometricPage() {
                    </button>
                  </div>
 
+                 {/* Top Right Floating Toolbar (Search & Controls) */}
+                 <div className="absolute top-6 right-6 z-10 flex flex-col gap-2">
+                   {/* Search Box */}
+                   <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-xl shadow-lg border border-gray-200/60 dark:border-gray-700 flex items-center overflow-hidden px-3 py-2 w-64 transition-all focus-within:ring-2 focus-within:ring-indigo-500/50">
+                     <IconSearch className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
+                     <input
+                       type="text"
+                       placeholder="Search node..."
+                       value={searchQuery}
+                       onChange={(e) => handleSearch(e.target.value)}
+                       className="bg-transparent border-none outline-none text-sm w-full text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
+                     />
+                     {searchQuery && (
+                       <button onClick={() => handleSearch('')} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 ml-1 shrink-0">
+                         <IconX className="w-3.5 h-3.5" />
+                       </button>
+                     )}
+                   </div>
+                 </div>
+
                  <NodeDetailPanel selectedNode={selectedNode} onClose={() => setSelectedNode(null)} />
 
                  <ForceGraph2D
@@ -279,27 +453,51 @@ export default function BibliometricPage() {
                     width={graphDim.width}
                     height={graphDim.height}
                     nodeCanvasObject={(node: any, ctx: any, globalScale: any) => {
-                      const r = Math.max(Math.sqrt(node.val) * 3.5, 4);
+                      const baseR = Math.max(Math.sqrt(node.val) * 3.5, 4);
+                      const r = baseR * nodeSizeScale;
                       
-                      ctx.beginPath();
-                      ctx.arc(node.x, node.y, r, 0, 2 * Math.PI, false);
-                      ctx.fillStyle = getNodeColor(node);
-                      ctx.fill();
-
-                      // Ring for hovered/highlighted
-                      if (highlightNodes.has(node.id) || hoverNode === node) {
+                      if (colorMode === 'density') {
+                        // Density Visualization Mode
+                        ctx.globalCompositeOperation = 'multiply'; // or 'screen' depending on background
+                        const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, r * 2.5);
+                        gradient.addColorStop(0, 'rgba(239, 68, 68, 0.4)'); // hot center
+                        gradient.addColorStop(0.3, 'rgba(245, 158, 11, 0.2)'); // warm middle
+                        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)'); // fade out
+                        
                         ctx.beginPath();
-                        ctx.arc(node.x, node.y, r + 3, 0, 2 * Math.PI, false);
-                        ctx.strokeStyle = 'rgba(59, 130, 246, 0.5)';
-                        ctx.lineWidth = 2;
-                        ctx.stroke();
+                        ctx.arc(node.x, node.y, r * 2.5, 0, 2 * Math.PI, false);
+                        ctx.fillStyle = gradient;
+                        ctx.fill();
+                        ctx.globalCompositeOperation = 'source-over'; // reset
+                        
+                        // Optionally don't draw label unless hovered
+                        if (hoverNode !== node && !highlightNodes.has(node.id) && node.val < 10) return;
+                      } else {
+                        // Standard Mode
+                        ctx.beginPath();
+                        ctx.arc(node.x, node.y, r, 0, 2 * Math.PI, false);
+                        ctx.fillStyle = getNodeColor(node);
+                        ctx.fill();
+
+                        // Ring for hovered/highlighted
+                        if (highlightNodes.has(node.id) || hoverNode === node) {
+                          ctx.beginPath();
+                          ctx.arc(node.x, node.y, r + 3, 0, 2 * Math.PI, false);
+                          ctx.strokeStyle = 'rgba(59, 130, 246, 0.5)';
+                          ctx.lineWidth = 2;
+                          ctx.stroke();
+                        }
                       }
 
                       if (hoverNode && !highlightNodes.has(node.id)) {
                         return;
                       }
 
-                      const label = `${node.id} (${node.val})`;
+                      if (!showLabels && hoverNode !== node && !highlightNodes.has(node.id)) {
+                        return;
+                      }
+
+                      const label = `${node.id}`;
                       const fontSize = Math.max(12 / globalScale, 4.5);
                       ctx.font = `500 ${fontSize}px Inter, system-ui, sans-serif`;
                       
@@ -327,7 +525,8 @@ export default function BibliometricPage() {
                       ctx.fillText(label, node.x, textY);
                     }}
                     nodePointerAreaPaint={(node: any, color: any, ctx: any) => {
-                      const r = Math.max(Math.sqrt(node.val) * 3.5, 4);
+                      const baseR = Math.max(Math.sqrt(node.val) * 3.5, 4);
+                      const r = baseR * nodeSizeScale;
                       ctx.fillStyle = color;
                       ctx.beginPath();
                       ctx.arc(node.x, node.y, r + 8, 0, 2 * Math.PI, false);
@@ -342,6 +541,11 @@ export default function BibliometricPage() {
                     cooldownTicks={150}
                     d3AlphaDecay={0.015}
                     d3VelocityDecay={0.2}
+                    onEngineStop={() => {
+                      if (fgRef.current) {
+                        fgRef.current.d3Force('charge').strength(chargeStrength);
+                      }
+                    }}
                   />
                </div>
             )}

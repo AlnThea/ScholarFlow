@@ -2,16 +2,34 @@ import { useMemo } from "react";
 import { CitationCandidate } from "@/lib/services";
 
 export function useBibliometricGraph(
-  library: CitationCandidate[],
+  libraryRaw: any,
   minOccurrences: number,
   minLinkStrength: number,
-  analysisType: "keyword" | "author",
+  analysisType: "keyword" | "author" | "co-citation" | "bibliographic-coupling",
   yearFilter: "all" | "custom",
   minYear: number,
-  maxYear: number
+  maxYear: number,
+  dictionaryStr: string = ""
 ) {
   return useMemo(() => {
+    // Determine if libraryRaw is object map or array
+    const library = Array.isArray(libraryRaw) ? libraryRaw : Object.values(libraryRaw);
     if (library.length === 0) return { nodes: [], links: [], yearCounts: {}, maxYearCount: 1 };
+
+    // Build synonym map
+    const synonymMap: Record<string, string> = {};
+    if (dictionaryStr) {
+      dictionaryStr.split('\n').forEach(line => {
+        if (line.includes('->')) {
+          const [left, right] = line.split('->').map(s => s.trim());
+          if (left && right) {
+            left.split(',').forEach(word => {
+              synonymMap[word.trim().toLowerCase()] = right.toLowerCase();
+            });
+          }
+        }
+      });
+    }
 
     const stopWords = new Set([
       "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "has", "he",
@@ -30,8 +48,9 @@ export function useBibliometricGraph(
     const entityCounts: Record<string, number> = {};
     const cooccurrences: Record<string, number> = {};
     const yearCounts: Record<string, number> = {};
+    const entityYears: Record<string, number[]> = {};
 
-    library.forEach((item) => {
+    library.forEach((item: any) => {
       // Apply Year Filter
       const itemYear = item.year ? parseInt(String(item.year)) : null;
       if (yearFilter === 'custom' && itemYear) {
@@ -46,14 +65,13 @@ export function useBibliometricGraph(
       let docEntities: string[] = [];
 
       if (analysisType === 'keyword') {
-        const text = `${item.title} ${item.abstract || ""}`.toLowerCase().replace(/[^\w\s-]/g, " ");
+        const text = ((item.title || "") + " " + (item.abstract || "")).toLowerCase().replace(/[^\w\s-]/g, "");
         const rawWords = text.split(/\s+/).filter(w => w.length > 0);
         const docPhrases = new Set<string>();
 
         for (let i = 0; i < rawWords.length; i++) {
           const w1 = rawWords[i];
           let formedPhrase = false;
-          
           if (i < rawWords.length - 1) {
             const w2 = rawWords[i + 1];
             if (!stopWords.has(w1) && !stopWords.has(w2) && w1.length > 2 && w2.length > 2) {
@@ -62,25 +80,45 @@ export function useBibliometricGraph(
               i++;
             }
           }
-          
           if (!formedPhrase && !stopWords.has(w1) && w1.length >= 4) {
             if (!genericUnigrams.has(w1)) {
               docPhrases.add(w1);
             }
           }
         }
-        // Limit per doc to prevent massive hubs
         docEntities = Array.from(docPhrases).slice(0, 15);
       } else if (analysisType === 'author') {
-        if (item.authors && item.authors.length > 0) {
-          // Normalize author names
-          docEntities = item.authors.map(a => a.trim()).filter(a => a.length > 0);
+        if (item.authors && Array.isArray(item.authors)) {
+          docEntities = item.authors.map((a: any) => a.trim()).filter((a: any) => a.length > 0);
         }
+      } else if (analysisType === 'co-citation') {
+        if (item.references && Array.isArray(item.references)) {
+          docEntities = item.references.map((r: any) => String(r).trim()).filter((r: any) => r.length > 0);
+        }
+      } else if (analysisType === 'bibliographic-coupling') {
+        if (item.references && Array.isArray(item.references) && item.references.length > 0) {
+          docEntities = item.references.map((r: any) => String(r).trim()).filter((r: any) => r.length > 0);
+        } else if (item.reference_id) {
+          docEntities = [String(item.reference_id).trim()];
+        }
+      }
+
+      // Apply Synonym Map
+      docEntities = docEntities.map(w => synonymMap[w.toLowerCase()] || w);
+
+      // Unique entities per doc to avoid self-links
+      if (analysisType !== 'bibliographic-coupling') {
+        docEntities = Array.from(new Set(docEntities));
       }
 
       docEntities.forEach(w => {
         entityCounts[w] = (entityCounts[w] || 0) + 1;
+        if (!entityYears[w]) entityYears[w] = [];
+        if (itemYear) entityYears[w].push(itemYear);
       });
+
+      if (analysisType === 'bibliographic-coupling') {
+      }
 
       for (let i = 0; i < docEntities.length; i++) {
         for (let j = i + 1; j < docEntities.length; j++) {
@@ -92,10 +130,13 @@ export function useBibliometricGraph(
       }
     });
 
-    // Apply Thresholds
     const validNodes = Object.entries(entityCounts)
       .filter(([_, count]) => count >= minOccurrences)
-      .map(([id, val]) => ({ id, val, neighbors: [] as string[], links: [] as any[], group: 0 }));
+      .map(([id, val]) => {
+        const years = entityYears[id] || [];
+        const avgYear = years.length > 0 ? (years.reduce((a, b) => a + b, 0) / years.length) : null;
+        return { id, val, avgYear, neighbors: [] as string[], links: [] as any[], group: 0 };
+      });
 
     const validNodeIds = new Set(validNodes.map(n => n.id));
 
@@ -109,7 +150,6 @@ export function useBibliometricGraph(
         return { source, target, value: weight };
       });
 
-    // Cross-link nodes for highlighting logic and simple clustering simulation
     validLinks.forEach(link => {
       const a = validNodes.find(n => n.id === link.source);
       const b = validNodes.find(n => n.id === link.target);
@@ -121,58 +161,81 @@ export function useBibliometricGraph(
       }
     });
 
-    // Assign simple communities (groups) based on strongest links
-    // Run Label Propagation Algorithm for Clustering
     validNodes.forEach((node, i) => {
-        node.group = i; // Initial group is their own index
+        node.group = i;
     });
 
+    // Label Propagation
     for (let iter = 0; iter < 5; iter++) {
-        let changed = false;
-        // Deterministic shuffle for consistency between renders if data doesn't change
-        const shuffledNodes = [...validNodes].sort((a, b) => a.id.localeCompare(b.id));
-        
-        shuffledNodes.forEach(node => {
-            if (node.links.length === 0) return;
-            
-            const groupWeights: Record<number, number> = {};
-            node.links.forEach((link: any) => {
-                const neighborId = link.source === node.id ? link.target : link.source;
-                const neighbor = validNodes.find(n => n.id === neighborId);
-                if (neighbor) {
-                    groupWeights[neighbor.group] = (groupWeights[neighbor.group] || 0) + link.value;
-                }
-            });
-            
-            if (Object.keys(groupWeights).length > 0) {
-                let maxGroup = node.group;
-                let maxWeight = -1;
-                for (const [gStr, w] of Object.entries(groupWeights)) {
-                    const g = parseInt(gStr);
-                    if (w > maxWeight) {
-                        maxWeight = w;
-                        maxGroup = g;
-                    }
-                }
-                
-                if (node.group !== maxGroup) {
-                    node.group = maxGroup;
-                    changed = true;
-                }
-            }
+      let changed = false;
+      [...validNodes].sort(() => Math.random() - 0.5).forEach(node => {
+        if (node.neighbors.length === 0) return;
+        const groupCounts: Record<number, number> = {};
+        node.links.forEach((link: any) => {
+           const neighborId = link.source === node.id ? link.target : link.source;
+           const neighbor = validNodes.find(n => n.id === neighborId);
+           if (neighbor) {
+             groupCounts[neighbor.group] = (groupCounts[neighbor.group] || 0) + link.value;
+           }
         });
-        if (!changed) break;
+        let bestGroup = node.group;
+        let maxCount = -1;
+        for (const [group, count] of Object.entries(groupCounts)) {
+          if (count > maxCount) {
+             maxCount = count;
+             bestGroup = parseInt(group);
+          }
+        }
+        if (node.group !== bestGroup) {
+          node.group = bestGroup;
+          changed = true;
+        }
+      });
+      if (!changed) break;
     }
-    
-    // re-index groups to be 0,1,2... to map cleanly to colors
+
     const uniqueGroups = Array.from(new Set(validNodes.map(n => n.group)));
     validNodes.forEach(node => {
         node.group = uniqueGroups.indexOf(node.group);
     });
-    
+
+    // PageRank Centrality
+    const pr: Record<string, number> = {};
+    const d = 0.85;
+    validNodes.forEach(n => { pr[n.id] = 1.0; });
+
+    for (let iter = 0; iter < 10; iter++) {
+      const nextPr: Record<string, number> = {};
+      validNodes.forEach(n => {
+        let sum = 0;
+        n.links.forEach((link: any) => {
+           const neighborId = link.source === n.id ? link.target : link.source;
+           const neighbor = validNodes.find(x => x.id === neighborId);
+           if (neighbor && neighbor.links.length > 0) {
+             sum += (pr[neighbor.id] * link.value) / neighbor.links.reduce((acc: number, l: any) => acc + l.value, 0);
+           }
+        });
+        nextPr[n.id] = (1 - d) + d * sum;
+      });
+      validNodes.forEach(n => { pr[n.id] = nextPr[n.id]; });
+    }
+
+    const maxPr = Math.max(...Object.values(pr), 0.0001);
+    validNodes.forEach(n => {
+      (n as any).centrality = parseFloat((pr[n.id] / maxPr).toFixed(4));
+    });
+
+    const minAvgYear = Math.min(...validNodes.map(n => n.avgYear || 2050).filter(y => y !== 2050));
+    const maxAvgYear = Math.max(...validNodes.map(n => n.avgYear || 0));
     const maxYearCount = Object.keys(yearCounts).length > 0 ? Math.max(...Object.values(yearCounts)) : 1;
 
-    return { nodes: validNodes, links: validLinks, yearCounts, maxYearCount };
-  }, [library, minOccurrences, minLinkStrength, analysisType, yearFilter, minYear, maxYear]);
-
+    return { 
+      nodes: validNodes, 
+      links: validLinks, 
+      yearCounts, 
+      maxYearCount,
+      minAvgYear,
+      maxAvgYear
+    };
+  }, [libraryRaw, minOccurrences, minLinkStrength, analysisType, yearFilter, minYear, maxYear, dictionaryStr]);
 }
