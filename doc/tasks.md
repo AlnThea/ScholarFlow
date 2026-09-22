@@ -96,3 +96,9 @@ Target: Meningkatkan halaman analisis bibliometrik (pp/dashboard/bibliometric/p
 - [x] **Time-Slicing Animation**: Fitur pemutaran (Play/Pause) pada rentang tahun untuk melihat animasi evolusi jaringan secara dinamis dari waktu ke waktu.
 - [x] **GraphML / GML Export**: Fitur ekspor graf ke standar industri (GraphML/GML) agar bisa dibaca utuh oleh Gephi, VOSviewer, atau Cytoscape.
 - [x] **Co-Citation & Bibliographic Coupling Analysis**: Tambahan tipe analisis berdasarkan referensi/daftar pustaka antar dokumen.
+
+### Phase 5: Absolute Finishing Touches (The Final Polish)
+- [x] **Dynamic NLP Keyword Extraction**: Ganti ekstraksi Regex statis dengan pembacaan properti `item.keywords` bawaan abstrak, atau integrasikan library/API NLP (seperti `rake-js`) agar bisa mengekstrak kata kunci dinamis dari segala bidang keilmuan secara akurat.
+- [x] **High-Resolution Image Export (PNG/SVG)**: Tambahkan fitur pengeksporan *canvas* graf menjadi format gambar 4K PNG/SVG untuk keperluan publikasi/poster akademis.
+- [x] **Save/Load Thesaurus Workspace**: Hubungkan state *Dictionary* ke pengaturan profil/database Supabase, agar kamus sinonim tersimpan permanen dan tidak hilang saat pengguna melakukan *refresh*.
+- [ ] **Drill-Down / Click-to-View Documents**: Tingkatkan interaksi klik pada *node* dengan menampilkan daftar *scrollable* dokumen/jurnal yang aktual mendasari (menyusun) node tersebut pada Panel Kanan.

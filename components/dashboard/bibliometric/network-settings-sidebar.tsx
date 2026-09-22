@@ -1,5 +1,6 @@
-import React from "react";
-import { IconSettings, IconTags, IconUsers, IconFilter, IconCalendarEvent, IconBook } from "@tabler/icons-react";
+import React, { useState } from "react";
+import { IconSettings, IconTags, IconUsers, IconFilter, IconCalendarEvent, IconBook, IconInfoCircle, IconX } from "@tabler/icons-react";
+import { useLanguage } from "@/components/i18n/language-context";
 
 interface NetworkSettingsSidebarProps {
   yearFilter: 'all' | 'custom';
@@ -38,6 +39,9 @@ export function NetworkSettingsSidebar({
   showLabels, setShowLabels, nodeSizeScale, setNodeSizeScale, chargeStrength, setChargeStrength,
   isAnimating, onToggleAnimate
 }: NetworkSettingsSidebarProps) {
+  const [showDictHelper, setShowDictHelper] = useState(false);
+  const { language } = useLanguage();
+
   return (
     <>
           {/* Settings Sidebar Panel */}
@@ -230,10 +234,19 @@ export function NetworkSettingsSidebar({
                 </div>
 
                 {/* Thesaurus */}
-                <div className="space-y-3 pt-4 border-t border-gray-100 dark:border-gray-800">
-                  <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <IconBook className="w-4 h-4" /> Dictionary / Thesaurus
-                  </label>
+                <div className="space-y-3 pt-4 border-t border-gray-100 dark:border-gray-800 relative">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                      <IconBook className="w-4 h-4" /> Dictionary / Thesaurus
+                    </label>
+                    <button 
+                      onClick={() => setShowDictHelper(true)}
+                      className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400 transition-colors"
+                      title="Cara Penggunaan"
+                    >
+                      <IconInfoCircle className="w-4 h-4" />
+                    </button>
+                  </div>
                   <p className="text-[11px] text-gray-500 leading-tight">Format: <code>word1, word2 -&gt; target</code></p>
                   <textarea
                     value={dictionary}
@@ -241,6 +254,61 @@ export function NetworkSettingsSidebar({
                     className="w-full p-2 text-xs border border-gray-200 dark:border-gray-700 rounded-md bg-transparent h-20 resize-none font-mono focus:ring-1 focus:ring-indigo-500 outline-none"
                     placeholder="ai, artificial intelligence -> artificial intelligence&#10;machine learning, ml -> machine learning"
                   />
+
+                  {showDictHelper && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                      <div className="w-full max-w-md bg-white dark:bg-gray-900 border border-slate-200 dark:border-slate-700 shadow-2xl rounded-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                          <h4 className="font-bold text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                            <IconBook className="w-5 h-5 text-indigo-500" />
+                            {language === 'id' ? 'Cara Pakai Thesaurus' : 'How to use Thesaurus'}
+                          </h4>
+                          <button onClick={() => setShowDictHelper(false)} className="p-1 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                            <IconX className="w-5 h-5" />
+                          </button>
+                        </div>
+                        <div className="p-5 text-sm text-slate-600 dark:text-slate-300 space-y-4">
+                          {language === 'id' ? (
+                            <>
+                              <p>Fitur ini digunakan untuk <strong>menggabungkan beberapa topik yang maknanya sama</strong> menjadi 1 node (bulatan) besar.</p>
+                              <p>Anda bisa memasukkan <strong>banyak aturan sekaligus</strong> dengan memisahkannya menggunakan <strong>baris baru (Enter)</strong>. Contoh:</p>
+                              <div className="bg-slate-900 text-indigo-300 p-3 rounded-lg font-mono text-xs shadow-inner whitespace-pre-wrap">
+                                ai, a.i. -&gt; artificial intelligence
+                                <br />ml, machine learning -&gt; machine learning
+                                <br />penggunaan, bertujuan -&gt; 
+                              </div>
+                              <p>Aturan di atas akan meleburkan node "ai" menjadi "artificial intelligence", "ml" menjadi "machine learning", dan seterusnya secara serentak. Graf Anda akan menjadi jauh lebih rapi dan bebas duplikasi.</p>
+                              <p className="mt-2 p-2 bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 rounded border border-amber-200 dark:border-amber-800 text-xs">
+                                💡 <strong>Tips:</strong> Kosongkan sisi kanan tanda panah (seperti <code>penggunaan -&gt; </code>) untuk <strong>menghapus/menyembunyikan</strong> kata yang tidak relevan dari graf!
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              <p>This feature is used to <strong>merge multiple identical topics</strong> into 1 large node.</p>
+                              <p>You can add <strong>multiple rules at once</strong> by separating them with a <strong>new line (Enter)</strong>. Example:</p>
+                              <div className="bg-slate-900 text-indigo-300 p-3 rounded-lg font-mono text-xs shadow-inner whitespace-pre-wrap">
+                                ai, a.i. -&gt; artificial intelligence
+                                <br />ml, machine learning -&gt; machine learning
+                                <br />usage, aimed -&gt; 
+                              </div>
+                              <p>The rule above will merge "ai" into "artificial intelligence", "ml" into "machine learning", and so on simultaneously. Your graph will be much cleaner and free of duplicates.</p>
+                              <p className="mt-2 p-2 bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 rounded border border-amber-200 dark:border-amber-800 text-xs">
+                                💡 <strong>Tip:</strong> Leave the right side of the arrow empty (like <code>usage -&gt; </code>) to <strong>delete/hide</strong> irrelevant words from the graph completely!
+                              </p>
+                            </>
+                          )}
+                        </div>
+                        <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-end bg-slate-50/50 dark:bg-slate-900/50">
+                          <button 
+                            onClick={() => setShowDictHelper(false)}
+                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
+                          >
+                            {language === 'id' ? 'Mengerti' : 'Got it'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -13,6 +13,7 @@ export type UserProfile = {
   subscription_plan: string;
   subscription_status: string;
   subscription_end: string | null;
+  preferences?: Record<string, any>;
 };
 
 type AuthContextType = {
@@ -36,7 +37,7 @@ const AuthContext = createContext<AuthContextType>({
 async function fetchProfile(user: User): Promise<UserProfile | null> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, full_name, role, created_at, subscription_plan, subscription_status, subscription_end')
+    .select('id, full_name, role, created_at, subscription_plan, subscription_status, subscription_end, preferences')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -57,7 +58,7 @@ async function fetchProfile(user: User): Promise<UserProfile | null> {
         subscription_plan: 'free',
         subscription_status: 'active'
       })
-      .select('id, full_name, role, created_at, subscription_plan, subscription_status, subscription_end')
+      .select('id, full_name, role, created_at, subscription_plan, subscription_status, subscription_end, preferences')
       .maybeSingle();
 
     if (insertError) {

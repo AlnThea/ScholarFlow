@@ -1,4 +1,6 @@
 import { useMemo } from "react";
+import keyword_extractor from "keyword-extractor";
+import { ind as indStopwords, eng as engStopwords } from "stopword";
 import { CitationCandidate } from "@/lib/services";
 
 export function useBibliometricGraph(
@@ -22,7 +24,7 @@ export function useBibliometricGraph(
       dictionaryStr.split('\n').forEach(line => {
         if (line.includes('->')) {
           const [left, right] = line.split('->').map(s => s.trim());
-          if (left && right) {
+          if (left && right !== undefined) {
             left.split(',').forEach(word => {
               synonymMap[word.trim().toLowerCase()] = right.toLowerCase();
             });
@@ -32,10 +34,10 @@ export function useBibliometricGraph(
     }
 
     const stopWords = new Set([
-      "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "has", "he",
-      "in", "is", "it", "its", "of", "on", "that", "the", "to", "was", "were", "will", "with", "this", "we", "which", "their",
-      "dan", "di", "yang", "untuk", "dengan", "itu", "ini", "dalam", "pada", "dari", "ke",
-      "sebagai", "adalah", "oleh", "atau", "telah", "bisa", "dapat", "akan", "juga", "terhadap", "menggunakan"
+      ...engStopwords,
+      ...indStopwords,
+      "salah", "satu", "utama", "penting", "bagian", "terdiri", "lain", "lainnya", "baik", "terdapat", "lebih", "paling", "tidak", "ada", "saja", "jika", "namun", "antara", "saat", "hal", "lalu", "bagi", "kita", "banyak",
+      "penggunaan", "bertujuan", "meningkatkan", "meningkatan", "dilakukan", "kegiatan", "melalui", "cara", "proses", "tujuan", "sebagai", "mampu", "memberikan", "upaya", "berbagai", "dalam", "sangat", "secara", "dapat", "untuk", "memiliki", "menggunakan", "dengan", "adalah", "terkait", "bahwa", "serta"
     ]);
 
     const genericUnigrams = new Set([
@@ -65,28 +67,26 @@ export function useBibliometricGraph(
       let docEntities: string[] = [];
 
       if (analysisType === 'keyword') {
-        const text = ((item.title || "") + " " + (item.abstract || "")).toLowerCase().replace(/[^\w\s-]/g, "");
-        const rawWords = text.split(/\s+/).filter(w => w.length > 0);
-        const docPhrases = new Set<string>();
-
-        for (let i = 0; i < rawWords.length; i++) {
-          const w1 = rawWords[i];
-          let formedPhrase = false;
-          if (i < rawWords.length - 1) {
-            const w2 = rawWords[i + 1];
-            if (!stopWords.has(w1) && !stopWords.has(w2) && w1.length > 2 && w2.length > 2) {
-              docPhrases.add(`${w1} ${w2}`);
-              formedPhrase = true;
-              i++;
+        if (item.keywords && Array.isArray(item.keywords) && item.keywords.length > 0) {
+          docEntities = item.keywords.map((k: any) => String(k).trim().toLowerCase()).filter((k: string) => k.length > 0);
+        } else {
+          const text = ((item.title || "") + " " + (item.abstract || ""));
+          const extractionResult = keyword_extractor.extract(text, {
+            language: "english",
+            remove_digits: true,
+            return_changed_case: true,
+            remove_duplicates: true
+          });
+          
+          const docPhrases = new Set<string>();
+          extractionResult.forEach((w: string) => {
+            if (w.length >= 4 && !stopWords.has(w) && !genericUnigrams.has(w)) {
+              docPhrases.add(w);
             }
-          }
-          if (!formedPhrase && !stopWords.has(w1) && w1.length >= 4) {
-            if (!genericUnigrams.has(w1)) {
-              docPhrases.add(w1);
-            }
-          }
+          });
+          
+          docEntities = Array.from(docPhrases).slice(0, 15);
         }
-        docEntities = Array.from(docPhrases).slice(0, 15);
       } else if (analysisType === 'author') {
         if (item.authors && Array.isArray(item.authors)) {
           docEntities = item.authors.map((a: any) => a.trim()).filter((a: any) => a.length > 0);
@@ -103,8 +103,10 @@ export function useBibliometricGraph(
         }
       }
 
-      // Apply Synonym Map
-      docEntities = docEntities.map(w => synonymMap[w.toLowerCase()] || w);
+      // Apply Synonym Map & Exclusion (Exclude if mapped to empty string)
+      docEntities = docEntities
+        .map(w => synonymMap[w.toLowerCase()] !== undefined ? synonymMap[w.toLowerCase()] : w)
+        .filter(w => w !== "");
 
       // Unique entities per doc to avoid self-links
       if (analysisType !== 'bibliographic-coupling') {

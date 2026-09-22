@@ -171,7 +171,7 @@ export class SupabaseDataService implements IDataService {
   async getUserProfile(userId: string): Promise<UserProfile | null> {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, full_name, role, created_at, subscription_plan, subscription_status, subscription_end')
+      .select('id, full_name, role, created_at, subscription_plan, subscription_status, subscription_end, preferences')
       .eq('id', userId)
       .maybeSingle();
 

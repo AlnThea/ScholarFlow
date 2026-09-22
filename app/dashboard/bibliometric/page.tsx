@@ -6,6 +6,7 @@ import { useBibliometricGraph } from "@/hooks/use-bibliometric-graph";
 import { NodeDetailPanel } from "@/components/dashboard/bibliometric/node-detail-panel";
 import { NetworkSettingsSidebar } from "@/components/dashboard/bibliometric/network-settings-sidebar";
 import { useDataService, CitationCandidate } from "@/lib/services";
+import { useAuth } from "@/components/auth/auth-provider";
 import { MinimalSidebar } from '@/components/editor/minimal-sidebar';
 import { useRouter } from 'next/navigation';
 import { 
@@ -17,9 +18,12 @@ import {
 // Dynamically import ForceGraph2D with no SSR
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
+import { useDebounce } from 'use-debounce';
+
 export default function BibliometricPage() {
   const router = useRouter();
   const { dataService } = useDataService();
+  const { user, profile } = useAuth();
   const [library, setLibrary] = useState<CitationCandidate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
@@ -96,6 +100,32 @@ export default function BibliometricPage() {
     };
     loadLibrary();
   }, [dataService]);
+
+  // Load Thesaurus Workspace from Profile
+  useEffect(() => {
+    if (profile?.preferences?.bibliometric_dictionary !== undefined) {
+      setDictionary(profile.preferences.bibliometric_dictionary);
+    }
+  }, [profile]);
+
+  // Auto-Save Thesaurus Workspace
+  const [debouncedDictionary] = useDebounce(dictionary, 2000);
+  useEffect(() => {
+    if (!user?.id || !profile) return;
+    
+    // Prevent saving if it's identical to what's already in the profile
+    if (debouncedDictionary === profile.preferences?.bibliometric_dictionary) return;
+    if (debouncedDictionary === "" && !profile.preferences?.bibliometric_dictionary) return;
+
+    const newPreferences = {
+      ...(profile.preferences || {}),
+      bibliometric_dictionary: debouncedDictionary
+    };
+
+    dataService.updateUserProfile(user.id, { preferences: newPreferences }).catch(e => {
+      console.error("Failed to save Thesaurus Workspace:", e);
+    });
+  }, [debouncedDictionary, user, profile, dataService]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -200,23 +230,81 @@ export default function BibliometricPage() {
     }
   }, []);
 
+  const exportNetworkSVG = () => {
+    if (!graphData || graphData.nodes.length === 0) return;
+    const { nodes, links } = graphData;
+    
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    nodes.forEach((n: any) => {
+      if (n.x < minX) minX = n.x;
+      if (n.y < minY) minY = n.y;
+      if (n.x > maxX) maxX = n.x;
+      if (n.y > maxY) maxY = n.y;
+    });
+    
+    minX -= 100; minY -= 100; maxX += 100; maxY += 100;
+    const width = maxX - minX;
+    const height = maxY - minY;
+
+    let svgStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX} ${minY} ${width} ${height}" style="background-color: ${document.documentElement.classList.contains('dark') ? '#020617' : '#ffffff'};">`;
+    
+    // Draw links
+    svgStr += `<g stroke="${document.documentElement.classList.contains('dark') ? '#334155' : '#cbd5e1'}" stroke-opacity="0.6">`;
+    links.forEach((l: any) => {
+       const src = typeof l.source === 'object' ? l.source : nodes.find((n:any) => n.id === l.source);
+       const tgt = typeof l.target === 'object' ? l.target : nodes.find((n:any) => n.id === l.target);
+       if (src && tgt) {
+         svgStr += `<line x1="${src.x}" y1="${src.y}" x2="${tgt.x}" y2="${tgt.y}" stroke-width="${Math.sqrt(l.value || 1)}"/>`;
+       }
+    });
+    svgStr += `</g>`;
+
+    // Draw nodes and labels
+    svgStr += `<g>`;
+    nodes.forEach((n: any) => {
+       const color = n.color || '#6366f1';
+       const r = Math.sqrt(n.val) * 3 * nodeSizeScale;
+       svgStr += `<circle cx="${n.x}" cy="${n.y}" r="${r}" fill="${color}" fill-opacity="0.9" />`;
+       if (showLabels) {
+         const textColor = document.documentElement.classList.contains('dark') ? '#cbd5e1' : '#334155';
+         svgStr += `<text x="${n.x}" y="${n.y + r + 6}" fill="${textColor}" font-size="${4 * nodeSizeScale}px" font-family="sans-serif" text-anchor="middle" font-weight="600">${n.id}</text>`;
+       }
+    });
+    svgStr += `</g></svg>`;
+
+    const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = `ScholarFlow_Network_Vector.svg`;
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const [colorMode, setColorMode] = useState<'cluster' | 'trend' | 'density'>('cluster');
 
   const exportNetworkImage = () => {
     const canvas = document.querySelector('.force-graph-container canvas, canvas') as HTMLCanvasElement;
     if (canvas) {
+      // Create a high-res export canvas
+      const scaleFactor = 3; // 3x resolution for 4K quality
       const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = canvas.width;
-      tempCanvas.height = canvas.height;
+      tempCanvas.width = canvas.width * scaleFactor;
+      tempCanvas.height = canvas.height * scaleFactor;
       const ctx = tempCanvas.getContext('2d');
       if (ctx) {
-        ctx.fillStyle = '#ffffff'; 
-        ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-        ctx.drawImage(canvas, 0, 0);
+        ctx.scale(scaleFactor, scaleFactor);
+        ctx.fillStyle = document.documentElement.classList.contains('dark') ? '#020617' : '#ffffff'; 
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // We draw the existing canvas but apply image smoothing for a slightly better upscaled result
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height);
         
         const link = document.createElement('a');
-        link.download = `ScholarFlow_Network_${analysisType}.jpg`;
-        link.href = tempCanvas.toDataURL('image/jpeg', 1.0);
+        link.download = `ScholarFlow_Network_4K.png`;
+        link.href = tempCanvas.toDataURL('image/png');
         link.click();
       }
     }
@@ -371,10 +459,19 @@ export default function BibliometricPage() {
               </button>
              <button 
                 onClick={exportNetworkImage}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-lg text-sm font-medium transition-colors"
+                className="flex items-center gap-2 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-lg text-sm font-medium transition-colors"
+                title="Export High-Res PNG"
               >
                 <IconDownload className="w-4 h-4" />
-                Image
+                PNG (4K)
+              </button>
+              <button 
+                onClick={exportNetworkSVG}
+                className="flex items-center gap-2 px-3 py-2 bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/30 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-lg text-sm font-medium transition-colors"
+                title="Export Scalable Vector Graphics"
+              >
+                <IconDownload className="w-4 h-4" />
+                SVG
               </button>
           </div>
         </header>

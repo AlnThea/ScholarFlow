@@ -51,6 +51,7 @@ export type UserProfile = {
   subscription_plan: string;
   subscription_status: string;
   subscription_end: string | null;
+  preferences?: Record<string, any>;
 };
 
 export type CitationCandidate = {
