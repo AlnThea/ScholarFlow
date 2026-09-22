@@ -593,9 +593,12 @@ export default function BibliometricPage() {
                     graphData={graphData}
                     width={graphDim.width}
                     height={graphDim.height}
+                    backgroundColor="rgba(0,0,0,0)"
                     nodeCanvasObject={(node: any, ctx: any, globalScale: any) => {
                       const baseR = Math.max(Math.sqrt(node.val) * 3.5, 4);
                       const r = baseR * nodeSizeScale;
+                      
+                      const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
                       
                       if (colorMode === 'density') {
                         // Density Visualization Mode
@@ -623,47 +626,42 @@ export default function BibliometricPage() {
                         // Ring for hovered/highlighted
                         if (highlightNodes.has(node.id) || hoverNode === node) {
                           ctx.beginPath();
-                          ctx.arc(node.x, node.y, r + 3, 0, 2 * Math.PI, false);
-                          ctx.strokeStyle = 'rgba(59, 130, 246, 0.5)';
-                          ctx.lineWidth = 2;
+                          ctx.arc(node.x, node.y, r + 4, 0, 2 * Math.PI, false);
+                          ctx.strokeStyle = getNodeColor(node);
+                          ctx.lineWidth = 2 / globalScale;
                           ctx.stroke();
                         }
                       }
 
-                      if (hoverNode && !highlightNodes.has(node.id)) {
-                        return;
-                      }
+                      // Labels
+                      if (showLabels && globalScale > 0.8) {
+                        const label = node.id;
+                        const fontSize = Math.max(10 / globalScale, 2); // Dynamic font size based on zoom
+                        ctx.font = `500 ${fontSize}px Inter, sans-serif`;
+                        const textY = node.y + r + (fontSize / 2) + 2;
+                        
+                        const textWidth = ctx.measureText(label).width;
+                        const bckgDimensions = [textWidth + (fontSize), fontSize + (fontSize * 0.4)];
 
-                      if (!showLabels && hoverNode !== node && !highlightNodes.has(node.id)) {
-                        return;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        
+                        // Draw pill background
+                        ctx.fillStyle = isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+                        ctx.beginPath();
+                        ctx.roundRect(node.x - bckgDimensions[0] / 2, textY - bckgDimensions[1] / 2, bckgDimensions[0], bckgDimensions[1], 4);
+                        ctx.fill();
+                        
+                        // Border for pill
+                        ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+                        ctx.lineWidth = 1 / globalScale;
+                        ctx.stroke();
+                        
+                        ctx.fillStyle = isDark 
+                          ? (hoverNode === node ? '#ffffff' : '#cbd5e1') 
+                          : (hoverNode === node ? '#0f172a' : '#334155');
+                        ctx.fillText(label, node.x, textY);
                       }
-
-                      const label = `${node.id}`;
-                      const fontSize = Math.max(12 / globalScale, 4.5);
-                      ctx.font = `500 ${fontSize}px Inter, system-ui, sans-serif`;
-                      
-                      const textWidth = ctx.measureText(label).width;
-                      const paddingX = fontSize * 0.6;
-                      const paddingY = fontSize * 0.4;
-                      const bckgDimensions = [textWidth + paddingX * 2, fontSize + paddingY * 2];
-                      const textY = node.y + r + (fontSize / 2) + 4;
-                      
-                      ctx.textAlign = 'center';
-                      ctx.textBaseline = 'middle';
-                      
-                      // Draw pill background
-                      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                      ctx.beginPath();
-                      ctx.roundRect(node.x - bckgDimensions[0] / 2, textY - bckgDimensions[1] / 2, bckgDimensions[0], bckgDimensions[1], 4);
-                      ctx.fill();
-                      
-                      // Border for pill
-                      ctx.strokeStyle = 'rgba(0,0,0,0.05)';
-                      ctx.lineWidth = 1 / globalScale;
-                      ctx.stroke();
-                      
-                      ctx.fillStyle = hoverNode === node ? '#0f172a' : '#334155';
-                      ctx.fillText(label, node.x, textY);
                     }}
                     nodePointerAreaPaint={(node: any, color: any, ctx: any) => {
                       const baseR = Math.max(Math.sqrt(node.val) * 3.5, 4);
