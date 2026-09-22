@@ -168,43 +168,22 @@ export function useBibliometricGraph(
       }
     });
 
-    validNodes.forEach((node, i) => {
-        node.group = i;
-    });
-
-    // Label Propagation
-    for (let iter = 0; iter < 5; iter++) {
-      let changed = false;
-      [...validNodes].sort(() => Math.random() - 0.5).forEach(node => {
-        if (node.neighbors.length === 0) return;
-        const groupCounts: Record<number, number> = {};
-        node.links.forEach((link: any) => {
-           const neighborId = link.source === node.id ? link.target : link.source;
-           const neighbor = validNodes.find(n => n.id === neighborId);
-           if (neighbor) {
-             groupCounts[neighbor.group] = (groupCounts[neighbor.group] || 0) + link.value;
-           }
+    // Louvain Modularity Clustering
+    if (validNodes.length > 0 && validLinks.length > 0) {
+      try {
+        const { jLouvain } = require('jlouvain');
+        const nodeData = validNodes.map(n => n.id);
+        const edgeData = validLinks.map(l => ({ source: l.source, target: l.target, weight: l.value }));
+        const community = jLouvain().nodes(nodeData).edges(edgeData);
+        const clusteringResult = community();
+        
+        validNodes.forEach(n => {
+          n.group = clusteringResult[n.id] || 0;
         });
-        let bestGroup = node.group;
-        let maxCount = -1;
-        for (const [group, count] of Object.entries(groupCounts)) {
-          if (count > maxCount) {
-             maxCount = count;
-             bestGroup = parseInt(group);
-          }
-        }
-        if (node.group !== bestGroup) {
-          node.group = bestGroup;
-          changed = true;
-        }
-      });
-      if (!changed) break;
+      } catch (e) {
+        console.error("Louvain clustering failed", e);
+      }
     }
-
-    const uniqueGroups = Array.from(new Set(validNodes.map(n => n.group)));
-    validNodes.forEach(node => {
-        node.group = uniqueGroups.indexOf(node.group);
-    });
 
     // PageRank Centrality
     const pr: Record<string, number> = {};
@@ -236,13 +215,20 @@ export function useBibliometricGraph(
     const maxAvgYear = Math.max(...validNodes.map(n => n.avgYear || 0));
     const maxYearCount = Object.keys(yearCounts).length > 0 ? Math.max(...Object.values(yearCounts)) : 1;
 
+    // Network Metrics
+    const totalNodes = validNodes.length;
+    const totalEdges = validLinks.length;
+    const density = totalNodes > 1 ? (2 * totalEdges) / (totalNodes * (totalNodes - 1)) : 0;
+    const avgDegree = totalNodes > 0 ? (2 * totalEdges) / totalNodes : 0;
+
     return { 
       nodes: validNodes, 
       links: validLinks, 
       yearCounts, 
       maxYearCount,
       minAvgYear,
-      maxAvgYear
+      maxAvgYear,
+      metrics: { totalNodes, totalEdges, density, avgDegree }
     };
   }, [libraryRaw, minOccurrences, minLinkStrength, analysisType, yearFilter, minYear, maxYear, dictionaryStr]);
 }

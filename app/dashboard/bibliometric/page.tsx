@@ -511,7 +511,7 @@ export default function BibliometricPage() {
                </div>
             ) : (
                <div className="flex-1 relative force-graph-container overflow-hidden w-full h-full">
-                 {/* Floating Toolbar */}
+                 {/* Floating Toolbar (Bottom Right) */}
                  <div className="absolute bottom-6 right-6 z-10 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-xl shadow-lg border border-gray-200/60 dark:border-gray-700 flex flex-col overflow-hidden">
                    <button 
                      onClick={() => fgRef.current?.zoomToFit(400, 50)}
@@ -520,6 +520,50 @@ export default function BibliometricPage() {
                    >
                      <IconMaximize className="w-5 h-5" />
                    </button>
+                 </div>
+
+                 {/* Network Metrics Panel (Bottom Left) */}
+                 <div className="absolute bottom-6 left-6 z-10 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-xl shadow-lg border border-slate-200/60 dark:border-slate-700 p-4 w-72">
+                   <div className="flex justify-between items-center mb-3">
+                     <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Network Statistics</h3>
+                     <button 
+                       onClick={() => {
+                         if (!graphData.nodes.length) return;
+                         const csvHeader = "ID,Occurrences,Centrality,ClusterGroup,NeighborsCount\n";
+                         const csvRows = graphData.nodes.map((n:any) => `"${n.id}",${n.val},${n.centrality || 0},${n.group || 0},${n.neighbors?.length || 0}`).join("\n");
+                         const blob = new Blob([csvHeader + csvRows], { type: 'text/csv;charset=utf-8;' });
+                         const url = URL.createObjectURL(blob);
+                         const link = document.createElement("a");
+                         link.setAttribute("href", url);
+                         link.setAttribute("download", `Network_Metrics_${analysisType}.csv`);
+                         link.style.visibility = 'hidden';
+                         document.body.appendChild(link);
+                         link.click();
+                         document.body.removeChild(link);
+                       }}
+                       className="text-[10px] bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-900/50 dark:hover:text-indigo-400 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 font-medium transition-colors"
+                     >
+                       Export CSV
+                     </button>
+                   </div>
+                   <div className="grid grid-cols-2 gap-3">
+                     <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700/50">
+                       <div className="text-[10px] text-slate-500 uppercase tracking-wide">Nodes</div>
+                       <div className="text-lg font-semibold text-slate-700 dark:text-slate-200">{graphData.metrics?.totalNodes || 0}</div>
+                     </div>
+                     <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700/50">
+                       <div className="text-[10px] text-slate-500 uppercase tracking-wide">Links</div>
+                       <div className="text-lg font-semibold text-slate-700 dark:text-slate-200">{graphData.metrics?.totalEdges || 0}</div>
+                     </div>
+                     <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700/50">
+                       <div className="text-[10px] text-slate-500 uppercase tracking-wide">Density</div>
+                       <div className="text-lg font-semibold text-slate-700 dark:text-slate-200">{(graphData.metrics?.density || 0).toFixed(4)}</div>
+                     </div>
+                     <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700/50">
+                       <div className="text-[10px] text-slate-500 uppercase tracking-wide">Avg Degree</div>
+                       <div className="text-lg font-semibold text-slate-700 dark:text-slate-200">{(graphData.metrics?.avgDegree || 0).toFixed(2)}</div>
+                     </div>
+                   </div>
                  </div>
 
                  {/* Top Right Floating Toolbar (Search & Controls) */}

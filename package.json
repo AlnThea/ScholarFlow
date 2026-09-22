@@ -23,6 +23,7 @@
     "@tabler/icons-react": "^3.44.0",
     "clsx": "^2.1.1",
     "editorjs-undo": "^2.0.28",
+    "jlouvain": "^2.0.0",
     "katex": "^0.17.0",
     "keyword-extractor": "^0.3.0",
     "lucide-react": "*",

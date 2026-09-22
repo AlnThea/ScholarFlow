@@ -2,6 +2,20 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## 🚀 [v0.6.0] - 2026-09-22
+
+### 📊 Bibliometric Network Analytics (Phase 5 & 6)
+- **Dynamic NLP Keyword Extraction**: Replaced static regex keyword whitelist with advanced NLP extraction, integrating `keyword-extractor` and `stopword` for comprehensive bilingual (English & Indonesian) stopword filtering and true topic detection.
+- **Thesaurus / Dictionary Auto-Save**: Connected the Thesaurus/Synonym dictionary to Supabase `user_profiles` (JSONB preferences) with a 2000ms debounce auto-save, ensuring workspace persistence across sessions. Added capability to map words to empty strings to dynamically exclude/hide irrelevant nodes.
+- **High-Resolution & Vector Export**: 
+  - Added **PNG (4K)** export feature leveraging 3x canvas upscaling and anti-aliasing.
+  - Added **SVG (Vector)** export feature via custom programmatic mathematical generation of nodes and links for infinite-resolution academic poster printing.
+- **Source Documents Drill-Down**: Upgraded node click interaction in the Detail Panel to list all underlying source documents (Title, Author, Year) contributing to the selected cluster.
+- **True Clustering Algorithm (Louvain Modularity)**: Integrated `jlouvain` to compute actual Louvain Modularity communities/clusters, completely replacing randomized/dummy grouping.
+- **Global Network Metrics Dashboard**: Implemented a floating dashboard in the bottom-left displaying Total Nodes, Total Links, Network Density, and Average Degree.
+- **Metrics Data Export**: Added `Export CSV` functionality to download raw node metrics (Occurrences, Centrality, Cluster Group, Neighbors Count) for statistical analysis in SPSS or Excel.
+- **Node Search & Auto-Zoom**: Optimized the existing search bar in the floating toolbar to trigger camera auto-panning and zoom onto targeted topics.
+
 ## 🚀 [Unreleased]
 
 ### 🏗️ Massive Architecture Refactoring & Type-Safety
