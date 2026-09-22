@@ -27,6 +27,8 @@ interface NetworkSettingsSidebarProps {
   setNodeSizeScale: (v: number) => void;
   chargeStrength: number;
   setChargeStrength: (v: number) => void;
+  layoutMode: 'force' | 'circular' | 'grid' | 'freeze';
+  setLayoutMode: (v: 'force' | 'circular' | 'grid' | 'freeze') => void;
   isAnimating: boolean;
   onToggleAnimate: () => void;
 }
@@ -37,10 +39,11 @@ export function NetworkSettingsSidebar({
   minLinkStrength, setMinLinkStrength, graphData, setSelectedYear,
   dictionary, setDictionary, colorMode, setColorMode,
   showLabels, setShowLabels, nodeSizeScale, setNodeSizeScale, chargeStrength, setChargeStrength,
-  isAnimating, onToggleAnimate
+  layoutMode, setLayoutMode, isAnimating, onToggleAnimate
 }: NetworkSettingsSidebarProps) {
   const [showDictHelper, setShowDictHelper] = useState(false);
   const { language } = useLanguage();
+  const isEn = language === 'en';
 
   return (
     <>
@@ -114,6 +117,23 @@ export function NetworkSettingsSidebar({
                     <option value="author">Author Co-occurrence</option>
                     <option value="co-citation">Co-Citation</option>
                     <option value="bibliographic-coupling">Bibliographic Coupling</option>
+                  </select>
+                </div>
+
+                {/* Physics Switcher / Layout Algorithm */}
+                <div className="space-y-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+                  <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    {isEn ? 'Network Layout (Physics)' : 'Tata Letak Jaringan (Fisika)'}
+                  </label>
+                  <select 
+                    value={layoutMode}
+                    onChange={(e) => setLayoutMode(e.target.value as any)}
+                    className="w-full p-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 outline-none focus:ring-2 focus:ring-indigo-500/50"
+                  >
+                    <option value="force">{isEn ? 'Force-Directed (Repulsion)' : 'Tarik-Menarik (Repulsion)'}</option>
+                    <option value="circular">{isEn ? 'Circular (Radial)' : 'Lingkaran (Radial)'}</option>
+                    <option value="grid">{isEn ? 'Grid / Matrix' : 'Grid / Matriks'}</option>
+                    <option value="freeze">{isEn ? 'Freeze (No Physics)' : 'Bekukan (Tanpa Animasi)'}</option>
                   </select>
                 </div>
 

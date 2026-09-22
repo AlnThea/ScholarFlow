@@ -80,6 +80,7 @@ export default function BibliometricPage() {
   const [showLabels, setShowLabels] = useState(true);
   const [nodeSizeScale, setNodeSizeScale] = useState(1.0);
   const [chargeStrength, setChargeStrength] = useState(-30);
+  const [layoutMode, setLayoutMode] = useState<'force' | 'circular' | 'grid' | 'freeze'>('force');
 
   const fgRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -157,10 +158,49 @@ export default function BibliometricPage() {
 
   useEffect(() => {
     if (fgRef.current) {
-      fgRef.current.d3Force('charge').strength(chargeStrength);
+      if (layoutMode === 'force') {
+        fgRef.current.d3Force('charge').strength(chargeStrength);
+        fgRef.current.d3Force('collide', null);
+      } else {
+        fgRef.current.d3Force('charge').strength(0);
+      }
       fgRef.current.d3ReheatSimulation();
     }
-  }, [chargeStrength]);
+  }, [chargeStrength, layoutMode]);
+
+  useEffect(() => {
+    if (!graphData || !graphData.nodes.length) return;
+    const nodes = graphData.nodes;
+    
+    if (layoutMode === 'circular') {
+      const radius = Math.max(200, nodes.length * 10);
+      nodes.forEach((node: any, i: number) => {
+        const angle = (i / nodes.length) * 2 * Math.PI;
+        node.fx = radius * Math.cos(angle);
+        node.fy = radius * Math.sin(angle);
+      });
+    } else if (layoutMode === 'grid') {
+      const cols = Math.ceil(Math.sqrt(nodes.length));
+      const spacing = 80;
+      nodes.forEach((node: any, i: number) => {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        node.fx = (col - cols / 2) * spacing;
+        node.fy = (row - cols / 2) * spacing;
+      });
+    } else if (layoutMode === 'freeze') {
+      nodes.forEach((node: any) => {
+        node.fx = node.x;
+        node.fy = node.y;
+      });
+    } else {
+      // Force mode
+      nodes.forEach((node: any) => {
+        node.fx = undefined;
+        node.fy = undefined;
+      });
+    }
+  }, [layoutMode, graphData]);
 
   const handleNodeHover = useCallback((node: any) => {
     setHighlightNodes(new Set());
@@ -224,11 +264,11 @@ export default function BibliometricPage() {
   }, []);
 
   const handleNodeDragEnd = useCallback((node: any) => {
-    if (node) {
-      node.fx = null;
-      node.fy = null;
+    if (node && layoutMode === 'force') {
+      node.fx = undefined;
+      node.fy = undefined;
     }
-  }, []);
+  }, [layoutMode]);
 
   const exportNetworkSVG = () => {
     if (!graphData || graphData.nodes.length === 0) return;
@@ -492,6 +532,7 @@ export default function BibliometricPage() {
             showLabels={showLabels} setShowLabels={setShowLabels}
             nodeSizeScale={nodeSizeScale} setNodeSizeScale={setNodeSizeScale}
             chargeStrength={chargeStrength} setChargeStrength={setChargeStrength}
+            layoutMode={layoutMode} setLayoutMode={setLayoutMode}
             isAnimating={isAnimating} onToggleAnimate={handleToggleAnimate}
           />
           {/* Graph Area */}
