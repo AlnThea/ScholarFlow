@@ -5,7 +5,7 @@ import {
   IconSearch, IconSum, IconSparkles, IconWand, IconChevronLeft,
   IconChevronRight, IconLanguage, IconX, IconClock, IconTrash, IconCopy, IconHistory
 } from '@tabler/icons-react';
-import { BurstinessChart } from './burstiness-chart';
+
 
 
 export const SidebarDocumentTab = (props: any) => {
@@ -97,7 +97,7 @@ export const SidebarDocumentTab = (props: any) => {
                     </span>
                   </div>
 
-                  <BurstinessChart content={selectedText} />
+
                 </section>
 
                 {/* Citation Style Selector Section */}

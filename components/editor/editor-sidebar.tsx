@@ -23,7 +23,7 @@ import {
   IconClock,
   IconTrash,
   IconCopy,
-  IconHistory,
+  IconHistory, IconChartBar,
 } from '@tabler/icons-react';
 import { type ImproveWritingResponse, synthesizeLiteratureReview } from '@/lib/api/ai';
 import type { CitationCandidate } from '@/lib/api/citations';
@@ -37,7 +37,7 @@ import { SidebarLibraryTab } from './sidebar-library-tab';
 import { SidebarWritingTab } from './sidebar-writing-tab';
 import { SidebarDocumentTab } from './sidebar-document-tab';
 import { SidebarCommentsTab } from './sidebar-comments-tab';
-import { BurstinessChart } from './burstiness-chart';
+import { SidebarBurstinessTab } from './sidebar-burstiness-tab';
 
 type SidebarProps = {
   selectedText: string;
@@ -221,7 +221,7 @@ export function EditorSidebar(props: SidebarProps) {
 } = props;
   const { language, t } = useLanguage();
   const { user } = useAuth();
-  const [workspaceTab, setWorkspaceTab] = useState<'library' | 'writing' | 'document' | 'comments'>('document');
+  const [workspaceTab, setWorkspaceTab] = useState<'library' | 'writing' | 'document' | 'comments' | 'burstiness'>('burstiness');
   const [commentFilterTab, setCommentFilterTab] = useState<'active' | 'suggestions' | 'resolved'>('active');
   const [suggestionSubTab, setSuggestionSubTab] = useState<'active' | 'history'>('active');
 
@@ -332,17 +332,21 @@ export function EditorSidebar(props: SidebarProps) {
 
   return (
     <>
-      <aside className={`relative h-full flex flex-row border-l border-slate-100 bg-transparent overflow-hidden transition-all duration-300 ${isExpanded ? 'w-[360px]' : 'w-12'} shrink-0 z-40`}>
+      <aside className={`relative h-full flex flex-row border-l border-slate-100 bg-transparent overflow-hidden transition-all duration-300 ${isExpanded ? 'w-[480px]' : 'w-12'} shrink-0 z-40`}>
         {/* Main Content Area */}
         <div className={`flex min-h-0 flex-col transition-all duration-300 overflow-hidden ${isExpanded ? 'flex-1 opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}>
           <div className="border-b border-slate-100 px-4 py-4 flex items-center justify-between min-h-[65px]">
             <span className="font-bold text-slate-800 text-sm">
-              {workspaceTab === 'library' ? 'Library' : workspaceTab === 'writing' ? 'AI Writing' : workspaceTab === 'document' ? 'Document Stats' : 'Comments'}
+              {workspaceTab === 'burstiness' ? 'Burstiness' : workspaceTab === 'library' ? 'Library' : workspaceTab === 'writing' ? 'AI Writing' : workspaceTab === 'document' ? 'Document Stats' : 'Comments'}
             </span>
           </div>
 
 
-          {workspaceTab === 'library' ? (
+          {workspaceTab === 'burstiness' ? (
+            <div className="flex-1 overflow-y-auto p-4 thin-scroll">
+              <SidebarBurstinessTab {...props} />
+            </div>
+          ) : workspaceTab === 'library' ? (
             <SidebarLibraryTab {...props}
           workspaceTab={workspaceTab} setWorkspaceTab={setWorkspaceTab}
           commentFilterTab={commentFilterTab} setCommentFilterTab={setCommentFilterTab}
@@ -429,6 +433,7 @@ export function EditorSidebar(props: SidebarProps) {
           {/* Vertical Tabs */}
           <div className="flex flex-col gap-2 w-full px-1.5 flex-1 items-center">
             {[
+              { id: 'burstiness', label: '', icon: <IconChartBar className="h-4 w-4" /> },
               { id: 'document', label: '', icon: <IconFileText className="h-4 w-4" /> },
               { id: 'writing', label: '', icon: <IconWand className="h-4 w-4" /> },
               { id: 'library', label: '', icon: <IconBook className="h-4 w-4" /> },

@@ -109,3 +109,8 @@ Target: Meningkatkan halaman analisis bibliometrik (pp/dashboard/bibliometric/p
 - [x] **Node Search & Highlight**: Aktifkan fitur *Search Bar* yang memungkinkan pengguna mencari topik tertentu dengan cepat, diiringi efek visual *auto-zoom* dan *highlight* memudarkan node lain.
 - [x] **CSV/Excel Metrics Export**: Sediakan fitur pengeksporan struktur data node dan *link* (Degree, Occurrences, Centrality) murni ke dalam format CSV agar peneliti bisa mengolahnya di *software* statistik SPSS/Excel.
 - [x] **Layout Physics Switcher**: Tambahkan opsi untuk mengubah gaya algoritma tata letak fisika jaringan (misalnya Fruchterman-Reingold, Circular, atau LinLog) untuk mengatasi graf yang kusut.
+
+### Editor & AI Enhancements (Current)
+- [x] **AI Burstiness Tab**: Pindahkan Burstiness Chart dari tab statistik dokumen ke tab khusus baru di sidebar kanan.
+- [x] **Default Burstiness Tab**: Jadikan tab Burstiness sebagai tab default saat editor dibuka.
+- [x] **Editor Layout Optimization**: Ubah penjajaran canvas editor menjadi rata kiri (`mr-auto`) dan lebarkan sidebar kanan (`w-[480px]`) agar lebih lega untuk chart dan analitik lanjutan.
