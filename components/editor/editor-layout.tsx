@@ -135,7 +135,7 @@ export function EditorLayout({
   onRejectSuggestion,
   onResolveComment,
   onCommentClick,
-  activeSidebarTab
+  activeSidebarTab, setActiveSidebarTab
 }: EditorLayoutProps) {
   const {
     mounted,
@@ -243,7 +243,11 @@ export function EditorLayout({
     editStates, setEditStates, savingPlanId
   } = adminModals;
 
-
+  React.useEffect(() => {
+    if (activeSidebarTab === 'burstiness') {
+      setIsSidebarExpanded(true);
+    }
+  }, [activeSidebarTab, setIsSidebarExpanded]);
 
   const editorModals = useEditorModals({ editorJsRef });
 
@@ -296,6 +300,7 @@ export function EditorLayout({
         onToggleDarkMode={toggleDarkMode}
         onOpenBackendSettings={() => setIsBackendModalOpen(true)}
         onOpenHelp={() => setIsHelpOpen(true)}
+        activeSidebarTab={activeSidebarTab}
       />
 
 
@@ -566,7 +571,7 @@ export function EditorLayout({
                   onRejectSuggestion={onRejectSuggestion}
                   onResolveComment={onResolveComment}
                   onCommentClick={onCommentClick}
-                  activeTab={activeSidebarTab}
+                  activeTab={activeSidebarTab} setActiveTab={setActiveSidebarTab}
                 />
               )}
             </div>

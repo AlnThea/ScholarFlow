@@ -38,6 +38,7 @@ import { SidebarSettingsView } from './sidebar/sidebar-settings-view';
 import { SidebarLogo } from './sidebar/sidebar-logo';
 import { SidebarMainView } from './sidebar/sidebar-main-view';
 import { parseRISContent } from '@/lib/editor/ris-parser';
+import { SentenceRhythmExplorer } from './sentence-rhythm-explorer';
 
 /**
  * Minimal sidebar that shows the application logo and a collapse/expand control.
@@ -57,7 +58,9 @@ export function MinimalSidebar({
   isDarkMode = false,
   onToggleDarkMode,
   onOpenBackendSettings,
-  onOpenHelp
+  onOpenHelp,
+  activeSidebarTab,
+  selectedText
 }: { 
   isExpanded: boolean; 
   onToggle: () => void;
@@ -73,6 +76,8 @@ export function MinimalSidebar({
   onToggleDarkMode?: () => void;
   onOpenBackendSettings?: () => void;
   onOpenHelp?: () => void;
+  activeSidebarTab?: 'library' | 'writing' | 'document' | 'comments' | 'burstiness';
+  selectedText?: string;
 }) {
   const { language, setLanguage, t } = useLanguage();
   const { user, profile } = useAuth();
@@ -336,10 +341,19 @@ export function MinimalSidebar({
 
   return (
     <aside
-      className={`bg-slate-50 border-r border-slate-200/80 shadow-[2px_0_12px_rgba(0,0,0,0.015)] transition-all duration-300 ease-in-out ${
-        isEffectiveExpanded ? 'w-60' : (isDocumentEditor ? 'w-0 opacity-0 overflow-hidden pointer-events-none border-0' : 'w-16')
-      } flex flex-col h-screen sticky top-0 z-30 font-sans ${className || ''}`}
+      className={`bg-slate-50 border-r border-slate-200/80 shadow-[2px_0_12px_rgba(0,0,0,0.015)] transition-all duration-300 ease-in-out flex flex-col h-screen sticky top-0 z-30 font-sans ${
+        isEffectiveExpanded 
+          ? (activeSidebarTab === 'burstiness' ? 'w-[350px]' : 'w-60') 
+          : (isDocumentEditor ? 'w-0 opacity-0 overflow-hidden pointer-events-none border-0' : 'w-16')
+      } ${className || ''}`}
     >
+      {activeSidebarTab === 'burstiness' ? (
+        <SentenceRhythmExplorer 
+          content={selectedText || ''} 
+          onClose={onToggle} 
+        />
+      ) : (
+        <>
       {/* 1. DOCUMENTS VIEW HEADER & CONTENT */}
       {activeView === 'documents' && (
         <SidebarDocumentsView
@@ -586,6 +600,8 @@ export function MinimalSidebar({
         cancelText={language === 'en' ? 'Cancel' : 'Batal'}
         type="danger"
       />
+      </>
+      )}
     </aside>
   );
 }

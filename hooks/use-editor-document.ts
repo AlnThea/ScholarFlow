@@ -420,7 +420,7 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
   const [notifications, setNotifications] = useState<DocumentNotification[]>([]);
   const [activeUsers, setActiveUsers] = useState<UserPresence[]>([]);
   const [suggestions, setSuggestions] = useState<DocumentSuggestion[]>([]);
-  const [activeSidebarTab, setActiveSidebarTab] = useState<'library' | 'writing' | 'document' | 'comments' | undefined>(undefined);
+  const [activeSidebarTab, setActiveSidebarTab] = useState<'library' | 'writing' | 'document' | 'comments' | 'burstiness' | undefined>(undefined);
   const [hasPendingRemoteUpdate, setHasPendingRemoteUpdate] = useState<boolean>(false);
   const [pendingRemoteContent, setPendingRemoteContent] = useState<any>(null);
   const processedAcceptedSuggestionsRef = useRef<Set<string>>(new Set());

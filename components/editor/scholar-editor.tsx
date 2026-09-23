@@ -638,7 +638,7 @@ export function ScholarEditor() {
         }}
         onResolveComment={handleResolveComment}
         onCommentClick={handleCommentClick}
-        activeSidebarTab={activeSidebarTab}
+        activeSidebarTab={activeSidebarTab} setActiveSidebarTab={setActiveSidebarTab}
       />
 
       <RemoteUpdateBanner

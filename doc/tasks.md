@@ -114,3 +114,28 @@ Target: Meningkatkan halaman analisis bibliometrik (pp/dashboard/bibliometric/p
 - [x] **AI Burstiness Tab**: Pindahkan Burstiness Chart dari tab statistik dokumen ke tab khusus baru di sidebar kanan.
 - [x] **Default Burstiness Tab**: Jadikan tab Burstiness sebagai tab default saat editor dibuka.
 - [x] **Editor Layout Optimization**: Ubah penjajaran canvas editor menjadi rata kiri (`mr-auto`) dan lebarkan sidebar kanan (`w-[480px]`) agar lebih lega untuk chart dan analitik lanjutan.
+
+### Phase 7: Burstiness & Humanization Studio (Cockpit Layout)
+Target: Mengimplementasikan UI/UX 3-Kolom berdasarkan desain mockup skala Enterprise untuk analisis ritme kalimat dan humanisasi AI.
+
+#### Tahap 1: State Management & Arsitektur Layout
+- [x] Buat state global atau hook khusus (misal: `useBurstinessStudio`) untuk mengatur buka-tutup otomatis panel kiri saat tab Burstiness kanan aktif.
+- [x] Sesuaikan komponen `EditorLayout` dan `MinimalSidebar` (Panel Kiri) agar bisa merender mode "Rhythm Explorer" selain mode "Library/File" standar.
+
+#### Tahap 2: Pembangunan Panel Kiri (Rhythm Explorer)
+- [x] Buat komponen `SentenceRhythmExplorer.tsx` di panel kiri.
+- [x] Buat fungsi ekstraktor teks untuk memecah naskah di editor menjadi array kalimat (Sentence Tokenizer).
+- [x] Rancang UI "Cadence Ribbon" (navigasi lompat cepat berderet) dan filter kalimat (Short, Standard, Long).
+- [x] Rancang UI *Card* per kalimat yang menampilkan jumlah kata dan simpangan rata-ratanya, serta tombol aksi *Paraphrase*.
+
+#### Tahap 3: Pembangunan Panel Kanan (Analitik & Paraphrase Studio)
+- [ ] **Security Assessment Card**: Rancang card teratas untuk menampilkan skor Burstiness (CV) dan indikator visual aman/bahaya.
+- [ ] **Metrics Grid**: Rancang grid 4 kotak (Total Words, Sentences, Avg Length, Std Dev).
+- [ ] **Paraphrase Studio**: Rancang area interaktif (Dropdown pilihan kalimat + 3 Opsi Rekonstruksi dari AI + tombol Terapkan).
+- [ ] **Sentence Cadence Chart**: Tingkatkan `BurstinessChart` menjadi grafik *bar* warna-warni yang memetakan panjang setiap kalimat secara sekuensial.
+- [ ] **Rekomendasi Panel**: Rancang panel pintar di bawah untuk menyorot "Kalimat Prioritas" yang merusak ritme dan perlu segera diparafrase.
+
+#### Tahap 4: Integrasi Fungsi & AI
+- [ ] Hubungkan logika klik pada panel kiri (Rhythm Explorer) agar otomatis *scroll* dan menyorot teks terkait di EditorJS (Tengah).
+- [ ] Hubungkan *Paraphrase Studio* di panel kanan dengan API AI untuk menghasilkan variasi kalimat (Rhythmic Variance, Clause Split, Scholarly Flow).
+- [ ] Pastikan fungsi "Terapkan ke Naskah" bekerja sinkron mengubah teks di kanvas editor secara real-time.

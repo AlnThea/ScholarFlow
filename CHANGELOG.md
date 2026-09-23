@@ -46,6 +46,8 @@ All notable changes, architectural milestones, and UI improvements to the Schola
 - **Added**: Integrating a 100% Client-Side Sentence Variance (Burstiness) Analyzer to detect AI-generated text patterns using Math/Regex (Standard Deviation) and visualizing it with `recharts` in the editor sidebar.
 - **Improved**: Dedicated "Burstiness" tab inside the right sidebar serving as the default open tab, allowing more space for chart visualizations.
 - **Layout Tweaks**: Main canvas editor aligned to the left and right sidebar widened to `480px` for optimal analytics viewing.
+- **Added (Cockpit Layout)**: Implemented 3-column architecture synchronizing the Right Sidebar with the Left Sidebar. The Left Sidebar automatically expands to a 350px `SentenceRhythmExplorer` when the Burstiness tab is active.
+- **Added (Rhythm Explorer)**: Sentence tokenizer that breaks down the manuscript into clickable Sentence Cards grouped by length (short, standard, long, complex) with a visual Cadence Ribbon.
 
 ## 🛠️ [v0.7.5] - 2026-08-11
 

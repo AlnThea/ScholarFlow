@@ -99,7 +99,8 @@ type SidebarProps = {
   onRejectSuggestion?: (id: string) => void;
   onResolveComment?: (id: string) => void;
   onCommentClick?: (comment: any) => void;
-  activeTab?: 'library' | 'writing' | 'document' | 'comments';
+  activeTab, setactiveTab?: 'library' | 'writing' | 'document' | 'comments' | 'burstiness'; setActiveTab?: (tab: 'library' | 'writing' | 'document' | 'comments' | 'burstiness') => void;
+  setActiveTab?: (tab: 'library' | 'writing' | 'document' | 'comments' | 'burstiness') => void;
 };
 
 function PanelRow({
@@ -217,7 +218,7 @@ export function EditorSidebar(props: SidebarProps) {
   onRejectSuggestion,
   onResolveComment,
   onCommentClick,
-  activeTab
+  activeTab, setActiveTab
 } = props;
   const { language, t } = useLanguage();
   const { user } = useAuth();
@@ -444,7 +445,7 @@ export function EditorSidebar(props: SidebarProps) {
                 key={item.id}
                 type="button"
                 onClick={() => {
-                  setWorkspaceTab(item.id as typeof workspaceTab);
+                  setWorkspaceTab(item.id as typeof workspaceTab); if(setActiveTab) setActiveTab(item.id as typeof workspaceTab);
                   if (!isExpanded) toggleExpanded(); // Auto-expand when a tab is clicked
                 }}
                 className={`w-full py-2 flex flex-col items-center justify-center gap-1 rounded-md transition relative group ${workspaceTab === item.id && isExpanded

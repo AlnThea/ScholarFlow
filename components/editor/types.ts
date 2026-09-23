@@ -103,5 +103,5 @@ export type EditorLayoutProps = {
   onRejectSuggestion?: (id: string) => void;
   onResolveComment?: (id: string) => void;
   onCommentClick?: (comment: any) => void;
-  activeSidebarTab?: 'library' | 'writing' | 'document' | 'comments';
+  activeSidebarTab?: 'library' | 'writing' | 'document' | 'comments' | 'burstiness'; setActiveSidebarTab?: (tab: 'library' | 'writing' | 'document' | 'comments' | 'burstiness') => void;
 };
