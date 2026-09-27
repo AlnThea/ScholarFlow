@@ -40,6 +40,9 @@ import { SidebarCommentsTab } from './sidebar-comments-tab';
 import { SidebarBurstinessTab } from './sidebar-burstiness-tab';
 
 type SidebarProps = {
+  currentDocument?: any;
+  editorJsRef?: any;
+  onContentChange?: (content: any) => void;
   selectedText: string;
   citationResults: CitationCandidate[];
   citationHistory: CitationHistoryEntry[];

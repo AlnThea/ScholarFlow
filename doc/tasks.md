@@ -129,13 +129,25 @@ Target: Mengimplementasikan UI/UX 3-Kolom berdasarkan desain mockup skala Enterp
 - [x] Rancang UI *Card* per kalimat yang menampilkan jumlah kata dan simpangan rata-ratanya, serta tombol aksi *Paraphrase*.
 
 #### Tahap 3: Pembangunan Panel Kanan (Analitik & Paraphrase Studio)
-- [ ] **Security Assessment Card**: Rancang card teratas untuk menampilkan skor Burstiness (CV) dan indikator visual aman/bahaya.
-- [ ] **Metrics Grid**: Rancang grid 4 kotak (Total Words, Sentences, Avg Length, Std Dev).
-- [ ] **Paraphrase Studio**: Rancang area interaktif (Dropdown pilihan kalimat + 3 Opsi Rekonstruksi dari AI + tombol Terapkan).
-- [ ] **Sentence Cadence Chart**: Tingkatkan `BurstinessChart` menjadi grafik *bar* warna-warni yang memetakan panjang setiap kalimat secara sekuensial.
-- [ ] **Rekomendasi Panel**: Rancang panel pintar di bawah untuk menyorot "Kalimat Prioritas" yang merusak ritme dan perlu segera diparafrase.
+- [x] **Security Assessment Card**: Rancang card teratas untuk menampilkan skor Burstiness (CV) dan indikator visual aman/bahaya.
+- [x] **Metrics Grid**: Rancang grid 4 kotak (Total Words, Sentences, Avg Length, Std Dev).
+- [x] **Paraphrase Studio**: Rancang area interaktif (Dropdown pilihan kalimat + 3 Opsi Rekonstruksi dari AI + tombol Terapkan).
+- [x] **Sentence Cadence Chart**: Tingkatkan `BurstinessChart` menjadi grafik *bar* warna-warni yang memetakan panjang setiap kalimat secara sekuensial.
+- [x] **Rekomendasi Panel**: Rancang panel pintar di bawah untuk menyorot "Kalimat Prioritas" yang merusak ritme dan perlu segera diparafrase.
 
 #### Tahap 4: Integrasi Fungsi & AI
-- [ ] Hubungkan logika klik pada panel kiri (Rhythm Explorer) agar otomatis *scroll* dan menyorot teks terkait di EditorJS (Tengah).
-- [ ] Hubungkan *Paraphrase Studio* di panel kanan dengan API AI untuk menghasilkan variasi kalimat (Rhythmic Variance, Clause Split, Scholarly Flow).
-- [ ] Pastikan fungsi "Terapkan ke Naskah" bekerja sinkron mengubah teks di kanvas editor secara real-time.
+- [x] Hubungkan logika klik pada panel kiri (Rhythm Explorer) agar otomatis *scroll* dan menyorot teks terkait di EditorJS (Tengah).
+- [x] Hubungkan *Paraphrase Studio* di panel kanan dengan API AI untuk menghasilkan variasi kalimat (Rhythmic Variance, Clause Split, Scholarly Flow).
+- [x] Pastikan fungsi "Terapkan ke Naskah" bekerja sinkron mengubah teks di kanvas editor secara real-time.
+
+### Phase 7.5: Burstiness Technical Enhancements (Refinement)
+- [x] **1. Koneksi ke API Gemini Asli**: Menghapus simulasi `setTimeout` dan menghubungkan fungsi variasi di Paraphrase Studio dengan endpoint `/api/v1/ai/improve` (concurrent 3 variations).
+- [x] **2. Keamanan Format HTML**: Mengembangkan fungsi *smart-replace* agar penimpaan teks tidak menghapus elemen HTML (seperti tag `<b>`, `<i>`, atau `<cite>`) di dalam blok EditorJS.
+- [x] **3. Auto-Scroll & Canvas Highlight**: Mengimplementasikan logika DOM traversal untuk mencari elemen `<p>` yang mengandung teks terkait dan melakukan `scrollIntoView` beserta efek *highlight* kuning temporer saat panel Rhythm Explorer diklik.
+- [x] **4. Toggle Analisis Seluruh Dokumen**: Menambahkan opsi sakelar agar diagram Burstiness dapat merender metrik untuk seluruh dokumen secara utuh, bukan hanya teks yang di-blok (*selected text*).
+
+### Phase 8: Enterprise Professional Standards (Upcoming)
+- [ ] **1. Error Boundaries & Crash Recovery**: Membungkus komponen utama dengan `<ErrorBoundary>` untuk mencegah layar putih (Blank Screen of Death) jika komponen *child* mengalami kegagalan *render*.
+- [ ] **2. Keamanan XSS (Cross-Site Scripting)**: Menambahkan pustaka `DOMPurify` untuk mensterilkan (*sanitize*) *input/output* format HTML dari dan ke *database* sebelum dimasukkan ke `dangerouslySetInnerHTML` atau EditorJS.
+- [ ] **3. Automated Testing (Unit & E2E)**: Menulis *Unit Tests* (menggunakan `Vitest`/`Jest`) untuk fungsi utilitas (*Burstiness Engine*, ekstraksi regex) dan *E2E Tests* (menggunakan `Playwright`) untuk alur klik *user*.
+- [ ] **4. Interactive Onboarding & a11y**: Menambahkan *Onboarding Tour* (misal dengan `Shepherd.js`) untuk memandu *user* baru menggunakan panel kompleks, serta meningkatkan navigasi ARIA dan *keyboard* (Aksesibilitas).

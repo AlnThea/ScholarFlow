@@ -42,12 +42,23 @@ All notable changes, architectural milestones, and UI improvements to the Schola
 ### ✨ Distraction-Free Zen Mode Layout
 - **Added**: Upgraded the Left Sidebar (`MinimalSidebar`) to completely hide (`w-0`) when collapsed instead of shrinking to `w-16`. A floating Hamburger menu appears on the document header to toggle it, providing a fully immersive, distraction-free writing canvas for the user.
 
+### 🛡️ Enterprise Professional Standards (Phase 8 Planned)
+- **Planned**: Add Error Boundaries for robust component crash recovery.
+- **Planned**: Implement DOMPurify to prevent XSS (Cross-Site Scripting) vulnerabilities in EditorJS and UI components.
+- **Planned**: Introduce automated testing suite (Vitest/Jest for unit tests, Playwright for E2E).
+- **Planned**: Interactive onboarding tours (Shepherd.js) and accessibility (a11y) improvements.
+
 ### ✨ Burstiness & Sentence Length Analyzer
 - **Added**: Integrating a 100% Client-Side Sentence Variance (Burstiness) Analyzer to detect AI-generated text patterns using Math/Regex (Standard Deviation) and visualizing it with `recharts` in the editor sidebar.
 - **Improved**: Dedicated "Burstiness" tab inside the right sidebar serving as the default open tab, allowing more space for chart visualizations.
 - **Layout Tweaks**: Main canvas editor aligned to the left and right sidebar widened to `480px` for optimal analytics viewing.
 - **Added (Cockpit Layout)**: Implemented 3-column architecture synchronizing the Right Sidebar with the Left Sidebar. The Left Sidebar automatically expands to a 350px `SentenceRhythmExplorer` when the Burstiness tab is active.
 - **Added (Rhythm Explorer)**: Sentence tokenizer that breaks down the manuscript into clickable Sentence Cards grouped by length (short, standard, long, complex) with a visual Cadence Ribbon.
+- **Added (Paraphrase Studio)**: Right-panel UI containing a 4-box metrics grid and an interactive AI Paraphrase Studio with smart priority sentence highlighting.
+- **Added (AI Integration)**: Connected the Paraphrase Studio to the Gemini API (concurrently generating 3 variations: Rhythmic, Clause Split, and Scholarly Flow).
+- **Added (Real-time Sync)**: "Apply" function replaces text directly within the EditorJS data blocks in real-time.
+- **Added (Smart Replace & Auto-Scroll)**: Implemented DOM traversal for auto-scrolling to clicked sentences and a flexible Regex engine to overwrite text without stripping HTML formats (bold, italic, citations).
+- **Added (Document Toggle)**: Switch to analyze the burstiness of the entire document text at once instead of just selected segments.
 
 ## 🛠️ [v0.7.5] - 2026-08-11
 

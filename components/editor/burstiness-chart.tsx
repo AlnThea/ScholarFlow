@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { calculateBurstiness, BurstinessMetrics } from '@/lib/editor/burstiness-engine';
 import { useDebounce } from 'use-debounce';
 import { useLanguage } from '../i18n/language-context';
@@ -45,7 +45,12 @@ export function BurstinessChart({ content }: { content: string }) {
     }
   };
 
-  const barColor = metrics.status === 'human' ? '#10b981' : metrics.status === 'warning' ? '#f59e0b' : '#f43f5e';
+  const getCategoryColor = (wordCount: number) => {
+    if (wordCount <= 10) return '#22d3ee'; // cyan-400 (short)
+    if (wordCount <= 24) return '#3b82f6'; // blue-500 (standard)
+    if (wordCount <= 36) return '#4f46e5'; // indigo-600 (long)
+    return '#9333ea'; // purple-600 (complex)
+  };
 
   return (
     <div className="rounded-xl border border-line bg-panel p-3 flex flex-col gap-3 animate-fade-in shadow-sm mt-3">
@@ -56,13 +61,21 @@ export function BurstinessChart({ content }: { content: string }) {
         </span>
       </div>
       
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-4 gap-2">
         <div className="bg-white border border-slate-100 rounded-lg p-2 text-center flex flex-col justify-center">
-          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">{isEn ? 'Avg Words' : 'Rata-rata Kata'}</p>
+          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">{isEn ? 'Words' : 'Kata'}</p>
+          <p className="text-sm font-bold text-slate-700">{metrics.totalWords}</p>
+        </div>
+        <div className="bg-white border border-slate-100 rounded-lg p-2 text-center flex flex-col justify-center">
+          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">{isEn ? 'Sentences' : 'Kalimat'}</p>
+          <p className="text-sm font-bold text-slate-700">{metrics.totalSentences}</p>
+        </div>
+        <div className="bg-white border border-slate-100 rounded-lg p-2 text-center flex flex-col justify-center">
+          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">{isEn ? 'Avg Len' : 'Rata-rata'}</p>
           <p className="text-sm font-bold text-slate-700">{metrics.averageSentenceLength}</p>
         </div>
         <div className="bg-white border border-slate-100 rounded-lg p-2 text-center flex flex-col justify-center">
-          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">{isEn ? 'Std Deviation' : 'Standar Deviasi'}</p>
+          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">{isEn ? 'Std Dev' : 'Deviasi'}</p>
           <p className="text-sm font-bold text-slate-700">{metrics.standardDeviation}</p>
         </div>
       </div>
@@ -78,7 +91,11 @@ export function BurstinessChart({ content }: { content: string }) {
               labelFormatter={(label) => `${isEn ? 'Sentence' : 'Kalimat ke-'}${isEn ? ' ' : ''}${label}`}
             />
             <ReferenceLine y={metrics.averageSentenceLength} stroke="#cbd5e1" strokeDasharray="3 3" />
-            <Bar dataKey="words" fill={barColor} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="words" radius={[4, 4, 0, 0]}>
+              {metrics.sentenceData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={getCategoryColor(entry.words)} />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>

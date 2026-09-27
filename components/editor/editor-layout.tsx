@@ -516,6 +516,9 @@ export function EditorLayout({
               {/* Right Panel — Citation Results, Plagiarism Checker, & AI */}
               {showRightSidebar && (
                 <EditorSidebar
+                  currentDocument={currentDocument}
+                  editorJsRef={editorJsRef}
+                  onContentChange={onContentChange}
                   selectedText={selectedText}
                   citationResults={citationResults}
                   citationHistory={citationHistory}

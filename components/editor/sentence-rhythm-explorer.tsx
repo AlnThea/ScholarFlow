@@ -159,8 +159,22 @@ export function SentenceRhythmExplorer({
             {isEn ? "No sentences found. Try selecting text in the editor." : "Tidak ada kalimat ditemukan. Blok/pilih teks di editor terlebih dahulu."}
           </div>
         ) : (
-          filteredSentences.map(s => (
-            <div key={s.id} className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg p-3 shadow-sm flex flex-col gap-2 hover:border-slate-200 dark:hover:border-slate-600 transition-colors group cursor-pointer">
+          filteredSentences.map(s => {
+            const handleSentenceClick = () => {
+              const blocks = document.querySelectorAll('.ce-paragraph, .ce-header');
+              for (const block of Array.from(blocks)) {
+                if (block.textContent?.includes(s.text)) {
+                  block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  block.classList.add('bg-amber-100', 'dark:bg-amber-900/30', 'transition-colors', 'duration-500');
+                  setTimeout(() => {
+                    block.classList.remove('bg-amber-100', 'dark:bg-amber-900/30');
+                  }, 2000);
+                  break;
+                }
+              }
+            };
+            return (
+            <div key={s.id} onClick={handleSentenceClick} className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg p-3 shadow-sm flex flex-col gap-2 hover:border-amber-200 dark:hover:border-amber-700 transition-colors group cursor-pointer">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-5 h-5 flex items-center justify-center rounded bg-slate-800 dark:bg-slate-700 text-white text-[9px] font-bold">{s.index}</span>
@@ -179,7 +193,7 @@ export function SentenceRhythmExplorer({
                 {s.text}
               </p>
             </div>
-          ))
+          )})
         )}
       </div>
     </div>
