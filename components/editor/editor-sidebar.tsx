@@ -40,6 +40,8 @@ import { SidebarCommentsTab } from './sidebar-comments-tab';
 import { SidebarBurstinessTab } from './sidebar-burstiness-tab';
 
 type SidebarProps = {
+  activePlanId?: string | null;
+  setIsPlanModalOpen?: (open: boolean) => void;
   currentDocument?: any;
   editorJsRef?: any;
   onContentChange?: (content: any) => void;

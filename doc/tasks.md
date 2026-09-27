@@ -145,6 +145,7 @@ Target: Mengimplementasikan UI/UX 3-Kolom berdasarkan desain mockup skala Enterp
 - [x] **2. Keamanan Format HTML**: Mengembangkan fungsi *smart-replace* agar penimpaan teks tidak menghapus elemen HTML (seperti tag `<b>`, `<i>`, atau `<cite>`) di dalam blok EditorJS.
 - [x] **3. Auto-Scroll & Canvas Highlight**: Mengimplementasikan logika DOM traversal untuk mencari elemen `<p>` yang mengandung teks terkait dan melakukan `scrollIntoView` beserta efek *highlight* kuning temporer saat panel Rhythm Explorer diklik.
 - [x] **4. Toggle Analisis Seluruh Dokumen**: Menambahkan opsi sakelar agar diagram Burstiness dapat merender metrik untuk seluruh dokumen secara utuh, bukan hanya teks yang di-blok (*selected text*).
+- [x] **5. Skema Monetisasi (PLG Paywall)**: Mengunci modul *Paraphrase Studio* menggunakan `activePlanId === 'free'` sehingga UI *disable* dan *user* diarahkan ke Modal *Upgrade/Pricing* saat tombol Generate diklik.
 
 ### Phase 8: Enterprise Professional Standards (Upcoming)
 - [ ] **1. Error Boundaries & Crash Recovery**: Membungkus komponen utama dengan `<ErrorBoundary>` untuk mencegah layar putih (Blank Screen of Death) jika komponen *child* mengalami kegagalan *render*.

@@ -513,9 +513,11 @@ export function EditorLayout({
                 />
               </main>
 
-              {/* Right Panel — Citation Results, Plagiarism Checker, & AI */}
+              {/* Right Panel - Citation Results, Plagiarism Checker, & AI */}
               {showRightSidebar && (
                 <EditorSidebar
+                  activePlanId={activePlanId}
+                  setIsPlanModalOpen={setIsPlanModalOpen}
                   currentDocument={currentDocument}
                   editorJsRef={editorJsRef}
                   onContentChange={onContentChange}

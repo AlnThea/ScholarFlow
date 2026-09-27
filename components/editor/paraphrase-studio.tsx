@@ -11,12 +11,16 @@ export function ParaphraseStudio({
   content,
   currentDocument,
   editorJsRef,
-  onContentChange
+  onContentChange,
+  activePlanId,
+  setIsPlanModalOpen
 }: { 
   content: string;
   currentDocument?: any;
   editorJsRef?: any;
   onContentChange?: (content: any) => void;
+  activePlanId?: string | null;
+  setIsPlanModalOpen?: (open: boolean) => void;
 }) {
   const { language } = useLanguage();
   const isEn = language === 'en';
@@ -24,6 +28,8 @@ export function ParaphraseStudio({
   const [variations, setVariations] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [applyingText, setApplyingText] = useState<string | null>(null);
+
+  const isFreePlan = activePlanId === 'free';
 
   // Parse sentences to suggest targets
   const [debouncedContent] = useDebounce(content, 1000);
@@ -39,6 +45,10 @@ export function ParaphraseStudio({
     .slice(0, 3); // top 3
 
   const handleGenerate = async (textToParaphrase: string = selectedSentence) => {
+    if (isFreePlan) {
+      setIsPlanModalOpen?.(true);
+      return;
+    }
     if (!textToParaphrase) return;
     setSelectedSentence(textToParaphrase);
     setLoading(true);
@@ -147,12 +157,19 @@ export function ParaphraseStudio({
       )}
 
       {/* Paraphrase Studio */}
-      <div className="rounded-xl border border-line bg-white dark:bg-slate-800 p-3 flex flex-col gap-3 shadow-sm">
-         <div className="flex items-center gap-2">
-           <IconWand className="h-4 w-4 text-indigo-500" />
-           <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-             {isEn ? 'Paraphrase Studio' : 'Studio Parafrase'}
-           </h3>
+      <div className={`rounded-xl border border-line bg-white dark:bg-slate-800 p-3 flex flex-col gap-3 shadow-sm ${isFreePlan ? 'opacity-80 relative' : ''}`}>
+         <div className="flex items-center justify-between">
+           <div className="flex items-center gap-2">
+             <IconWand className="h-4 w-4 text-indigo-500" />
+             <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+               {isEn ? 'Paraphrase Studio' : 'Studio Parafrase'}
+             </h3>
+           </div>
+           {isFreePlan && (
+             <span className="text-[9px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800 uppercase tracking-wider">
+               PRO
+             </span>
+           )}
          </div>
          
          <textarea 
@@ -160,16 +177,26 @@ export function ParaphraseStudio({
            onChange={(e) => setSelectedSentence(e.target.value)}
            placeholder={isEn ? "Select a priority sentence or paste text here..." : "Pilih kalimat prioritas atau tempel teks di sini..."}
            className="w-full text-xs p-2 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 resize-none h-16 focus:outline-none focus:border-indigo-400"
+           disabled={isFreePlan}
          />
 
-         <button 
-           onClick={() => handleGenerate(selectedSentence)}
-           disabled={loading || !selectedSentence.trim()}
-           className="w-full py-1.5 rounded-md bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 text-xs font-bold hover:bg-indigo-100 transition-colors flex items-center justify-center gap-1 disabled:opacity-50"
-         >
-           {loading ? <IconRefresh className="w-3 h-3 animate-spin" /> : <IconWand className="w-3 h-3" />}
-           {isEn ? 'Generate Variations' : 'Buat Variasi'}
-         </button>
+         {isFreePlan ? (
+           <button 
+             onClick={() => setIsPlanModalOpen?.(true)}
+             className="w-full py-1.5 rounded-md bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 text-xs font-bold hover:bg-amber-100 transition-colors flex items-center justify-center gap-1 border border-amber-200 dark:border-amber-800/50"
+           >
+             ⭐ {isEn ? 'Upgrade to Pro to Generate' : 'Tingkatkan ke Pro untuk Menggunakan'}
+           </button>
+         ) : (
+           <button 
+             onClick={() => handleGenerate(selectedSentence)}
+             disabled={loading || !selectedSentence.trim()}
+             className="w-full py-1.5 rounded-md bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 text-xs font-bold hover:bg-indigo-100 transition-colors flex items-center justify-center gap-1 disabled:opacity-50"
+           >
+             {loading ? <IconRefresh className="w-3 h-3 animate-spin" /> : <IconWand className="w-3 h-3" />}
+             {isEn ? 'Generate Variations' : 'Buat Variasi'}
+           </button>
+         )}
 
          {variations.length > 0 && (
            <div className="flex flex-col gap-2 mt-2 border-t border-slate-100 dark:border-slate-700 pt-3">

@@ -59,6 +59,7 @@ All notable changes, architectural milestones, and UI improvements to the Schola
 - **Added (Real-time Sync)**: "Apply" function replaces text directly within the EditorJS data blocks in real-time.
 - **Added (Smart Replace & Auto-Scroll)**: Implemented DOM traversal for auto-scrolling to clicked sentences and a flexible Regex engine to overwrite text without stripping HTML formats (bold, italic, citations).
 - **Added (Document Toggle)**: Switch to analyze the burstiness of the entire document text at once instead of just selected segments.
+- **Added (Paywall & PLG)**: Locked the Paraphrase Studio feature behind a Pro subscription, rendering a disabled UI with an "Upgrade to Pro" call-to-action button for Free Tier users.
 
 ## 🛠️ [v0.7.5] - 2026-08-11
 

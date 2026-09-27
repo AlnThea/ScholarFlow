@@ -55,6 +55,8 @@ export const SidebarBurstinessTab = (props: any) => {
           currentDocument={props.currentDocument}
           editorJsRef={props.editorJsRef}
           onContentChange={props.onContentChange}
+          activePlanId={props.activePlanId}
+          setIsPlanModalOpen={props.setIsPlanModalOpen}
         />
       </div>
     </>
