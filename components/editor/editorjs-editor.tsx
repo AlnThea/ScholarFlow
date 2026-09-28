@@ -8,6 +8,7 @@ import 'katex/dist/katex.min.css';
 import { MathBlockTool, InlineMathSanitizerTool, CitationSanitizerTool, CustomFormatsSanitizerTool, scrambleHtmlText } from '@/lib/editor/editor-tools';
 import type { EditorJsMethods } from '@/lib/editor/editor-tools';
 import { buildEditorJsMethods } from '@/hooks/use-editorjs-methods';
+import { sanitizeHtml, sanitizeEditorContent } from '@/lib/utils/sanitize';
 
 const ALIGNMENT_KEY = 'scholarflow.editorjs.alignments.v1';
 
@@ -109,7 +110,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
   const cleanHtmlContent = (html: string) => {
     if (typeof document === 'undefined') return html;
     const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
+    tempDiv.innerHTML = sanitizeHtml(html);
     const mathSpans = tempDiv.querySelectorAll('.sf-inline-math');
     mathSpans.forEach((span) => {
       span.innerHTML = '';
@@ -521,7 +522,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
               undoRef.current = new Undo({ editor });
 
               // Render initial content if provided, otherwise render pending content
-              const contentToRender = initialContent || pendingContentRef.current;
+              const contentToRender = sanitizeEditorContent(initialContent || pendingContentRef.current);
               if (contentToRender) {
                 try {
                   isRenderingRef.current = true;

@@ -1,5 +1,6 @@
 import type { EditorJsMethodsProps } from '@/hooks/use-editorjs-methods';
 import { scrambleHtmlText } from '@/lib/editor/editor-tools';
+import { sanitizeEditorContent } from '@/lib/utils/sanitize';
 
 export function buildBlockMethods(props: EditorJsMethodsProps) {
   const {
@@ -339,10 +340,11 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
           if (editorRef.current && typeof editorRef.current.render === 'function') {
             try {
               isRenderingRef.current = true;
-              editorRef.current.render(data)
+              const sanitizedData = sanitizeEditorContent(data);
+              editorRef.current.render(sanitizedData)
                 .then(() => {
                   if (undoRef.current && typeof undoRef.current.initialize === 'function') {
-                    undoRef.current.initialize(data);
+                    undoRef.current.initialize(sanitizedData);
                   }
                   renderAllInlineMath();
                   setTimeout(() => {

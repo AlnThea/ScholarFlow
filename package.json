@@ -7,7 +7,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@citation-js/core": "^0.8.1",
@@ -22,6 +24,7 @@
     "@supabase/supabase-js": "^2.44.2",
     "@tabler/icons-react": "^3.44.0",
     "clsx": "^2.1.1",
+    "dompurify": "^3.4.16",
     "editorjs-undo": "^2.0.28",
     "jlouvain": "^2.0.0",
     "katex": "^0.17.0",
@@ -32,18 +35,27 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-force-graph-2d": "^1.29.1",
+    "react-shepherd": "^7.0.6",
     "recharts": "^3.10.1",
+    "shepherd.js": "^15.3.0",
     "stopword": "^3.1.5",
     "use-debounce": "^10.1.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/dompurify": "^3.0.5",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@types/stopword": "^2.0.3",
+    "@vitejs/plugin-react": "^6.1.1",
     "autoprefixer": "^10.0.0",
+    "jsdom": "^29.1.1",
     "postcss": "^8.0.0",
     "tailwindcss": "^3.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^5.0.2"
   }
 }

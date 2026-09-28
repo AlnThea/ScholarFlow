@@ -152,6 +152,7 @@ export function SidebarMainView({
               <div className="flex flex-col gap-1 px-1">
                 {/* Library */}
                 <button 
+                  data-tour="sidebar-library"
                   className="flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left text-slate-650 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 group"
                   onClick={() => handleAction('library', () => setActiveView('library'))}
                 >
@@ -316,6 +317,7 @@ export function SidebarMainView({
 
             {/* Library Button (collapsed) */}
             <button
+              data-tour="sidebar-library"
               className="flex items-center justify-center w-full aspect-square rounded-lg bg-transparent text-slate-400 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 relative group"
               title={language === 'en' ? 'Library' : 'Perpustakaan'}
               aria-label={language === 'en' ? 'Library' : 'Perpustakaan'}

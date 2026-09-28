@@ -149,7 +149,7 @@ Target: Mengimplementasikan UI/UX 3-Kolom berdasarkan desain mockup skala Enterp
 
 ### Phase 8: Enterprise Professional Standards (Upcoming)
 *(Panduan Evaluasi Lengkap Kini Tersedia di: `doc/ENTERPRISE_STANDARDS_CHECKLIST.md`)*
-- [ ] **1. Error Boundaries & Crash Recovery**: Membungkus komponen utama dengan `<ErrorBoundary>` untuk mencegah layar putih (Blank Screen of Death) jika komponen *child* mengalami kegagalan *render*.
-- [ ] **2. Keamanan XSS (Cross-Site Scripting)**: Menambahkan pustaka `DOMPurify` untuk mensterilkan (*sanitize*) *input/output* format HTML dari dan ke *database* sebelum dimasukkan ke `dangerouslySetInnerHTML` atau EditorJS.
-- [ ] **3. Automated Testing (Unit & E2E)**: Menulis *Unit Tests* (menggunakan `Vitest`/`Jest`) untuk fungsi utilitas (*Burstiness Engine*, ekstraksi regex) dan *E2E Tests* (menggunakan `Playwright`) untuk alur klik *user*.
-- [ ] **4. Interactive Onboarding & a11y**: Menambahkan *Onboarding Tour* (misal dengan `Shepherd.js`) untuk memandu *user* baru menggunakan panel kompleks, serta meningkatkan navigasi ARIA dan *keyboard* (Aksesibilitas).
+- [x] **1. Error Boundaries & Crash Recovery**: Membungkus komponen utama dengan `<ErrorBoundary>` untuk mencegah layar putih (Blank Screen of Death) jika komponen *child* mengalami kegagalan *render*.
+- [x] **2. Keamanan XSS (Cross-Site Scripting)**: Menambahkan pustaka `DOMPurify` untuk mensterilkan (*sanitize*) *input/output* format HTML dari dan ke *database* sebelum dimasukkan ke `dangerouslySetInnerHTML` atau EditorJS.
+- [x] **3. Automated Testing (Unit & E2E)**: Menulis *Unit Tests* (menggunakan `Vitest`/`Jest`) untuk fungsi utilitas (*Burstiness Engine*, ekstraksi regex) dan *E2E Tests* (menggunakan `Playwright`) untuk alur klik *user*.
+- [x] **4. Interactive Onboarding & a11y**: Menambahkan *Onboarding Tour* (misal dengan `Shepherd.js`) untuk memandu *user* baru menggunakan panel kompleks, serta meningkatkan navigasi ARIA dan *keyboard* (Aksesibilitas).

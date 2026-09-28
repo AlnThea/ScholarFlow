@@ -70,14 +70,14 @@ v0.5.0-architecture: Architecture Sprint EPICs 1, 2, 3, 4, 5 completed (Database
 52. [Completed] Implement Gemini Multi-API Key Rotation & Failover Pool (lib/ai/gemini-key-pool.ts) to automatically cycle across multiple API keys when quota (HTTP 429) is exceeded.
 
 ## Current Task
-Completed Gemini Multi-API Key Failover Pool, 100% UI bilingual i18n, and modal button padding polish (v0.6.0).
+v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional Standards) yang mencakup Error Boundaries, XSS Security (DOMPurify), Automated Testing, dan Interactive Onboarding.
 
 ## Next Tasks
-- Complete remaining UI pages & user-facing feature modules.
-- **[Completed] Distraction-Free Zen Mode** (Hide left sidebar completely when collapsed for maximum editor workspace).
-- **[Completed] Burstiness & Sentence Length Analyzer** (Debounced Real-time UI Sidebar panel with Recharts to detect AI patterns vs human variance).
-- **[Completed] My Library (Centralized Reference Manager)** (Dashboard page untuk kelola referensi & import RIS/PDF).
-- **[Completed] Bibliometric Analysis** (Dashboard page + ECharts Network Graph MVP).
+- [x] **1. Error Boundaries & Crash Recovery**: Membungkus komponen utama dengan `<ErrorBoundary>`.
+- [x] **2. Keamanan XSS (Cross-Site Scripting)**: Implementasi `DOMPurify` untuk sanitasi HTML.
+- [x] **3. Automated Testing (Unit & E2E)**: Setup `Vitest`/`Jest` dan `Playwright`.
+- [x] **4. Interactive Onboarding & a11y**: Setup `Shepherd.js` dan peningkatan ARIA.
+- [ ] Complete remaining UI pages & user-facing feature modules.
 
 ## Do Not Work On Yet
 - SPSS / PSPP (Strategy decided: "AI Output Interpreter" - user uploads output tables, AI interprets and drafts academic narrative to editor. Do not build a full SPSS clone).

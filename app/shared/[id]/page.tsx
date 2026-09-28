@@ -25,6 +25,7 @@ import { useSharedEditorLogic } from '@/hooks/use-shared-editor-logic';
 import { CitationDetailsModal } from '@/components/editor/modals/citation-details-modal';
 import { SharedToolbar } from '@/components/editor/shared-toolbar';
 import { useAuth } from '@/components/auth/auth-provider';
+import { ErrorBoundary } from '@/components/error-boundary';
 import {
   IconLock,
   IconBook,
@@ -194,6 +195,7 @@ export default function SharedDocumentPage() {
 
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-slate-50/50 font-sans text-slate-850">
 
       {/* Navigation Header */}
@@ -753,6 +755,7 @@ export default function SharedDocumentPage() {
         </div>
       )}
     </div>
+    </ErrorBoundary>
   );
 }
 

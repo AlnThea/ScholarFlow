@@ -2,6 +2,7 @@
 'use client';
 
 import { EditorModalsWrapper } from './editor-modals-wrapper';
+import { OnboardingTour } from '@/components/onboarding-tour';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
@@ -33,6 +34,7 @@ import { exportToWordFile, exportToPdfFile } from '@/lib/editor/citation-export-
 
 
 import { useAuth } from '@/components/auth/auth-provider';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { fetchPricingPlans, updatePricingPlan, createPricingPlan, deletePricingPlan, type PricingPlan } from '@/lib/api/pricing';
 import { fetchPaymentGateways, updatePaymentGatewayStatus, type PaymentGateway } from '@/lib/api/payment-gateways';
 import { type AIModel, type AIProvider, createAIModel, deleteAIModel, DEFAULT_PROVIDERS, createAIProvider, updateAIProvider, deleteAIProvider } from '@/lib/api/ai-models';
@@ -276,6 +278,7 @@ export function EditorLayout({
   const isAnyModalOpen = isPlanModalOpen || isModelModalOpen || isImageModalOpen || isMathModalOpen;
 
   return (
+    <ErrorBoundary>
     <div className="flex min-h-screen bg-slate-50/50">
       {/* Hide native EditorJS inline toolbar to avoid overlaps */}
       <style>{`
@@ -701,7 +704,9 @@ export function EditorLayout({
         isHelpOpen={isHelpOpen}
         setIsHelpOpen={setIsHelpOpen}
       />
+      <OnboardingTour />
     </div>
+    </ErrorBoundary>
   );
 }
 
