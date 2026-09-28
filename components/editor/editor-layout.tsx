@@ -8,8 +8,6 @@ import { createPortal } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
 import { EditorJsEditor } from './editorjs-editor';
 import { EditorSidebar } from './editor-sidebar';
-import { Switch } from './editor-switch';
-import { KatexPreview } from './katex-preview';
 import { EditorHeader } from './editor-header';
 import { DashboardView } from './dashboard-view';
 import { MathHelperPanel } from './math-helper-panel';
