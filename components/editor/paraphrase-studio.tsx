@@ -64,11 +64,14 @@ export function ParaphraseStudio({
         safeText = safeText.replace(cite, `[CITE_${idx}]`);
       });
 
-      // Call AI for 3 variations concurrently
+      // Extract Author's Style Reference (Rest of the document)
+      const styleRef = content.replace(textToParaphrase, '').trim().substring(0, 1500);
+
+      // Call AI for 3 variations concurrently (including Mimic My Voice)
       const [res1, res2, res3] = await Promise.all([
         improveWriting(safeText, 'paraphrase', 'gemini', language),
         improveWriting(safeText, 'simplify', 'gemini', language),
-        improveWriting(safeText, 'academic', 'gemini', language)
+        improveWriting(safeText, 'mimic', 'gemini', language, styleRef)
       ]);
 
       // Restore Citations

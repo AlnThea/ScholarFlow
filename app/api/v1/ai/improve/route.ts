@@ -7,7 +7,7 @@ import { defaultAiRateLimiter } from '@/lib/ai/rate-limiter';
 
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
-function buildPrompt(text: string, tone: string, language: string = 'en'): string {
+function buildPrompt(text: string, tone: string, language: string = 'en', styleReference?: string): string {
   let toneInstruction = '';
   switch (tone) {
     case 'simplify':
@@ -25,23 +25,31 @@ function buildPrompt(text: string, tone: string, language: string = 'en'): strin
     case 'summarize':
       toneInstruction = 'Summarize the text. Condense it into a concise, high-level academic summary that highlights the key concepts and findings.';
       break;
+    case 'mimic':
+      toneInstruction = 'Mimic the author\'s specific voice. Rewrite the text to strictly match the vocabulary, sentence rhythm, and stylistic quirks of the provided reference text. Do not make it sound like generic AI.';
+      break;
     case 'academic':
     default:
       toneInstruction = 'Improve clarity, academic vocabulary, objectivity, and scholarly phrasing.';
       break;
   }
 
-  return (
-    'You are an expert academic editor. Rewrite the selected text according to the following instructions:\n' +
+  let prompt = 'You are an expert academic editor. Rewrite the selected text according to the following instructions:\n' +
     `- Target Tone: ${tone.toUpperCase()}\n` +
-    `- Instruction: ${toneInstruction}\n` +
-    'Requirements:\n' +
+    `- Instruction: ${toneInstruction}\n`;
+    
+  if (styleReference && styleReference.trim().length > 0) {
+    prompt += `\nAUTHOR'S STYLE REFERENCE (MIMIC THIS EXACTLY):\n"""\n${styleReference}\n"""\n\n`;
+  }
+
+  prompt += 'Requirements:\n' +
     '- Keep the original meaning and core arguments.\n' +
     '- Do not add external citations, facts, statistics, or unbacked claims.\n' +
     '- Write the rewritten text in the exact same language as the input text (e.g. if the input text is in Indonesian, rewrite the text in Indonesian; if the input text is in English, rewrite in English).\n' +
     '- Return ONLY the rewritten text. Do NOT wrap it in quotes, markdown block, or write any greeting/explanation.\n\n' +
-    `Text to rewrite:\n${text}`
-  );
+    `Text to rewrite:\n${text}`;
+    
+  return prompt;
 }
 
 function fallbackResponse(text: string, tone: string, disclaimer: string) {
@@ -277,13 +285,13 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { text, tone = 'academic', model = 'gemini', language = 'en', stream = false } = body;
+    const { text, tone = 'academic', model = 'gemini', language = 'en', stream = false, styleReference } = body;
 
     if (!text) {
       return NextResponse.json({ error: 'Text parameter is required.' }, { status: 400 });
     }
 
-    const prompt = buildPrompt(text, tone, language);
+    const prompt = buildPrompt(text, tone, language, styleReference);
 
     // If client requested SSE streaming
     if (stream && (model === 'gemini' || model === 'gemini-2.0-flash')) {

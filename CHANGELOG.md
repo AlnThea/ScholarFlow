@@ -8,6 +8,8 @@ All notable changes, architectural milestones, and UI improvements to the Schola
 - **Heatmap / Inline Highlight**: Added non-destructive visual heatmap directly in the Editor canvas (`.ce-block`) that highlights detected AI buzzwords using safe regex DOM replacement without destroying block formats.
 - **AI Lexical Analyzer & Buzzword Tracker**: Expanded `AI_BUZZWORDS` dictionaries with hundreds of words for both English and Indonesian. Implemented a professional UI in `SidebarBurstinessTab` that counts and displays specific detected cliches.
 - **Citation Lock (Safe-Mode Paraphrase)**: Implemented robust dual-regex protection (supporting APA/Harvard and IEEE formats) in `ParaphraseStudio`. The system securely locks citations like `(Smith et al., 2020)` into `[CITE_N]` placeholders before calling Gemini, restoring them flawlessly post-generation to prevent AI hallucination or deletion.
+- **Author Stylometry (Mimic My Voice)**: Upgraded the `improveWriting` API to accept an author's `styleReference`. Paraphrase Studio now dynamically reads the surrounding document text to instruct the AI to perfectly mimic the author's unique vocabulary, rhythm, and stylistic quirks instead of generating generic academic text.
+- **Originality Certificate Export**: Added `handleExportReport` to generate and print a certified "ScholarFlow Originality Report" (PDF), providing researchers tangible proof of their document's burstiness score, lexical diversity, and human-written status.
 - **Enterprise UI Refinements**: Added "SAFE-MODE" UI badge and visual warning alerts (Amber/Emerald states) for Lexical Analyzer. Fully responsive with Dark Mode and `isEn` bilingual support.
 
 ## 🚀 [v0.6.0] - 2026-09-22

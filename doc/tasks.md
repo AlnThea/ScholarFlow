@@ -164,4 +164,4 @@ Target: Meningkatkan kualitas modul Burstiness menjadi standar industri (setara 
 - [x] **Expanded Bilingual Dictionary**: Memperluas kamus *buzzwords* menjadi ratusan kata untuk Bahasa Inggris dan Bahasa Indonesia.
 - [x] **Robust Citation Regex**: Meningkatkan kekuatan regex sitasi gabungan (misal: `Smith et al., 2020; Doe, 2021`) agar tak sengaja terhapus AI.
 - [x] **Heatmap / Inline Highlight**: Menyorot langsung di kanvas editor teks mana yang mengandung kalimat robotik atau *buzzwords* (Toggle Heatmap).
-- [ ] **Export Human-written Report**: Fitur unduh Laporan Orisinalitas (PDF/Image) sebagai bukti bebas AI.
+- [x] **Export Human-written Report**: Fitur unduh Laporan Orisinalitas (PDF/Image) sebagai bukti bebas AI.

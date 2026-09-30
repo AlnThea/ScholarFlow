@@ -12,12 +12,13 @@ export async function improveWriting(
   text: string,
   tone = 'academic',
   model = 'gemini',
-  language = 'en'
+  language = 'en',
+  styleReference?: string
 ): Promise<ImproveWritingResponse> {
   const response = await fetch('/api/v1/ai/improve', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, tone, model, language }),
+    body: JSON.stringify({ text, tone, model, language, styleReference }),
   });
 
   if (!response.ok) {
