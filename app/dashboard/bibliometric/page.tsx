@@ -19,11 +19,16 @@ import {
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
 import { useDebounce } from 'use-debounce';
+const PricingModal = dynamic(() => import('@/components/editor/modals/pricing-modal').then(m => m.PricingModal), { ssr: false });
 
 export default function BibliometricPage() {
   const router = useRouter();
   const { dataService } = useDataService();
   const { user, profile } = useAuth();
+  
+  const isFreePlan = !profile || profile.subscription_plan === 'free';
+  const [isPricingOpen, setIsPricingOpen] = useState(false);
+  
   const [library, setLibrary] = useState<CitationCandidate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
@@ -271,6 +276,7 @@ export default function BibliometricPage() {
   }, [layoutMode]);
 
   const exportNetworkSVG = () => {
+    if (isFreePlan) return setIsPricingOpen(true);
     if (!graphData || graphData.nodes.length === 0) return;
     const { nodes, links } = graphData;
     
@@ -324,6 +330,7 @@ export default function BibliometricPage() {
   const [colorMode, setColorMode] = useState<'cluster' | 'trend' | 'density'>('cluster');
 
   const exportNetworkImage = () => {
+    if (isFreePlan) return setIsPricingOpen(true);
     const canvas = document.querySelector('.force-graph-container canvas, canvas') as HTMLCanvasElement;
     if (canvas) {
       // Create a high-res export canvas
@@ -351,6 +358,7 @@ export default function BibliometricPage() {
   };
 
   const exportNetworkCSV = () => {
+    if (isFreePlan) return setIsPricingOpen(true);
     if (graphData.nodes.length === 0) return;
     
     // Nodes CSV
@@ -375,6 +383,7 @@ export default function BibliometricPage() {
   };
 
   const exportNetworkGraphML = () => {
+    if (isFreePlan) return setIsPricingOpen(true);
     if (graphData.nodes.length === 0) return;
     
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
@@ -772,6 +781,11 @@ export default function BibliometricPage() {
           </div>
         )}
       </div>
+      
+      <PricingModal
+        isOpen={isPricingOpen}
+        onClose={() => setIsPricingOpen(false)}
+      />
     </div>
   );
 }
