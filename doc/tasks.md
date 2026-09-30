@@ -178,3 +178,19 @@ Target: Membangun dasbor manajemen organisasi (B2B) kelas enterprise agar klien 
 - [x] **Usage Analytics & Adoption Report**: Tab analitik yang menyajikan grafik statistik keaktifan anggota institusi (Area Chart & Pie Chart).
 - [x] **Organization Branding & Whitelisting**: Pengaturan profil kampus (Upload Logo) agar antarmuka pengguna terasa personal, serta opsi *Domain Whitelisting* (`@kampus.ac.id`) untuk auto-join.
 - [x] **Activity Audit Logs**: Catatan rekam jejak keamanan (siapa yang mengundang siapa, siapa yang mencabut lisensi, kapan) demi memenuhi standar kepatuhan (compliance) sistem akademik.
+
+
+### Phase 11: Statistical Output Interpreter (SPSS/PSPP AI)
+Target: Membangun asisten AI "Data Analyst" multimodal di dalam editor yang mampu membaca gambar/tabel hasil software statistik dan mengubahnya menjadi narasi akademik berstandar APA.
+
+- [ ] **1. Navigation & Layout (Sidebar Integration)**: Menambahkan tab baru (ikon grafik) di Sidebar Kanan Editor yang dapat di-toggle (berdampingan dengan *Burstiness* dan *Dictionary*).
+- [ ] **2. The Dropzone (Input UI)**: Membangun area unggah (Drag & Drop) yang bereaksi terhadap file `.csv`, `.txt`, `.jpg`, `.png`, lengkap dengan fitur `Ctrl+V` (paste listener) dan thumbnail preview sebelum diolah.
+- [ ] **3. Analysis Configuration Panel**: Membuat antarmuka dropdown untuk mengatur parameter AI: Sumber Aplikasi (SPSS/SmartPLS), Jenis Uji (T-Test/ANOVA/Regresi), Bahasa Output (EN/ID), dan Gaya Penulisan (Thesis/Journal Mode).
+- [ ] **4. Multimodal AI Endpoint (`/api/v1/ai/interpret-stats`)**: Membangun backend route yang mampu memproses Multipart Form-Data (Gambar/Teks) dan mengirimkannya ke Google Gemini 1.5 Pro/Flash Vision dengan System Prompt ahli statistik.
+- [ ] **5. Execution & Result UI**: Membangun komponen hasil yang memiliki Skeleton Loading saat memproses, Error Handling (jika gambar buram), dan tombol aksi (Copy, Regenerate).
+- [ ] **6. EditorJS Insertion Bridge**: Membangun logika DOM/React untuk menyuntikkan narasi hasil interpretasi AI langsung ke dalam blok kanvas EditorJS aktif milik pengguna saat tombol "Insert" diklik.
+- [ ] **7. Security & Privacy Safeguards**: Menambahkan label peringatan privasi untuk tidak mengunggah data sensitif, serta memastikan sanitasi input sebelum dikirim ke LLM.
+- [ ] **8. Local History Logs**: Menyimpan 3-5 hasil interpretasi terakhir ke dalam `LocalStorage` browser agar hasil analisis tidak hilang jika pengguna melakukan refresh halaman secara tidak sengaja.
+- [ ] **9. Enterprise Paywall & BYOK**: Mengunci akses panel penuh ini di balik validasi `isFreePlan` (memunculkan modal Pricing), dan mengintegrasikan penggunaan token mandiri jika pengguna telah menyetel Custom API Key (BYOK).
+- [ ] **10. Pre-Processing Data Parser**: Membangun modul pembersih data (menggunakan PapaParse/Regex) untuk mem-parsing file CSV/Excel/HTML kotor menjadi *Markdown Table* yang bersih sebelum dikirim ke AI, guna menghemat biaya token API dan mencegah halusinasi.
+- [ ] **11. APA Table Generator (Post-Processing)**: Memprogram AI agar tidak hanya menghasilkan teks paragraf, tetapi juga me-render ulang matriks angka tersebut menjadi struktur tabel EditorJS berstandar APA Edisi ke-7, siap untuk disisipkan langsung ke dalam dokumen.
