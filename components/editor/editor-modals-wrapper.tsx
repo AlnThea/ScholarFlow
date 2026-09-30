@@ -120,6 +120,7 @@ export function EditorModalsWrapper(props: any) {
         documentTitle={currentDocument?.title}
         settings={currentDocument?.settings}
         onSaveSettings={onSaveSettings}
+        onUpgrade={() => setIsPricingOpen(true)}
       />
       <ExportUpgradeModal
         isOpen={mounted && isExportUpgradeModalOpen}

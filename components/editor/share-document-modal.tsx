@@ -15,6 +15,7 @@ interface ShareDocumentModalProps {
   onSaveSettings?: (newSettings: Partial<DocumentSettings>) => void;
   activePlanId?: string;
   role?: string;
+  onUpgrade?: () => void;
 }
 
 export function ShareDocumentModal({
@@ -25,7 +26,8 @@ export function ShareDocumentModal({
   settings,
   onSaveSettings,
   activePlanId = 'free',
-  role = 'user'
+  role = 'user',
+  onUpgrade,
 }: ShareDocumentModalProps) {
   const { language } = useLanguage();
   const [isLinkActive, setIsLinkActive] = useState(false);
@@ -155,12 +157,21 @@ export function ShareDocumentModal({
                 </label>
                 <select
                   value={permission}
-                  onChange={(e) => handlePermissionChange(e.target.value as 'view' | 'edit')}
+                  onChange={(e) => {
+                    if (e.target.value === 'edit_upsell') {
+                      onClose(); // Close share modal first
+                      setTimeout(() => onUpgrade?.(), 100);
+                      return;
+                    }
+                    handlePermissionChange(e.target.value as 'view' | 'edit')
+                  }}
                   className="border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 bg-white outline-none focus:border-indigo-500 transition"
                 >
                   <option value="view">{language === 'en' ? 'Read-only access' : 'Dapat membaca saja (Read-only)'}</option>
-                  {(activePlanId === 'enterprise' || activePlanId === 'team' || activePlanId === 'institution' || role === 'admin') && (
+                  {(activePlanId === 'enterprise' || activePlanId === 'team' || activePlanId === 'institution' || activePlanId === 'pro' || role === 'admin') ? (
                     <option value="edit">{language === 'en' ? 'Can edit draft (Co-Editor)' : 'Dapat mengedit draf (Co-Editor)'}</option>
+                  ) : (
+                    <option value="edit_upsell">⭐ {language === 'en' ? 'Upgrade to Pro to unlock Co-Editor' : 'Tingkatkan ke Pro untuk fitur Co-Editor'}</option>
                   )}
                 </select>
               </div>
