@@ -177,4 +177,4 @@ Target: Membangun dasbor manajemen organisasi (B2B) kelas enterprise agar klien 
 - [x] **Revoke/Remove Access**: Tombol aksi untuk mencabut lisensi dari anggota secara individu (mengembalikan akun mereka ke *Free Tier*).
 - [x] **Usage Analytics & Adoption Report**: Tab analitik yang menyajikan grafik statistik keaktifan anggota institusi (Area Chart & Pie Chart).
 - [x] **Organization Branding & Whitelisting**: Pengaturan profil kampus (Upload Logo) agar antarmuka pengguna terasa personal, serta opsi *Domain Whitelisting* (`@kampus.ac.id`) untuk auto-join.
-- [ ] **Activity Audit Logs**: Catatan rekam jejak keamanan (siapa yang mengundang siapa, siapa yang mencabut lisensi, kapan) demi memenuhi standar kepatuhan (compliance) sistem akademik.
+- [x] **Activity Audit Logs**: Catatan rekam jejak keamanan (siapa yang mengundang siapa, siapa yang mencabut lisensi, kapan) demi memenuhi standar kepatuhan (compliance) sistem akademik.

@@ -40,13 +40,21 @@ const initialMembers = [
   { id: '5', name: 'Andi Kusuma', email: 'andi.k@student.um.ac.id', role: 'Member', status: 'Invited', joined: '-' },
 ];
 
+const initialAuditLogs = [
+  { id: '101', user: 'Prof. Dahlan', action: 'INVITE_USER', target: 'andi.k@student.um.ac.id', date: '2026-09-30 14:32', ip: '114.125.x.x' },
+  { id: '102', user: 'System', action: 'BULK_IMPORT', target: 'Imported 40 new students via CSV', date: '2026-09-29 09:15', ip: 'Server' },
+  { id: '103', user: 'Dr. Sarah', action: 'REVOKE_USER', target: 'alumni_2025@student.um.ac.id', date: '2026-09-28 16:05', ip: '114.125.x.x' },
+  { id: '104', user: 'Prof. Dahlan', action: 'UPDATE_ORG', target: 'Changed Domain Whitelisting to @um.ac.id', date: '2026-09-25 10:00', ip: '114.125.x.x' },
+  { id: '105', user: 'Prof. Dahlan', action: 'EXPORT_REPORT', target: 'Downloaded Q3 Usage Analytics', date: '2026-09-20 11:22', ip: '114.125.x.x' },
+];
+
 export default function InstitutionDashboard() {
   const router = useRouter();
   const { user, profile } = useAuth();
   const { language } = useLanguage();
   const isEn = language === 'en';
 
-  const [activeTab, setActiveTab] = useState<'members' | 'analytics' | 'settings'>('members');
+  const [activeTab, setActiveTab] = useState<'members' | 'analytics' | 'settings' | 'audit'>('members');
   const [members, setMembers] = useState(initialMembers);
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -224,6 +232,7 @@ export default function InstitutionDashboard() {
             {[
               { id: 'members', label: isEn ? 'Member Management' : 'Manajemen Anggota', icon: IconUsers },
               { id: 'analytics', label: isEn ? 'Usage Analytics' : 'Analitik Penggunaan', icon: IconChartLine },
+              { id: 'audit', label: isEn ? 'Audit Logs' : 'Log Aktivitas', icon: IconShieldCheck },
               { id: 'settings', label: isEn ? 'Organization Settings' : 'Pengaturan Organisasi', icon: IconSettings },
             ].map(tab => (
               <button
@@ -485,6 +494,67 @@ export default function InstitutionDashboard() {
                       ))}
                     </div>
                   </div>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'audit' && (
+              <motion.div 
+                key="audit"
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden"
+              >
+                <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <IconShieldCheck className="w-5 h-5 text-indigo-500" />
+                    {isEn ? 'Security & Activity Logs' : 'Log Aktivitas & Keamanan'}
+                  </h3>
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded-md">Last 30 Days</span>
+                  </div>
+                </div>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
+                        <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">{isEn ? 'Timestamp' : 'Waktu'}</th>
+                        <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">{isEn ? 'Actor' : 'Aktor'}</th>
+                        <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">{isEn ? 'Action' : 'Aksi'}</th>
+                        <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">{isEn ? 'Target/Details' : 'Target/Detail'}</th>
+                        <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">{isEn ? 'IP Address' : 'Alamat IP'}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                      {initialAuditLogs.map((log) => (
+                        <tr key={log.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                          <td className="px-6 py-4 text-xs text-slate-500 dark:text-slate-400 font-mono">
+                            {log.date}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{log.user}</span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`text-[10px] font-bold px-2 py-1 rounded-md border uppercase tracking-wider ${
+                              log.action.includes('REVOKE') || log.action.includes('DELETE')
+                                ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800/50'
+                                : log.action.includes('INVITE') || log.action.includes('IMPORT')
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/50'
+                                : 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800/50'
+                            }`}>
+                              {log.action}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
+                            {log.target}
+                          </td>
+                          <td className="px-6 py-4 text-right text-xs text-slate-400 font-mono">
+                            {log.ip}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </motion.div>
             )}
