@@ -14,6 +14,7 @@ export const SidebarBurstinessTab = (props: any) => {
   } = props;
 
   const isEn = language === 'en';
+  const isFreePlan = props.activePlanId === 'free';
   const [analyzeAll, setAnalyzeAll] = useState(false);
   const [heatmapActive, setHeatmapActive] = useState(false);
 
@@ -157,14 +158,24 @@ export const SidebarBurstinessTab = (props: any) => {
               </div>
               <div className="flex items-center gap-2">
                 {metrics.buzzwordCount > 0 && (
-                  <button 
-                    onClick={() => setHeatmapActive(!heatmapActive)}
-                    className={`flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider border transition-colors ${heatmapActive ? 'bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-900/50 dark:text-rose-300 dark:border-rose-700' : 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
-                    title={isEn ? "Highlight buzzwords in editor" : "Sorot kosakata klise di editor"}
-                  >
-                    {heatmapActive ? <IconEyeOff className="w-3 h-3" /> : <IconEye className="w-3 h-3" />}
-                    {isEn ? 'Heatmap' : 'Sorot'}
-                  </button>
+                  isFreePlan ? (
+                    <button 
+                      onClick={() => props.setIsPlanModalOpen?.(true)}
+                      className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider border bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800/50 dark:text-amber-400 hover:bg-amber-100 transition-colors"
+                      title={isEn ? "Upgrade to Pro to use Heatmap" : "Tingkatkan ke Pro untuk menggunakan Heatmap"}
+                    >
+                      ⭐ PRO
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => setHeatmapActive(!heatmapActive)}
+                      className={`flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider border transition-colors ${heatmapActive ? 'bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-900/50 dark:text-rose-300 dark:border-rose-700' : 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
+                      title={isEn ? "Highlight buzzwords in editor" : "Sorot kosakata klise di editor"}
+                    >
+                      {heatmapActive ? <IconEyeOff className="w-3 h-3" /> : <IconEye className="w-3 h-3" />}
+                      {isEn ? 'Heatmap' : 'Sorot'}
+                    </button>
+                  )
                 )}
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider border ${metrics.buzzwordCount > 0 ? 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800/50 dark:text-amber-400' : 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800/50 dark:text-emerald-400'}`}>
                   {metrics.buzzwordCount} {isEn ? 'Buzzwords' : 'Kata Klise'}
@@ -201,13 +212,22 @@ export const SidebarBurstinessTab = (props: any) => {
 
         {/* Export Report Action */}
         {metrics.totalSentences > 0 && (
-          <button 
-            onClick={handleExportReport}
-            className="w-full py-2 mt-4 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-line dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
-          >
-            <IconDownload className="w-4 h-4" />
-            {isEn ? 'Export Originality Report' : 'Unduh Laporan Orisinalitas'}
-          </button>
+          isFreePlan ? (
+            <button 
+              onClick={() => props.setIsPlanModalOpen?.(true)}
+              className="w-full py-2 mt-4 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-xs font-bold hover:bg-amber-100 transition-colors flex items-center justify-center gap-2 shadow-sm"
+            >
+              ⭐ {isEn ? 'Upgrade to Pro to Export Report' : 'Tingkatkan ke Pro untuk Unduh Laporan'}
+            </button>
+          ) : (
+            <button 
+              onClick={handleExportReport}
+              className="w-full py-2 mt-4 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-line dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
+            >
+              <IconDownload className="w-4 h-4" />
+              {isEn ? 'Export Originality Report' : 'Unduh Laporan Orisinalitas'}
+            </button>
+          )
         )}
       </div>
     </>
