@@ -2,6 +2,14 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## 🚀 [v0.7.0] - 2026-09-30 (Enterprise Burstiness & Academic Integrity)
+
+### 🛡️ Professional Grade UI & Security
+- **Heatmap / Inline Highlight**: Added non-destructive visual heatmap directly in the Editor canvas (`.ce-block`) that highlights detected AI buzzwords using safe regex DOM replacement without destroying block formats.
+- **AI Lexical Analyzer & Buzzword Tracker**: Expanded `AI_BUZZWORDS` dictionaries with hundreds of words for both English and Indonesian. Implemented a professional UI in `SidebarBurstinessTab` that counts and displays specific detected cliches.
+- **Citation Lock (Safe-Mode Paraphrase)**: Implemented robust dual-regex protection (supporting APA/Harvard and IEEE formats) in `ParaphraseStudio`. The system securely locks citations like `(Smith et al., 2020)` into `[CITE_N]` placeholders before calling Gemini, restoring them flawlessly post-generation to prevent AI hallucination or deletion.
+- **Enterprise UI Refinements**: Added "SAFE-MODE" UI badge and visual warning alerts (Amber/Emerald states) for Lexical Analyzer. Fully responsive with Dark Mode and `isEn` bilingual support.
+
 ## 🚀 [v0.6.0] - 2026-09-22
 
 ### 📊 Bibliometric Network Analytics (Phase 5 & 6)

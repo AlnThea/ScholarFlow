@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { IconWand, IconCheck, IconRefresh, IconAlertTriangle } from '@tabler/icons-react';
+import { IconWand, IconCheck, IconRefresh, IconAlertTriangle, IconShieldCheck } from '@tabler/icons-react';
 import { useLanguage } from '../i18n/language-context';
 import { calculateBurstiness } from '@/lib/editor/burstiness-engine';
 import { useDebounce } from 'use-debounce';
@@ -55,16 +55,35 @@ export function ParaphraseStudio({
     setVariations([]);
     
     try {
+      // Citation Lock Mechanism (Safe-Mode)
+      // Matches APA/Harvard: (Smith, 2020; Doe, 2021) or (see Smith, 2020, p. 12)
+      // Matches IEEE: [1], [1, 2], [1-3]
+      const citationMatches = textToParaphrase.match(/\([^()]*\d{4}[a-z]?[^()]*\)|\[\s*\d+(?:\s*[,-]\s*\d+)*\s*\]/g) || [];
+      let safeText = textToParaphrase;
+      citationMatches.forEach((cite, idx) => {
+        safeText = safeText.replace(cite, `[CITE_${idx}]`);
+      });
+
       // Call AI for 3 variations concurrently
       const [res1, res2, res3] = await Promise.all([
-        improveWriting(textToParaphrase, 'paraphrase', 'gemini', language),
-        improveWriting(textToParaphrase, 'simplify', 'gemini', language),
-        improveWriting(textToParaphrase, 'academic', 'gemini', language)
+        improveWriting(safeText, 'paraphrase', 'gemini', language),
+        improveWriting(safeText, 'simplify', 'gemini', language),
+        improveWriting(safeText, 'academic', 'gemini', language)
       ]);
+
+      // Restore Citations
+      const restoreCitations = (text: string) => {
+        let restored = text;
+        citationMatches.forEach((cite, idx) => {
+          restored = restored.replace(`[CITE_${idx}]`, cite);
+        });
+        return restored;
+      };
+
       setVariations([
-        res1.improved_text,
-        res2.improved_text,
-        res3.improved_text
+        restoreCitations(res1.improved_text),
+        restoreCitations(res2.improved_text),
+        restoreCitations(res3.improved_text)
       ].filter(Boolean));
     } catch (err) {
       console.error('AI generation failed', err);
@@ -165,11 +184,16 @@ export function ParaphraseStudio({
                {isEn ? 'Paraphrase Studio' : 'Studio Parafrase'}
              </h3>
            </div>
-           {isFreePlan && (
-             <span className="text-[9px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800 uppercase tracking-wider">
-               PRO
+           <div className="flex items-center gap-2">
+             <span className="flex items-center gap-1 text-[9px] font-bold text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 uppercase tracking-wider" title={isEn ? "Citations are locked and protected" : "Sitasi dikunci dan dilindungi"}>
+               <IconShieldCheck className="w-3 h-3" /> SAFE-MODE
              </span>
-           )}
+             {isFreePlan && (
+               <span className="text-[9px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800 uppercase tracking-wider">
+                 PRO
+               </span>
+             )}
+           </div>
          </div>
          
          <textarea 

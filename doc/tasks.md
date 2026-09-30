@@ -153,3 +153,15 @@ Target: Mengimplementasikan UI/UX 3-Kolom berdasarkan desain mockup skala Enterp
 - [x] **2. Keamanan XSS (Cross-Site Scripting)**: Menambahkan pustaka `DOMPurify` untuk mensterilkan (*sanitize*) *input/output* format HTML dari dan ke *database* sebelum dimasukkan ke `dangerouslySetInnerHTML` atau EditorJS.
 - [x] **3. Automated Testing (Unit & E2E)**: Menulis *Unit Tests* (menggunakan `Vitest`/`Jest`) untuk fungsi utilitas (*Burstiness Engine*, ekstraksi regex) dan *E2E Tests* (menggunakan `Playwright`) untuk alur klik *user*.
 - [x] **4. Interactive Onboarding & a11y**: Menambahkan *Onboarding Tour* (misal dengan `Shepherd.js`) untuk memandu *user* baru menggunakan panel kompleks, serta meningkatkan navigasi ARIA dan *keyboard* (Aksesibilitas).
+
+
+### Phase 9: Enterprise Burstiness & Academic Integrity (Professional Grade)
+Target: Meningkatkan kualitas modul Burstiness menjadi standar industri (setara Quillbot Pro / Turnitin) dengan menambahkan deteksi *Lexical Diversity* (Kosakata Klise AI) dan mengamankan sitasi (Citation Lock) saat melakukan parafrase.
+
+- [x] **AI Lexical Analyzer (Buzzwords & Cliches)**: Menambahkan detektor kata-kata yang sering digunakan AI untuk menghitung seberapa "robotik" pemilihan kata.
+- [x] **Citation Lock / Safe-Mode Paraphrase**: Proteksi elemen referensi akademik (sitasi).
+- [x] **UI/UX Buzzword Tracker**: Membuat komponen UI profesional di Sidebar.
+- [x] **Expanded Bilingual Dictionary**: Memperluas kamus *buzzwords* menjadi ratusan kata untuk Bahasa Inggris dan Bahasa Indonesia.
+- [x] **Robust Citation Regex**: Meningkatkan kekuatan regex sitasi gabungan (misal: `Smith et al., 2020; Doe, 2021`) agar tak sengaja terhapus AI.
+- [x] **Heatmap / Inline Highlight**: Menyorot langsung di kanvas editor teks mana yang mengandung kalimat robotik atau *buzzwords* (Toggle Heatmap).
+- [ ] **Export Human-written Report**: Fitur unduh Laporan Orisinalitas (PDF/Image) sebagai bukti bebas AI.

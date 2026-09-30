@@ -9,7 +9,28 @@ export interface BurstinessMetrics {
   burstinessScore: number;
   status: 'human' | 'warning' | 'ai';
   sentenceData: Array<{ index: number; words: number; text: string }>;
+  buzzwordCount: number;
+  detectedBuzzwords: Array<{ word: string; count: number }>;
 }
+
+export const AI_BUZZWORDS = [
+  // English AI Buzzwords
+  'delve', 'tapestry', 'crucial', 'seamless', 'multifaceted', 'paramount',
+  'realm', 'foster', 'landscape', 'intricate', 'testament', 'furthermore',
+  'moreover', 'pivotal', 'underscore', 'embark', 'navigating', 'demystify',
+  'comprehensive', 'nuance', 'unprecedented', 'vital', 'harness', 'leverage',
+  'paradigm', 'symbiosis', 'myriad', 'catalyst', 'spearhead', 'trajectory',
+  'imperative', 'synergy', 'transformative', 'meticulous', 'orchestrate',
+  'elucidate', 'intricacies', 'resonates', 'interplay', 'cornerstone',
+  // Indonesian AI Klise (Buzzwords)
+  'esensial', 'krusial', 'signifikan', 'menggarisbawahi', 'menyoroti',
+  'komprehensif', 'transformasi', 'era', 'digital', 'lanskap', 'ranah',
+  'paradigma', 'sinergi', 'katalis', 'berkaitan', 'seiring', 'berkembangnya',
+  'zaman', 'navigasi', 'kompleksitas', 'nuansa', 'menyelaraskan', 'inovatif',
+  'dinamis', 'memfasilitasi', 'mengintegrasikan', 'relevan', 'konteks',
+  'mendorong', 'menjembatani', 'merajut', 'peran', 'penting', 'tantangan',
+  'peluang', 'mendasar', 'pilar', 'fondasi', 'berkesinambungan'
+];
 
 export function calculateBurstiness(text: string): BurstinessMetrics {
   // Clean HTML if passed directly from editor
@@ -23,7 +44,9 @@ export function calculateBurstiness(text: string): BurstinessMetrics {
       standardDeviation: 0,
       burstinessScore: 0,
       status: 'human',
-      sentenceData: []
+      sentenceData: [],
+      buzzwordCount: 0,
+      detectedBuzzwords: []
     };
   }
 
@@ -65,7 +88,9 @@ export function calculateBurstiness(text: string): BurstinessMetrics {
       standardDeviation: 0,
       burstinessScore: 0,
       status: 'human',
-      sentenceData: []
+      sentenceData: [],
+      buzzwordCount: 0,
+      detectedBuzzwords: []
     };
   }
 
@@ -99,6 +124,22 @@ export function calculateBurstiness(text: string): BurstinessMetrics {
     status = 'warning'; 
   }
 
+  // Find buzzwords
+  const detectedBuzzwordsMap = new Map<string, number>();
+  let buzzwordCount = 0;
+  
+  const wordsList = cleanText.toLowerCase().match(/\b([a-z]+)\b/g) || [];
+  wordsList.forEach(w => {
+    if (AI_BUZZWORDS.includes(w)) {
+      detectedBuzzwordsMap.set(w, (detectedBuzzwordsMap.get(w) || 0) + 1);
+      buzzwordCount++;
+    }
+  });
+
+  const detectedBuzzwords = Array.from(detectedBuzzwordsMap.entries())
+    .map(([word, count]) => ({ word, count }))
+    .sort((a, b) => b.count - a.count);
+
   return {
     totalWords,
     totalSentences,
@@ -106,6 +147,8 @@ export function calculateBurstiness(text: string): BurstinessMetrics {
     standardDeviation: parseFloat(standardDeviation.toFixed(2)),
     burstinessScore,
     status,
-    sentenceData
+    sentenceData,
+    buzzwordCount,
+    detectedBuzzwords
   };
 }
