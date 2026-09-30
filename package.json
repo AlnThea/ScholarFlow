@@ -26,6 +26,7 @@
     "clsx": "^2.1.1",
     "dompurify": "^3.4.16",
     "editorjs-undo": "^2.0.28",
+    "framer-motion": "^13.4.6",
     "jlouvain": "^2.0.0",
     "katex": "^0.17.0",
     "keyword-extractor": "^0.3.0",

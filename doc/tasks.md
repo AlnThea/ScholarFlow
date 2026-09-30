@@ -165,3 +165,16 @@ Target: Meningkatkan kualitas modul Burstiness menjadi standar industri (setara 
 - [x] **Robust Citation Regex**: Meningkatkan kekuatan regex sitasi gabungan (misal: `Smith et al., 2020; Doe, 2021`) agar tak sengaja terhapus AI.
 - [x] **Heatmap / Inline Highlight**: Menyorot langsung di kanvas editor teks mana yang mengandung kalimat robotik atau *buzzwords* (Toggle Heatmap).
 - [x] **Export Human-written Report**: Fitur unduh Laporan Orisinalitas (PDF/Image) sebagai bukti bebas AI.
+
+
+### Phase 10: B2B Campus Portal (Enterprise Dashboard)
+Target: Membangun dasbor manajemen organisasi (B2B) kelas enterprise agar klien institusi/kampus dapat mengelola akses, lisensi, dan memonitor aktivitas pengguna secara profesional.
+
+- [x] **Institution Dashboard UI (`/dashboard/institution`)**: Buat halaman dasbor khusus yang hanya dapat diakses oleh user dengan role `campus_admin` atau plan `institution`.
+- [x] **Seat & Quota Management**: Sistem visual indikator batas kuota lisensi (contoh: 45/50 Seats Used). Mengunci fungsi penambahan anggota jika kuota penuh, disertai CTA Upsell untuk menambah lisensi.
+- [x] **Member Management Table & RBAC**: Tabel daftar anggota dengan fitur filter/pencarian, Pagination, Empty States, dan Skeleton Loading. Mendukung *Role-Based Access Control* internal kampus (Admin Institusi vs Member Biasa).
+- [x] **Bulk Invite via CSV**: Fitur unggah dokumen (Excel/CSV) untuk mendaftarkan ratusan email mahasiswa/dosen sekaligus (UI Ready).
+- [x] **Revoke/Remove Access**: Tombol aksi untuk mencabut lisensi dari anggota secara individu (mengembalikan akun mereka ke *Free Tier*).
+- [x] **Usage Analytics & Adoption Report**: Tab analitik yang menyajikan grafik statistik keaktifan anggota institusi (Area Chart & Pie Chart).
+- [x] **Organization Branding & Whitelisting**: Pengaturan profil kampus (Upload Logo) agar antarmuka pengguna terasa personal, serta opsi *Domain Whitelisting* (`@kampus.ac.id`) untuk auto-join.
+- [ ] **Activity Audit Logs**: Catatan rekam jejak keamanan (siapa yang mengundang siapa, siapa yang mencabut lisensi, kapan) demi memenuhi standar kepatuhan (compliance) sistem akademik.

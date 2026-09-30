@@ -2,6 +2,17 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## 🏢 [v0.8.0] - 2026-09-30 (B2B Enterprise & Institutional SaaS)
+
+### 🚀 B2B Campus Portal (Institution Dashboard)
+- **Enterprise UI/UX Layout**: Implemented `/dashboard/institution` with a professional, Silicon Valley-standard SaaS dashboard utilizing `framer-motion` for smooth staggered animations and state transitions.
+- **Micro-UX Refinements**: Built a robust Member Management data table featuring Search, Status Filters, **Pagination**, elegant **Empty States**, and **Skeleton Loading** placeholders.
+- **Seat & Quota Management**: Added visual KPI cards with dynamic animated progress bars showing license capacity (e.g., "42/150 Seats Allocated") to drive PLG Upselling.
+- **Usage Analytics**: Integrated `recharts` to render beautiful, responsive Area Charts (Platform Adoption Rate) and Pie Charts (Role Distribution) to provide campus admins with actionable ROI metrics.
+- **Organization Branding**: Added a settings tab supporting custom organization names and Domain Whitelisting configuration (e.g., `@um.ac.id`) for automated member invites.
+- **Role-Based Access Control (RBAC)**: Added visual badges and permission-ready UI for managing Campus Admins vs Standard Members.
+- **100% Bilingual & Dark Mode**: Dashboard UI is fully compliant with EN/ID localization and responsive Tailwind Dark Mode.
+
 ## 🚀 [v0.7.0] - 2026-09-30 (Enterprise Burstiness & Academic Integrity)
 
 ### 🛡️ Professional Grade UI & Security
