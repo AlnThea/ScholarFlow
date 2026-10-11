@@ -104,7 +104,7 @@ type SidebarProps = {
   onRejectSuggestion?: (id: string) => void;
   onResolveComment?: (id: string) => void;
   onCommentClick?: (comment: any) => void;
-  activeTab, setactiveTab?: 'library' | 'writing' | 'document' | 'comments' | 'burstiness'; setActiveTab?: (tab: 'library' | 'writing' | 'document' | 'comments' | 'burstiness') => void;
+  activeTab?: 'library' | 'writing' | 'document' | 'comments' | 'burstiness';
   setActiveTab?: (tab: 'library' | 'writing' | 'document' | 'comments' | 'burstiness') => void;
 };
 

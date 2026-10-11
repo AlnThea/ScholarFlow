@@ -33,6 +33,8 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const loadedDocumentIdRef = useRef<string | null>(null);
   const lastSavedContentRef = useRef<string>('');
+  const currentDocumentRef = useRef<DocumentEntry | null>(currentDocument);
+  currentDocumentRef.current = currentDocument;
 
   const triggerDebouncedSave = useCallback((docId: string, titleToSave: string, contentToSave: any, settingsToSave?: any) => {
     if (!user?.id) return;
@@ -50,7 +52,7 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
         console.warn('Failed to parse alignments from localStorage:', e);
       }
 
-      const activeSettings = settingsToSave || currentDocument?.settings || {};
+      const activeSettings = settingsToSave || currentDocumentRef.current?.settings || {};
       const finalSettings = {
         ...activeSettings,
         alignments
@@ -65,8 +67,20 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
         const res = await updateDocument(docId, user.id, updates);
         if (res.success) {
           setSaveStatus(language === 'en' ? 'Saved to Cloud' : 'Tersimpan ke Cloud');
+          lastSavedContentRef.current = getContentComparisonString(contentToSave);
           localStorage.removeItem(`scholarflow.offline_backup.${docId}`);
           
+          // Keep currentDocument synchronized after successful save
+          setCurrentDocument(prev => {
+            if (!prev || prev.id !== docId) return prev;
+            return {
+              ...prev,
+              title: titleToSave,
+              content: contentToSave,
+              settings: finalSettings
+            };
+          });
+
           // Refresh list to update title/timestamps
           const list = await fetchDocuments(user.id);
           setDocuments(list);
@@ -75,7 +89,7 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
             `scholarflow.offline_backup.${docId}`,
             JSON.stringify({ ...updates, id: docId, user_id: user.id })
           );
-          setSaveStatus('Disimpan Lokal (Offline)');
+          setSaveStatus(language === 'en' ? 'Saved Locally (Offline)' : 'Disimpan Lokal (Offline)');
         }
       } catch (err) {
         console.error('Error saving document:', err);
@@ -83,10 +97,10 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
           `scholarflow.offline_backup.${docId}`,
           JSON.stringify({ ...updates, id: docId, user_id: user.id })
         );
-        setSaveStatus('Disimpan Lokal (Offline)');
+        setSaveStatus(language === 'en' ? 'Saved Locally (Offline)' : 'Disimpan Lokal (Offline)');
       }
     }, 1500);
-  }, [user, language, currentDocument]);
+  }, [user?.id, language]);
 
   useEffect(() => {
     const docId = params?.id as string | undefined;
@@ -263,7 +277,9 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
       try {
         const list = await fetchDocuments(user.id);
         setDocuments(list);
-        setCurrentDocument(null);
+        if (!params?.id && !currentDocument) {
+          setCurrentDocument(null);
+        }
       } catch (err) {
         console.error('Error loading documents:', err);
       }

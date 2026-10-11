@@ -328,6 +328,15 @@ export function ScholarEditor() {
 
   useEffect(() => {
     if (!currentDocument || !editorJsRef.current) return;
+
+    // Initial mount: EditorJS onReady hook handles rendering initialContent.
+    // Record the loaded document id so we do not wipe active typing with a delayed re-render.
+    if (loadedDocumentIdRef.current === null) {
+      loadedDocumentIdRef.current = currentDocument.id;
+      return;
+    }
+
+    // Only switch content when explicitly navigating to a different document ID
     if (currentDocument.id !== loadedDocumentIdRef.current) {
       loadedDocumentIdRef.current = currentDocument.id;
       const timer = setTimeout(() => {
@@ -341,7 +350,7 @@ export function ScholarEditor() {
                 id: "welcome-block-id",
                 type: "header",
                 data: {
-                  text: currentDocument.title || "Untitled Document",
+                  text: currentDocument.title || (language === 'en' ? "Untitled Document" : "Dokumen Tanpa Judul"),
                   level: 2
                 }
               },
@@ -349,7 +358,7 @@ export function ScholarEditor() {
                 id: "intro-block-id",
                 type: "paragraph",
                 data: {
-                  text: "Mulai menulis draf jurnal akademik Anda di sini..."
+                  text: language === 'en' ? "Start drafting your manuscript here..." : "Mulai menulis draf jurnal akademik Anda di sini..."
                 }
               }
             ],
@@ -359,7 +368,7 @@ export function ScholarEditor() {
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [currentDocument]);
+  }, [currentDocument?.id, language]);
 
 
 
@@ -376,17 +385,13 @@ export function ScholarEditor() {
       }
     }
 
-    const updatedDoc = { ...currentDocument, content };
-    setCurrentDocument(updatedDoc);
-
     const contentString = getContentComparisonString(content);
     if (contentString === lastSavedContentRef.current) {
       return;
     }
 
-    lastSavedContentRef.current = contentString;
     triggerDebouncedSave(currentDocument.id, currentDocument.title, content, currentDocument.settings);
-  }, [currentDocument, user, triggerDebouncedSave, isApplied, contentBeforeApply]);
+  }, [currentDocument, user?.id, triggerDebouncedSave, isApplied, contentBeforeApply]);
 
   const folders = useMemo(() => {
     return currentDocument?.settings?.folders || (language === 'en'
@@ -482,6 +487,10 @@ export function ScholarEditor() {
           if (!currentDocument) return;
           try {
             const alignments = JSON.parse(localStorage.getItem('scholarflow.editorjs.alignments.v1') || '{}');
+            const prevAlignments = currentDocument.settings?.alignments || {};
+            if (JSON.stringify(alignments) === JSON.stringify(prevAlignments)) {
+              return;
+            }
             const updatedSettings = {
               ...currentDocument.settings,
               alignments

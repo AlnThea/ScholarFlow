@@ -19,27 +19,42 @@ export const SidebarBurstinessTab = (props: any) => {
   const [heatmapActive, setHeatmapActive] = useState(false);
 
   useEffect(() => {
-    const toggleHeatmap = (active: boolean) => {
+    // Only touch DOM if heatmap is actually active or needs cleanup
+    if (!heatmapActive) {
+      // Clean up highlights if any were present
+      const blocks = document.querySelectorAll('.ce-block [contenteditable="true"]');
+      blocks.forEach(block => {
+        if (block.innerHTML.includes('ai-heatmap-highlight')) {
+          block.innerHTML = block.innerHTML.replace(/<span class="ai-heatmap-highlight[^>]*>(.*?)<\/span>/gi, '$1');
+        }
+      });
+      return;
+    }
+
+    const toggleHeatmap = () => {
       const blocks = document.querySelectorAll('.ce-block [contenteditable="true"]');
       blocks.forEach(block => {
         // remove old highlights
         block.innerHTML = block.innerHTML.replace(/<span class="ai-heatmap-highlight[^>]*>(.*?)<\/span>/gi, '$1');
         
-        if (active) {
-          const regex = new RegExp(`\\b(${AI_BUZZWORDS.join('|')})\\b`, 'gi');
-          // Replace text outside of HTML tags to prevent breaking formatting
-          block.innerHTML = block.innerHTML.replace(/(>|^)([^<]+)(<|$)/g, (match, p1, p2, p3) => {
-            return p1 + p2.replace(regex, '<span class="ai-heatmap-highlight bg-rose-200/80 dark:bg-rose-900/50 text-rose-900 dark:text-rose-200 rounded px-1 border-b-2 border-rose-400">$1</span>') + p3;
-          });
-        }
+        const regex = new RegExp(`\\b(${AI_BUZZWORDS.join('|')})\\b`, 'gi');
+        // Replace text outside of HTML tags to prevent breaking formatting
+        block.innerHTML = block.innerHTML.replace(/(>|^)([^<]+)(<|$)/g, (match, p1, p2, p3) => {
+          return p1 + p2.replace(regex, '<span class="ai-heatmap-highlight bg-rose-200/80 dark:bg-rose-900/50 text-rose-900 dark:text-rose-200 rounded px-1 border-b-2 border-rose-400">$1</span>') + p3;
+        });
       });
     };
 
-    toggleHeatmap(heatmapActive);
+    toggleHeatmap();
 
     // Cleanup on unmount
     return () => {
-      toggleHeatmap(false);
+      const blocks = document.querySelectorAll('.ce-block [contenteditable="true"]');
+      blocks.forEach(block => {
+        if (block.innerHTML.includes('ai-heatmap-highlight')) {
+          block.innerHTML = block.innerHTML.replace(/<span class="ai-heatmap-highlight[^>]*>(.*?)<\/span>/gi, '$1');
+        }
+      });
     };
   }, [heatmapActive, currentDocument?.content]);
 

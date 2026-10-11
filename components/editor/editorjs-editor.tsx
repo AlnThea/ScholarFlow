@@ -75,7 +75,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         const block = editorRef.current.blocks.getBlockByIndex(i);
         if (block && alignments[block.id]) {
           const contentEditable = block.holder.querySelector('[contenteditable="true"], [contenteditable="false"], .ce-paragraph, .ce-header, .cdx-block') as HTMLElement;
-          if (contentEditable) {
+          if (contentEditable && contentEditable.style.textAlign !== alignments[block.id]) {
             contentEditable.style.textAlign = alignments[block.id];
           }
         }
@@ -185,6 +185,19 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
     } as any);
   };
 
+  const liveStatsTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debouncedCalculateLiveStats = () => {
+    if (liveStatsTimerRef.current) {
+      clearTimeout(liveStatsTimerRef.current);
+    }
+    liveStatsTimerRef.current = setTimeout(() => {
+      calculateLiveStats();
+    }, 400);
+  };
+
+  const lastSyncedBlockTypeRef = useRef<string>('');
+  const lastSyncedAlignmentRef = useRef<string>('');
+
   // Helper to sync currently active block type and alignment back to the parent toolbar
   const syncActiveBlockType = async () => {
     if (!editorRef.current || !editorRef.current.blocks) return;
@@ -197,24 +210,31 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           // Sync block type
           const name = block.name; // 'paragraph', 'header', etc.
           if (name === 'paragraph') {
-            onBlockTypeChange?.('paragraph');
+            if (lastSyncedBlockTypeRef.current !== 'paragraph') {
+              lastSyncedBlockTypeRef.current = 'paragraph';
+              onBlockTypeChange?.('paragraph');
+            }
           } else if (name === 'header') {
             const data = (await block.save()) as any;
             const level = data?.data?.level || 1;
-            onBlockTypeChange?.(`h${level}`);
+            const hType = `h${level}`;
+            if (lastSyncedBlockTypeRef.current !== hType) {
+              lastSyncedBlockTypeRef.current = hType;
+              onBlockTypeChange?.(hType);
+            }
           }
 
           // Sync alignment
           const contentEditable = block.holder.querySelector('[contenteditable="true"]') as HTMLElement;
           if (contentEditable) {
             const align = contentEditable.style.textAlign || 'left';
-            onAlignmentChange?.(align);
+            if (lastSyncedAlignmentRef.current !== align) {
+              lastSyncedAlignmentRef.current = align;
+              onAlignmentChange?.(align);
+            }
           }
         }
       }
-
-      // Keep alignment styles intact (EditorJS re-renders block wrappers occasionally)
-      restoreBlockAlignments();
     } catch (e) {
       // Quiet fail if EditorJS is busy or uninitialized
     }
@@ -558,7 +578,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
             },
             onChange: async () => {
               syncActiveBlockType();
-              calculateLiveStats();
+              debouncedCalculateLiveStats();
 
               if (isRenderingRef.current) {
                 return;
