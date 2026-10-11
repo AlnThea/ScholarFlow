@@ -349,7 +349,21 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
 
         {/* Footer */}
         <div className="flex items-center justify-between px-6 py-3 border-t border-slate-100 bg-slate-50 text-[11px] text-slate-500">
-          <span>ScholarFlow v0.5.2 • AI Academic & Research Co-Pilot</span>
+          <div className="flex items-center gap-3">
+            <span>ScholarFlow v0.5.2 • AI Academic & Research Co-Pilot</span>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                setTimeout(() => {
+                  window.dispatchEvent(new CustomEvent('sf-start-onboarding-tour'));
+                }, 300);
+              }}
+              className="text-indigo-600 hover:text-indigo-800 font-bold underline cursor-pointer"
+            >
+              {language === 'en' ? '▶ Replay Interactive Tour' : '▶ Putar Ulang Tur Interaktif'}
+            </button>
+          </div>
           <button
             type="button"
             onClick={onClose}
