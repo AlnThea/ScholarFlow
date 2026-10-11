@@ -19,7 +19,7 @@ import {
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
 import { useDebounce } from 'use-debounce';
-const PricingModal = dynamic(() => import('@/components/editor/modals/pricing-modal').then(m => m.PricingModal), { ssr: false });
+const PricingModal = dynamic(() => import('@/components/editor/pricing-modal').then(m => m.PricingModal), { ssr: false });
 
 export default function BibliometricPage() {
   const router = useRouter();

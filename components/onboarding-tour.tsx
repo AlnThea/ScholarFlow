@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useContext, useEffect, useState } from 'react';
-import { ShepherdTour, ShepherdTourContext } from 'react-shepherd';
+import React, { useEffect, useState } from 'react';
+import { ShepherdJourneyProvider, useShepherd } from 'react-shepherd';
 import 'shepherd.js/dist/css/shepherd.css';
 import { useLanguage } from '@/components/i18n/language-context';
 
@@ -16,22 +16,28 @@ const tourOptions = {
   useModalOverlay: true
 };
 
-function TourInstance() {
-  const tour = useContext(ShepherdTourContext);
+function TourInstance({ steps }: { steps: any[] }) {
+  const shepherd = useShepherd();
   
   useEffect(() => {
     // Check if running in browser
     if (typeof window !== 'undefined') {
       const hasSeenTour = localStorage.getItem('scholarflow.onboarding.v1.seen');
       // Adding a small delay to ensure DOM is fully rendered
-      if (!hasSeenTour && tour) {
+      if (!hasSeenTour && shepherd && (shepherd as any).Tour) {
         setTimeout(() => {
-          tour.start();
-          localStorage.setItem('scholarflow.onboarding.v1.seen', 'true');
+          try {
+            const tour = new (shepherd as any).Tour(tourOptions);
+            steps.forEach(step => tour.addStep(step));
+            tour.start();
+            localStorage.setItem('scholarflow.onboarding.v1.seen', 'true');
+          } catch (e) {
+            console.warn('Failed to start onboarding tour:', e);
+          }
         }, 1500);
       }
     }
-  }, [tour]);
+  }, [shepherd, steps]);
 
   return null;
 }
@@ -106,8 +112,8 @@ export function OnboardingTour() {
   ];
 
   return (
-    <ShepherdTour steps={steps as any} tourOptions={tourOptions}>
-      <TourInstance />
-    </ShepherdTour>
+    <ShepherdJourneyProvider>
+      <TourInstance steps={steps} />
+    </ShepherdJourneyProvider>
   );
 }

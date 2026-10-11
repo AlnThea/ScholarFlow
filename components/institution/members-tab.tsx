@@ -7,8 +7,8 @@ interface MembersTabProps {
   members: any[];
   searchQuery: string;
   setSearchQuery: (val: string) => void;
-  filterRole: string;
-  setFilterRole: (val: string) => void;
+  filterRole: 'All' | 'Admin' | 'Member' | string;
+  setFilterRole: (val: any) => void;
   isLoading: boolean;
   currentPage: number;
   setCurrentPage: (val: number | ((prev: number) => number)) => void;

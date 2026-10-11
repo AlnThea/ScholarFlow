@@ -45,8 +45,8 @@ import { SentenceRhythmExplorer } from './sentence-rhythm-explorer';
  * Styled entirely using pure Tailwind CSS utility classes.
  */
 export function MinimalSidebar({ 
-  isExpanded, 
-  onToggle,
+  isExpanded = true, 
+  onToggle = () => {},
   documents = [],
   currentDocumentId = null,
   onSelectDocument,
@@ -62,8 +62,8 @@ export function MinimalSidebar({
   activeSidebarTab,
   selectedText
 }: { 
-  isExpanded: boolean; 
-  onToggle: () => void;
+  isExpanded?: boolean; 
+  onToggle?: () => void;
   documents?: DocumentListItem[];
   currentDocumentId?: string | null;
   onSelectDocument?: (id: string) => void;
