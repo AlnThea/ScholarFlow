@@ -20,6 +20,7 @@ export function OnboardingTour() {
   const isEn = language === 'en';
   const [mounted, setMounted] = useState(false);
   const activeTourRef = useRef<any>(null);
+  const userCheckedDontShowRef = useRef<boolean>(false);
 
   useEffect(() => {
     setMounted(true);
@@ -35,6 +36,9 @@ export function OnboardingTour() {
         try { activeTourRef.current.complete(); } catch (e) {}
       }
 
+      // Reset ref for each tour session
+      userCheckedDontShowRef.current = false;
+
       const tour = new Shepherd.Tour(tourOptions as any);
       activeTourRef.current = tour;
 
@@ -48,12 +52,19 @@ export function OnboardingTour() {
         </div>
       `;
 
-      const savePreferenceOnExit = () => {
+      const syncCheckboxState = () => {
         const checkbox = document.getElementById(checkboxId) as HTMLInputElement | null;
-        if (checkbox && checkbox.checked) {
+        if (checkbox) {
+          userCheckedDontShowRef.current = checkbox.checked;
+        }
+      };
+
+      const finalizeUserPreference = () => {
+        syncCheckboxState();
+        if (userCheckedDontShowRef.current) {
           localStorage.setItem('scholarflow.onboarding.v1.seen', 'true');
         } else {
-          // If user didn't check it, remove the seen flag so it can show again next time
+          // If NOT checked, ensure the seen flag is removed so it shows again next time
           localStorage.removeItem('scholarflow.onboarding.v1.seen');
         }
       };
@@ -73,14 +84,17 @@ export function OnboardingTour() {
               classes: 'px-3 py-1.5 mt-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-semibold mr-2 transition',
               text: isEn ? 'Skip' : 'Lewati',
               action: () => {
-                savePreferenceOnExit();
+                finalizeUserPreference();
                 tour.complete();
               }
             },
             {
               classes: 'px-5 py-2 mt-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold text-sm transition',
               text: isEn ? 'Start Tour' : 'Mulai Tur',
-              action: tour.next
+              action: () => {
+                syncCheckboxState();
+                tour.next();
+              }
             }
           ]
         },
@@ -121,7 +135,7 @@ export function OnboardingTour() {
               classes: 'px-5 py-2 mt-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-semibold text-sm transition',
               text: isEn ? 'Finish' : 'Selesai',
               action: () => {
-                savePreferenceOnExit();
+                finalizeUserPreference();
                 tour.complete();
               }
             }
@@ -131,8 +145,29 @@ export function OnboardingTour() {
 
       steps.forEach(s => tour.addStep(s as any));
 
+      // Bind dynamic change listener when the first step is shown
+      tour.on('show', (e: any) => {
+        if (e && e.step && e.step.id === 'welcome') {
+          setTimeout(() => {
+            const checkbox = document.getElementById(checkboxId) as HTMLInputElement | null;
+            if (checkbox) {
+              checkbox.checked = userCheckedDontShowRef.current;
+              checkbox.onchange = () => {
+                userCheckedDontShowRef.current = checkbox.checked;
+              };
+            }
+          }, 50);
+        }
+      });
+
+      // Handle cancel event (clicking X button on header)
       tour.on('cancel', () => {
-        savePreferenceOnExit();
+        finalizeUserPreference();
+      });
+
+      // Handle complete event
+      tour.on('complete', () => {
+        finalizeUserPreference();
       });
 
       tour.start();
@@ -150,10 +185,10 @@ export function OnboardingTour() {
     };
     window.addEventListener('sf-start-onboarding-tour', handleManualRestart);
 
-    // Check automatic start
+    // Check automatic start: ONLY skip if user explicitly set seen flag
     const hasSeenTour = localStorage.getItem('scholarflow.onboarding.v1.seen');
     let timer: NodeJS.Timeout | null = null;
-    if (!hasSeenTour) {
+    if (hasSeenTour !== 'true') {
       timer = setTimeout(() => {
         startTour();
       }, 1500);
