@@ -448,6 +448,7 @@ export function EditorSidebar(props: SidebarProps) {
             ].map((item) => (
               <button
                 key={item.id}
+                data-tour={`sidebar-tab-${item.id}`}
                 type="button"
                 onClick={() => {
                   setWorkspaceTab(item.id as typeof workspaceTab); if(setActiveTab) setActiveTab(item.id as typeof workspaceTab);

@@ -94,6 +94,7 @@ export const EditorHeader = ({
       <div className="flex items-center gap-2">
         {/* Live Hybrid Sync Engine Status Chip */}
         <div
+          data-tour="header-sync-status"
           className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50/80 border border-emerald-200/80 text-emerald-700 text-[10px] font-bold cursor-help"
           title={
             backendType === 'express'
@@ -119,7 +120,7 @@ export const EditorHeader = ({
 
         <div className="flex items-center gap-0.5 bg-slate-100/80 p-0.5 rounded-lg border border-slate-200/50">
           {/* Export Dropdown */}
-          <div className="relative">
+          <div className="relative" data-tour="header-export">
             <button
               disabled={isExporting || isExportingPdf}
               onClick={() => setShowExportDropdown(prev => !prev)}
@@ -290,6 +291,7 @@ export const EditorHeader = ({
           {/* Notification Bell */}
           <div className="relative">
             <button
+              data-tour="header-notifications"
               onClick={() => setShowNotificationsDropdown(prev => !prev)}
               className="inline-flex items-center justify-center rounded-md p-1.5 text-slate-550 hover:bg-white hover:text-slate-800 transition cursor-pointer relative"
               title={language === 'en' ? 'Notifications' : 'Notifikasi'}
@@ -366,6 +368,7 @@ export const EditorHeader = ({
           {(activePlanId !== 'free' || role === 'admin') && (
             <>
               <button
+                data-tour="header-share"
                 onClick={() => setIsShareOpen(true)}
                 className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-slate-650 hover:bg-white hover:text-slate-800 transition cursor-pointer"
               >
@@ -392,6 +395,7 @@ export const EditorHeader = ({
 
           {/* Research Assistant Button */}
           <button
+            data-tour="header-research-assistant"
             onClick={() => setShowRightSidebar(prev => !prev)}
             className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition cursor-pointer ${showRightSidebar
               ? 'bg-white text-indigo-750 shadow-sm font-bold'

@@ -72,7 +72,7 @@ export const EditorJsToolbar = ({
   return (
     <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-100 bg-white px-6 py-2.5 lg:sticky lg:top-[57px] z-10 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
       {/* Mode Switcher Toggle (Edit Langsung vs Mode Sugesti) */}
-      <div className="flex items-center rounded-lg bg-slate-100/90 p-0.5 border border-slate-200/80 mr-1.5 shrink-0">
+      <div data-tour="toolbar-modes" className="flex items-center rounded-lg bg-slate-100/90 p-0.5 border border-slate-200/80 mr-1.5 shrink-0">
         <button
           type="button"
           onClick={() => setEditorMode('edit')}
@@ -102,22 +102,24 @@ export const EditorJsToolbar = ({
       <div className="h-5 w-px bg-slate-200 mx-1 hidden sm:block" />
 
       {/* Undo / Redo */}
-      <button
-        className="p-1.5 rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition"
-        title="Undo"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => editorJsRef.current?.undo()}
-      >
-        <IconArrowBackUp className="h-4 w-4" />
-      </button>
-      <button
-        className="p-1.5 rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition"
-        title="Redo"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => editorJsRef.current?.redo()}
-      >
-        <IconArrowForwardUp className="h-4 w-4" />
-      </button>
+      <div data-tour="toolbar-undo-redo" className="flex items-center gap-0.5">
+        <button
+          className="p-1.5 rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition"
+          title="Undo"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => editorJsRef.current?.undo()}
+        >
+          <IconArrowBackUp className="h-4 w-4" />
+        </button>
+        <button
+          className="p-1.5 rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition"
+          title="Redo"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => editorJsRef.current?.redo()}
+        >
+          <IconArrowForwardUp className="h-4 w-4" />
+        </button>
+      </div>
 
       <div className="h-5 w-px bg-slate-200 mx-1" />
 
@@ -272,6 +274,7 @@ export const EditorJsToolbar = ({
 
       {/* Citation Button */}
       <button
+        data-tour="toolbar-citation"
         className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-indigo-50 hover:bg-indigo-100/80 text-xs font-semibold text-indigo-700 transition"
         title="Insert Inline Citation"
         onMouseDown={(e) => e.preventDefault()}
