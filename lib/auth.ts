@@ -16,6 +16,22 @@ export async function signIn(email: string, password: string) {
   return { user: data?.user ?? null, session: data?.session ?? null, error };
 }
 
+/** Sign in with OAuth provider (e.g. Google / Campus SSO) */
+export async function signInWithOAuth(provider: 'google' | 'azure' = 'google') {
+  const redirectTo = typeof window !== 'undefined' ? `${window.location.origin}/dashboard` : undefined;
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
+    },
+  });
+  return { data, error };
+}
+
 /** Register a new user with email and password */
 export async function signUp(email: string, password: string, fullName?: string) {
   const { data, error } = await supabase.auth.signUp({

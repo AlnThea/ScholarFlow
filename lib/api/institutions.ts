@@ -188,11 +188,16 @@ export async function deleteInstitution(id: string): Promise<{ success: boolean;
   return { success: true };
 }
 
+export type AcademicRole = 'Super Admin' | 'Faculty Admin' | 'Lecturer' | 'Student' | 'Admin' | 'Member';
+
 export interface InstitutionMember {
   id: string;
   name: string;
   email: string;
-  role: 'Admin' | 'Member';
+  role: AcademicRole;
+  department?: string;
+  ai_quota_used?: number;
+  ai_quota_limit?: number;
   status: 'Active' | 'Invited';
   joined: string;
 }
@@ -208,9 +213,14 @@ export interface InstitutionAuditLog {
 
 const DEFAULT_MEMBERS: Record<string, InstitutionMember[]> = {
   default: [
-    { id: '1', name: 'Dr. Coordinator', email: 'coordinator@campus.ac.id', role: 'Admin', status: 'Active', joined: '2026-01-15' },
-    { id: '2', name: 'Budi Santoso', email: 'budi.s@student.campus.ac.id', role: 'Member', status: 'Active', joined: '2026-08-01' },
-    { id: '3', name: 'Siti Aminah', email: 'siti.a@student.campus.ac.id', role: 'Member', status: 'Active', joined: '2026-08-02' }
+    { id: '1', name: 'Prof. Dr. Hendra Gunawan', email: 'hendra.rektor@campus.ac.id', role: 'Super Admin', department: 'Rektorat & LPPM', status: 'Active', joined: '2026-01-10', ai_quota_used: 125000, ai_quota_limit: 1000000 },
+    { id: '2', name: 'Dr. Sri Wahyuni, M.Kom', email: 'sri.dekan@campus.ac.id', role: 'Faculty Admin', department: 'Fakultas Ilmu Komputer', status: 'Active', joined: '2026-01-15', ai_quota_used: 94000, ai_quota_limit: 500000 },
+    { id: '3', name: 'Dr. Ahmad Fauzi, M.T.', email: 'fauzi.dosen@campus.ac.id', role: 'Lecturer', department: 'Teknik Elektro', status: 'Active', joined: '2026-02-01', ai_quota_used: 68000, ai_quota_limit: 500000 },
+    { id: '4', name: 'Dr. Maria Kusuma, M.Si.', email: 'maria.dosen@campus.ac.id', role: 'Lecturer', department: 'Matematika & Sains', status: 'Active', joined: '2026-02-10', ai_quota_used: 42000, ai_quota_limit: 500000 },
+    { id: '5', name: 'Budi Santoso', email: 'budi.s@student.campus.ac.id', role: 'Student', department: 'Fakultas Ilmu Komputer', status: 'Active', joined: '2026-08-01', ai_quota_used: 48000, ai_quota_limit: 100000 },
+    { id: '6', name: 'Siti Aminah', email: 'siti.a@student.campus.ac.id', role: 'Student', department: 'Fakultas Kedokteran', status: 'Active', joined: '2026-08-02', ai_quota_used: 65000, ai_quota_limit: 100000 },
+    { id: '7', name: 'Rian Pratama', email: 'rian.p@student.campus.ac.id', role: 'Student', department: 'Teknik Elektro', status: 'Active', joined: '2026-08-05', ai_quota_used: 21000, ai_quota_limit: 100000 },
+    { id: '8', name: 'Dewi Lestari', email: 'dewi.l@student.campus.ac.id', role: 'Student', department: 'Ekonomi & Bisnis', status: 'Invited', joined: '2026-09-01', ai_quota_used: 0, ai_quota_limit: 100000 }
   ]
 };
 
@@ -283,6 +293,24 @@ export async function revokeInstitutionMember(instId: string, memberId: string):
   }
   await updateInstitution(instId, { used_seats: updated.length });
   return true;
+}
+
+export async function updateInstitutionMember(
+  instId: string,
+  memberId: string,
+  updates: Partial<InstitutionMember>
+): Promise<InstitutionMember | null> {
+  const current = await fetchInstitutionMembers(instId);
+  const idx = current.findIndex((m) => m.id === memberId);
+  if (idx === -1) return null;
+
+  const updatedMember = { ...current[idx], ...updates };
+  current[idx] = updatedMember;
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(`scholarflow.inst_members.${instId}.v1`, JSON.stringify(current));
+  }
+  return updatedMember;
 }
 
 export async function fetchInstitutionAuditLogs(instId: string): Promise<InstitutionAuditLog[]> {

@@ -90,16 +90,16 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] **Xendit Animated Payments**: Invoice creation, webhook auto-upgrade, in-app checkout modal dengan 4 animasi (Pulse Loader, Radar Scanner Timer, Live Status Polling, dan Selebrasi Konfeti Upgrade).
   - [x] **Database & Keamanan RLS**: Tabel `institutions`, model Prisma `InstitutionEntry`, dan penguncian RLS penuh pada tabel `ai_providers`.
 - [ ] **6. Phase 13: Enterprise B2B Campus Standards & Production Readiness**:
-  - [ ] **Sub-phase 1: Granular Role-Based Access Control (RBAC) & Departemen**:
-    - [ ] Perluas peran akademik menjadi 4 tingkat: *Super Admin (Rektorat)*, *Faculty Admin (Dekanat/Prodi)*, *Lecturer (Dosen Pembimbing)*, dan *Student (Mahasiswa)* di `lib/api/institutions.ts`.
-    - [ ] Tambahkan field `department`/fakultas pada data anggota institusi (contoh: *Fakultas Teknik*, *Fakultas Kedokteran*).
-    - [ ] Fitur *Change Role & Department* langsung di tabel anggota (`components/institution/members-tab.tsx`) dengan modal/inline switcher.
-    - [ ] Filter anggota berdasarkan Fakultas/Departemen dan Peran di tab keanggotaan.
-    - [ ] Donut Chart analitik menampilkan distribusi 4 peran secara dinamis.
-  - [ ] **Sub-phase 2: Keamanan & Autentikasi (Enterprise Security & Google SSO)**:
-    - [ ] Tombol resmi "Continue with Google / Akun Kampus" di halaman login (`app/(auth)/login/page.tsx`).
-    - [ ] Auto-Enrollment Domain Whitelist: deteksi domain kampus saat login Google, auto-assign lisensi kampus dengan default role *Student*, siap di-promote oleh Admin.
-    - [ ] Banner jaminan privasi data akademik ("Zero Data Retention Guarantee for Campus AI").
+  - [x] **Sub-phase 1: Granular Role-Based Access Control (RBAC) & Departemen**:
+    - [x] Perluas peran akademik menjadi 4 tingkat: *Super Admin (Rektorat)*, *Faculty Admin (Dekanat/Prodi)*, *Lecturer (Dosen Pembimbing)*, dan *Student (Mahasiswa)* di `lib/api/institutions.ts`.
+    - [x] Tambahkan field `department`/fakultas pada data anggota institusi (contoh: *Fakultas Teknik*, *Fakultas Kedokteran*).
+    - [x] Fitur *Change Role & Department* langsung di tabel anggota (`components/institution/members-tab.tsx`) dengan modal/inline switcher.
+    - [x] Filter anggota berdasarkan Fakultas/Departemen dan Peran di tab keanggotaan.
+    - [x] Donut Chart analitik menampilkan distribusi 4 peran secara dinamis.
+  - [x] **Sub-phase 2: Keamanan & Autentikasi (Enterprise Security & Google SSO)**:
+    - [x] Tombol resmi "Continue with Google / Akun Kampus" di halaman login (`app/(auth)/login/page.tsx`).
+    - [x] Auto-Enrollment Domain Whitelist: deteksi domain kampus saat login Google, auto-assign lisensi kampus dengan default role *Student*, siap di-promote oleh Admin.
+    - [x] Banner jaminan privasi data akademik ("Zero Data Retention Guarantee for Campus AI").
   - [ ] **Sub-phase 3: Manajemen Kuota & Resource Policy**:
     - [ ] Per-Member AI Token/Credit Quota policy (mahasiswa capped, dosen prioritas).
     - [ ] Department-level seat quota allocation (pembagian jatah kursi per fakultas).

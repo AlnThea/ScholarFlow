@@ -26,6 +26,7 @@ import {
   fetchInstitutionAuditLogs,
   addInstitutionAuditLog,
   updateInstitution,
+  updateInstitutionMember,
   Institution,
   InstitutionMember,
   InstitutionAuditLog
@@ -45,15 +46,26 @@ export default function InstitutionDashboard() {
   const [activeTab, setActiveTab] = useState<'members' | 'analytics' | 'audit' | 'settings'>('members');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [filterRole, setFilterRole] = useState<'All' | 'Admin' | 'Member'>('All');
+  const [filterRole, setFilterRole] = useState<string>('All');
+  const [filterDepartment, setFilterDepartment] = useState<string>('All');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 6;
 
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteName, setInviteName] = useState('');
-  const [inviteRole, setInviteRole] = useState<'Admin' | 'Member'>('Member');
+  const [inviteRole, setInviteRole] = useState<any>('Student');
+  const [inviteDepartment, setInviteDepartment] = useState('Fakultas Ilmu Komputer');
   const [isInviting, setIsInviting] = useState(false);
+
+  const departmentsList = [
+    'Fakultas Ilmu Komputer',
+    'Teknik Elektro',
+    'Fakultas Kedokteran',
+    'Ekonomi & Bisnis',
+    'Matematika & Sains',
+    'Rektorat & LPPM'
+  ];
 
   // 1. Auth Guard
   useEffect(() => {
@@ -142,6 +154,9 @@ export default function InstitutionDashboard() {
         name: inviteName.trim() || inviteEmail.split('@')[0],
         email: inviteEmail.trim(),
         role: inviteRole,
+        department: inviteDepartment,
+        ai_quota_used: 0,
+        ai_quota_limit: inviteRole === 'Lecturer' || inviteRole === 'Super Admin' ? 500000 : 100000,
         status: 'Invited'
       });
 
@@ -149,7 +164,7 @@ export default function InstitutionDashboard() {
       await addInstitutionAuditLog(currentInst.id, {
         user: user?.email || 'Campus Admin',
         action: 'INVITE_USER',
-        target: inviteEmail.trim(),
+        target: `${inviteEmail.trim()} (${inviteRole} - ${inviteDepartment})`,
         ip: 'Browser'
       });
 
@@ -162,6 +177,34 @@ export default function InstitutionDashboard() {
     } finally {
       setIsInviting(false);
     }
+  };
+
+  const handleUpdateMember = async (memberId: string, updates: Partial<InstitutionMember>) => {
+    if (!currentInst) return;
+    const target = members.find((m) => m.id === memberId);
+    if (!target) return;
+
+    // Auto-adjust AI limit if role changes
+    const quotaLimit = updates.role === 'Lecturer' || updates.role === 'Super Admin' 
+      ? 500000 
+      : updates.role === 'Faculty Admin' 
+      ? 250000 
+      : 100000;
+
+    const mergedUpdates = { ...updates, ai_quota_limit: quotaLimit };
+    await updateInstitutionMember(currentInst.id, memberId, mergedUpdates);
+
+    setMembers(members.map((m) => m.id === memberId ? { ...m, ...mergedUpdates } : m));
+
+    await addInstitutionAuditLog(currentInst.id, {
+      user: user?.email || 'Campus Admin',
+      action: 'UPDATE_ROLE',
+      target: `Promoted ${target.email} to ${updates.role || target.role}`,
+      ip: 'Browser'
+    });
+
+    const updatedLogs = await fetchInstitutionAuditLogs(currentInst.id);
+    setAuditLogs(updatedLogs);
   };
 
   const handleRevoke = async (memberId: string) => {
@@ -227,12 +270,17 @@ export default function InstitutionDashboard() {
     setAuditLogs(updatedLogs);
   };
 
-  // Dynamic calculations for charts
-  const adminCount = members.filter((m) => m.role === 'Admin').length;
-  const studentCount = members.length - adminCount;
+  // Dynamic calculations for 4 Academic Roles
+  const superAdminCount = members.filter((m) => m.role === 'Super Admin').length;
+  const facultyAdminCount = members.filter((m) => m.role === 'Faculty Admin').length;
+  const lecturerCount = members.filter((m) => m.role === 'Lecturer' || m.role === 'Admin').length;
+  const studentCount = members.filter((m) => m.role === 'Student' || m.role === 'Member').length;
+
   const roleData = [
-    { name: isEn ? 'Lecturers/Admins' : 'Dosen/Admin', value: Math.max(1, adminCount), color: '#6366f1' },
-    { name: isEn ? 'Students/Members' : 'Mahasiswa/Member', value: Math.max(1, studentCount), color: '#10b981' }
+    { name: isEn ? 'Super Admin (Rektorat)' : 'Super Admin', value: Math.max(1, superAdminCount), color: '#6366f1' },
+    { name: isEn ? 'Faculty Admin' : 'Admin Fakultas', value: Math.max(1, facultyAdminCount), color: '#a855f7' },
+    { name: isEn ? 'Lecturers' : 'Dosen Pembimbing', value: Math.max(1, lecturerCount), color: '#10b981' },
+    { name: isEn ? 'Students' : 'Mahasiswa', value: Math.max(1, studentCount), color: '#06b6d4' }
   ];
 
   const usageData = [
@@ -247,13 +295,15 @@ export default function InstitutionDashboard() {
     show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 300, damping: 24 } }
   };
 
-  // Filtered & Paginated Members
+  // Filtered & Paginated Members with Role and Department Support
   const filteredMembers = members.filter((m) => {
     const matchesSearch =
       m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.email.toLowerCase().includes(searchQuery.toLowerCase());
+      m.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (m.department && m.department.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesRole = filterRole === 'All' || m.role === filterRole;
-    return matchesSearch && matchesRole;
+    const matchesDept = filterDepartment === 'All' || m.department === filterDepartment;
+    return matchesSearch && matchesRole && matchesDept;
   });
 
   const totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
@@ -445,6 +495,9 @@ export default function InstitutionDashboard() {
                 setSearchQuery={setSearchQuery}
                 filterRole={filterRole}
                 setFilterRole={setFilterRole}
+                filterDepartment={filterDepartment}
+                setFilterDepartment={setFilterDepartment}
+                departments={departmentsList}
                 isLoading={isLoading}
                 currentPage={currentPage}
                 setCurrentPage={setCurrentPage}
@@ -455,6 +508,7 @@ export default function InstitutionDashboard() {
                 setIsInviteModalOpen={setIsInviteModalOpen}
                 handleRevoke={handleRevoke}
                 onBulkCSV={handleBulkCSV}
+                onUpdateMember={handleUpdateMember}
               />
             )}
 
@@ -519,18 +573,37 @@ export default function InstitutionDashboard() {
                 />
               </div>
 
-              <div>
-                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
-                  {isEn ? 'Role' : 'Peran'}
-                </label>
-                <select
-                  value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value as any)}
-                  className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 dark:text-white outline-none focus:border-indigo-500"
-                >
-                  <option value="Member">{isEn ? 'Student / Member' : 'Mahasiswa / Member'}</option>
-                  <option value="Admin">{isEn ? 'Lecturer / Campus Admin' : 'Dosen / Admin Kampus'}</option>
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+                    {isEn ? 'Academic Role' : 'Peran Akademik'}
+                  </label>
+                  <select
+                    value={inviteRole}
+                    onChange={(e) => setInviteRole(e.target.value as any)}
+                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 dark:text-white outline-none focus:border-indigo-500"
+                  >
+                    <option value="Student">{isEn ? 'Student / Scholar' : 'Mahasiswa'}</option>
+                    <option value="Lecturer">{isEn ? 'Lecturer / Advisor' : 'Dosen Pembimbing'}</option>
+                    <option value="Faculty Admin">{isEn ? 'Faculty Admin' : 'Admin Fakultas/Prodi'}</option>
+                    <option value="Super Admin">{isEn ? 'Super Admin' : 'Super Admin (Rektorat)'}</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+                    {isEn ? 'Faculty / Department' : 'Fakultas / Prodi'}
+                  </label>
+                  <select
+                    value={inviteDepartment}
+                    onChange={(e) => setInviteDepartment(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 dark:text-white outline-none focus:border-indigo-500"
+                  >
+                    {departmentsList.map((dep) => (
+                      <option key={dep} value={dep}>{dep}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
