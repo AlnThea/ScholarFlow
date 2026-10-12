@@ -77,8 +77,20 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
 - [x] **2. Keamanan XSS (Cross-Site Scripting)**: Implementasi `DOMPurify` untuk sanitasi HTML.
 - [x] **3. Automated Testing (Unit & E2E)**: Setup `Vitest`/`Jest` dan `Playwright`.
 - [x] **4. Interactive Onboarding & a11y**: Setup `Shepherd.js` dan peningkatan ARIA.
-- [x] **5. Phase 12: Xendit Animated Payments & B2B Campus Admin**: Selesai mengintegrasikan sistem Xendit Invoice, Webhook auto-upgrade, In-App Radar & Confetti animation, dan Super Admin Institutions Management (`/admin/institutions`).
+- [x] **5. Phase 12: Xendit Animated Payments & B2B Campus Admin (Fitur Kunci Penjualan Universitas)**:
+  - [x] **Super Admin Institutions Management (`/admin/institutions`)**: Onboarding mitra kampus baru (Nama, Email PIC, Kuota Kursi, Domain Whitelist, Tanggal Kontrak) dengan Dual-Persistence fallback.
+  - [x] **Admin Khusus Kampus Portal (`/dashboard/institution`)**:
+    - [x] *Member Management & Bulk CSV*: Mengundang dosen/mahasiswa satu per satu atau impor CSV ratusan mahasiswa sekaligus.
+    - [x] *Revoke Access (Daur Ulang Lisensi)*: Mencabut lisensi mahasiswa yang lulus/wisuda agar kursinya bisa dipakai angkatan baru tanpa biaya tambahan.
+    - [x] *Seat & Quota Meter*: Progress bar visual kapasitas lisensi (contoh: 47/150 Seats Used) dengan indikator limit.
+    - [x] *Usage Analytics & Adoption Report*: Grafik statistik keaktifan riset (Recharts Area & Pie Chart) sebagai bukti ROI kampus.
+    - [x] *Domain Whitelisting*: Penyetelan domain resmi kampus (`@kampus.ac.id`) untuk auto-join mahasiswa baru.
+    - [x] *Audit Trail*: Log rekam jejak kepatuhan akademik (siapa mengundang siapa, IP address, waktu).
+  - [x] **Navigasi End-to-End**: Tombol menu "Portal Kampus" dinamis di sidebar untuk role admin/campus_admin dan tombol aksi "Buka Portal" di tabel Super Admin.
+  - [x] **Xendit Animated Payments**: Invoice creation, webhook auto-upgrade, in-app checkout modal dengan 4 animasi (Pulse Loader, Radar Scanner Timer, Live Status Polling, dan Selebrasi Konfeti Upgrade).
+  - [x] **Database & Keamanan RLS**: Tabel `institutions`, model Prisma `InstitutionEntry`, dan penguncian RLS penuh pada tabel `ai_providers`.
 - [ ] Complete remaining UI pages & user-facing feature modules.
+
 
 ## Do Not Work On Yet
 - SPSS / PSPP (Strategy decided: "AI Output Interpreter" - user uploads output tables, AI interprets and drafts academic narrative to editor. Do not build a full SPSS clone).
