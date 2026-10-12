@@ -187,3 +187,131 @@ export async function deleteInstitution(id: string): Promise<{ success: boolean;
 
   return { success: true };
 }
+
+export interface InstitutionMember {
+  id: string;
+  name: string;
+  email: string;
+  role: 'Admin' | 'Member';
+  status: 'Active' | 'Invited';
+  joined: string;
+}
+
+export interface InstitutionAuditLog {
+  id: string;
+  user: string;
+  action: string;
+  target: string;
+  date: string;
+  ip: string;
+}
+
+const DEFAULT_MEMBERS: Record<string, InstitutionMember[]> = {
+  default: [
+    { id: '1', name: 'Dr. Coordinator', email: 'coordinator@campus.ac.id', role: 'Admin', status: 'Active', joined: '2026-01-15' },
+    { id: '2', name: 'Budi Santoso', email: 'budi.s@student.campus.ac.id', role: 'Member', status: 'Active', joined: '2026-08-01' },
+    { id: '3', name: 'Siti Aminah', email: 'siti.a@student.campus.ac.id', role: 'Member', status: 'Active', joined: '2026-08-02' }
+  ]
+};
+
+const DEFAULT_AUDIT_LOGS: Record<string, InstitutionAuditLog[]> = {
+  default: [
+    { id: '101', user: 'Coordinator', action: 'INVITE_USER', target: 'siti.a@student.campus.ac.id', date: '2026-08-02 10:15', ip: '114.125.x.x' },
+    { id: '102', user: 'System', action: 'BULK_IMPORT', target: 'Imported new students via CSV', date: '2026-08-01 09:00', ip: 'Server' }
+  ]
+};
+
+export async function fetchInstitutionMembers(instId: string): Promise<InstitutionMember[]> {
+  if (typeof window === 'undefined') return DEFAULT_MEMBERS.default;
+  try {
+    const raw = localStorage.getItem(`scholarflow.inst_members.${instId}.v1`);
+    if (!raw) {
+      localStorage.setItem(`scholarflow.inst_members.${instId}.v1`, JSON.stringify(DEFAULT_MEMBERS.default));
+      return DEFAULT_MEMBERS.default;
+    }
+    return JSON.parse(raw);
+  } catch {
+    return DEFAULT_MEMBERS.default;
+  }
+}
+
+export async function addInstitutionMember(
+  instId: string,
+  member: Omit<InstitutionMember, 'id' | 'joined'>
+): Promise<InstitutionMember> {
+  const current = await fetchInstitutionMembers(instId);
+  const newMember: InstitutionMember = {
+    ...member,
+    id: `mem_${Date.now()}`,
+    joined: new Date().toISOString().slice(0, 10)
+  };
+  const updated = [newMember, ...current];
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(`scholarflow.inst_members.${instId}.v1`, JSON.stringify(updated));
+  }
+  // Update used seats in institution
+  await updateInstitution(instId, { used_seats: updated.length });
+  return newMember;
+}
+
+export async function bulkAddInstitutionMembers(
+  instId: string,
+  emails: string[]
+): Promise<number> {
+  const current = await fetchInstitutionMembers(instId);
+  const newEntries: InstitutionMember[] = emails.map((email, idx) => ({
+    id: `mem_${Date.now()}_${idx}`,
+    name: email.split('@')[0].replace(/[._]/g, ' '),
+    email: email.trim(),
+    role: 'Member',
+    status: 'Invited',
+    joined: new Date().toISOString().slice(0, 10)
+  }));
+  const updated = [...newEntries, ...current];
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(`scholarflow.inst_members.${instId}.v1`, JSON.stringify(updated));
+  }
+  await updateInstitution(instId, { used_seats: updated.length });
+  return newEntries.length;
+}
+
+export async function revokeInstitutionMember(instId: string, memberId: string): Promise<boolean> {
+  const current = await fetchInstitutionMembers(instId);
+  const updated = current.filter((m) => m.id !== memberId);
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(`scholarflow.inst_members.${instId}.v1`, JSON.stringify(updated));
+  }
+  await updateInstitution(instId, { used_seats: updated.length });
+  return true;
+}
+
+export async function fetchInstitutionAuditLogs(instId: string): Promise<InstitutionAuditLog[]> {
+  if (typeof window === 'undefined') return DEFAULT_AUDIT_LOGS.default;
+  try {
+    const raw = localStorage.getItem(`scholarflow.inst_audit.${instId}.v1`);
+    if (!raw) {
+      localStorage.setItem(`scholarflow.inst_audit.${instId}.v1`, JSON.stringify(DEFAULT_AUDIT_LOGS.default));
+      return DEFAULT_AUDIT_LOGS.default;
+    }
+    return JSON.parse(raw);
+  } catch {
+    return DEFAULT_AUDIT_LOGS.default;
+  }
+}
+
+export async function addInstitutionAuditLog(
+  instId: string,
+  log: Omit<InstitutionAuditLog, 'id' | 'date'>
+): Promise<void> {
+  const current = await fetchInstitutionAuditLogs(instId);
+  const newLog: InstitutionAuditLog = {
+    ...log,
+    id: `audit_${Date.now()}`,
+    date: new Date().toLocaleString()
+  };
+  const updated = [newLog, ...current];
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(`scholarflow.inst_audit.${instId}.v1`, JSON.stringify(updated));
+  }
+}
+

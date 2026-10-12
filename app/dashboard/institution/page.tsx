@@ -8,105 +8,250 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   IconBuildingBank, IconUsers, IconChartLine, 
-  IconSettings, IconShieldCheck, IconAlertTriangle, IconDownload, IconCheck, IconMail, IconX,
-  IconArrowLeft
+  IconSettings, IconShieldCheck, IconAlertTriangle, IconDownload, 
+  IconCheck, IconMail, IconX, IconArrowLeft, IconLoader, IconChevronDown
 } from '@tabler/icons-react';
-
 
 import { MembersTab } from '@/components/institution/members-tab';
 import { AnalyticsTab } from '@/components/institution/analytics-tab';
 import { AuditTab } from '@/components/institution/audit-tab';
 import { SettingsTab } from '@/components/institution/settings-tab';
 
-// --- MOCK DATA ---
-const usageData = [
-  { date: '10/01', users: 120, documents: 340 },
-  { date: '10/05', users: 150, documents: 410 },
-  { date: '10/10', users: 180, documents: 520 },
-  { date: '10/15', users: 210, documents: 600 },
-  { date: '10/20', users: 190, documents: 580 },
-  { date: '10/25', users: 240, documents: 710 },
-  { date: '10/30', users: 280, documents: 890 },
-];
-
-const roleData = [
-  { name: 'Lecturer/Admin', value: 15, color: '#6366f1' },
-  { name: 'Students', value: 85, color: '#10b981' },
-];
-
-const initialMembers = [
-  { id: '1', name: 'Prof. Dahlan', email: 'dahlan@um.ac.id', role: 'Admin', status: 'Active', joined: '2026-01-15' },
-  { id: '2', name: 'Dr. Sarah', email: 'sarah@um.ac.id', role: 'Admin', status: 'Active', joined: '2026-02-10' },
-  { id: '3', name: 'Budi Santoso', email: 'budi.s@student.um.ac.id', role: 'Member', status: 'Active', joined: '2026-08-01' },
-  { id: '4', name: 'Siti Aminah', email: 'siti.a@student.um.ac.id', role: 'Member', status: 'Active', joined: '2026-08-02' },
-  { id: '5', name: 'Andi Kusuma', email: 'andi.k@student.um.ac.id', role: 'Member', status: 'Invited', joined: '-' },
-];
-
-const initialAuditLogs = [
-  { id: '101', user: 'Prof. Dahlan', action: 'INVITE_USER', target: 'andi.k@student.um.ac.id', date: '2026-09-30 14:32', ip: '114.125.x.x' },
-  { id: '102', user: 'System', action: 'BULK_IMPORT', target: 'Imported 40 new students via CSV', date: '2026-09-29 09:15', ip: 'Server' },
-  { id: '103', user: 'Dr. Sarah', action: 'REVOKE_USER', target: 'alumni_2025@student.um.ac.id', date: '2026-09-28 16:05', ip: '114.125.x.x' },
-  { id: '104', user: 'Prof. Dahlan', action: 'UPDATE_ORG', target: 'Changed Domain Whitelisting to @um.ac.id', date: '2026-09-25 10:00', ip: '114.125.x.x' },
-  { id: '105', user: 'Prof. Dahlan', action: 'EXPORT_REPORT', target: 'Downloaded Q3 Usage Analytics', date: '2026-09-20 11:22', ip: '114.125.x.x' },
-];
+import {
+  fetchInstitutions,
+  fetchInstitutionMembers,
+  addInstitutionMember,
+  bulkAddInstitutionMembers,
+  revokeInstitutionMember,
+  fetchInstitutionAuditLogs,
+  addInstitutionAuditLog,
+  updateInstitution,
+  Institution,
+  InstitutionMember,
+  InstitutionAuditLog
+} from '@/lib/api/institutions';
 
 export default function InstitutionDashboard() {
   const router = useRouter();
-  const { user, profile } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const { language } = useLanguage();
   const isEn = language === 'en';
 
+  const [institutions, setInstitutions] = useState<Institution[]>([]);
+  const [currentInst, setCurrentInst] = useState<Institution | null>(null);
+  const [members, setMembers] = useState<InstitutionMember[]>([]);
+  const [auditLogs, setAuditLogs] = useState<InstitutionAuditLog[]>([]);
+
   const [activeTab, setActiveTab] = useState<'members' | 'analytics' | 'audit' | 'settings'>('members');
-  const [members, setMembers] = useState(initialMembers);
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // NEW UX States
   const [isLoading, setIsLoading] = useState(true);
   const [filterRole, setFilterRole] = useState<'All' | 'Admin' | 'Member'>('All');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, [activeTab]);
-  
-  // Seat Management
-  const totalSeats = 150;
-  const usedSeats = members.length + 42; 
-  const seatPercentage = (usedSeats / totalSeats) * 100;
-  
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteName, setInviteName] = useState('');
+  const [inviteRole, setInviteRole] = useState<'Admin' | 'Member'>('Member');
+  const [isInviting, setIsInviting] = useState(false);
 
-  const handleInvite = (e: React.FormEvent) => {
+  // 1. Auth Guard
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user) {
+        router.replace('/login');
+      } else if (
+        profile &&
+        profile.role !== 'admin' &&
+        profile.role !== ('campus_admin' as any) &&
+        profile.subscription_plan !== 'institution'
+      ) {
+        router.replace('/dashboard');
+      }
+    }
+  }, [user, profile, authLoading, router]);
+
+  // 2. Load Institutions & Select Matching Institution
+  const loadInstitutionsData = async () => {
+    setIsLoading(true);
+    try {
+      const allInst = await fetchInstitutions();
+      setInstitutions(allInst);
+
+      if (allInst.length > 0) {
+        // Cari institusi yang cocok dengan email user
+        const matching = allInst.find((inst) => inst.admin_email.toLowerCase() === user?.email?.toLowerCase());
+        const selected = matching || allInst[0];
+        setCurrentInst(selected);
+
+        // Load members & audit logs untuk institusi terpilih
+        const mems = await fetchInstitutionMembers(selected.id);
+        setMembers(mems);
+
+        const logs = await fetchInstitutionAuditLogs(selected.id);
+        setAuditLogs(logs);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && profile) {
+      loadInstitutionsData();
+    }
+  }, [user, profile]);
+
+  // Switch Institution (untuk Super Admin)
+  const handleSelectInstitution = async (inst: Institution) => {
+    setCurrentInst(inst);
+    setIsLoading(true);
+    try {
+      const mems = await fetchInstitutionMembers(inst.id);
+      setMembers(mems);
+      const logs = await fetchInstitutionAuditLogs(inst.id);
+      setAuditLogs(logs);
+      setCurrentPage(1);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Quota calculation
+  const totalSeats = currentInst?.total_seats || 50;
+  const usedSeats = members.length;
+  const seatPercentage = Math.min(100, (usedSeats / totalSeats) * 100);
+
+  // Actions
+  const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inviteEmail) return;
-    setMembers([{
-      id: Date.now().toString(),
-      name: 'Pending User',
-      email: inviteEmail,
-      role: 'Member',
-      status: 'Invited',
-      joined: '-'
-    }, ...members]);
-    setIsInviteModalOpen(false);
-    setInviteEmail('');
+    if (!inviteEmail || !currentInst) return;
+
+    if (usedSeats >= totalSeats) {
+      alert(
+        isEn
+          ? 'License capacity full! Please contact the administrator to expand seat quota.'
+          : 'Kapasitas lisensi telah penuh! Silakan hubungi administrator untuk menambah kuota kursi.'
+      );
+      return;
+    }
+
+    setIsInviting(true);
+    try {
+      const newMember = await addInstitutionMember(currentInst.id, {
+        name: inviteName.trim() || inviteEmail.split('@')[0],
+        email: inviteEmail.trim(),
+        role: inviteRole,
+        status: 'Invited'
+      });
+
+      setMembers([newMember, ...members]);
+      await addInstitutionAuditLog(currentInst.id, {
+        user: user?.email || 'Campus Admin',
+        action: 'INVITE_USER',
+        target: inviteEmail.trim(),
+        ip: 'Browser'
+      });
+
+      const updatedLogs = await fetchInstitutionAuditLogs(currentInst.id);
+      setAuditLogs(updatedLogs);
+
+      setIsInviteModalOpen(false);
+      setInviteEmail('');
+      setInviteName('');
+    } finally {
+      setIsInviting(false);
+    }
   };
 
-  const handleRevoke = (id: string) => {
-    setMembers(members.filter(m => m.id !== id));
+  const handleRevoke = async (memberId: string) => {
+    if (!currentInst) return;
+    const targetMember = members.find((m) => m.id === memberId);
+    if (!confirm(isEn ? `Revoke license for ${targetMember?.email || 'this member'}?` : `Cabut lisensi untuk ${targetMember?.email || 'anggota ini'}?`)) {
+      return;
+    }
+
+    await revokeInstitutionMember(currentInst.id, memberId);
+    setMembers(members.filter((m) => m.id !== memberId));
+
+    await addInstitutionAuditLog(currentInst.id, {
+      user: user?.email || 'Campus Admin',
+      action: 'REVOKE_USER',
+      target: targetMember?.email || memberId,
+      ip: 'Browser'
+    });
+
+    const updatedLogs = await fetchInstitutionAuditLogs(currentInst.id);
+    setAuditLogs(updatedLogs);
   };
+
+  const handleBulkCSV = async (emails: string[]) => {
+    if (!currentInst) return;
+    const available = Math.max(0, totalSeats - usedSeats);
+    if (available <= 0) {
+      alert(isEn ? 'Seat quota full! Cannot add more members.' : 'Kuota lisensi penuh! Tidak dapat menambahkan anggota.');
+      return;
+    }
+
+    const toAdd = emails.slice(0, available);
+    const addedCount = await bulkAddInstitutionMembers(currentInst.id, toAdd);
+
+    await addInstitutionAuditLog(currentInst.id, {
+      user: user?.email || 'Campus Admin',
+      action: 'BULK_IMPORT',
+      target: `Imported ${addedCount} members via CSV`,
+      ip: 'Browser'
+    });
+
+    const updatedMems = await fetchInstitutionMembers(currentInst.id);
+    setMembers(updatedMems);
+    const updatedLogs = await fetchInstitutionAuditLogs(currentInst.id);
+    setAuditLogs(updatedLogs);
+
+    alert(isEn ? `Successfully imported ${addedCount} members!` : `Berhasil menambahkan ${addedCount} anggota!`);
+  };
+
+  const handleUpdateSettings = async (updates: Partial<Institution>) => {
+    if (!currentInst) return;
+    await updateInstitution(currentInst.id, updates);
+    setCurrentInst({ ...currentInst, ...updates });
+
+    await addInstitutionAuditLog(currentInst.id, {
+      user: user?.email || 'Campus Admin',
+      action: 'UPDATE_ORG',
+      target: `Updated settings for ${currentInst.name}`,
+      ip: 'Browser'
+    });
+
+    const updatedLogs = await fetchInstitutionAuditLogs(currentInst.id);
+    setAuditLogs(updatedLogs);
+  };
+
+  // Dynamic calculations for charts
+  const adminCount = members.filter((m) => m.role === 'Admin').length;
+  const studentCount = members.length - adminCount;
+  const roleData = [
+    { name: isEn ? 'Lecturers/Admins' : 'Dosen/Admin', value: Math.max(1, adminCount), color: '#6366f1' },
+    { name: isEn ? 'Students/Members' : 'Mahasiswa/Member', value: Math.max(1, studentCount), color: '#10b981' }
+  ];
+
+  const usageData = [
+    { date: 'Wk 1', users: Math.round(usedSeats * 0.4), documents: Math.round(usedSeats * 1.5) },
+    { date: 'Wk 2', users: Math.round(usedSeats * 0.6), documents: Math.round(usedSeats * 2.2) },
+    { date: 'Wk 3', users: Math.round(usedSeats * 0.8), documents: Math.round(usedSeats * 3.1) },
+    { date: 'Wk 4', users: usedSeats, documents: Math.round(usedSeats * 4.2) }
+  ];
 
   const itemVariants = {
     hidden: { opacity: 0, y: 15 },
     show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 300, damping: 24 } }
   };
 
-  // Pagination Logic
-  const filteredMembers = members.filter(m => {
-    const matchesSearch = m.name.toLowerCase().includes(searchQuery.toLowerCase()) || m.email.toLowerCase().includes(searchQuery.toLowerCase());
+  // Filtered & Paginated Members
+  const filteredMembers = members.filter((m) => {
+    const matchesSearch =
+      m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      m.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRole = filterRole === 'All' || m.role === filterRole;
     return matchesSearch && matchesRole;
   });
@@ -114,45 +259,70 @@ export default function InstitutionDashboard() {
   const totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
   const currentMembers = filteredMembers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
+  if (authLoading || (user && !profile) || (!currentInst && isLoading)) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <IconLoader className="h-8 w-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden font-sans">
       <MinimalSidebar activeDashboardTab="admin" />
-      
+
       <div className="flex-1 flex flex-col overflow-y-auto">
-        {/* Header */}
+        {/* Dynamic Header */}
         <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-8 py-5 flex justify-between items-center sticky top-0 z-20">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-md">
               <IconBuildingBank className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 leading-tight">
-                Universitas Negeri Malang
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 leading-tight">
+                  {currentInst?.name || 'Universitas Mitra'}
+                </h1>
+                {profile?.role === 'admin' && institutions.length > 1 && (
+                  <select
+                    value={currentInst?.id}
+                    onChange={(e) => {
+                      const found = institutions.find((i) => i.id === e.target.value);
+                      if (found) handleSelectInstitution(found);
+                    }}
+                    className="text-xs bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1 outline-none text-slate-700 dark:text-slate-200"
+                  >
+                    {institutions.map((i) => (
+                      <option key={i.id} value={i.id}>
+                        {i.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
               <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                {isEn ? 'Institution Portal' : 'Portal Institusi'}
+                {isEn ? 'Institution B2B Portal' : 'Portal Institusi B2B'} • {currentInst?.domains?.map((d) => `@${d}`).join(', ') || '@campus.ac.id'}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={() => router.push('/dashboard')}
-              className="flex items-center gap-2 px-3.5 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750 transition"
+              className="flex items-center gap-2 px-3.5 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750 transition cursor-pointer"
             >
               <IconArrowLeft className="w-4 h-4" />
               <span>{isEn ? 'Back to Workspace' : 'Kembali ke Workspace'}</span>
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm transition">
+            <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm transition cursor-pointer">
               <IconDownload className="w-4 h-4" />
               <span>{isEn ? 'Export Report' : 'Unduh Laporan'}</span>
             </button>
           </div>
         </header>
 
-
         <div className="p-8 max-w-7xl mx-auto w-full">
-          {/* KPI Cards */}
-          <motion.div variants={{show: {transition: {staggerChildren: 0.1}}}} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Dynamic KPI Cards */}
+          <motion.div variants={{ show: { transition: { staggerChildren: 0.1 } } }} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <motion.div variants={itemVariants} className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
               <div className="flex justify-between items-start mb-4">
                 <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl">
@@ -169,12 +339,12 @@ export default function InstitutionDashboard() {
                 {isEn ? 'License Quota Allocated' : 'Kuota Lisensi Terpakai'}
               </p>
               <div className="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
-                <div className={`h-full rounded-full ${seatPercentage > 90 ? 'bg-rose-500' : 'bg-indigo-600'}`} style={{ width: `${seatPercentage}%` }}></div>
+                <div className={`h-full rounded-full transition-all duration-500 ${seatPercentage > 90 ? 'bg-rose-500' : 'bg-indigo-600'}`} style={{ width: `${seatPercentage}%` }}></div>
               </div>
               {seatPercentage > 90 && (
                 <div className="mt-3 flex items-center gap-1.5 text-rose-600 dark:text-rose-400 text-xs font-semibold">
                   <IconAlertTriangle className="w-4 h-4" />
-                  {isEn ? 'Approaching limit. Contact Sales.' : 'Mendekati batas. Hubungi Sales.'}
+                  {isEn ? 'Approaching limit. Contact Sales to expand.' : 'Mendekati batas. Hubungi Sales untuk ekspansi.'}
                 </div>
               )}
             </motion.div>
@@ -185,118 +355,172 @@ export default function InstitutionDashboard() {
                   <IconChartLine className="w-5 h-5" />
                 </div>
               </div>
-              <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-1">3,842</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{isEn ? 'Total Documents Analyzed' : 'Total Dokumen Dianalisis'}</p>
+              <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-1">
+                {(usedSeats * 18).toLocaleString('id-ID')}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{isEn ? 'Estimated Research Drafts' : 'Estimasi Naskah Riset Mahasiswa'}</p>
             </motion.div>
 
-            <motion.div variants={itemVariants} className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
-              <div className="absolute -right-4 -bottom-4 opacity-10">
-                <IconShieldCheck className="w-32 h-32 text-indigo-500" />
-              </div>
+            <motion.div variants={itemVariants} className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
               <div className="flex justify-between items-start mb-4">
-                <div className="p-2 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl">
-                  <IconCheck className="w-5 h-5" />
+                <div className="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl">
+                  <IconShieldCheck className="w-5 h-5" />
                 </div>
               </div>
-              <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-1">100%</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[80%] relative z-10">{isEn ? 'System Compliance & Security Uptime' : 'Kepatuhan Keamanan & Uptime Sistem'}</p>
+              <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-1">
+                {currentInst?.status === 'active' ? (isEn ? 'Active' : 'Aktif') : currentInst?.status}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {isEn ? 'Contract Status' : 'Status Kontrak Lisensi'}
+              </p>
             </motion.div>
           </motion.div>
 
           {/* Navigation Tabs */}
-          <div className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-700 mb-6">
+          <div className="flex border-b border-slate-200 dark:border-slate-700 mb-6 gap-8">
             {[
-              { id: 'members', label: isEn ? 'Member Management' : 'Manajemen Anggota', icon: IconUsers },
-              { id: 'analytics', label: isEn ? 'Usage Analytics' : 'Analitik Penggunaan', icon: IconChartLine },
-              { id: 'audit', label: isEn ? 'Audit Logs' : 'Log Aktivitas', icon: IconShieldCheck },
-              { id: 'settings', label: isEn ? 'Organization Settings' : 'Pengaturan Organisasi', icon: IconSettings },
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold transition relative ${
-                  activeTab === tab.id 
-                    ? 'text-indigo-600 dark:text-indigo-400' 
-                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-                }`}
-              >
-                <tab.icon className="w-4 h-4" />
-                {tab.label}
-                {activeTab === tab.id && (
-                  <motion.div 
-                    layoutId="activeTabIndicator"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-indigo-400" 
-                  />
-                )}
-              </button>
-            ))}
+              { id: 'members', label: isEn ? 'Members Management' : 'Kelola Anggota', icon: IconUsers },
+              { id: 'analytics', label: isEn ? 'Usage Analytics' : 'Analitik Riset', icon: IconChartLine },
+              { id: 'audit', label: isEn ? 'Audit Trail' : 'Log Audit', icon: IconShieldCheck },
+              { id: 'settings', label: isEn ? 'Settings' : 'Pengaturan', icon: IconSettings }
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex items-center gap-2 pb-4 text-sm font-semibold transition relative cursor-pointer ${
+                    activeTab === tab.id
+                      ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Tab Content Components */}
+          {/* Tab Content */}
           <AnimatePresence mode="wait">
             {activeTab === 'members' && (
-              <MembersTab 
-                isEn={isEn} members={members} searchQuery={searchQuery} setSearchQuery={setSearchQuery} 
-                filterRole={filterRole} setFilterRole={setFilterRole} isLoading={isLoading} 
-                currentPage={currentPage} setCurrentPage={setCurrentPage} itemsPerPage={itemsPerPage} 
-                filteredMembers={filteredMembers} currentMembers={currentMembers} totalPages={totalPages} 
-                setIsInviteModalOpen={setIsInviteModalOpen} handleRevoke={handleRevoke} 
+              <MembersTab
+                isEn={isEn}
+                members={members}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                filterRole={filterRole}
+                setFilterRole={setFilterRole}
+                isLoading={isLoading}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                itemsPerPage={itemsPerPage}
+                filteredMembers={filteredMembers}
+                currentMembers={currentMembers}
+                totalPages={totalPages}
+                setIsInviteModalOpen={setIsInviteModalOpen}
+                handleRevoke={handleRevoke}
+                onBulkCSV={handleBulkCSV}
               />
             )}
-            {activeTab === 'analytics' && <AnalyticsTab isEn={isEn} usageData={usageData} roleData={roleData} />}
-            {activeTab === 'audit' && <AuditTab isEn={isEn} initialAuditLogs={initialAuditLogs} />}
-            {activeTab === 'settings' && <SettingsTab isEn={isEn} />}
+
+            {activeTab === 'analytics' && (
+              <AnalyticsTab isEn={isEn} usageData={usageData} roleData={roleData} />
+            )}
+
+            {activeTab === 'audit' && (
+              <AuditTab isEn={isEn} initialAuditLogs={auditLogs} />
+            )}
+
+            {activeTab === 'settings' && (
+              <SettingsTab
+                isEn={isEn}
+                institution={currentInst}
+                onUpdateInstitution={handleUpdateSettings}
+              />
+            )}
           </AnimatePresence>
         </div>
       </div>
 
-      {/* Invite Modal Overlay */}
-      <AnimatePresence>
-        {isInviteModalOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4"
-          >
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-8 w-full max-w-md shadow-2xl border border-slate-200 dark:border-slate-700"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">{isEn ? 'Invite Members' : 'Undang Anggota'}</h3>
-                <button onClick={() => setIsInviteModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                  <IconX className="w-5 h-5" />
+      {/* Invite Modal */}
+      {isInviteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in font-sans">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl w-full max-w-md flex flex-col gap-4 text-xs">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-white">
+                {isEn ? 'Invite Faculty or Student' : 'Undang Dosen atau Mahasiswa'}
+              </h3>
+              <button onClick={() => setIsInviteModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <IconX className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleInvite} className="flex flex-col gap-3">
+              <div>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+                  {isEn ? 'Full Name' : 'Nama Lengkap'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder={isEn ? 'e.g. Andi Saputra' : 'Contoh: Andi Saputra'}
+                  value={inviteName}
+                  onChange={(e) => setInviteName(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 dark:text-white outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+                  {isEn ? 'Email Address' : 'Alamat Email'}
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="andi.s@student.campus.ac.id"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 dark:text-white outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+                  {isEn ? 'Role' : 'Peran'}
+                </label>
+                <select
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value as any)}
+                  className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 dark:text-white outline-none focus:border-indigo-500"
+                >
+                  <option value="Member">{isEn ? 'Student / Member' : 'Mahasiswa / Member'}</option>
+                  <option value="Admin">{isEn ? 'Lecturer / Campus Admin' : 'Dosen / Admin Kampus'}</option>
+                </select>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsInviteModalOpen(false)}
+                  className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 font-semibold"
+                >
+                  {isEn ? 'Cancel' : 'Batal'}
+                </button>
+                <button
+                  type="submit"
+                  disabled={isInviting}
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition flex items-center gap-1.5"
+                >
+                  {isInviting && <IconLoader className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{isEn ? 'Send Invite' : 'Kirim Undangan'}</span>
                 </button>
               </div>
-              <form onSubmit={handleInvite}>
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{isEn ? 'Email Address' : 'Alamat Email'}</label>
-                  <div className="relative">
-                    <IconMail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input 
-                      type="email" 
-                      required
-                      value={inviteEmail}
-                      onChange={e => setInviteEmail(e.target.value)}
-                      placeholder="dosen@kampus.ac.id" 
-                      className="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-indigo-500 transition" 
-                    />
-                  </div>
-                </div>
-                <div className="mb-6">
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{isEn ? 'Assign Role' : 'Beri Peran'}</label>
-                  <select className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:border-indigo-500 transition">
-                    <option value="member">Member</option>
-                    <option value="admin">Institution Admin</option>
-                  </select>
-                </div>
-                <button type="submit" className="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-sm hover:bg-indigo-700 transition">
-                  {isEn ? 'Send Invitation' : 'Kirim Undangan'}
-                </button>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -18,13 +18,15 @@ interface MembersTabProps {
   totalPages: number;
   setIsInviteModalOpen: (val: boolean) => void;
   handleRevoke: (id: string) => void;
+  onBulkCSV?: (emails: string[]) => void;
 }
 
 export function MembersTab({
   isEn, members, searchQuery, setSearchQuery, filterRole, setFilterRole,
   isLoading, currentPage, setCurrentPage, itemsPerPage, filteredMembers,
-  currentMembers, totalPages, setIsInviteModalOpen, handleRevoke
+  currentMembers, totalPages, setIsInviteModalOpen, handleRevoke, onBulkCSV
 }: MembersTabProps) {
+
   return (
     <motion.div 
       key="members"
@@ -54,10 +56,36 @@ export function MembersTab({
           </select>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+          <label className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition cursor-pointer">
             <IconUpload className="w-4 h-4" />
-            {isEn ? 'Bulk CSV' : 'Unggah CSV'}
-          </button>
+            <span>{isEn ? 'Bulk CSV' : 'Unggah CSV'}</span>
+            <input
+              type="file"
+              accept=".csv,.txt"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                  const content = event.target?.result as string;
+                  if (!content) return;
+                  const emails = content
+                    .split(/[\r\n,;]+/)
+                    .map((item) => item.trim())
+                    .filter((item) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item));
+                  if (emails.length > 0 && onBulkCSV) {
+                    onBulkCSV(emails);
+                  } else {
+                    alert(isEn ? 'No valid email addresses found in file.' : 'Tidak ditemukan format email yang valid di file.');
+                  }
+                };
+                reader.readAsText(file);
+                e.target.value = '';
+              }}
+            />
+          </label>
+
           <button 
             onClick={() => setIsInviteModalOpen(true)}
             className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 shadow-sm transition"
