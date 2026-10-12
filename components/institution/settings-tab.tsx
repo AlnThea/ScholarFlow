@@ -129,6 +129,75 @@ export function SettingsTab({ isEn, institution, onUpdateInstitution }: Settings
           </div>
         </div>
         
+        {/* 1. Shareable Campus Join Link */}
+        <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            {isEn ? 'Shareable Campus Join Link' : 'Tautan Pendaftaran Mandiri Kampus (Join Link)'}
+          </label>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+            {isEn 
+              ? 'Share this secure token link with students and faculty. Only users with whitelisted domains can join.' 
+              : 'Bagikan tautan resmi ini kepada mahasiswa/dosen. Hanya email dengan domain terdaftar yang dapat bergabung.'}
+          </p>
+          <div className="flex gap-2 items-center">
+            <input 
+              type="text" 
+              readOnly 
+              value={typeof window !== 'undefined' ? `${window.location.origin}/join/${institution?.join_token || 'ugm-2026-partner'}` : `https://scholarflow.com/join/${institution?.join_token || 'ugm-2026-partner'}`}
+              className="flex-1 px-4 py-2 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-600 dark:text-slate-300 select-all outline-none"
+            />
+            <button 
+              type="button"
+              onClick={() => {
+                const url = typeof window !== 'undefined' ? `${window.location.origin}/join/${institution?.join_token || 'ugm-2026-partner'}` : '';
+                navigator.clipboard.writeText(url);
+                alert(isEn ? 'Join link copied to clipboard!' : 'Tautan berhasil disalin ke clipboard!');
+              }}
+              className="px-4 py-2 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-xl text-xs font-bold transition cursor-pointer"
+            >
+              {isEn ? 'Copy Link' : 'Salin Tautan'}
+            </button>
+          </div>
+        </div>
+
+        {/* 2. AI Resource Quota Policies */}
+        <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            {isEn ? 'AI Monthly Token Quota Policy' : 'Kebijakan Batas Token AI Bulanan'}
+          </label>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+            {isEn 
+              ? 'Control monthly token allowances per academic level to optimize university budget.' 
+              : 'Atur jatah token bulanan per jenjang civitas untuk menghemat kuota institusi.'}
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl">
+              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                {isEn ? 'Student Monthly Cap' : 'Mahasiswa / Bulan'}
+              </span>
+              <div className="text-sm font-bold text-slate-800 dark:text-slate-100">100,000 <span className="text-xs font-normal text-slate-400">Tokens</span></div>
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">{isEn ? 'Standard Plan' : 'Rencana Standar'}</span>
+            </div>
+
+            <div className="p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl">
+              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                {isEn ? 'Lecturer Monthly Cap' : 'Dosen Pembimbing'}
+              </span>
+              <div className="text-sm font-bold text-slate-800 dark:text-slate-100">500,000 <span className="text-xs font-normal text-slate-400">Tokens</span></div>
+              <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">{isEn ? 'Priority Tier' : 'Tier Prioritas'}</span>
+            </div>
+
+            <div className="p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl">
+              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                {isEn ? 'Campus / Faculty Admin' : 'Admin Fakultas/LPPM'}
+              </span>
+              <div className="text-sm font-bold text-slate-800 dark:text-slate-100">1,000,000 <span className="text-xs font-normal text-slate-400">Tokens</span></div>
+              <span className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold">{isEn ? 'Unrestricted Tier' : 'Akses Penuh'}</span>
+            </div>
+          </div>
+        </div>
+
         <div className="pt-6 border-t border-slate-200 dark:border-slate-700 flex items-center gap-3">
           <button 
             type="submit"

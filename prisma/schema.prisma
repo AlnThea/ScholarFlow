@@ -167,35 +167,39 @@ model CitationCacheEntry {
 }
 
 model InstitutionEntry {
-  id            String    @id @default(uuid())
-  name          String
-  adminEmail    String    @map("admin_email")
-  domains       Json      @default("[]")
-  totalSeats    Int       @default(50) @map("total_seats")
-  usedSeats     Int       @default(0) @map("used_seats")
-  contractStart DateTime  @default(now()) @map("contract_start")
-  contractEnd   DateTime  @map("contract_end")
-  status        String    @default("active")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+  id               String    @id @default(uuid())
+  name             String
+  adminEmail       String    @map("admin_email")
+  domains          Json      @default("[]")
+  totalSeats       Int       @default(50) @map("total_seats")
+  usedSeats        Int       @default(0) @map("used_seats")
+  joinToken        String?   @unique @map("join_token")
+  departmentQuotas Json?     @map("department_quotas")
+  aiPolicy         Json?     @map("ai_policy")
+  contractStart    DateTime  @default(now()) @map("contract_start")
+  contractEnd      DateTime  @map("contract_end")
+  status           String    @default("active")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at")
 
   @@map("institutions")
 }
 
 model InstitutionMemberEntry {
-  id            String    @id @default(uuid())
-  institutionId String    @map("institution_id")
-  userId        String?   @map("user_id")
-  name          String
-  email         String
-  role          String    @default("Student")
-  department    String?   @default("Akademik Umum")
-  aiQuotaUsed   Int       @default(0) @map("ai_quota_used")
-  aiQuotaLimit  Int       @default(100000) @map("ai_quota_limit")
-  status        String    @default("Active")
-  joined        DateTime  @default(now())
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+  id             String    @id @default(uuid())
+  institutionId  String    @map("institution_id")
+  userId         String?   @map("user_id")
+  name           String
+  email          String
+  role           String    @default("Student")
+  department     String?   @default("Akademik Umum")
+  aiQuotaUsed    Int       @default(0) @map("ai_quota_used")
+  aiQuotaLimit   Int       @default(100000) @map("ai_quota_limit")
+  graduationDate DateTime? @map("graduation_date")
+  status         String    @default("Active")
+  joined         DateTime  @default(now())
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at")
 
   @@map("institution_members")
 }

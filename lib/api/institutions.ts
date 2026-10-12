@@ -3,6 +3,12 @@
 
 import { supabase } from '@/lib/supabase';
 
+export interface InstitutionAiPolicy {
+  student_monthly_token: number;
+  lecturer_monthly_token: number;
+  admin_monthly_token: number;
+}
+
 export interface Institution {
   id: string;
   name: string;
@@ -13,6 +19,9 @@ export interface Institution {
   contract_start: string;
   contract_end: string;
   status: 'active' | 'suspended' | 'expired';
+  join_token?: string;
+  department_quotas?: Record<string, number>;
+  ai_policy?: InstitutionAiPolicy;
   created_at?: string;
   updated_at?: string;
 }
@@ -198,6 +207,7 @@ export interface InstitutionMember {
   department?: string;
   ai_quota_used?: number;
   ai_quota_limit?: number;
+  graduation_date?: string;
   status: 'Active' | 'Invited';
   joined: string;
 }

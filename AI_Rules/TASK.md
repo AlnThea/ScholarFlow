@@ -100,12 +100,12 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
     - [x] Tombol resmi "Continue with Google / Akun Kampus" di halaman login (`app/(auth)/login/page.tsx`).
     - [x] Auto-Enrollment Domain Whitelist: deteksi domain kampus saat login Google, auto-assign lisensi kampus dengan default role *Student*, siap di-promote oleh Admin.
     - [x] Banner jaminan privasi data akademik ("Zero Data Retention Guarantee for Campus AI").
-  - [ ] **Sub-phase 3: Manajemen Kuota & Resource Policy**:
-    - [ ] Per-Member AI Token/Credit Quota policy (mahasiswa capped, dosen prioritas).
-    - [ ] Department-level seat quota allocation (pembagian jatah kursi per fakultas).
-  - [ ] **Sub-phase 4: Otomasi Siklus Hidup Akun (Lifecycle & Offboarding)**:
-    - [ ] Shareable Campus Join Link bertoken (`/join/[token]`) khusus email domain resmi kampus.
-    - [ ] Fitur tanggal kedaluwarsa lisensi otomatis berdasarkan tahun kelulusan/wisuda angkatan.
+  - [x] **Sub-phase 3: Manajemen Kuota & Resource Policy**:
+    - [x] Per-Member AI Token/Credit Quota policy (mahasiswa capped, dosen prioritas).
+    - [x] Department-level seat quota allocation (pembagian jatah kursi per fakultas).
+  - [x] **Sub-phase 4: Otomasi Siklus Hidup Akun (Lifecycle & Offboarding)**:
+    - [x] Shareable Campus Join Link bertoken (`/join/[token]`) khusus email domain resmi kampus.
+    - [x] Fitur tanggal kedaluwarsa lisensi otomatis berdasarkan tahun kelulusan/wisuda angkatan.
   - [ ] **Sub-phase 5: Pelaporan Eksekutif & Stabilitas Operasional**:
     - [ ] Executive PDF Summary satu lembar bertanda tangan/kop resmi untuk laporan ke Rektorat.
     - [ ] Granular backup naskah dan filter audit log terperinci.
