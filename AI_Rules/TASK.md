@@ -89,6 +89,26 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] **Navigasi End-to-End**: Tombol menu "Portal Kampus" dinamis di sidebar untuk role admin/campus_admin dan tombol aksi "Buka Portal" di tabel Super Admin.
   - [x] **Xendit Animated Payments**: Invoice creation, webhook auto-upgrade, in-app checkout modal dengan 4 animasi (Pulse Loader, Radar Scanner Timer, Live Status Polling, dan Selebrasi Konfeti Upgrade).
   - [x] **Database & Keamanan RLS**: Tabel `institutions`, model Prisma `InstitutionEntry`, dan penguncian RLS penuh pada tabel `ai_providers`.
+- [ ] **6. Phase 13: Enterprise B2B Campus Standards & Production Readiness**:
+  - [ ] **Sub-phase 1: Granular Role-Based Access Control (RBAC) & Departemen**:
+    - [ ] Perluas peran akademik menjadi 4 tingkat: *Super Admin (Rektorat)*, *Faculty Admin (Dekanat/Prodi)*, *Lecturer (Dosen Pembimbing)*, dan *Student (Mahasiswa)* di `lib/api/institutions.ts`.
+    - [ ] Tambahkan field `department`/fakultas pada data anggota institusi (contoh: *Fakultas Teknik*, *Fakultas Kedokteran*).
+    - [ ] Fitur *Change Role & Department* langsung di tabel anggota (`components/institution/members-tab.tsx`) dengan modal/inline switcher.
+    - [ ] Filter anggota berdasarkan Fakultas/Departemen dan Peran di tab keanggotaan.
+    - [ ] Donut Chart analitik menampilkan distribusi 4 peran secara dinamis.
+  - [ ] **Sub-phase 2: Keamanan & Autentikasi (Enterprise Security & Google SSO)**:
+    - [ ] Tombol resmi "Continue with Google / Akun Kampus" di halaman login (`app/(auth)/login/page.tsx`).
+    - [ ] Auto-Enrollment Domain Whitelist: deteksi domain kampus saat login Google, auto-assign lisensi kampus dengan default role *Student*, siap di-promote oleh Admin.
+    - [ ] Banner jaminan privasi data akademik ("Zero Data Retention Guarantee for Campus AI").
+  - [ ] **Sub-phase 3: Manajemen Kuota & Resource Policy**:
+    - [ ] Per-Member AI Token/Credit Quota policy (mahasiswa capped, dosen prioritas).
+    - [ ] Department-level seat quota allocation (pembagian jatah kursi per fakultas).
+  - [ ] **Sub-phase 4: Otomasi Siklus Hidup Akun (Lifecycle & Offboarding)**:
+    - [ ] Shareable Campus Join Link bertoken (`/join/[token]`) khusus email domain resmi kampus.
+    - [ ] Fitur tanggal kedaluwarsa lisensi otomatis berdasarkan tahun kelulusan/wisuda angkatan.
+  - [ ] **Sub-phase 5: Pelaporan Eksekutif & Stabilitas Operasional**:
+    - [ ] Executive PDF Summary satu lembar bertanda tangan/kop resmi untuk laporan ke Rektorat.
+    - [ ] Granular backup naskah dan filter audit log terperinci.
 - [ ] Complete remaining UI pages & user-facing feature modules.
 
 
