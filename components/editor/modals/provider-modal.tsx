@@ -21,6 +21,9 @@ export const ProviderModal = ({
   setModalProviderState,
   handleSaveModalProvider,
 }: ProviderModalProps) => {
+  const [isCheckingBalance, setIsCheckingBalance] = React.useState(false);
+  const [balanceResult, setBalanceResult] = React.useState<any>(null);
+
   if (!isOpen || typeof window === 'undefined') return null;
 
   return createPortal(
@@ -107,9 +110,39 @@ export const ProviderModal = ({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider">
-              {isEn ? 'API Key (Input Once Here!)' : 'API Key (Input Sekali di Sini!)'}
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider">
+                {isEn ? 'API Key (Input Once Here!)' : 'API Key (Input Sekali di Sini!)'}
+              </label>
+              <button
+                type="button"
+                disabled={isCheckingBalance || !modalProviderState.api_key}
+                onClick={async () => {
+                  setIsCheckingBalance(true);
+                  setBalanceResult(null);
+                  try {
+                    const res = await fetch('/api/v1/ai/check-balance', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        provider_type: modalProviderState.type,
+                        base_url: modalProviderState.base_url,
+                        api_key: modalProviderState.api_key,
+                      })
+                    });
+                    const data = await res.json();
+                    setBalanceResult(data);
+                  } catch (err: any) {
+                    setBalanceResult({ success: false, message: err.message || 'Gagal mengecek saldo.' });
+                  } finally {
+                    setIsCheckingBalance(false);
+                  }
+                }}
+                className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition cursor-pointer flex items-center gap-1 disabled:opacity-50"
+              >
+                <span>{isCheckingBalance ? (isEn ? 'Checking...' : 'Mengecek...') : (isEn ? '⚡ Check Balance' : '⚡ Cek Saldo')}</span>
+              </button>
+            </div>
             <input
               type="password"
               placeholder="hf_xxxx / gsk_xxxx / tgp_xxxx / sk-xxxx..."
@@ -120,6 +153,27 @@ export const ProviderModal = ({
             <span className="text-[9px] text-slate-400 dark:text-slate-500">
               {isEn ? 'All models linked to this provider will automatically use this API key.' : 'Semua model yang terhubung ke provider ini akan otomatis memakai API key ini.'}
             </span>
+
+            {/* Balance Result Banner */}
+            {balanceResult && (
+              <div className={`mt-2 p-2.5 rounded-xl border text-[11px] font-semibold flex items-start gap-2 ${
+                balanceResult.status_badge === 'critical'
+                  ? 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-950/40 dark:border-rose-900/60 dark:text-rose-300'
+                  : balanceResult.status_badge === 'low'
+                  ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/40 dark:border-amber-900/60 dark:text-amber-300'
+                  : 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-900/60 dark:text-emerald-300'
+              }`}>
+                <span className="mt-0.5">{balanceResult.status_badge === 'critical' ? '🔴' : balanceResult.status_badge === 'low' ? '🟡' : '🟢'}</span>
+                <div className="flex-1">
+                  <div>{balanceResult.message}</div>
+                  {balanceResult.balance !== undefined && (
+                    <div className="text-[10px] opacity-80 mt-0.5">
+                      {isEn ? 'Live Provider Balance: ' : 'Saldo Real-Time: '}${balanceResult.balance} {balanceResult.currency}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
