@@ -8,8 +8,10 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   IconBuildingBank, IconUsers, IconChartLine, 
-  IconSettings, IconShieldCheck, IconAlertTriangle, IconDownload, IconCheck, IconMail, IconX
+  IconSettings, IconShieldCheck, IconAlertTriangle, IconDownload, IconCheck, IconMail, IconX,
+  IconArrowLeft
 } from '@tabler/icons-react';
+
 
 import { MembersTab } from '@/components/institution/members-tab';
 import { AnalyticsTab } from '@/components/institution/analytics-tab';
@@ -132,11 +134,21 @@ export default function InstitutionDashboard() {
               </p>
             </div>
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition">
-            <IconDownload className="w-4 h-4" />
-            {isEn ? 'Export Report' : 'Unduh Laporan'}
-          </button>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => router.push('/dashboard')}
+              className="flex items-center gap-2 px-3.5 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750 transition"
+            >
+              <IconArrowLeft className="w-4 h-4" />
+              <span>{isEn ? 'Back to Workspace' : 'Kembali ke Workspace'}</span>
+            </button>
+            <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm transition">
+              <IconDownload className="w-4 h-4" />
+              <span>{isEn ? 'Export Report' : 'Unduh Laporan'}</span>
+            </button>
+          </div>
         </header>
+
 
         <div className="p-8 max-w-7xl mx-auto w-full">
           {/* KPI Cards */}

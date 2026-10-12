@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import { 
   IconBuildingBank, IconUsers, IconSearch, IconEdit, IconTrash, 
-  IconWorld, IconCheck, IconAlertTriangle, IconClock
+  IconWorld, IconCheck, IconAlertTriangle, IconClock, IconExternalLink
 } from '@tabler/icons-react';
+
 import { Institution } from '@/lib/api/institutions';
 import { useLanguage } from '@/components/i18n/language-context';
 
@@ -175,6 +176,15 @@ export function InstitutionsTable({
                       </td>
                       <td className="px-5 py-4 align-top text-center">
                         <div className="flex items-center justify-center gap-1.5">
+                          <a
+                            href="/dashboard/institution"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 transition"
+                            title={isEn ? 'View Campus Portal' : 'Buka Portal Kampus'}
+                          >
+                            <IconExternalLink className="h-4 w-4" />
+                          </a>
                           <button
                             onClick={() => onEdit(inst)}
                             className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition"
@@ -182,6 +192,7 @@ export function InstitutionsTable({
                           >
                             <IconEdit className="h-4 w-4" />
                           </button>
+
                           <button
                             onClick={() => {
                               if (confirm(isEn ? `Delete ${inst.name}?` : `Hapus ${inst.name}?`)) {

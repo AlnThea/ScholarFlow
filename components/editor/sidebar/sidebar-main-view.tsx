@@ -8,10 +8,13 @@ import {
   IconCreditCard,
   IconSparkles,
   IconLayoutDashboard,
-  IconLoader2
+  IconLoader2,
+  IconBuildingBank
 } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { SidebarLogo } from './sidebar-logo';
+import { useAuth } from '@/components/auth/auth-provider';
+
 
 export function SidebarMainView({
   language,
@@ -35,8 +38,11 @@ export function SidebarMainView({
   onOpenHelp?: () => void;
 }) {
   const router = useRouter();
+  const { profile } = useAuth();
+  const isCampusAdminOrSuper = profile?.role === 'admin' || (profile as any)?.role === 'campus_admin' || profile?.subscription_plan === 'institution';
   const Logo = () => <SidebarLogo />;
   const [loadingItem, setLoadingItem] = React.useState<string | null>(null);
+
 
   const handleAction = (item: string, action: () => void) => {
     setLoadingItem(item);
@@ -141,8 +147,32 @@ export function SidebarMainView({
                   </div>
                   <IconChevronRight className="ml-auto h-3.5 w-3.5 text-slate-400 self-center flex-shrink-0" />
                 </button>
+
+                {/* Campus Portal (If campus admin / super admin) */}
+                {isCampusAdminOrSuper && (
+                  <button
+                    className="flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left transition-all duration-200 group cursor-pointer text-slate-650 hover:bg-slate-100/80 hover:text-slate-900"
+                    onClick={() => handleAction('institution', () => router.push('/dashboard/institution'))}
+                  >
+                    {loadingItem === 'institution' ? (
+                      <IconLoader2 className="h-[18px] w-[18px] mt-0.5 flex-shrink-0 animate-spin text-indigo-500" />
+                    ) : (
+                      <IconBuildingBank className="h-[18px] w-[18px] mt-0.5 flex-shrink-0 text-indigo-600 dark:text-indigo-400 transition-transform duration-200 group-hover:scale-105" />
+                    )}
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="text-xs font-bold text-slate-800 dark:text-white">
+                        {language === 'en' ? 'Campus Portal' : 'Portal Kampus'}
+                      </span>
+                      <span className="text-[8px] text-slate-400 leading-tight font-medium mt-0.5">
+                        {language === 'en' ? 'Manage members & seat quota' : 'Kelola anggota & kuota lisensi'}
+                      </span>
+                    </div>
+                    <IconChevronRight className="ml-auto h-3.5 w-3.5 text-slate-400 self-center flex-shrink-0" />
+                  </button>
+                )}
               </div>
             </div>
+
 
             {/* Group 2: Sources & References */}
             <div className="flex flex-col gap-1">
@@ -315,7 +345,24 @@ export function SidebarMainView({
               )}
             </button>
 
+            {/* Campus Portal Button (collapsed) */}
+            {isCampusAdminOrSuper && (
+              <button
+                className="flex items-center justify-center w-full aspect-square rounded-lg bg-transparent text-slate-400 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 relative group"
+                title={language === 'en' ? 'Campus Portal' : 'Portal Kampus'}
+                aria-label={language === 'en' ? 'Campus Portal' : 'Portal Kampus'}
+                onClick={() => handleAction('institution', () => router.push('/dashboard/institution'))}
+              >
+                {loadingItem === 'institution' ? (
+                  <IconLoader2 className="h-5 w-5 animate-spin text-indigo-500" />
+                ) : (
+                  <IconBuildingBank className="h-5 w-5 text-indigo-600 dark:text-indigo-400 transition-transform duration-200 group-hover:scale-105" />
+                )}
+              </button>
+            )}
+
             {/* Library Button (collapsed) */}
+
             <button
               data-tour="sidebar-library"
               className="flex items-center justify-center w-full aspect-square rounded-lg bg-transparent text-slate-400 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 relative group"

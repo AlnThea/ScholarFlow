@@ -205,4 +205,6 @@ Target: Membangun sistem pembayaran resmi Xendit (Invoice & Webhook) dengan anim
 - [x] **5. Xendit Invoice & Webhook API**: Endpoint `/api/payments/xendit/create-invoice` dan `/api/payments/xendit/webhook` dengan auto-upgrade akun.
 - [x] **6. Xendit Animated Checkout Modal**: Komponen `XenditCheckoutModal` dengan 4 tahapan animasi (Invoice Pulse, Radar Scanner Timer, Live Status Polling, dan Selebrasi Konfeti Upgrade).
 - [x] **7. Pricing Modal Gateway Integration**: Integrasi pilihan pembayaran Xendit di modal paket harga.
+- [x] **8. Campus Portal End-to-End Navigation**: Menambahkan tombol menu "Portal Kampus" di sidebar untuk role admin/campus_admin, tombol "Back to Workspace" di header portal, dan aksi cepat "Buka Portal" di tabel Super Admin.
+
 
