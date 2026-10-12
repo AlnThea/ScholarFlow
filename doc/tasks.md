@@ -194,3 +194,15 @@ Target: Membangun asisten AI "Data Analyst" multimodal di dalam editor yang mamp
 - [ ] **9. Enterprise Paywall & BYOK**: Mengunci akses panel penuh ini di balik validasi `isFreePlan` (memunculkan modal Pricing), dan mengintegrasikan penggunaan token mandiri jika pengguna telah menyetel Custom API Key (BYOK).
 - [ ] **10. Pre-Processing Data Parser**: Membangun modul pembersih data (menggunakan PapaParse/Regex) untuk mem-parsing file CSV/Excel/HTML kotor menjadi *Markdown Table* yang bersih sebelum dikirim ke AI, guna menghemat biaya token API dan mencegah halusinasi.
 - [ ] **11. APA Table Generator (Post-Processing)**: Memprogram AI agar tidak hanya menghasilkan teks paragraf, tetapi juga me-render ulang matriks angka tersebut menjadi struktur tabel EditorJS berstandar APA Edisi ke-7, siap untuk disisipkan langsung ke dalam dokumen.
+
+### Phase 12: Xendit Animated SaaS Payments & B2B Campus Admin Management
+Target: Membangun sistem pembayaran resmi Xendit (Invoice & Webhook) dengan animasi interaktif (Radar Scanner, Live Polling, Confetti Celebration), dan Halaman Kelola Institusi bagi Super Admin untuk onboarding kampus baru secara instan.
+
+- [x] **1. SQL Schema & Prisma Migration**: Membuat tabel `institutions` dan model Prisma `InstitutionEntry`.
+- [x] **2. Institutions API & Dual-Persistence**: Membuat modul `lib/api/institutions.ts` dengan fallback `localStorage`.
+- [x] **3. Super Admin Institutions UI**: Membuat modal form (`components/admin/institution-modal.tsx`), tabel data (`components/admin/institutions-table.tsx`), dan halaman rute (`app/admin/institutions/page.tsx`).
+- [x] **4. Navigation Integration**: Menambahkan tautan Kelola Institusi pada menu navigasi admin di sidebar.
+- [x] **5. Xendit Invoice & Webhook API**: Endpoint `/api/payments/xendit/create-invoice` dan `/api/payments/xendit/webhook` dengan auto-upgrade akun.
+- [x] **6. Xendit Animated Checkout Modal**: Komponen `XenditCheckoutModal` dengan 4 tahapan animasi (Invoice Pulse, Radar Scanner Timer, Live Status Polling, dan Selebrasi Konfeti Upgrade).
+- [x] **7. Pricing Modal Gateway Integration**: Integrasi pilihan pembayaran Xendit di modal paket harga.
+

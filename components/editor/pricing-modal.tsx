@@ -8,7 +8,9 @@ import { useAuth } from '@/components/auth/auth-provider';
 import { useLanguage } from '../i18n/language-context';
 import { StripeCheckoutModal } from './stripe-checkout-modal';
 import { MidtransCheckoutModal } from './midtrans-checkout-modal';
+import { XenditCheckoutModal } from './xendit-checkout-modal';
 import { GatewaySelectorModal } from './gateway-selector-modal';
+
 
 interface PricingModalProps {
   isOpen: boolean;
@@ -28,6 +30,7 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [isStripeOpen, setIsStripeOpen] = useState(false);
   const [isMidtransOpen, setIsMidtransOpen] = useState(false);
+  const [isXenditOpen, setIsXenditOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
 
   useEffect(() => {
@@ -74,13 +77,16 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
     setIsSelectorOpen(true);
   };
 
-  const handleSelectGateway = (gatewayId: 'stripe' | 'midtrans') => {
-    if (gatewayId === 'stripe') {
+  const handleSelectGateway = (gatewayId: 'stripe' | 'midtrans' | 'xendit') => {
+    if (gatewayId === 'xendit') {
+      setIsXenditOpen(true);
+    } else if (gatewayId === 'stripe') {
       setIsStripeOpen(true);
     } else {
       setIsMidtransOpen(true);
     }
   };
+
 
   const getLocalizedPlan = (plan: PricingPlan) => {
     if (language === 'id') return plan;
@@ -332,6 +338,22 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
           }}
         />
       )}
+
+      {/* Xendit Hosted Checkout Modal popup */}
+      {selectedPlan && (
+        <XenditCheckoutModal
+          isOpen={isXenditOpen}
+          onClose={() => setIsXenditOpen(false)}
+          planId={selectedPlan.id}
+          planName={getLocalizedPlan(selectedPlan).name}
+          planPrice={selectedPlan.price}
+          onSuccess={() => {
+            setIsXenditOpen(false);
+            onClose();
+          }}
+        />
+      )}
     </>
   );
+
 }

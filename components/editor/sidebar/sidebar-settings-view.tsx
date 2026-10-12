@@ -1,5 +1,6 @@
 import React from 'react';
-import { IconSparkles, IconDatabase, IconCreditCard } from '@tabler/icons-react';
+import { IconSparkles, IconDatabase, IconCreditCard, IconBuildingBank } from '@tabler/icons-react';
+
 
 interface SidebarSettingsViewProps {
   language: 'en' | 'id';
@@ -151,8 +152,24 @@ export function SidebarSettingsView({
               </span>
             </div>
           </button>
+
+          <a
+            href="/admin/institutions"
+            className="flex items-start gap-2.5 w-full px-3 py-2 rounded-lg text-left cursor-pointer transition-all duration-200 group text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
+          >
+            <IconBuildingBank className="h-[18px] w-[18px] mt-0.5 flex-shrink-0 transition-transform duration-200 group-hover:scale-105 text-slate-400" />
+            <div className="flex flex-col min-w-0">
+              <span className="text-xs font-bold">
+                {language === 'en' ? 'Campus & Institutions' : 'Mitra Kampus & Institusi'}
+              </span>
+              <span className="text-[8px] text-slate-400 leading-tight font-medium mt-0.5">
+                {language === 'en' ? 'Manage B2B licenses & seats' : 'Kelola lisensi B2B & kuota kursi'}
+              </span>
+            </div>
+          </a>
         </div>
       </div>
     </>
+
   );
 }

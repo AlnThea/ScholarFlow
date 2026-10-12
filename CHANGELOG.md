@@ -2,7 +2,22 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
-## 🏢 [v0.8.0] - 2026-09-30 (B2B Enterprise & Institutional SaaS)
+## 💳 [v0.8.5] - 2026-10-12 (Xendit Animated Payments & B2B Campus Admin Management)
+
+### 🚀 Xendit Hosted Invoice & Animated In-App Checkout
+- **Xendit Invoice Creation & Webhook Endpoints**: Implemented `/api/payments/xendit/create-invoice` and `/api/payments/xendit/webhook` supporting live Xendit API integration with graceful sandbox simulation fallback.
+- **Rich 4-Stage In-App Animated Checkout Modal**: Created `XenditCheckoutModal` featuring invoice creation pulse, live countdown timer (`23:59:45`), active radar pulse listener (`animate-ping`), live polling detector, instant demo simulation trigger, and celebration confetti upgrade moment.
+- **Gateway Selection Parity**: Updated `GatewaySelectorModal` and `PricingModal` to present Xendit Invoice alongside Stripe and Midtrans.
+- **Hybrid API Key Management**: Supported Xendit credentials through both `.env` (`XENDIT_SECRET_KEY`) and Admin Panel (`/admin/gateways`).
+
+### 🏛️ B2B Campus & Institutional Partner Management (`/admin/institutions`)
+- **SQL Migration Script**: Created `supabase/migrations/20261012000001_create_institutions_table.sql` with RLS policies and table indexes.
+- **Prisma Model**: Added `InstitutionEntry` universal model to `prisma/schema.prisma`.
+- **API Service & Dual-Persistence**: Implemented `lib/api/institutions.ts` supporting full CRUD operations with `localStorage` dual-persistence fallback (`scholarflow.institutions.v1`).
+- **Super Admin Management UI**: Built `app/admin/institutions/page.tsx`, `components/admin/institutions-table.tsx` with seat capacity progress bars and KPI metric cards, and `components/admin/institution-modal.tsx` with domain whitelisting and PIC email assignments.
+- **Admin Sidebar Navigation**: Linked "Campus & Institutions" directly in `SidebarSettingsView`.
+- **100% Bilingual & Dark Mode**: All new UI components strictly adhere to Tailwind Dark Mode and dynamic EN/ID localization.
+
 
 ### 🚀 B2B Campus Portal (Institution Dashboard)
 - **Enterprise UI/UX Layout**: Implemented `/dashboard/institution` with a professional, Silicon Valley-standard SaaS dashboard utilizing `framer-motion` for smooth staggered animations and state transitions.

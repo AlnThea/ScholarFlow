@@ -9,7 +9,7 @@ import { useLanguage } from '../i18n/language-context';
 interface GatewaySelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectGateway: (gatewayId: 'stripe' | 'midtrans') => void;
+  onSelectGateway: (gatewayId: 'stripe' | 'midtrans' | 'xendit') => void;
 }
 
 export function GatewaySelectorModal({
@@ -32,7 +32,7 @@ export function GatewaySelectorModal({
           
           // Auto-select if only 1 is active
           if (enabled.length === 1) {
-            onSelectGateway(enabled[0].id as 'stripe' | 'midtrans');
+            onSelectGateway(enabled[0].id as 'stripe' | 'midtrans' | 'xendit');
             onClose();
           }
         })
@@ -49,21 +49,21 @@ export function GatewaySelectorModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 transition-all animate-fade-in font-sans">
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl flex flex-col w-full max-w-md overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl flex flex-col w-full max-w-md overflow-hidden">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 bg-slate-50/50">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-5 py-4 bg-slate-50/50 dark:bg-slate-800/50">
           <div className="flex flex-col gap-0.5">
-            <h3 className="text-xs font-bold text-slate-800">
+            <h3 className="text-xs font-bold text-slate-800 dark:text-white">
               {language === 'en' ? 'Select Payment Gateway' : 'Pilih Jalur Pembayaran'}
             </h3>
             <p className="text-[10px] text-slate-400">
-              {language === 'en' ? 'Select the payment gateway that matches your location.' : 'Pilih gerbang pembayaran yang sesuai dengan lokasi Anda.'}
+              {language === 'en' ? 'Select the payment gateway that matches your preferred method.' : 'Pilih gerbang pembayaran yang sesuai dengan preferensi Anda.'}
             </p>
           </div>
           <button 
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition"
+            className="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition"
           >
             <IconX className="h-4.5 w-4.5" />
           </button>
@@ -80,6 +80,7 @@ export function GatewaySelectorModal({
             </div>
           ) : (
             gateways.map((g) => {
+              const isXendit = g.id === 'xendit';
               const isStripe = g.id === 'stripe';
               
               return (
@@ -89,25 +90,31 @@ export function GatewaySelectorModal({
                     onSelectGateway(g.id as any);
                     onClose();
                   }}
-                  className="w-full border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/10 p-4 rounded-xl text-left flex items-start gap-4 transition group cursor-pointer"
+                  className="w-full border border-slate-200 dark:border-slate-700 hover:border-indigo-400 hover:bg-indigo-50/10 dark:hover:bg-indigo-950/20 p-4 rounded-xl text-left flex items-start gap-4 transition group cursor-pointer"
                 >
                   <div className={`p-2.5 rounded-lg transition ${
-                    isStripe 
-                      ? 'bg-indigo-50 text-indigo-600 group-hover:scale-105' 
-                      : 'bg-emerald-50 text-emerald-600 group-hover:scale-105'
+                    isXendit
+                      ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 group-hover:scale-105'
+                      : isStripe 
+                      ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 group-hover:scale-105' 
+                      : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 group-hover:scale-105'
                   }`}>
                     {isStripe ? <IconCreditCard className="h-5 w-5" /> : <IconWallet className="h-5 w-5" />}
                   </div>
                   
                   <div className="flex-1 flex flex-col gap-0.5">
-                    <span className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                      {isStripe 
+                    <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center justify-between">
+                      {isXendit
+                        ? (language === 'en' ? 'Xendit Invoice (QRIS, VA & E-Wallet)' : 'Xendit Invoice (QRIS, VA & E-Wallet)')
+                        : isStripe 
                         ? (language === 'en' ? 'Global Credit Card (Stripe)' : 'Kartu Kredit Global (Stripe)') 
-                        : (language === 'en' ? 'E-Wallet & Local Bank (Midtrans)' : 'E-Wallet & Bank Lokal (Midtrans)')}
+                        : (language === 'en' ? 'Midtrans M-Snap (GoPay & VA)' : 'Midtrans M-Snap (GoPay & VA)')}
                       <IconArrowRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition text-indigo-600" />
                     </span>
-                    <span className="text-[10px] text-slate-400 leading-normal">
-                      {isStripe 
+                    <span className="text-[10px] text-slate-400 dark:text-slate-400 leading-normal">
+                      {isXendit
+                        ? (language === 'en' ? 'Instant payment via QRIS, Bank Virtual Accounts, and E-Wallets.' : 'Pembayaran instan via QRIS semua bank, Virtual Account, & E-Wallet.')
+                        : isStripe 
                         ? (language === 'en' ? 'Suitable for international payments with global credit/debit cards.' : 'Cocok untuk pembayaran internasional dengan kartu kredit/debit global.') 
                         : (language === 'en' ? 'Suitable for Indonesia. Pay with GoPay, QRIS, or local Bank Virtual Accounts.' : 'Cocok untuk Indonesia. Bayar dengan GoPay, QRIS, atau Virtual Account Bank lokal.')}
                     </span>
@@ -117,6 +124,7 @@ export function GatewaySelectorModal({
             })
           )}
         </div>
+
 
       </div>
     </div>

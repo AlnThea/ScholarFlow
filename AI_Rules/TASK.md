@@ -77,6 +77,7 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
 - [x] **2. Keamanan XSS (Cross-Site Scripting)**: Implementasi `DOMPurify` untuk sanitasi HTML.
 - [x] **3. Automated Testing (Unit & E2E)**: Setup `Vitest`/`Jest` dan `Playwright`.
 - [x] **4. Interactive Onboarding & a11y**: Setup `Shepherd.js` dan peningkatan ARIA.
+- [x] **5. Phase 12: Xendit Animated Payments & B2B Campus Admin**: Selesai mengintegrasikan sistem Xendit Invoice, Webhook auto-upgrade, In-App Radar & Confetti animation, dan Super Admin Institutions Management (`/admin/institutions`).
 - [ ] Complete remaining UI pages & user-facing feature modules.
 
 ## Do Not Work On Yet

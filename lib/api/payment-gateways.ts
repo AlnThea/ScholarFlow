@@ -6,25 +6,46 @@ export type PaymentGateway = {
   id: string;
   name: string;
   is_enabled: boolean;
+  config?: {
+    secret_key?: string;
+    webhook_token?: string;
+    [key: string]: any;
+  };
   updated_at: string;
 };
 
+const DEFAULT_GATEWAYS: PaymentGateway[] = [
+  { id: 'xendit', name: 'Xendit Invoice (QRIS, VA, E-Wallet)', is_enabled: true, updated_at: new Date().toISOString() },
+  { id: 'midtrans', name: 'Midtrans Snap', is_enabled: true, updated_at: new Date().toISOString() },
+  { id: 'stripe', name: 'Stripe Global Card', is_enabled: true, updated_at: new Date().toISOString() }
+];
+
 /**
- * Mengambil status seluruh payment gateway dari Supabase
+ * Mengambil status seluruh payment gateway dari Supabase (dengan fallback Xendit)
  */
 export async function fetchPaymentGateways(): Promise<PaymentGateway[]> {
-  const { data, error } = await supabase
-    .from('payment_gateways')
-    .select('*')
-    .order('id', { ascending: true });
+  try {
+    const { data, error } = await supabase
+      .from('payment_gateways')
+      .select('*')
+      .order('id', { ascending: true });
 
-  if (error || !data) {
-    console.error('Error fetching payment gateways:', error);
-    return [];
+    if (error || !data || data.length === 0) {
+      return DEFAULT_GATEWAYS;
+    }
+
+    const list = data as PaymentGateway[];
+    // Pastikan xendit selalu ada di list
+    if (!list.some(g => g.id === 'xendit')) {
+      list.unshift(DEFAULT_GATEWAYS[0]);
+    }
+
+    return list;
+  } catch {
+    return DEFAULT_GATEWAYS;
   }
-
-  return data as PaymentGateway[];
 }
+
 
 /**
  * Memperbarui status keaktifan payment gateway (Hanya admin via RLS)
