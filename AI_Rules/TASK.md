@@ -89,7 +89,7 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] **Navigasi End-to-End**: Tombol menu "Portal Kampus" dinamis di sidebar untuk role admin/campus_admin dan tombol aksi "Buka Portal" di tabel Super Admin.
   - [x] **Xendit Animated Payments**: Invoice creation, webhook auto-upgrade, in-app checkout modal dengan 4 animasi (Pulse Loader, Radar Scanner Timer, Live Status Polling, dan Selebrasi Konfeti Upgrade).
   - [x] **Database & Keamanan RLS**: Tabel `institutions`, model Prisma `InstitutionEntry`, dan penguncian RLS penuh pada tabel `ai_providers`.
-- [ ] **6. Phase 13: Enterprise B2B Campus Standards & Production Readiness**:
+- [x] **6. Phase 13: Enterprise B2B Campus Standards & Production Readiness**:
   - [x] **Sub-phase 1: Granular Role-Based Access Control (RBAC) & Departemen**:
     - [x] Perluas peran akademik menjadi 4 tingkat: *Super Admin (Rektorat)*, *Faculty Admin (Dekanat/Prodi)*, *Lecturer (Dosen Pembimbing)*, dan *Student (Mahasiswa)* di `lib/api/institutions.ts`.
     - [x] Tambahkan field `department`/fakultas pada data anggota institusi (contoh: *Fakultas Teknik*, *Fakultas Kedokteran*).
