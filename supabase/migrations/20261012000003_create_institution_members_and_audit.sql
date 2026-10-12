@@ -65,7 +65,13 @@ CREATE POLICY "Campus Admins manage their own members"
         EXISTS (
             SELECT 1 FROM public.institutions
             WHERE institutions.id = institution_members.institution_id
-              AND (institutions.admin_email = auth.email() OR profiles.role IN ('admin', 'campus_admin'))
+              AND (
+                  institutions.admin_email = auth.email()
+                  OR EXISTS (
+                      SELECT 1 FROM public.profiles 
+                      WHERE profiles.id = auth.uid() AND profiles.role IN ('admin', 'campus_admin')
+                  )
+              )
         )
     );
 
