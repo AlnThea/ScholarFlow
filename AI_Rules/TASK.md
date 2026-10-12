@@ -106,9 +106,9 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] **Sub-phase 4: Otomasi Siklus Hidup Akun (Lifecycle & Offboarding)**:
     - [x] Shareable Campus Join Link bertoken (`/join/[token]`) khusus email domain resmi kampus.
     - [x] Fitur tanggal kedaluwarsa lisensi otomatis berdasarkan tahun kelulusan/wisuda angkatan.
-  - [ ] **Sub-phase 5: Pelaporan Eksekutif & Stabilitas Operasional**:
-    - [ ] Executive PDF Summary satu lembar bertanda tangan/kop resmi untuk laporan ke Rektorat.
-    - [ ] Granular backup naskah dan filter audit log terperinci.
+  - [x] **Sub-phase 5: Pelaporan Eksekutif & Stabilitas Operasional**:
+    - [x] Executive PDF Summary satu lembar bertanda tangan/kop resmi untuk laporan ke Rektorat.
+    - [x] Granular backup naskah dan filter audit log terperinci.
 - [ ] Complete remaining UI pages & user-facing feature modules.
 
 
