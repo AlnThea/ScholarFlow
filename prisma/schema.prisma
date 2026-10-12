@@ -182,3 +182,34 @@ model InstitutionEntry {
   @@map("institutions")
 }
 
+model InstitutionMemberEntry {
+  id            String    @id @default(uuid())
+  institutionId String    @map("institution_id")
+  userId        String?   @map("user_id")
+  name          String
+  email         String
+  role          String    @default("Student")
+  department    String?   @default("Akademik Umum")
+  aiQuotaUsed   Int       @default(0) @map("ai_quota_used")
+  aiQuotaLimit  Int       @default(100000) @map("ai_quota_limit")
+  status        String    @default("Active")
+  joined        DateTime  @default(now())
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  @@map("institution_members")
+}
+
+model InstitutionAuditLogEntry {
+  id            String    @id @default(uuid())
+  institutionId String    @map("institution_id")
+  actorEmail    String    @map("actor_email")
+  action        String
+  target        String
+  ipAddress     String?   @default("Browser") @map("ip_address")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@map("institution_audit_logs")
+}
+
+
