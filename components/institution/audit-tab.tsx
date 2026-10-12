@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { IconShieldCheck } from '@tabler/icons-react';
+import { IconShieldCheck, IconDownload, IconFilter } from '@tabler/icons-react';
 
 interface AuditTabProps {
   isEn: boolean;
@@ -8,6 +8,45 @@ interface AuditTabProps {
 }
 
 export function AuditTab({ isEn, initialAuditLogs }: AuditTabProps) {
+  const [timeFilter, setTimeFilter] = React.useState<'30d' | '7d' | 'all'>('30d');
+
+  const filteredLogs = React.useMemo(() => {
+    if (timeFilter === 'all') return initialAuditLogs;
+    const now = new Date();
+    const daysLimit = timeFilter === '7d' ? 7 : 30;
+    const cutoff = new Date(now.getTime() - daysLimit * 24 * 60 * 60 * 1000);
+
+    return initialAuditLogs.filter(log => {
+      try {
+        const logDate = new Date(log.date);
+        return isNaN(logDate.getTime()) || logDate >= cutoff;
+      } catch {
+        return true;
+      }
+    });
+  }, [initialAuditLogs, timeFilter]);
+
+  const handleExportAudit = () => {
+    const headers = ['ID', 'Date', 'User', 'Action', 'Target/Details', 'IP Address'];
+    const rows = filteredLogs.map((l) => [
+      l.id,
+      `"${l.date}"`,
+      `"${l.user}"`,
+      l.action,
+      `"${(l.target || '').replace(/"/g, '""')}"`,
+      l.ip
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + 
+      [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `ScholarFlow_AuditLogs_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <motion.div 
       key="audit"
@@ -19,8 +58,47 @@ export function AuditTab({ isEn, initialAuditLogs }: AuditTabProps) {
           <IconShieldCheck className="w-5 h-5 text-indigo-500" />
           {isEn ? 'Security & Activity Logs' : 'Log Aktivitas & Keamanan'}
         </h3>
-        <div className="flex items-center gap-2 text-xs text-slate-500">
-          <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded-md">Last 30 Days</span>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-slate-100 dark:bg-slate-700 p-1 rounded-xl text-xs font-semibold">
+            <button
+              onClick={() => setTimeFilter('7d')}
+              className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                timeFilter === '7d' 
+                  ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs' 
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              {isEn ? 'Last 7 Days' : '7 Hari'}
+            </button>
+            <button
+              onClick={() => setTimeFilter('30d')}
+              className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                timeFilter === '30d' 
+                  ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs' 
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              {isEn ? 'Last 30 Days' : '30 Hari'}
+            </button>
+            <button
+              onClick={() => setTimeFilter('all')}
+              className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                timeFilter === 'all' 
+                  ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs' 
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              {isEn ? 'All' : 'Semua'}
+            </button>
+          </div>
+          <button
+            onClick={handleExportAudit}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
+            title={isEn ? 'Download Audit Log CSV' : 'Unduh Log Audit CSV'}
+          >
+            <IconDownload className="w-3.5 h-3.5" />
+            <span>CSV</span>
+          </button>
         </div>
       </div>
       
@@ -36,7 +114,7 @@ export function AuditTab({ isEn, initialAuditLogs }: AuditTabProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
-            {initialAuditLogs.map((log) => (
+            {filteredLogs.map((log) => (
               <tr key={log.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                 <td className="px-6 py-4 text-xs text-slate-500 dark:text-slate-400 font-mono">
                   {log.date}

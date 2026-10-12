@@ -313,7 +313,40 @@ export default function InstitutionDashboard() {
               <IconArrowLeft className="w-4 h-4" />
               <span>{isEn ? 'Back to Workspace' : 'Kembali ke Workspace'}</span>
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm transition cursor-pointer">
+            <button
+              onClick={() => {
+                if (!currentInst) return;
+                const headers = ['ID', 'Name', 'Email', 'Role', 'Status', 'Joined Date'];
+                const rows = members.map((m) => [
+                  m.id,
+                  `"${m.name.replace(/"/g, '""')}"`,
+                  m.email,
+                  m.role,
+                  m.status,
+                  m.joined
+                ]);
+                const summary = [
+                  [],
+                  ['--- INSTITUTION SUMMARY ---'],
+                  ['Institution Name', `"${currentInst.name.replace(/"/g, '""')}"`],
+                  ['Total Seats Quota', currentInst.total_seats],
+                  ['Used Seats', members.length],
+                  ['Available Seats', Math.max(0, currentInst.total_seats - members.length)],
+                  ['Contract Expiry', currentInst.contract_end || 'N/A'],
+                  ['Export Date', new Date().toLocaleString()]
+                ];
+                const csvContent = 'data:text/csv;charset=utf-8,' + 
+                  [headers.join(','), ...rows.map(r => r.join(',')), ...summary.map(s => s.join(','))].join('\n');
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement('a');
+                link.setAttribute('href', encodedUri);
+                link.setAttribute('download', `ScholarFlow_Report_${currentInst.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm transition cursor-pointer"
+            >
               <IconDownload className="w-4 h-4" />
               <span>{isEn ? 'Export Report' : 'Unduh Laporan'}</span>
             </button>
