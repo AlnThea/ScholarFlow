@@ -4,6 +4,7 @@ export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { defaultAiRateLimiter } from '@/lib/ai/rate-limiter';
+import { checkPersonalQuota, recordPersonalTokenConsumption, estimateTokens } from '@/lib/ai/token-quota';
 
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
@@ -285,10 +286,28 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { text, tone = 'academic', model = 'gemini', language = 'en', stream = false, styleReference } = body;
+    const { text, tone = 'academic', model = 'gemini', language = 'en', stream = false, styleReference, userId, userPlan = 'free' } = body;
 
     if (!text) {
       return NextResponse.json({ error: 'Text parameter is required.' }, { status: 400 });
+    }
+
+    // 2. Personal Token Quota Guard
+    const quotaCheck = await checkPersonalQuota(userId, userPlan);
+    if (!quotaCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: language === 'en'
+            ? 'Monthly AI token quota exceeded. Please upgrade to Pro for 1,000,000 tokens or configure a custom API key.'
+            : 'Batas kuota token AI bulanan telah tercapai. Silakan tingkatkan ke Pro untuk 1.000.000 token atau gunakan API Key sendiri.',
+          quotaExceeded: true,
+          tokensUsed: quotaCheck.used,
+          monthlyQuota: quotaCheck.limit,
+          remainingTokens: quotaCheck.remaining,
+          percentUsed: quotaCheck.percentUsed
+        },
+        { status: 403 }
+      );
     }
 
     const prompt = buildPrompt(text, tone, language, styleReference);
@@ -407,11 +426,19 @@ export async function POST(request: Request) {
       );
     }
 
+    const tokensConsumed = estimateTokens(prompt) + estimateTokens(finalResult);
+    const usageRecord = await recordPersonalTokenConsumption(userId, tokensConsumed, userPlan);
+
     return NextResponse.json({
       original_text: text,
       improved_text: finalResult,
       tone: tone,
       disclaimer: disclaimer,
+      tokens_consumed: tokensConsumed,
+      tokens_remaining: usageRecord.remaining,
+      monthly_quota: usageRecord.limit,
+      tokens_used: usageRecord.used,
+      percent_used: usageRecord.percentUsed,
     });
   } catch (error) {
     console.error('Error in dynamic AI cascading improve API:', error);

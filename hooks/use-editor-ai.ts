@@ -3,6 +3,8 @@ import { improveWriting, type ImproveWritingResponse, synthesizeLiteratureReview
 import { fetchAIModels, updateAIModel, createAIModel, deleteAIModel, type AIModel, fetchAIProviders, createAIProvider, updateAIProvider, deleteAIProvider, type AIProvider } from '@/lib/api/ai-models';
 import { addAiHistoryEntry, type AiHistoryEntry } from '@/lib/editor/ai-history';
 import { extractTextFromContent } from '@/lib/editor/editor-utils';
+import { useAuth } from '@/components/auth/auth-provider';
+import { getLocalQuotaState } from '@/lib/ai/token-quota';
 
 export function useEditorAi(
   language: string,
@@ -16,6 +18,11 @@ export function useEditorAi(
   setSavedAt: (val: string) => void,
   hydrated: boolean
 ) {
+  const { user, profile } = useAuth();
+  const [tokensUsed, setTokensUsed] = useState<number>(0);
+  const [monthlyQuota, setMonthlyQuota] = useState<number>(50000);
+  const [isTokenQuotaModalOpen, setIsTokenQuotaModalOpen] = useState(false);
+
   const [selectedText, setSelectedText] = useState('');
   const [improvedResult, setImprovedResult] = useState<ImproveWritingResponse | null>(null);
   const [selectedAiModel, setSelectedAiModel] = useState('gemini');
@@ -32,6 +39,17 @@ export function useEditorAi(
   const [synthesizedText, setSynthesizedText] = useState<string | null>(null);
   const [synthesizeError, setSynthesizeError] = useState<string | null>(null);
   const [synthesizeDisclaimer, setSynthesizeDisclaimer] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (profile) {
+      setTokensUsed(typeof profile.ai_tokens_used === 'number' ? profile.ai_tokens_used : 0);
+      setMonthlyQuota(typeof profile.ai_monthly_quota === 'number' ? profile.ai_monthly_quota : (profile.subscription_plan === 'pro' ? 1000000 : 50000));
+    } else {
+      const local = getLocalQuotaState('free');
+      setTokensUsed(local.used);
+      setMonthlyQuota(local.limit);
+    }
+  }, [profile]);
 
   useEffect(() => {
     fetchAIModels().then(data => {
@@ -150,7 +168,9 @@ export function useEditorAi(
     setAiError(null);
 
     try {
-      const response = await improveWriting(selectedText, selectedAiTone, selectedAiModel, language);
+      const response = await improveWriting(selectedText, selectedAiTone, selectedAiModel, language, undefined, user?.id, profile?.subscription_plan || 'free');
+      if (typeof response.tokens_used === 'number') setTokensUsed(response.tokens_used);
+      if (typeof response.monthly_quota === 'number') setMonthlyQuota(response.monthly_quota);
       setImprovedResult(response);
       setContentBeforeApply(currentDocument?.content);
       setIsApplied(false);
@@ -166,12 +186,15 @@ export function useEditorAi(
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
+      if (message.toLowerCase().includes('quota') || message.toLowerCase().includes('kuota')) {
+        setIsTokenQuotaModalOpen(true);
+      }
       setAiError(message);
       setImprovedResult(null);
     } finally {
       setIsImproving(false);
     }
-  }, [selectedText, selectedAiModel, selectedAiTone, currentDocument, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied]);
+  }, [selectedText, selectedAiModel, selectedAiTone, currentDocument, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied, user, profile]);
 
   const runParaphrase = useCallback(async () => {
     if (!selectedText.trim()) return;
@@ -181,7 +204,9 @@ export function useEditorAi(
     setAiError(null);
 
     try {
-      const response = await improveWriting(selectedText, 'paraphrase', selectedAiModel, language);
+      const response = await improveWriting(selectedText, 'paraphrase', selectedAiModel, language, undefined, user?.id, profile?.subscription_plan || 'free');
+      if (typeof response.tokens_used === 'number') setTokensUsed(response.tokens_used);
+      if (typeof response.monthly_quota === 'number') setMonthlyQuota(response.monthly_quota);
       setImprovedResult(response);
       setContentBeforeApply(currentDocument?.content);
       setIsApplied(false);
@@ -197,12 +222,15 @@ export function useEditorAi(
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
+      if (message.toLowerCase().includes('quota') || message.toLowerCase().includes('kuota')) {
+        setIsTokenQuotaModalOpen(true);
+      }
       setAiError(message);
       setImprovedResult(null);
     } finally {
       setIsImproving(false);
     }
-  }, [selectedText, selectedAiModel, currentDocument, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied]);
+  }, [selectedText, selectedAiModel, currentDocument, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied, user, profile]);
 
   const runSummarize = useCallback(async () => {
     if (!selectedText.trim()) return;
@@ -212,7 +240,9 @@ export function useEditorAi(
     setAiError(null);
 
     try {
-      const response = await improveWriting(selectedText, 'summarize', selectedAiModel, language);
+      const response = await improveWriting(selectedText, 'summarize', selectedAiModel, language, undefined, user?.id, profile?.subscription_plan || 'free');
+      if (typeof response.tokens_used === 'number') setTokensUsed(response.tokens_used);
+      if (typeof response.monthly_quota === 'number') setMonthlyQuota(response.monthly_quota);
       setImprovedResult(response);
       setContentBeforeApply(currentDocument?.content);
       setIsApplied(false);
@@ -228,12 +258,15 @@ export function useEditorAi(
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
+      if (message.toLowerCase().includes('quota') || message.toLowerCase().includes('kuota')) {
+        setIsTokenQuotaModalOpen(true);
+      }
       setAiError(message);
       setImprovedResult(null);
     } finally {
       setIsImproving(false);
     }
-  }, [selectedText, selectedAiModel, currentDocument, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied]);
+  }, [selectedText, selectedAiModel, currentDocument, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied, user, profile]);
 
   const runGenerateAbstract = useCallback(async () => {
     setActiveSidebarTab('writing');
@@ -245,7 +278,9 @@ export function useEditorAi(
       if (!fullText.trim()) {
         throw new Error(language === 'en' ? 'Document is empty. Please write some content before generating abstract.' : 'Dokumen kosong. Silakan tulis isi dokumen sebelum membuat abstrak.');
       }
-      const response = await generateAbstract(fullText, selectedAiModel, language);
+      const response = await generateAbstract(fullText, selectedAiModel, language, user?.id, profile?.subscription_plan || 'free');
+      if (typeof response.tokens_used === 'number') setTokensUsed(response.tokens_used);
+      if (typeof response.monthly_quota === 'number') setMonthlyQuota(response.monthly_quota);
       setImprovedResult({
         original_text: 'Document Context',
         improved_text: response.abstract_text,
@@ -266,12 +301,15 @@ export function useEditorAi(
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
+      if (message.toLowerCase().includes('quota') || message.toLowerCase().includes('kuota')) {
+        setIsTokenQuotaModalOpen(true);
+      }
       setAiError(message);
       setImprovedResult(null);
     } finally {
       setIsImproving(false);
     }
-  }, [currentDocument, selectedAiModel, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied]);
+  }, [currentDocument, selectedAiModel, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied, user, profile]);
 
   const handleParafrasePlagiat = useCallback(async (sentence: string) => {
     setActiveSidebarTab('writing');
@@ -280,7 +318,9 @@ export function useEditorAi(
     setAiError(null);
 
     try {
-      const response = await improveWriting(sentence, selectedAiTone, selectedAiModel, language);
+      const response = await improveWriting(sentence, selectedAiTone, selectedAiModel, language, undefined, user?.id, profile?.subscription_plan || 'free');
+      if (typeof response.tokens_used === 'number') setTokensUsed(response.tokens_used);
+      if (typeof response.monthly_quota === 'number') setMonthlyQuota(response.monthly_quota);
       setImprovedResult(response);
       setContentBeforeApply(currentDocument?.content);
       setIsApplied(false);
@@ -296,12 +336,15 @@ export function useEditorAi(
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to contact AI backend.';
+      if (message.toLowerCase().includes('quota') || message.toLowerCase().includes('kuota')) {
+        setIsTokenQuotaModalOpen(true);
+      }
       setAiError(message);
       setImprovedResult(null);
     } finally {
       setIsImproving(false);
     }
-  }, [selectedAiModel, selectedAiTone, currentDocument, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied]);
+  }, [selectedAiModel, selectedAiTone, currentDocument, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied, user, profile]);
 
   const applyImprovedText = useCallback(() => {
     if (!improvedResult) return;
@@ -339,6 +382,11 @@ export function useEditorAi(
     handleSynthesizeReview,
     runImproveWriting, runParaphrase, runSummarize, runGenerateAbstract,
     handleParafrasePlagiat, applyImprovedText,
-    deleteAiHistoryEntry, clearAiHistory
+    deleteAiHistoryEntry, clearAiHistory,
+
+    // Token Quota states
+    tokensUsed, setTokensUsed,
+    monthlyQuota, setMonthlyQuota,
+    isTokenQuotaModalOpen, setIsTokenQuotaModalOpen
   };
 }

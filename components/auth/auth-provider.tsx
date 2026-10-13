@@ -14,6 +14,9 @@ export type UserProfile = {
   subscription_status: string;
   subscription_end: string | null;
   preferences?: Record<string, any>;
+  ai_tokens_used?: number;
+  ai_monthly_quota?: number;
+  ai_quota_reset_at?: string | null;
 };
 
 type AuthContextType = {
@@ -37,7 +40,7 @@ const AuthContext = createContext<AuthContextType>({
 async function fetchProfile(user: User): Promise<UserProfile | null> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, full_name, role, created_at, subscription_plan, subscription_status, subscription_end, preferences')
+    .select('id, full_name, role, created_at, subscription_plan, subscription_status, subscription_end, preferences, ai_tokens_used, ai_monthly_quota, ai_quota_reset_at')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -56,9 +59,11 @@ async function fetchProfile(user: User): Promise<UserProfile | null> {
         full_name: user.user_metadata?.full_name ?? '',
         role: 'user',
         subscription_plan: 'free',
-        subscription_status: 'active'
+        subscription_status: 'active',
+        ai_tokens_used: 0,
+        ai_monthly_quota: 50000
       })
-      .select('id, full_name, role, created_at, subscription_plan, subscription_status, subscription_end, preferences')
+      .select('id, full_name, role, created_at, subscription_plan, subscription_status, subscription_end, preferences, ai_tokens_used, ai_monthly_quota, ai_quota_reset_at')
       .maybeSingle();
 
     if (insertError) {
@@ -68,7 +73,16 @@ async function fetchProfile(user: User): Promise<UserProfile | null> {
     return inserted as UserProfile;
   }
 
-  return data as UserProfile;
+  // Provide sensible default fallback if newly added columns are null
+  const plan = data.subscription_plan || 'free';
+  const defaultQuota = plan === 'pro' ? 1000000 : 50000;
+  const profileWithDefaults: UserProfile = {
+    ...data,
+    ai_tokens_used: typeof data.ai_tokens_used === 'number' ? data.ai_tokens_used : 0,
+    ai_monthly_quota: typeof data.ai_monthly_quota === 'number' ? data.ai_monthly_quota : defaultQuota,
+  };
+
+  return profileWithDefaults;
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {

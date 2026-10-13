@@ -109,6 +109,13 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] **Sub-phase 5: Pelaporan Eksekutif & Stabilitas Operasional**:
     - [x] Executive PDF Summary satu lembar bertanda tangan/kop resmi untuk laporan ke Rektorat.
     - [x] Granular backup naskah dan filter audit log terperinci.
+- [x] **7. Personal AI Token Quota & Fair Usage Policy Guard (Non-Campus Free & Pro)**:
+  - [x] Database migration & Prisma schema: `ai_tokens_used`, `ai_monthly_quota`, and `ai_quota_reset_at` columns on `profiles` table (`supabase/migrations/20261013000001_add_user_ai_token_quota.sql`).
+  - [x] Engine & Heuristics (`lib/ai/token-quota.ts`): NLP token estimation, 50.000 Free & 1.000.000 Pro monthly caps, 30-day auto-reset cycle, and dual-persistence with localStorage.
+  - [x] API Quota Protection: Hard guard on `/api/v1/ai/improve`, `/api/v1/ai/abstract`, `/api/v1/ai/synthesize`, and query endpoint `/api/v1/ai/user-quota`.
+  - [x] UI Components: `TokenQuotaBadge` (responsive progress bar meter) and `TokenQuotaModal` (detailed tier comparison & 1-click upgrade).
+  - [x] Editor Integration: Header Editor and Sidebar Writing Tab integration with automatic quota exhaustion modal trigger.
+  - [x] Unit Testing: Vitest test suite in `__tests__/utils/token-quota.test.ts` (11/11 tests passing).
 - [ ] Complete remaining UI pages & user-facing feature modules.
 
 

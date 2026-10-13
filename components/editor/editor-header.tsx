@@ -6,6 +6,7 @@ import {
   IconShare, IconCreditCard, IconLayoutSidebarRightCollapse, 
   IconSettings 
 } from '@tabler/icons-react';
+import { TokenQuotaBadge } from '@/components/ai/token-quota-badge';
 
 export type EditorHeaderProps = {
   isSidebarExpanded: boolean;
@@ -15,6 +16,9 @@ export type EditorHeaderProps = {
   backendType: 'express' | 'supabase' | string;
   language: 'en' | 'id';
   activePlanId: string;
+  tokensUsed?: number;
+  monthlyQuota?: number;
+  onOpenTokenQuotaModal?: () => void;
   bibliographyEntries: any[];
   exportToWordFile: (title: string, blocks: any[], bibliography: string[], language?: 'en' | 'id', isPro?: boolean) => Promise<void>;
   exportToPdfFile: (title: string, blocks: any[], bibliography: string[], language?: 'en' | 'id', isPro?: boolean) => Promise<void>;
@@ -44,6 +48,9 @@ export const EditorHeader = ({
   backendType,
   language,
   activePlanId,
+  tokensUsed,
+  monthlyQuota,
+  onOpenTokenQuotaModal,
   bibliographyEntries,
   exportToWordFile,
   exportToPdfFile,
@@ -380,6 +387,19 @@ export const EditorHeader = ({
               <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
             </>
           )}
+
+          {/* AI Token Quota Badge */}
+          <TokenQuotaBadge
+            tokensUsed={tokensUsed}
+            monthlyQuota={monthlyQuota}
+            activePlanId={activePlanId}
+            language={language}
+            onClick={onOpenTokenQuotaModal}
+            compact={true}
+          />
+
+          {/* Divider */}
+          <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
 
           {/* Pricing Button */}
           <button

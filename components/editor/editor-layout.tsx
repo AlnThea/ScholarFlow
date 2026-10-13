@@ -3,6 +3,7 @@
 
 import { EditorModalsWrapper } from './editor-modals-wrapper';
 import { OnboardingTour } from '@/components/onboarding-tour';
+import { TokenQuotaModal } from '@/components/ai/token-quota-modal';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
@@ -135,7 +136,12 @@ export function EditorLayout({
   onRejectSuggestion,
   onResolveComment,
   onCommentClick,
-  activeSidebarTab, setActiveSidebarTab
+  activeSidebarTab, setActiveSidebarTab,
+  tokensUsed,
+  monthlyQuota,
+  isTokenQuotaModalOpen,
+  onOpenTokenQuotaModal,
+  onCloseTokenQuotaModal,
 }: EditorLayoutProps) {
   const {
     mounted,
@@ -359,6 +365,9 @@ export function EditorLayout({
             backendType={backendType}
             language={language}
             activePlanId={activePlanId}
+            tokensUsed={tokensUsed}
+            monthlyQuota={monthlyQuota}
+            onOpenTokenQuotaModal={onOpenTokenQuotaModal}
             bibliographyEntries={bibliographyEntries}
             exportToWordFile={exportToWordFile}
             exportToPdfFile={exportToPdfFile}
@@ -578,6 +587,9 @@ export function EditorLayout({
                   onResolveComment={onResolveComment}
                   onCommentClick={onCommentClick}
                   activeTab={activeSidebarTab} setActiveTab={setActiveSidebarTab}
+                  tokensUsed={tokensUsed}
+                  monthlyQuota={monthlyQuota}
+                  onOpenTokenQuotaModal={onOpenTokenQuotaModal}
                 />
               )}
             </div>
@@ -701,6 +713,15 @@ export function EditorLayout({
         setMathToast={setMathToast}
         isHelpOpen={isHelpOpen}
         setIsHelpOpen={setIsHelpOpen}
+      />
+      <TokenQuotaModal
+        isOpen={Boolean(isTokenQuotaModalOpen)}
+        onClose={onCloseTokenQuotaModal || (() => {})}
+        tokensUsed={tokensUsed}
+        monthlyQuota={monthlyQuota}
+        activePlanId={activePlanId}
+        language={language}
+        onUpgrade={() => setIsPricingOpen(true)}
       />
       <OnboardingTour />
     </div>

@@ -147,21 +147,37 @@ export default function BillingPage() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-8 relative z-10">
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8 relative z-10">
+                <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-4 border border-slate-100 dark:border-slate-800">
                   <span className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
                     {language === 'en' ? 'Project Quota' : 'Kuota Proyek'}
                   </span>
-                  <span className="text-lg font-bold text-slate-700">
+                  <span className="text-base font-bold text-slate-750 dark:text-slate-200">
                     {isPro ? (language === 'en' ? 'Unlimited' : 'Tanpa Batas') : '1 Proyek / 3 Bab'}
                   </span>
                 </div>
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
+                  <div>
+                    <span className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                      {language === 'en' ? 'Monthly AI Tokens' : 'Kuota Token Bulanan'}
+                    </span>
+                    <span className="text-base font-bold text-indigo-650 dark:text-indigo-400">
+                      {(profile.ai_tokens_used || 0).toLocaleString()} <span className="text-xs font-normal text-slate-500">/ {(profile.ai_monthly_quota || (isPro ? 1000000 : 50000)).toLocaleString()}</span>
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden mt-2">
+                    <div 
+                      className={`h-full ${isPro ? 'bg-indigo-500' : 'bg-emerald-500'}`}
+                      style={{ width: `${Math.min(100, Math.round(((profile.ai_tokens_used || 0) / (profile.ai_monthly_quota || (isPro ? 1000000 : 50000))) * 100))}%` }}
+                    />
+                  </div>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-4 border border-slate-100 dark:border-slate-800">
                   <span className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
-                    {language === 'en' ? 'AI Assistant' : 'Asisten AI'}
+                    {language === 'en' ? 'AI Engine' : 'Engine AI'}
                   </span>
-                  <span className="text-lg font-bold text-slate-700">
-                    {isPro ? 'Gemini 2.0 Pro' : 'Gemini 1.5 Flash'}
+                  <span className="text-base font-bold text-slate-750 dark:text-slate-200">
+                    {isPro ? 'Gemini 2.0 Flash' : 'Gemini 1.5 Flash'}
                   </span>
                 </div>
               </div>

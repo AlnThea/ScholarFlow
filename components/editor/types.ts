@@ -104,4 +104,9 @@ export type EditorLayoutProps = {
   onResolveComment?: (id: string) => void;
   onCommentClick?: (comment: any) => void;
   activeSidebarTab?: 'library' | 'writing' | 'document' | 'comments' | 'burstiness'; setActiveSidebarTab?: (tab: 'library' | 'writing' | 'document' | 'comments' | 'burstiness') => void;
+  tokensUsed?: number;
+  monthlyQuota?: number;
+  isTokenQuotaModalOpen?: boolean;
+  onOpenTokenQuotaModal?: () => void;
+  onCloseTokenQuotaModal?: () => void;
 };

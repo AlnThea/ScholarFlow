@@ -304,7 +304,10 @@ export function ScholarEditor() {
     handleSynthesizeReview,
     runImproveWriting, runParaphrase, runSummarize, runGenerateAbstract,
     handleParafrasePlagiat, applyImprovedText,
-    deleteAiHistoryEntry, clearAiHistory
+    deleteAiHistoryEntry, clearAiHistory,
+    tokensUsed, setTokensUsed,
+    monthlyQuota, setMonthlyQuota,
+    isTokenQuotaModalOpen, setIsTokenQuotaModalOpen
   } = useEditorAi(
     language,
     currentDocument,
@@ -648,6 +651,11 @@ export function ScholarEditor() {
         onResolveComment={handleResolveComment}
         onCommentClick={handleCommentClick}
         activeSidebarTab={activeSidebarTab} setActiveSidebarTab={setActiveSidebarTab}
+        tokensUsed={tokensUsed}
+        monthlyQuota={monthlyQuota}
+        isTokenQuotaModalOpen={isTokenQuotaModalOpen}
+        onOpenTokenQuotaModal={() => setIsTokenQuotaModalOpen(true)}
+        onCloseTokenQuotaModal={() => setIsTokenQuotaModalOpen(false)}
       />
 
       <RemoteUpdateBanner

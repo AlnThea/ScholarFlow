@@ -52,6 +52,9 @@ export type UserProfile = {
   subscription_status: string;
   subscription_end: string | null;
   preferences?: Record<string, any>;
+  ai_tokens_used?: number;
+  ai_monthly_quota?: number;
+  ai_quota_reset_at?: string | null;
 };
 
 export type CitationCandidate = {

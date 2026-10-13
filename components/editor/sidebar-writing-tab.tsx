@@ -6,6 +6,7 @@ import {
   IconChevronRight, IconLanguage, IconX, IconClock, IconTrash, IconCopy, IconHistory
 } from '@tabler/icons-react';
 import { BurstinessChart } from './burstiness-chart';
+import { TokenQuotaBadge } from '@/components/ai/token-quota-badge';
 
 
 export const SidebarWritingTab = (props: any) => {
@@ -59,6 +60,19 @@ export const SidebarWritingTab = (props: any) => {
                       ? selectedText
                       : (isEn ? 'Select text in the document to enable writing tools.' : 'Pilih teks di dalam dokumen untuk mengaktifkan alat penulisan.')}
                   </div>
+
+                  {/* Monthly AI Token Quota Status Card */}
+                  <div className="mb-3">
+                    <TokenQuotaBadge
+                      tokensUsed={props.tokensUsed}
+                      monthlyQuota={props.monthlyQuota}
+                      activePlanId={activePlanId}
+                      language={language}
+                      onClick={props.onOpenTokenQuotaModal}
+                      compact={false}
+                    />
+                  </div>
+
                   <div className="space-y-2">
                     <ActionButton
                       label={isImproving ? (isEn ? 'Improving...' : 'Sedang Memperbaiki...') : (isEn ? 'Improve Academic Writing' : 'Perbaiki Gaya Penulisan')}

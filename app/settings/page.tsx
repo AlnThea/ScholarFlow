@@ -177,6 +177,21 @@ export default function SettingsPage() {
                       System Administrator
                     </div>
                   )}
+                  {/* Monthly AI Token Meter */}
+                  <div className="mt-2 p-3 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-left">
+                    <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                      <span>{language === 'en' ? 'AI Tokens' : 'Token AI'}</span>
+                      <span className="font-bold text-indigo-650 dark:text-indigo-400">
+                        {(profile.ai_tokens_used || 0).toLocaleString()} / {(profile.ai_monthly_quota || (isPro ? 1000000 : 50000)).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                      <div 
+                        className={`h-full ${isPro ? 'bg-indigo-500' : 'bg-emerald-500'}`}
+                        style={{ width: `${Math.min(100, Math.round(((profile.ai_tokens_used || 0) / (profile.ai_monthly_quota || (isPro ? 1000000 : 50000))) * 100))}%` }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

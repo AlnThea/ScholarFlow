@@ -1,5 +1,16 @@
 # ScholarFlow Changelog
 
+## v0.8.0 - Personal AI Token Quota & Fair Usage Policy Guard (Non-Campus Free & Pro)
+
+- **Database & Prisma Schema Migration**: Added `ai_tokens_used`, `ai_monthly_quota`, and `ai_quota_reset_at` columns to `profiles` table (`supabase/migrations/20261013000001_add_user_ai_token_quota.sql` and `prisma/schema.prisma`).
+- **Token Quota Engine (`lib/ai/token-quota.ts`)**: Implemented monthly quota checks, standard NLP token estimation, and dual-persistence fallback with `localStorage`.
+- **API Guard & Tracking Routes**: Integrated personal token quota validation and consumption recording into `/api/v1/ai/improve`, `/api/v1/ai/abstract`, `/api/v1/ai/synthesize`, and created `/api/v1/ai/user-quota`.
+- **Interactive UI Components**:
+  - `components/ai/token-quota-badge.tsx`: Responsive progress bar badge showing remaining allowance with color indicators (Emerald, Amber, Rose).
+  - `components/ai/token-quota-modal.tsx`: Detailed modal dialog explaining 30-day reset cycles, comparing Free (50k) vs Pro (1M) vs BYOK, with 1-click Upgrade trigger.
+- **Editor Integration**: Integrated `TokenQuotaBadge` in both `EditorHeader` and `SidebarWritingTab`, connected to `useEditorAi`.
+- **Automated Unit Testing**: Created `__tests__/utils/token-quota.test.ts` covering token heuristics, quota limits, and consumption tracking (11/11 tests passing in Vitest).
+
 ## v0.5.0-architecture - EPIC 5 Testing & Production Readiness (Architecture Sprint Complete)
 
 - Created universal Prisma ORM schema in `prisma/schema.prisma` for PostgreSQL and MySQL multi-database support.

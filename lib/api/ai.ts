@@ -6,6 +6,11 @@ export type ImproveWritingResponse = {
   improved_text: string;
   tone: string;
   disclaimer: string;
+  tokens_consumed?: number;
+  tokens_remaining?: number;
+  monthly_quota?: number;
+  tokens_used?: number;
+  percent_used?: number;
 };
 
 export async function improveWriting(
@@ -13,17 +18,25 @@ export async function improveWriting(
   tone = 'academic',
   model = 'gemini',
   language = 'en',
-  styleReference?: string
+  styleReference?: string,
+  userId?: string,
+  userPlan?: string
 ): Promise<ImproveWritingResponse> {
   const response = await fetch('/api/v1/ai/improve', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, tone, model, language, styleReference }),
+    body: JSON.stringify({ text, tone, model, language, styleReference, userId, userPlan }),
   });
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || 'Failed to improve writing.');
+    let message = 'Failed to improve writing.';
+    try {
+      const errJson = await response.json();
+      if (errJson?.error) message = errJson.error;
+    } catch (_) {
+      message = await response.text().catch(() => message);
+    }
+    throw new Error(message);
   }
 
   return (await response.json()) as ImproveWritingResponse;
@@ -38,41 +51,62 @@ export async function synthesizeLiteratureReview(
     label: string;
   }>,
   model = 'gemini',
-  language = 'en'
-): Promise<{ synthesized_text: string; disclaimer?: string }> {
+  language = 'en',
+  userId?: string,
+  userPlan?: string
+): Promise<{ synthesized_text: string; disclaimer?: string; tokens_consumed?: number; tokens_remaining?: number }> {
   const response = await fetch('/api/v1/ai/synthesize', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ references, model, language }),
+    body: JSON.stringify({ references, model, language, userId, userPlan }),
   });
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || 'Failed to synthesize literature review.');
+    let message = 'Failed to synthesize literature review.';
+    try {
+      const errJson = await response.json();
+      if (errJson?.error) message = errJson.error;
+    } catch (_) {
+      message = await response.text().catch(() => message);
+    }
+    throw new Error(message);
   }
 
-  return (await response.json()) as { synthesized_text: string; disclaimer?: string };
+  return (await response.json()) as { synthesized_text: string; disclaimer?: string; tokens_consumed?: number; tokens_remaining?: number };
 }
 
 export type GenerateAbstractResponse = {
   abstract_text: string;
   disclaimer: string | null;
+  tokens_consumed?: number;
+  tokens_remaining?: number;
+  monthly_quota?: number;
+  tokens_used?: number;
+  percent_used?: number;
 };
 
 export async function generateAbstract(
   text: string,
   model = 'gemini',
-  language = 'en'
+  language = 'en',
+  userId?: string,
+  userPlan?: string
 ): Promise<GenerateAbstractResponse> {
   const response = await fetch('/api/v1/ai/abstract', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, model, language }),
+    body: JSON.stringify({ text, model, language, userId, userPlan }),
   });
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || 'Failed to generate abstract.');
+    let message = 'Failed to generate abstract.';
+    try {
+      const errJson = await response.json();
+      if (errJson?.error) message = errJson.error;
+    } catch (_) {
+      message = await response.text().catch(() => message);
+    }
+    throw new Error(message);
   }
 
   return (await response.json()) as GenerateAbstractResponse;

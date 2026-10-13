@@ -26,12 +26,16 @@ export async function POST(req: Request) {
         const nextMonth = new Date();
         nextMonth.setMonth(nextMonth.getMonth() + 1);
 
+        const isPro = planId.toLowerCase() === 'pro' || planId.toLowerCase() === 'institution';
         const { error } = await supabase
           .from('profiles')
           .update({
             subscription_plan: planId,
             subscription_status: 'active',
-            subscription_end: nextMonth.toISOString()
+            subscription_end: nextMonth.toISOString(),
+            ai_monthly_quota: isPro ? 1000000 : 50000,
+            ai_tokens_used: 0,
+            ai_quota_reset_at: nextMonth.toISOString()
           })
           .eq('id', userId);
 
