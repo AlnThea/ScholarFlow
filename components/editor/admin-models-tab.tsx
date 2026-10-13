@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { IconLoader, IconEdit } from '@tabler/icons-react';
+import { IconLoader, IconEdit, IconGripVertical, IconArrowUp, IconArrowDown } from '@tabler/icons-react';
 import { Switch } from './editor-switch';
+import { reorderAIModels } from '@/lib/api/ai-models';
 
 interface AdminModelsTabProps {
   isEn: boolean;
@@ -39,6 +40,63 @@ export function AdminModelsTab({
   handleTestModelConnection,
   testingModelId
 }: AdminModelsTabProps) {
+  const [modelsList, setModelsList] = useState<any[]>(aiModels);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [isReordering, setIsReordering] = useState(false);
+
+  React.useEffect(() => {
+    setModelsList(aiModels);
+  }, [aiModels]);
+
+  const handleDragStart = (e: React.DragEvent<HTMLTableRowElement>, id: string) => {
+    setDraggedId(id);
+    e.dataTransfer.effectAllowed = 'move';
+    if (e.currentTarget) e.currentTarget.style.opacity = '0.5';
+  };
+
+  const handleDragEnd = (e: React.DragEvent<HTMLTableRowElement>) => {
+    if (e.currentTarget) e.currentTarget.style.opacity = '1';
+    setDraggedId(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLTableRowElement>, targetId: string) => {
+    e.preventDefault();
+    if (!draggedId || draggedId === targetId) return;
+
+    const sourceIdx = modelsList.findIndex((m) => m.id === draggedId);
+    const targetIdx = modelsList.findIndex((m) => m.id === targetId);
+    if (sourceIdx === -1 || targetIdx === -1) return;
+
+    const next = [...modelsList];
+    const [moved] = next.splice(sourceIdx, 1);
+    next.splice(targetIdx, 0, moved);
+    setModelsList(next);
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLTableRowElement>) => {
+    e.preventDefault();
+    setDraggedId(null);
+    setIsReordering(true);
+    await reorderAIModels(modelsList.map((m) => m.id));
+    setIsReordering(false);
+  };
+
+  const handleMove = async (id: string, direction: 'up' | 'down') => {
+    const idx = modelsList.findIndex((m) => m.id === id);
+    if (idx === -1) return;
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= modelsList.length) return;
+
+    const next = [...modelsList];
+    const temp = next[idx];
+    next[idx] = next[targetIdx];
+    next[targetIdx] = temp;
+    setModelsList(next);
+
+    setIsReordering(true);
+    await reorderAIModels(next.map((m) => m.id));
+    setIsReordering(false);
+  };
   return (
     <div className="w-full flex flex-col gap-6 animate-fade-in px-4 md:px-8 py-2">
       {/* Header Banner - Enterprise Rounded-XL */}
@@ -81,7 +139,7 @@ export function AdminModelsTab({
       </div>
 
       {/* Stats Overview Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-sm flex items-center justify-between">
           <div className="flex flex-col">
             <span className="text-xs font-medium text-slate-500">{isEn ? 'Total AI Models' : 'Total Model AI'}</span>
@@ -97,10 +155,10 @@ export function AdminModelsTab({
             <span className="text-xs font-medium text-slate-500">{isEn ? 'Free Tier Models' : 'Model Free Tier'}</span>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-xl font-bold text-slate-900">
-                {aiModels.filter(m => !m.is_premium).length}
+                {aiModels.filter(m => !m.is_premium && m.access_tier !== 'institution').length}
               </span>
               <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60">
-                {aiModels.filter(m => !m.is_premium && m.is_enabled).length} {isEn ? 'Active' : 'Aktif'}
+                {aiModels.filter(m => !m.is_premium && m.access_tier !== 'institution' && m.is_enabled).length} {isEn ? 'Active' : 'Aktif'}
               </span>
             </div>
           </div>
@@ -114,15 +172,32 @@ export function AdminModelsTab({
             <span className="text-xs font-medium text-slate-500">{isEn ? 'Pro Writer Models' : 'Model Pro Writer'}</span>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-xl font-bold text-slate-900">
-                {aiModels.filter(m => m.is_premium).length}
+                {aiModels.filter(m => m.is_premium && m.access_tier !== 'institution').length}
               </span>
               <span className="text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200/60">
-                {aiModels.filter(m => m.is_premium && m.is_enabled).length} {isEn ? 'Active' : 'Aktif'}
+                {aiModels.filter(m => m.is_premium && m.access_tier !== 'institution' && m.is_enabled).length} {isEn ? 'Active' : 'Aktif'}
               </span>
             </div>
           </div>
           <div className="p-2.5 bg-amber-50 rounded-lg text-amber-600 font-bold text-xs">
             PRO
+          </div>
+        </div>
+
+        <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-sm flex items-center justify-between">
+          <div className="flex flex-col">
+            <span className="text-xs font-medium text-slate-500">{isEn ? 'Campus Models' : 'Model Kampus'}</span>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-xl font-bold text-slate-900">
+                {aiModels.filter(m => m.access_tier === 'institution').length}
+              </span>
+              <span className="text-[11px] font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-200/60">
+                {aiModels.filter(m => m.access_tier === 'institution' && m.is_enabled).length} {isEn ? 'Active' : 'Aktif'}
+              </span>
+            </div>
+          </div>
+          <div className="p-2.5 bg-purple-50 rounded-lg text-purple-600 font-bold text-xs">
+            B2B
           </div>
         </div>
       </div>
@@ -253,27 +328,71 @@ export function AdminModelsTab({
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="border-b border-slate-200/70 bg-slate-50/70 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                <th className="px-6 py-3 font-semibold min-w-[140px]">{isEn ? 'Status & Toggle' : 'Status & Toggle'}</th>
-                <th className="px-6 py-3 font-semibold min-w-[130px]">{isEn ? 'Gateway Key' : 'Gateway Key'}</th>
-                <th className="px-6 py-3 font-semibold min-w-[200px]">{isEn ? 'Model Display Name' : 'Nama Tampilan Model'}</th>
-                <th className="px-6 py-3 font-semibold min-w-[170px]">{isEn ? 'API Provider Type' : 'Tipe Provider API'}</th>
-                <th className="px-6 py-3 font-semibold min-w-[240px]">{isEn ? 'Real API Model ID' : 'ID Model API Asli'}</th>
-                <th className="px-6 py-3 font-semibold min-w-[130px]">{isEn ? 'Access Tier' : 'Hak Akses'}</th>
-                <th className="px-6 py-3 font-semibold text-center w-[140px]">{isEn ? 'Actions' : 'Aksi'}</th>
+                <th className="px-3 py-3 font-semibold text-center w-[60px]">{isEn ? 'Order' : 'Urutan'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[140px]">{isEn ? 'Status & Toggle' : 'Status & Toggle'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[130px]">{isEn ? 'Gateway Key' : 'Gateway Key'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[200px]">{isEn ? 'Model Display Name' : 'Nama Tampilan Model'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[170px]">{isEn ? 'API Provider Type' : 'Tipe Provider API'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[240px]">{isEn ? 'Real API Model ID' : 'ID Model API Asli'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[130px]">{isEn ? 'Access Tier' : 'Hak Akses'}</th>
+                <th className="px-5 py-3 font-semibold text-center w-[140px]">{isEn ? 'Actions' : 'Aksi'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs">
-              {aiModels.filter(m => !m.is_premium).length === 0 ? (
+              {modelsList.filter(m => !m.is_premium).length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-slate-400 text-xs font-normal">
+                  <td colSpan={8} className="px-6 py-8 text-center text-slate-400 text-xs font-normal">
                     {isEn ? 'No Free Tier AI models added yet. Click Add New Model above.' : 'Belum ada model AI untuk Free Tier. Klik tombol Tambah Model Baru di atas.'}
                   </td>
                 </tr>
               ) : (
-                aiModels.filter(m => !m.is_premium).map((model) => (
-                  <tr key={model.id} className="hover:bg-slate-50/60 transition-all duration-150">
+                modelsList.filter(m => !m.is_premium).map((model, index, arr) => (
+                  <tr 
+                    key={model.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, model.id)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={(e) => handleDragOver(e, model.id)}
+                    onDrop={handleDrop}
+                    className={`hover:bg-slate-50/60 transition-all duration-150 select-none ${
+                      draggedId === model.id ? 'bg-indigo-50/70 ring-1 ring-indigo-300' : ''
+                    }`}
+                  >
+                    {/* Drag Handle & Reorder */}
+                    <td className="px-3 py-4 align-middle text-center">
+                      <div className="flex items-center justify-center gap-1 text-slate-400">
+                        <button
+                          type="button"
+                          className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-slate-200/70 text-slate-400 hover:text-slate-700"
+                          title={isEn ? "Drag to prioritize fallback order" : "Tahan & geser untuk atur prioritas fallback"}
+                        >
+                          <IconGripVertical className="h-4 w-4" />
+                        </button>
+                        <div className="flex flex-col -space-y-1">
+                          <button
+                            type="button"
+                            disabled={index === 0}
+                            onClick={() => handleMove(model.id, 'up')}
+                            className="p-0.5 rounded hover:bg-slate-200/70 text-slate-400 hover:text-slate-800 disabled:opacity-20 disabled:hover:bg-transparent"
+                            title={isEn ? "Move Up" : "Pindah ke atas"}
+                          >
+                            <IconArrowUp className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={index === arr.length - 1}
+                            onClick={() => handleMove(model.id, 'down')}
+                            className="p-0.5 rounded hover:bg-slate-200/70 text-slate-400 hover:text-slate-800 disabled:opacity-20 disabled:hover:bg-transparent"
+                            title={isEn ? "Move Down" : "Pindah ke bawah"}
+                          >
+                            <IconArrowDown className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+
                     {/* Status & Quick Toggle */}
-                    <td className="px-6 py-4 align-middle">
+                    <td className="px-5 py-4 align-middle">
                       <button
                         onClick={() => handleToggleModelStatus(model)}
                         className="flex items-center gap-2.5 group cursor-pointer text-left focus:outline-none"
@@ -431,27 +550,71 @@ export function AdminModelsTab({
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="border-b border-slate-200/70 bg-slate-50/70 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                <th className="px-6 py-3 font-semibold min-w-[140px]">{isEn ? 'Status & Toggle' : 'Status & Toggle'}</th>
-                <th className="px-6 py-3 font-semibold min-w-[130px]">{isEn ? 'Gateway Key' : 'Gateway Key'}</th>
-                <th className="px-6 py-3 font-semibold min-w-[200px]">{isEn ? 'Model Display Name' : 'Nama Tampilan Model'}</th>
-                <th className="px-6 py-3 font-semibold min-w-[170px]">{isEn ? 'API Provider Type' : 'Tipe Provider API'}</th>
-                <th className="px-6 py-3 font-semibold min-w-[240px]">{isEn ? 'Real API Model ID' : 'ID Model API Asli'}</th>
-                <th className="px-6 py-3 font-semibold min-w-[130px]">{isEn ? 'Access Tier' : 'Hak Akses'}</th>
-                <th className="px-6 py-3 font-semibold text-center w-[140px]">{isEn ? 'Actions' : 'Aksi'}</th>
+                <th className="px-3 py-3 font-semibold text-center w-[60px]">{isEn ? 'Order' : 'Urutan'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[140px]">{isEn ? 'Status & Toggle' : 'Status & Toggle'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[130px]">{isEn ? 'Gateway Key' : 'Gateway Key'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[200px]">{isEn ? 'Model Display Name' : 'Nama Tampilan Model'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[170px]">{isEn ? 'API Provider Type' : 'Tipe Provider API'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[240px]">{isEn ? 'Real API Model ID' : 'ID Model API Asli'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[130px]">{isEn ? 'Access Tier' : 'Hak Akses'}</th>
+                <th className="px-5 py-3 font-semibold text-center w-[140px]">{isEn ? 'Actions' : 'Aksi'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs">
-              {aiModels.filter(m => m.is_premium).length === 0 ? (
+              {modelsList.filter(m => m.is_premium).length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-slate-400 text-xs font-normal">
+                  <td colSpan={8} className="px-6 py-8 text-center text-slate-400 text-xs font-normal">
                     {isEn ? 'No Pro Writer AI models added yet. Click Add New Model above and check "Pro Writer" tier.' : 'Belum ada model AI untuk Pro Writer. Klik tombol Tambah Model Baru di atas dan centang tier "Pro Writer".'}
                   </td>
                 </tr>
               ) : (
-                aiModels.filter(m => m.is_premium).map((model) => (
-                  <tr key={model.id} className="hover:bg-slate-50/60 transition-all duration-150">
+                modelsList.filter(m => m.is_premium).map((model, index, arr) => (
+                  <tr 
+                    key={model.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, model.id)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={(e) => handleDragOver(e, model.id)}
+                    onDrop={handleDrop}
+                    className={`hover:bg-slate-50/60 transition-all duration-150 select-none ${
+                      draggedId === model.id ? 'bg-amber-50/70 ring-1 ring-amber-300' : ''
+                    }`}
+                  >
+                    {/* Drag Handle & Reorder */}
+                    <td className="px-3 py-4 align-middle text-center">
+                      <div className="flex items-center justify-center gap-1 text-slate-400">
+                        <button
+                          type="button"
+                          className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-slate-200/70 text-slate-400 hover:text-slate-700"
+                          title={isEn ? "Drag to prioritize fallback order" : "Tahan & geser untuk atur prioritas fallback"}
+                        >
+                          <IconGripVertical className="h-4 w-4" />
+                        </button>
+                        <div className="flex flex-col -space-y-1">
+                          <button
+                            type="button"
+                            disabled={index === 0}
+                            onClick={() => handleMove(model.id, 'up')}
+                            className="p-0.5 rounded hover:bg-slate-200/70 text-slate-400 hover:text-slate-800 disabled:opacity-20 disabled:hover:bg-transparent"
+                            title={isEn ? "Move Up" : "Pindah ke atas"}
+                          >
+                            <IconArrowUp className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={index === arr.length - 1}
+                            onClick={() => handleMove(model.id, 'down')}
+                            className="p-0.5 rounded hover:bg-slate-200/70 text-slate-400 hover:text-slate-800 disabled:opacity-20 disabled:hover:bg-transparent"
+                            title={isEn ? "Move Down" : "Pindah ke bawah"}
+                          >
+                            <IconArrowDown className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+
                     {/* Status & Quick Toggle */}
-                    <td className="px-6 py-4 align-middle">
+                    <td className="px-5 py-4 align-middle">
                       <button
                         onClick={() => handleToggleModelStatus(model)}
                         className="flex items-center gap-2.5 group cursor-pointer text-left focus:outline-none"
@@ -542,6 +705,197 @@ export function AdminModelsTab({
                     <td className="px-6 py-4 align-middle text-center">
                       <div className="flex items-center justify-center gap-2">
                         {/* Test Connection Button */}
+                        <button
+                          onClick={() => handleTestModelConnection(model)}
+                          disabled={testingModelId === model.id}
+                          className="flex items-center justify-center p-2 bg-sky-50 border border-sky-100 hover:bg-sky-100 text-sky-700 rounded-lg transition cursor-pointer disabled:opacity-50"
+                          title="Uji Koneksi Model"
+                        >
+                          {testingModelId === model.id ? (
+                            <IconLoader className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleOpenEditModelModal(model)}
+                          className="flex items-center justify-center p-2 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-700 rounded-lg transition cursor-pointer"
+                          title="Edit detail model"
+                        >
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                          </svg>
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteModel(model.id)}
+                          className="flex items-center justify-center p-2 bg-rose-50 border border-rose-100 hover:bg-rose-100 text-rose-600 rounded-lg transition cursor-pointer"
+                          title="Hapus model ini"
+                        >
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Section 3: Model AI Kampus & Institusi (B2B Enterprise) */}
+      <div className="bg-white border border-slate-200/90 rounded-xl overflow-hidden shadow-sm flex flex-col mb-10">
+        <div className="px-6 py-4 border-b border-slate-200/80 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <span className="p-1.5 bg-purple-100 text-purple-700 rounded-md font-bold text-xs">
+              🏛️
+            </span>
+            <div className="flex flex-col">
+              <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                {isEn ? 'Institutional & Campus AI Models (B2B)' : 'Model AI Institusi & Kampus (B2B Lisensi)'}
+                <span className="text-[11px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200/60">
+                  {modelsList.filter(m => m.access_tier === 'institution').length} {isEn ? 'Models' : 'Model'}
+                </span>
+              </h2>
+              <p className="text-xs text-slate-500 font-normal">
+                {isEn 
+                  ? 'Dedicated AI models whitelist for Universities, Faculties, and Research Groups (Supports Campus BYOK).' 
+                  : 'Model AI khusus yang di-whitelist untuk mitra Universitas, Fakultas, dan Lembaga Riset (Mendukung BYOK Kampus).'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
+            <thead>
+              <tr className="border-b border-slate-200/70 bg-slate-50/70 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                <th className="px-3 py-3 font-semibold text-center w-[60px]">{isEn ? 'Order' : 'Urutan'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[140px]">{isEn ? 'Status & Toggle' : 'Status & Toggle'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[130px]">{isEn ? 'Gateway Key' : 'Gateway Key'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[200px]">{isEn ? 'Model Display Name' : 'Nama Tampilan Model'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[170px]">{isEn ? 'API Provider Type' : 'Tipe Provider API'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[240px]">{isEn ? 'Real API Model ID' : 'ID Model API Asli'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[130px]">{isEn ? 'Access Tier' : 'Hak Akses'}</th>
+                <th className="px-5 py-3 font-semibold text-center w-[140px]">{isEn ? 'Actions' : 'Aksi'}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-xs">
+              {modelsList.filter(m => m.access_tier === 'institution').length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-8 text-center text-slate-400 text-xs font-normal">
+                    {isEn 
+                      ? 'No Campus-specific AI models added yet. Click Add New Model above and select "Campus / B2B" tier.' 
+                      : 'Belum ada model AI khusus Kampus. Klik tombol Tambah Model Baru di atas dan pilih kategori "Institusi / Kampus".'}
+                  </td>
+                </tr>
+              ) : (
+                modelsList.filter(m => m.access_tier === 'institution').map((model, index, arr) => (
+                  <tr 
+                    key={model.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, model.id)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={(e) => handleDragOver(e, model.id)}
+                    onDrop={handleDrop}
+                    className={`hover:bg-slate-50/60 transition-all duration-150 select-none ${
+                      draggedId === model.id ? 'bg-purple-50/70 ring-1 ring-purple-300' : ''
+                    }`}
+                  >
+                    {/* Drag Handle & Reorder */}
+                    <td className="px-3 py-4 align-middle text-center">
+                      <div className="flex items-center justify-center gap-1 text-slate-400">
+                        <button
+                          type="button"
+                          className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-slate-200/70 text-slate-400 hover:text-slate-700"
+                          title={isEn ? "Drag to prioritize fallback order" : "Tahan & geser untuk atur prioritas fallback"}
+                        >
+                          <IconGripVertical className="h-4 w-4" />
+                        </button>
+                        <div className="flex flex-col -space-y-1">
+                          <button
+                            type="button"
+                            disabled={index === 0}
+                            onClick={() => handleMove(model.id, 'up')}
+                            className="p-0.5 rounded hover:bg-slate-200/70 text-slate-400 hover:text-slate-800 disabled:opacity-20 disabled:hover:bg-transparent"
+                            title={isEn ? "Move Up" : "Pindah ke atas"}
+                          >
+                            <IconArrowUp className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={index === arr.length - 1}
+                            onClick={() => handleMove(model.id, 'down')}
+                            className="p-0.5 rounded hover:bg-slate-200/70 text-slate-400 hover:text-slate-800 disabled:opacity-20 disabled:hover:bg-transparent"
+                            title={isEn ? "Move Down" : "Pindah ke bawah"}
+                          >
+                            <IconArrowDown className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Status & Quick Toggle */}
+                    <td className="px-5 py-4 align-middle">
+                      <button
+                        onClick={() => handleToggleModelStatus(model)}
+                        className="flex items-center gap-2.5 group cursor-pointer text-left focus:outline-none"
+                        title={isEn ? 'Click to toggle active status' : 'Klik untuk mengubah status aktif/non-aktif'}
+                      >
+                        <div className={`relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 transition-all duration-200 ease-in-out ${model.is_enabled
+                          ? 'bg-purple-600 border-purple-700 shadow-sm shadow-purple-500/20 ring-2 ring-purple-500/20'
+                          : 'bg-slate-300 border-slate-400/90 shadow-inner'
+                          }`}>
+                          <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${model.is_enabled ? 'translate-x-5' : 'translate-x-0.5'
+                            }`} />
+                        </div>
+                        <span className={`text-[11px] font-bold px-2 py-0.5 rounded border transition-all ${model.is_enabled
+                          ? 'text-purple-700 bg-purple-50 border-purple-200/80'
+                          : 'text-slate-600 bg-slate-100 border-slate-300'
+                          }`}>
+                          {model.is_enabled ? (isEn ? 'Active' : 'Aktif') : 'Off'}
+                        </span>
+                      </button>
+                    </td>
+
+                    {/* Gateway Key */}
+                    <td className="px-5 py-4 align-middle font-bold text-slate-800 uppercase tracking-wide">
+                      {model.id}
+                    </td>
+
+                    {/* Nama Tampilan Model */}
+                    <td className="px-5 py-4 align-middle font-semibold text-slate-900 text-xs">
+                      {model.name}
+                    </td>
+
+                    {/* Tipe Provider API */}
+                    <td className="px-5 py-4 align-middle">
+                      <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200/80">
+                        <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                        {model.provider_type || 'Campus Gateway'}
+                      </span>
+                    </td>
+
+                    {/* ID Model API Asli */}
+                    <td className="px-5 py-4 align-middle font-mono text-[11px] text-slate-600">
+                      {model.model_id}
+                    </td>
+
+                    {/* Akses Tier */}
+                    <td className="px-5 py-4 align-middle">
+                      <span className="text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200/60 px-2 py-1 rounded-md uppercase tracking-wider flex items-center gap-1 w-max">
+                        🏛️ Campus B2B
+                      </span>
+                    </td>
+
+                    {/* Aksi */}
+                    <td className="px-5 py-4 align-middle text-center">
+                      <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => handleTestModelConnection(model)}
                           disabled={testingModelId === model.id}

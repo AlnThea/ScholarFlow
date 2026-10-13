@@ -223,15 +223,27 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
                       
                       <div className="mb-4">
                         {plan.id === 'institution' ? (
-                          <span className="text-2xl font-bold text-slate-800">
-                            {language === 'en' ? 'Contact Us' : 'Hubungi Kami'}
-                          </span>
+                          <>
+                            <span className="text-2xl font-bold text-slate-800">
+                              {language === 'en' ? 'Contact Us' : 'Hubungi Kami'}
+                            </span>
+                            <span className="text-xs text-slate-400"> {language === 'en' ? '(Custom)' : '(Kustom)'}</span>
+                          </>
+                        ) : plan.id === 'free' || plan.price === 0 ? (
+                          <>
+                            <span className="text-2xl font-bold text-slate-800">
+                              {language === 'en' ? 'Free' : 'Gratis'}
+                            </span>
+                            <span className="text-xs text-slate-400"> / {language === 'en' ? 'forever' : 'selamanya'}</span>
+                          </>
                         ) : (
-                          <span className="text-2xl font-bold text-slate-800">
-                            {formatPrice(plan.price)}
-                          </span>
+                          <>
+                            <span className="text-2xl font-bold text-slate-800">
+                              {formatPrice(plan.price)}
+                            </span>
+                            <span className="text-xs text-slate-400"> / {plan.price_period}</span>
+                          </>
                         )}
-                        <span className="text-xs text-slate-400"> / {plan.price_period}</span>
                       </div>
                       
                       <p className="text-[11px] text-slate-500 leading-normal mb-6">

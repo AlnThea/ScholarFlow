@@ -4,6 +4,7 @@ import { Switch } from './editor-switch';
 import { UserDashboardTab } from './user-dashboard-tab';
 import { AdminPricingTab } from './admin-pricing-tab';
 import { AdminModelsTab } from './admin-models-tab';
+import { AdminGatewaysTab } from './admin-gateways-tab';
 export const DashboardView = (props: any) => {
   const {
     isAnyModalOpen, setIsPricingOpen, toggleDarkMode, isDarkMode, activeDashboardTab,
@@ -96,6 +97,13 @@ export const DashboardView = (props: any) => {
                 handleDeleteProvider={handleDeleteProvider}
                 handleTestModelConnection={handleTestModelConnection}
                 testingModelId={testingModelId}
+              />
+            ) : activeDashboardTab === 'admin-gateways' ? (
+              <AdminGatewaysTab
+                isEn={isEn}
+                gatewaysList={gatewaysList}
+                handleToggleGateway={handleToggleGateway}
+                togglingGatewayId={togglingGatewayId}
               />
             ) : null}
           </div>

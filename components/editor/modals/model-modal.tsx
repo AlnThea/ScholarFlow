@@ -187,18 +187,60 @@ export const ModelModal = ({
             />
           </div>
 
-          {/* Toggle Premium / Pro Writer */}
-          <div className="flex items-center justify-between p-3.5 border border-slate-200/60 rounded-2xl bg-slate-50/20">
+          {/* 3-Tier Access Level Selection */}
+          <div className="flex flex-col gap-2 p-3.5 border border-slate-200/80 rounded-xl bg-slate-50/50">
             <div className="flex flex-col gap-0.5">
-              <span className="text-xs font-bold text-slate-700">{isEn ? 'Model Access (Pro Writer Only)' : 'Hak Akses Model (Khusus Pro Writer)'}</span>
-              <span className="text-[9px] text-slate-400 leading-tight">
-                {isEn ? 'Restrict this premium AI model to Pro subscribers only.' : 'Membatasi pemakaian model AI premium ini hanya untuk pelanggan Pro.'}
+              <span className="text-xs font-bold text-slate-800">{isEn ? 'Access Tier Category' : 'Kategori Hak Akses Paket'}</span>
+              <span className="text-[10px] text-slate-500 leading-tight">
+                {isEn 
+                  ? 'Choose who can access this AI model across Free, Pro, and Institutional Campus plans.' 
+                  : 'Tentukan siapa yang dapat mengakses model ini (Gratis, Pro Writer, atau Khusus Kampus/Institusi).'}
               </span>
             </div>
-            <Switch
-              checked={modalModelState.is_premium}
-              onChange={() => setModalModelState((prev: any) => ({ ...prev, is_premium: !prev.is_premium }))}
-            />
+
+            <div className="grid grid-cols-3 gap-2 mt-1">
+              {/* Option 1: Free */}
+              <button
+                type="button"
+                onClick={() => setModalModelState((prev: any) => ({ ...prev, is_premium: false, access_tier: 'free' }))}
+                className={`py-2 px-2.5 rounded-lg border text-center transition cursor-pointer flex flex-col items-center gap-0.5 ${
+                  !modalModelState.is_premium && modalModelState.access_tier !== 'institution'
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-800 font-bold shadow-xs'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100 font-medium'
+                }`}
+              >
+                <span className="text-xs">🎁 {isEn ? 'Free Tier' : 'Gratis'}</span>
+                <span className="text-[8px] text-slate-400">{isEn ? 'All users' : 'Semua user'}</span>
+              </button>
+
+              {/* Option 2: Pro Writer */}
+              <button
+                type="button"
+                onClick={() => setModalModelState((prev: any) => ({ ...prev, is_premium: true, access_tier: 'pro' }))}
+                className={`py-2 px-2.5 rounded-lg border text-center transition cursor-pointer flex flex-col items-center gap-0.5 ${
+                  modalModelState.is_premium && modalModelState.access_tier !== 'institution'
+                    ? 'bg-indigo-50 border-indigo-300 text-indigo-800 font-bold shadow-xs'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100 font-medium'
+                }`}
+              >
+                <span className="text-xs">⚡ {isEn ? 'Pro Writer' : 'Pro Writer'}</span>
+                <span className="text-[8px] text-slate-400">{isEn ? 'Personal paid' : 'Berbayar'}</span>
+              </button>
+
+              {/* Option 3: Institutional Campus */}
+              <button
+                type="button"
+                onClick={() => setModalModelState((prev: any) => ({ ...prev, is_premium: true, access_tier: 'institution' }))}
+                className={`py-2 px-2.5 rounded-lg border text-center transition cursor-pointer flex flex-col items-center gap-0.5 ${
+                  modalModelState.access_tier === 'institution'
+                    ? 'bg-purple-50 border-purple-300 text-purple-800 font-bold shadow-xs'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100 font-medium'
+                }`}
+              >
+                <span className="text-xs">🏛️ {isEn ? 'Campus / B2B' : 'Institusi'}</span>
+                <span className="text-[8px] text-slate-400">{isEn ? 'Campus license' : 'Lisensi kampus'}</span>
+              </button>
+            </div>
           </div>
         </div>
 

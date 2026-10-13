@@ -24,6 +24,14 @@ export const ProviderModal = ({
   const [isCheckingBalance, setIsCheckingBalance] = React.useState(false);
   const [balanceResult, setBalanceResult] = React.useState<any>(null);
 
+  // Bersihkan hasil balance saat modal dibuka/tutup atau saat ganti provider
+  React.useEffect(() => {
+    if (isOpen) {
+      setBalanceResult(null);
+      setIsCheckingBalance(false);
+    }
+  }, [isOpen, selectedProviderForModal]);
+
   if (!isOpen || typeof window === 'undefined') return null;
 
   return createPortal(

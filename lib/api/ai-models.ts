@@ -17,9 +17,11 @@ export interface AIModel {
   provider_id?: string;
   is_enabled: boolean;
   is_premium: boolean;
+  access_tier?: 'free' | 'pro' | 'institution';
   provider_type?: 'gemini' | 'openrouter' | 'huggingface' | 'groq' | 'together' | 'custom_openai';
   base_url?: string;
   custom_api_key?: string;
+  display_order?: number | null;
   updated_at: string;
 }
 
@@ -191,26 +193,78 @@ function saveLocalStoredModels(models: AIModel[]) {
   }
 }
 
+const MODEL_ORDER_STORAGE_KEY = 'scholarflow.ai_model_order.v1';
+
 /**
  * Mengambil daftar konfigurasi model AI dari Supabase (dengan cadangan LocalStorage)
+ * Terurut sesuai prioritas yang diatur admin via drag-and-drop.
  */
 export async function fetchAIModels(): Promise<AIModel[]> {
+  let models: AIModel[] = [];
   try {
     const { data, error } = await supabase
       .from('ai_models')
-      .select('*')
-      .order('id', { ascending: true });
+      .select('*');
 
     if (error) throw error;
     if (data && data.length > 0) {
       saveLocalStoredModels(data as AIModel[]);
-      return data as AIModel[];
+      models = data as AIModel[];
+    } else {
+      models = getLocalStoredModels();
     }
-    return getLocalStoredModels();
   } catch (error) {
     console.warn('Error fetching AI models from Supabase (using local fallback persistence):', error);
-    return getLocalStoredModels();
+    models = getLocalStoredModels();
   }
+
+  // Cek custom order drag-and-drop dari localStorage
+  let savedOrder: string[] = [];
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem(MODEL_ORDER_STORAGE_KEY);
+      if (raw) savedOrder = JSON.parse(raw);
+    } catch (_) {}
+  }
+
+  return [...models].sort((a, b) => {
+    if (savedOrder.length > 0) {
+      const idxA = savedOrder.indexOf(a.id);
+      const idxB = savedOrder.indexOf(b.id);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+    }
+    if (typeof a.display_order === 'number' && typeof b.display_order === 'number') {
+      return a.display_order - b.display_order;
+    }
+    return a.id.localeCompare(b.id);
+  });
+}
+
+/**
+ * Menyimpan urutan baru model AI hasil drag-and-drop admin
+ */
+export async function reorderAIModels(orderedModelIds: string[]): Promise<{ success: boolean; error?: string }> {
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(MODEL_ORDER_STORAGE_KEY, JSON.stringify(orderedModelIds));
+    } catch (_) {}
+  }
+
+  try {
+    const promises = orderedModelIds.map((id, index) =>
+      supabase
+        .from('ai_models')
+        .update({ display_order: index + 1, updated_at: new Date().toISOString() })
+        .eq('id', id)
+    );
+    await Promise.allSettled(promises);
+  } catch (err: any) {
+    console.warn('[AIModels] Optional remote display_order update warning:', err);
+  }
+
+  return { success: true };
 }
 
 /**

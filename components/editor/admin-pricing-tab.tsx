@@ -1,5 +1,6 @@
-import React from 'react';
-import { IconLoader } from '@tabler/icons-react';
+import React, { useState } from 'react';
+import { IconLoader, IconGripVertical, IconArrowUp, IconArrowDown } from '@tabler/icons-react';
+import { reorderPricingPlans } from '@/lib/api/pricing';
 
 interface AdminPricingTabProps {
   handleOpenCreateModal: () => void;
@@ -16,6 +17,69 @@ export function AdminPricingTab({
   handleOpenEditModal,
   handleDeletePlan
 }: AdminPricingTabProps) {
+  const [plans, setPlans] = useState<any[]>(adminPlans);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [isReordering, setIsReordering] = useState(false);
+
+  // Sync state saat adminPlans berubah dari parent
+  React.useEffect(() => {
+    setPlans(adminPlans);
+  }, [adminPlans]);
+
+  const handleDragStart = (e: React.DragEvent<HTMLTableRowElement>, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    // Transparent drag preview style
+    if (e.currentTarget) {
+      e.currentTarget.style.opacity = '0.5';
+    }
+  };
+
+  const handleDragEnd = (e: React.DragEvent<HTMLTableRowElement>) => {
+    if (e.currentTarget) {
+      e.currentTarget.style.opacity = '1';
+    }
+    setDraggedIndex(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLTableRowElement>, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    const newPlans = [...plans];
+    const draggedItem = newPlans[draggedIndex];
+    newPlans.splice(draggedIndex, 1);
+    newPlans.splice(index, 0, draggedItem);
+
+    setDraggedIndex(index);
+    setPlans(newPlans);
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLTableRowElement>) => {
+    e.preventDefault();
+    setDraggedIndex(null);
+    setIsReordering(true);
+    const orderedIds = plans.map((p) => p.id);
+    await reorderPricingPlans(orderedIds);
+    setIsReordering(false);
+  };
+
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= plans.length) return;
+
+    const newPlans = [...plans];
+    const temp = newPlans[index];
+    newPlans[index] = newPlans[targetIndex];
+    newPlans[targetIndex] = temp;
+
+    setPlans(newPlans);
+    setIsReordering(true);
+    const orderedIds = newPlans.map((p) => p.id);
+    await reorderPricingPlans(orderedIds);
+    setIsReordering(false);
+  };
+
   return (
     <div className="w-full flex flex-col gap-6 animate-fade-in px-4 md:px-8 py-2">
       {/* Header Banner - Enterprise Rounded-XL */}
@@ -25,12 +89,17 @@ export function AdminPricingTab({
             <span className="text-[10px] font-extrabold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-0.5 rounded-md">
               Pricing Control Panel
             </span>
+            {isReordering && (
+              <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 px-2 py-0.5 rounded-md animate-pulse">
+                Menyimpan Urutan...
+              </span>
+            )}
           </div>
           <h1 className="text-xl md:text-2xl font-bold leading-tight text-slate-100">
             Kelola Paket Harga & Layanan
           </h1>
           <p className="text-xs text-slate-300 leading-normal font-normal">
-            Atur harga paket langganan secara dinamis, berikan teks promosi musiman, ubah daftar fitur unggulan, dan kelola CRUD data paket.
+            Atur harga paket langganan secara dinamis, berikan teks promosi musiman, ubah daftar fitur unggulan, dan geser (drag & drop) untuk mengatur urutan tampilan paket.
           </p>
         </div>
         <button
@@ -55,25 +124,69 @@ export function AdminPricingTab({
             <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="border-b border-slate-200/70 bg-slate-50/70 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                  <th className="px-6 py-3 font-semibold min-w-[140px]">ID Paket</th>
-                  <th className="px-6 py-3 font-semibold min-w-[200px]">Nama Paket</th>
-                  <th className="px-6 py-3 font-semibold min-w-[160px]">Harga (Rp)</th>
-                  <th className="px-6 py-3 font-semibold min-w-[120px]">Periode</th>
-                  <th className="px-6 py-3 font-semibold min-w-[220px]">Promo Tagline</th>
-                  <th className="px-6 py-3 font-semibold text-center w-[140px]">Aksi</th>
+                  <th className="px-3 py-3 font-semibold text-center w-[60px]" title="Drag handle untuk memindahkan posisi">Urutan</th>
+                  <th className="px-5 py-3 font-semibold min-w-[130px]">ID Paket</th>
+                  <th className="px-5 py-3 font-semibold min-w-[190px]">Nama Paket</th>
+                  <th className="px-5 py-3 font-semibold min-w-[150px]">Harga (Rp)</th>
+                  <th className="px-5 py-3 font-semibold min-w-[110px]">Periode</th>
+                  <th className="px-5 py-3 font-semibold min-w-[180px]">Promo Tagline</th>
+                  <th className="px-5 py-3 font-semibold text-center w-[140px]">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">
-                {adminPlans.map((plan) => {
+                {plans.map((plan, index) => {
                   return (
-                    <tr key={plan.id} className="hover:bg-slate-50/60 transition-all duration-150">
+                    <tr 
+                      key={plan.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, index)}
+                      onDragEnd={handleDragEnd}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDrop={handleDrop}
+                      className={`hover:bg-slate-50/80 transition-all duration-150 select-none ${
+                        draggedIndex === index ? 'bg-indigo-50/70 ring-1 ring-indigo-300' : ''
+                      }`}
+                    >
+                      {/* Drag Handle & Order Controls */}
+                      <td className="px-3 py-4 align-middle text-center">
+                        <div className="flex items-center justify-center gap-1 text-slate-400">
+                          <button
+                            type="button"
+                            className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-slate-200/70 text-slate-400 hover:text-slate-700"
+                            title="Tahan dan geser (drag) untuk ubah urutan"
+                          >
+                            <IconGripVertical className="h-4 w-4" />
+                          </button>
+                          <div className="flex flex-col -space-y-1">
+                            <button
+                              type="button"
+                              disabled={index === 0}
+                              onClick={() => handleMove(index, 'up')}
+                              className="p-0.5 rounded hover:bg-slate-200/70 text-slate-400 hover:text-slate-800 disabled:opacity-20 disabled:hover:bg-transparent"
+                              title="Pindah ke atas"
+                            >
+                              <IconArrowUp className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={index === plans.length - 1}
+                              onClick={() => handleMove(index, 'down')}
+                              className="p-0.5 rounded hover:bg-slate-200/70 text-slate-400 hover:text-slate-800 disabled:opacity-20 disabled:hover:bg-transparent"
+                              title="Pindah ke bawah"
+                            >
+                              <IconArrowDown className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+
                       {/* ID Paket */}
-                      <td className="px-6 py-4 align-middle font-mono font-bold text-slate-800">
+                      <td className="px-5 py-4 align-middle font-mono font-bold text-slate-800">
                         {plan.id}
                       </td>
 
                       {/* Nama Paket */}
-                      <td className="px-6 py-4 align-middle font-bold text-slate-900">
+                      <td className="px-5 py-4 align-middle font-bold text-slate-900">
                         <div className="flex items-center gap-2">
                           {plan.name}
                           {plan.is_popular && (
@@ -85,7 +198,7 @@ export function AdminPricingTab({
                       </td>
 
                       {/* Harga */}
-                      <td className="px-6 py-4 align-middle">
+                      <td className="px-5 py-4 align-middle">
                         {plan.price === 0 ? (
                           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-mono text-[11px] font-bold border border-emerald-200/60">
                             Gratis
@@ -98,12 +211,12 @@ export function AdminPricingTab({
                       </td>
 
                       {/* Periode */}
-                      <td className="px-6 py-4 align-middle text-slate-600 capitalize">
+                      <td className="px-5 py-4 align-middle text-slate-600 capitalize">
                         {plan.price < 0 ? '-' : `/${plan.price_period}`}
                       </td>
 
                       {/* Promo Tagline */}
-                      <td className="px-6 py-4 align-middle">
+                      <td className="px-5 py-4 align-middle">
                         {plan.promo_text ? (
                           <span className="text-slate-600">{plan.promo_text}</span>
                         ) : (
@@ -112,7 +225,7 @@ export function AdminPricingTab({
                       </td>
 
                       {/* Aksi */}
-                      <td className="px-6 py-4 align-middle text-center">
+                      <td className="px-5 py-4 align-middle text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => handleOpenEditModal(plan)}

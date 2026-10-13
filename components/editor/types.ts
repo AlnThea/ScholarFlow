@@ -103,7 +103,7 @@ export type EditorLayoutProps = {
   onRejectSuggestion?: (id: string) => void;
   onResolveComment?: (id: string) => void;
   onCommentClick?: (comment: any) => void;
-  activeSidebarTab?: 'library' | 'writing' | 'document' | 'comments' | 'burstiness'; setActiveSidebarTab?: (tab: 'library' | 'writing' | 'document' | 'comments' | 'burstiness') => void;
+  activeSidebarTab?: 'library' | 'writing' | 'document' | 'comments' | 'burstiness' | 'stats'; setActiveSidebarTab?: (tab: 'library' | 'writing' | 'document' | 'comments' | 'burstiness' | 'stats') => void;
   tokensUsed?: number;
   monthlyQuota?: number;
   isTokenQuotaModalOpen?: boolean;

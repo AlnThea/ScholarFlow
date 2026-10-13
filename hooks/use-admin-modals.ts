@@ -380,6 +380,9 @@ export function useAdminModals({
     try {
       const res = await updatePaymentGatewayStatus(gatewayId, isEnabled);
       if (res.success) {
+        setGatewaysList((prev) =>
+          prev.map((g) => (g.id === gatewayId ? { ...g, is_enabled: isEnabled } : g))
+        );
         showAlertModal('Gateway Pembayaran', `Status gateway "${gatewayId}" berhasil diubah!`, 'success');
       } else {
         showAlertModal('Gagal', `Gagal mengubah status gateway: ${res.error}`, 'error');
@@ -464,7 +467,7 @@ export function useAdminModals({
 
   const handleSaveModalPlan = async () => {
     if (!modalPlanState.id.trim() || !modalPlanState.name.trim()) {
-      alert('ID Paket dan Nama Paket harus diisi.');
+      showAlertModal('Validasi Gagal', 'ID Paket dan Nama Paket harus diisi.', 'warning');
       return;
     }
     setSavingPlanId(modalPlanState.id);
@@ -481,53 +484,58 @@ export function useAdminModals({
           is_popular: modalPlanState.is_popular
         });
         if (res.success) {
-          alert('Paket berhasil diperbarui!');
+          showAlertModal('Berhasil', 'Paket berhasil diperbarui!', 'success');
           setIsPlanModalOpen(false);
           // reload plans
           const plansData = await fetchPricingPlans();
           setAdminPlans(plansData);
         } else {
-          alert(`Gagal memperbarui paket: ${res.error}`);
+          showAlertModal('Gagal', `Gagal memperbarui paket: ${res.error}`, 'error');
         }
       } else {
         // Create mode
         const res = await createPricingPlan(modalPlanState);
         if (res.success) {
-          alert('Paket baru berhasil ditambahkan!');
+          showAlertModal('Berhasil', 'Paket baru berhasil ditambahkan!', 'success');
           setIsPlanModalOpen(false);
           // reload plans
           const plansData = await fetchPricingPlans();
           setAdminPlans(plansData);
         } else {
-          alert(`Gagal menambahkan paket baru: ${res.error}`);
+          showAlertModal('Gagal', `Gagal menambahkan paket baru: ${res.error}`, 'error');
         }
       }
     } catch (err) {
       console.error(err);
-      alert('Terjadi kesalahan saat menyimpan data.');
+      showAlertModal('Terjadi Kesalahan', 'Terjadi kesalahan sistem saat menyimpan data.', 'error');
     } finally {
       setSavingPlanId(null);
     }
   };
 
   const handleDeletePlan = async (planId: string) => {
-    if (!confirm(`Apakah Anda yakin ingin menghapus paket "${planId}"?`)) return;
-    setSavingPlanId(planId);
-    try {
-      const res = await deletePricingPlan(planId);
-      if (res.success) {
-        alert('Paket berhasil dihapus!');
-        const plansData = await fetchPricingPlans();
-        setAdminPlans(plansData);
-      } else {
-        alert(`Gagal menghapus paket: ${res.error}`);
+    showConfirmModal(
+      'Konfirmasi Hapus Paket',
+      `Apakah Anda yakin ingin menghapus paket "${planId}"? Tindakan ini tidak dapat dibatalkan.`,
+      async () => {
+        setSavingPlanId(planId);
+        try {
+          const res = await deletePricingPlan(planId);
+          if (res.success) {
+            showAlertModal('Berhasil', 'Paket berhasil dihapus!', 'success');
+            const plansData = await fetchPricingPlans();
+            setAdminPlans(plansData);
+          } else {
+            showAlertModal('Gagal', `Gagal menghapus paket: ${res.error}`, 'error');
+          }
+        } catch (err) {
+          console.error(err);
+          showAlertModal('Terjadi Kesalahan', 'Terjadi kesalahan saat menghapus paket.', 'error');
+        } finally {
+          setSavingPlanId(null);
+        }
       }
-    } catch (err) {
-      console.error(err);
-      alert('Terjadi kesalahan saat menghapus paket.');
-    } finally {
-      setSavingPlanId(null);
-    }
+    );
   };
 
 

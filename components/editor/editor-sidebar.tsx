@@ -23,7 +23,7 @@ import {
   IconClock,
   IconTrash,
   IconCopy,
-  IconHistory, IconChartBar,
+  IconHistory, IconChartBar, IconCalculator,
 } from '@tabler/icons-react';
 import { type ImproveWritingResponse, synthesizeLiteratureReview } from '@/lib/api/ai';
 import type { CitationCandidate } from '@/lib/api/citations';
@@ -227,7 +227,7 @@ export function EditorSidebar(props: SidebarProps) {
 } = props;
   const { language, t } = useLanguage();
   const { user } = useAuth();
-  const [workspaceTab, setWorkspaceTab] = useState<'library' | 'writing' | 'document' | 'comments' | 'burstiness'>('burstiness');
+  const [workspaceTab, setWorkspaceTab] = useState<'library' | 'writing' | 'document' | 'comments' | 'burstiness' | 'stats'>('burstiness');
   const [commentFilterTab, setCommentFilterTab] = useState<'active' | 'suggestions' | 'resolved'>('active');
   const [suggestionSubTab, setSuggestionSubTab] = useState<'active' | 'history'>('active');
 
@@ -340,13 +340,27 @@ export function EditorSidebar(props: SidebarProps) {
     <>
       <aside className={`relative h-full flex flex-row border-l border-slate-100 bg-transparent overflow-hidden transition-all duration-300 ${isExpanded ? 'w-[480px]' : 'w-12'} shrink-0 z-40`}>
         {/* Main Content Area */}
-        <div className={`flex min-h-0 flex-col transition-all duration-300 overflow-hidden ${isExpanded ? 'flex-1 opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}>
-          <div className="border-b border-slate-100 px-4 py-4 flex items-center justify-between min-h-[65px]">
-            <span className="font-bold text-slate-800 text-sm">
-              {workspaceTab === 'burstiness' ? 'Burstiness' : workspaceTab === 'library' ? 'Library' : workspaceTab === 'writing' ? 'AI Writing' : workspaceTab === 'document' ? 'Document Stats' : 'Comments'}
+        <div className={`flex min-h-0 flex-col transition-all duration-300 overflow-hidden bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 ${isExpanded ? 'flex-1 opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}>
+          <div className="border-b border-slate-100 dark:border-slate-800 px-4 py-4 flex items-center justify-between min-h-[65px] bg-slate-50/50 dark:bg-slate-900/80">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-slate-800 dark:text-slate-100 text-sm tracking-tight">
+                {workspaceTab === 'burstiness' 
+                  ? (language === 'en' ? 'AI Rhythm & Burstiness' : 'Ritme & Burstiness AI') 
+                  : workspaceTab === 'library' 
+                  ? (language === 'en' ? 'Citations & Library' : 'Sitasi & Perpustakaan') 
+                  : workspaceTab === 'writing' 
+                  ? (language === 'en' ? 'AI Writing Assistant' : 'Asisten Penulisan AI') 
+                  : workspaceTab === 'document' 
+                  ? (language === 'en' ? 'Document Stats & Scan' : 'Statistik & Pemindaian Dokumen') 
+                  : workspaceTab === 'stats' 
+                  ? (language === 'en' ? 'SPSS & Stats Interpreter' : 'Interpretasi Data SPSS / PSPP') 
+                  : (language === 'en' ? 'Review Comments' : 'Komentar & Catatan Review')}
+              </span>
+            </div>
+            <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 border border-indigo-100/80 dark:border-indigo-800/60">
+              {workspaceTab === 'burstiness' ? 'Engine' : workspaceTab === 'stats' ? 'Phase 11' : 'Workspace'}
             </span>
           </div>
-
 
           {workspaceTab === 'burstiness' ? (
             <div className="flex-1 overflow-y-auto p-4 thin-scroll">
@@ -420,55 +434,108 @@ export function EditorSidebar(props: SidebarProps) {
           isAddingFolder={isAddingFolder} setIsAddingFolder={setIsAddingFolder}
           language={language} activePlanId={activePlanId} user={user} t={t} getSourceLabel={getSourceLabel} formatHistoryLabel={formatHistoryLabel}
           ActionButton={ActionButton} PanelRow={PanelRow} />
+          ) : workspaceTab === 'stats' ? (
+            <div className="flex-1 overflow-y-auto p-4 thin-scroll">
+              <div className="rounded-xl border border-indigo-100 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50/70 to-purple-50/40 dark:from-indigo-950/40 dark:to-slate-900 p-4">
+                <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-400 font-bold text-sm mb-1">
+                  <IconCalculator className="h-4 w-4" />
+                  <span>{language === 'en' ? 'Statistical Output Interpreter' : 'Interpretasi Data Statistik'}</span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  {language === 'en' 
+                    ? 'Multimodal AI Data Analyst for SPSS, PSPP & SmartPLS output tables. Generates APA 7th Edition narrative interpretation directly into your manuscript.' 
+                    : 'Asisten AI Multimodal untuk tabel output SPSS, PSPP & SmartPLS. Menyusun narasi interpretasi akademik berstandar APA Edisi ke-7 langsung ke draf Anda.'}
+                </p>
+              </div>
+            </div>
           ) : null}
         </div>
 
         {/* Vertical Tabs Bar on the Right */}
-        <div className="w-12 shrink-0 flex flex-col items-center py-4 border-l border-slate-100 bg-transparent gap-4 overflow-hidden">
+        <div className="w-12 shrink-0 flex flex-col items-center py-4 border-l border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/90 gap-3 overflow-hidden">
           {/* Toggle Button */}
           <button
             type="button"
             onClick={toggleExpanded}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line bg-white text-text hover:bg-accentSoft/70 transition mb-2 shadow-sm"
-            aria-label={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
-            title={isExpanded ? 'Tutup Panel' : 'Buka Panel'}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition shadow-xs"
+            aria-label={isExpanded ? (language === 'en' ? 'Collapse sidebar' : 'Tutup panel') : (language === 'en' ? 'Expand sidebar' : 'Buka panel')}
+            title={isExpanded ? (language === 'en' ? 'Collapse Panel' : 'Tutup Panel') : (language === 'en' ? 'Expand Panel' : 'Buka Panel')}
           >
             {isExpanded ? <IconChevronRight className="h-4 w-4" /> : <IconChevronLeft className="h-4 w-4" />}
           </button>
 
           {/* Vertical Tabs */}
-          <div className="flex flex-col gap-2 w-full px-1.5 flex-1 items-center">
+          <div className="flex flex-col gap-1.5 w-full px-1.5 flex-1 items-center">
             {[
-              { id: 'burstiness', label: '', icon: <IconChartBar className="h-4 w-4" /> },
-              { id: 'document', label: '', icon: <IconFileText className="h-4 w-4" /> },
-              { id: 'writing', label: '', icon: <IconWand className="h-4 w-4" /> },
-              { id: 'library', label: '', icon: <IconBook className="h-4 w-4" /> },
-
-              ...(comments ? [{ id: 'comments', label: '', icon: <IconQuote className="h-4 w-4" /> }] : [])
-            ].map((item) => (
-              <button
-                key={item.id}
-                data-tour={`sidebar-tab-${item.id}`}
-                type="button"
-                onClick={() => {
-                  setWorkspaceTab(item.id as typeof workspaceTab); if(setActiveTab) setActiveTab(item.id as typeof workspaceTab);
-                  if (!isExpanded) toggleExpanded(); // Auto-expand when a tab is clicked
-                }}
-                className={`w-full py-2 flex flex-col items-center justify-center gap-1 rounded-md transition relative group ${workspaceTab === item.id && isExpanded
-                  ? 'bg-indigo-100 text-indigo-700 shadow-sm'
-                  : 'bg-transparent text-slate-500 hover:bg-slate-200/50 hover:text-slate-800'
+              { 
+                id: 'burstiness', 
+                label: language === 'en' ? 'AI Rhythm' : 'Ritme AI', 
+                tooltip: language === 'en' ? 'AI Rhythm & Burstiness' : 'Analisis Ritme & Humanizer AI',
+                icon: <IconChartBar className="h-4 w-4" /> 
+              },
+              { 
+                id: 'writing', 
+                label: language === 'en' ? 'AI Writer' : 'Penulis AI', 
+                tooltip: language === 'en' ? 'AI Writing Assistant & Paraphraser' : 'Asisten Penulisan & Parafrase AI',
+                icon: <IconWand className="h-4 w-4" /> 
+              },
+              { 
+                id: 'library', 
+                label: language === 'en' ? 'Citations' : 'Sitasi', 
+                tooltip: language === 'en' ? 'Citation Search & Library' : 'Pencarian Sitasi & Referensi',
+                icon: <IconBook className="h-4 w-4" /> 
+              },
+              { 
+                id: 'stats', 
+                label: language === 'en' ? 'SPSS / Stats' : 'Data SPSS', 
+                tooltip: language === 'en' ? 'SPSS & Stats Output Interpreter (Phase 11)' : 'Interpretasi Output SPSS / PSPP (Phase 11)',
+                icon: <IconCalculator className="h-4 w-4" /> 
+              },
+              { 
+                id: 'document', 
+                label: language === 'en' ? 'Doc Stats' : 'Statistik', 
+                tooltip: language === 'en' ? 'Document Statistics & Plagiarism Scan' : 'Statistik Dokumen & Cek Plagiasi',
+                icon: <IconFileText className="h-4 w-4" /> 
+              },
+              ...(comments ? [{ 
+                id: 'comments', 
+                label: language === 'en' ? 'Notes' : 'Catatan', 
+                tooltip: language === 'en' ? 'Review Comments & Suggestions' : 'Catatan Review & Kolaborasi',
+                icon: <IconQuote className="h-4 w-4" /> 
+              }] : [])
+            ].map((item) => {
+              const isActive = workspaceTab === item.id && isExpanded;
+              return (
+                <button
+                  key={item.id}
+                  data-tour={`sidebar-tab-${item.id}`}
+                  type="button"
+                  onClick={() => {
+                    setWorkspaceTab(item.id as typeof workspaceTab); 
+                    if(setActiveTab) setActiveTab(item.id as typeof workspaceTab);
+                    if (!isExpanded) toggleExpanded(); // Auto-expand when a tab is clicked
+                  }}
+                  className={`w-full py-2.5 flex flex-col items-center justify-center gap-1 rounded-lg transition-all duration-200 relative group cursor-pointer ${
+                    isActive
+                      ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/20'
+                      : 'bg-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
                   }`}
-                title={item.label}
-              >
-                {item.icon}
-                <span className="text-[9px] font-medium text-center w-full truncate px-0.5" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', marginTop: '8px', paddingBottom: '4px' }}>
-                  {item.label}
-                </span>
-                {workspaceTab === item.id && isExpanded && (
-                  <span className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-1 h-1/2 bg-indigo-600 rounded-r-full" />
-                )}
-              </button>
-            ))}
+                  title={item.tooltip}
+                >
+                  {item.icon}
+
+                  {/* Accessible Hover Tooltip Floating Preview */}
+                  <span className="pointer-events-none absolute right-full mr-2.5 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center px-2.5 py-1 text-[11px] font-semibold text-white bg-slate-900 dark:bg-slate-800 dark:border dark:border-slate-700 rounded-md whitespace-nowrap shadow-lg z-50 animate-fade-in">
+                    {item.tooltip}
+                    <span className="absolute left-full top-1/2 -translate-y-1/2 border-4 border-transparent border-l-slate-900 dark:border-l-slate-800" />
+                  </span>
+
+                  {isActive && (
+                    <span className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-1 h-1/2 bg-indigo-500 rounded-r-full" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       </aside>

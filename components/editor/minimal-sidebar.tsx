@@ -76,7 +76,7 @@ export function MinimalSidebar({
   onToggleDarkMode?: () => void;
   onOpenBackendSettings?: () => void;
   onOpenHelp?: () => void;
-  activeSidebarTab?: 'library' | 'writing' | 'document' | 'comments' | 'burstiness';
+  activeSidebarTab?: 'library' | 'writing' | 'document' | 'comments' | 'burstiness' | 'stats';
   selectedText?: string;
 }) {
   const { language, setLanguage, t } = useLanguage();
