@@ -402,11 +402,40 @@ export function buildInlineMethods(props: EditorJsMethodsProps) {
               }
               lastSelectionRangeRef.current = newRange;
               lastHighlightedRangeRef.current = null;
+              success = true;
             } catch (rangeErr) {
               console.error('Failed direct range replacement:', rangeErr);
             }
           }
-    
+
+          // Fallback: Jika execCommand & direct range gagal (misal focus berpindah ke sidebar),
+          // ganti isi teks pada active block EditorJS yang sedang dipilih atau insert block baru
+          if (!success && editorRef.current && editorRef.current.blocks) {
+            try {
+              const currentIdx = typeof activeBlockIndexRef.current === 'number' && activeBlockIndexRef.current >= 0
+                ? activeBlockIndexRef.current
+                : editorRef.current.blocks.getCurrentBlockIndex();
+
+              if (currentIdx >= 0) {
+                const blockHolder = document.querySelectorAll('#' + holderId + ' .ce-block')[currentIdx];
+                const contentEditable = blockHolder?.querySelector('[contenteditable="true"]') as HTMLElement | null;
+                if (contentEditable) {
+                  contentEditable.innerText = text;
+                  success = true;
+                } else {
+                  editorRef.current.blocks.update(currentIdx, { text });
+                  success = true;
+                }
+              } else {
+                const totalBlocks = editorRef.current.blocks.getBlocksCount();
+                editorRef.current.blocks.insert('paragraph', { text }, undefined, totalBlocks, true);
+                success = true;
+              }
+            } catch (blockErr) {
+              console.warn('Fallback block replacement error:', blockErr);
+            }
+          }
+
           if (editorRef.current && editorRef.current.save) {
             editorRef.current.save().then((outputData: any) => {
               if (onContentChange) {

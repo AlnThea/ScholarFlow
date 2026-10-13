@@ -141,15 +141,15 @@ function ActionButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="w-full rounded-md border border-line bg-white p-3 text-left transition hover:border-accent/30 hover:bg-accentSoft/60 disabled:cursor-not-allowed disabled:opacity-60"
+      className="w-full rounded-md border border-line dark:border-slate-700 bg-white dark:bg-slate-800 p-3 text-left transition hover:border-accent/30 hover:bg-accentSoft/60 dark:hover:bg-slate-700/60 disabled:cursor-not-allowed disabled:opacity-60"
     >
       <div className="flex items-start gap-3">
-        <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-md bg-accentSoft text-accent">
-          <Icon className="h-4 w-4" />
+        <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-md bg-accentSoft dark:bg-indigo-950/60 text-accent dark:text-indigo-400">
+          <Icon className={`h-4 w-4 ${Icon === IconLoader2 ? 'animate-spin' : ''}`} />
         </span>
         <span className="min-w-0">
-          <span className="block text-sm font-semibold text-text">{label}</span>
-          <span className="mt-1 block text-xs leading-5 text-muted">{description}</span>
+          <span className="block text-sm font-semibold text-text dark:text-slate-200">{label}</span>
+          <span className="mt-1 block text-xs leading-5 text-muted dark:text-slate-400">{description}</span>
         </span>
       </div>
     </button>
@@ -367,73 +367,81 @@ export function EditorSidebar(props: SidebarProps) {
               <SidebarBurstinessTab {...props} />
             </div>
           ) : workspaceTab === 'library' ? (
-            <SidebarLibraryTab {...props}
-          workspaceTab={workspaceTab} setWorkspaceTab={setWorkspaceTab}
-          commentFilterTab={commentFilterTab} setCommentFilterTab={setCommentFilterTab}
-          suggestionSubTab={suggestionSubTab} setSuggestionSubTab={setSuggestionSubTab}
-          query={query} setQuery={setQuery}
-          isHistoryModalOpen={isHistoryModalOpen} setIsHistoryModalOpen={setIsHistoryModalOpen}
-          localIsExpanded={localIsExpanded} setLocalIsExpanded={setLocalIsExpanded}
-          scanStatus={scanStatus} setScanStatus={setScanStatus}
-          scanProgress={scanProgress} setScanProgress={setScanProgress}
-          similarityScore={similarityScore} setSimilarityScore={setSimilarityScore}
-          plagiarismDetails={plagiarismDetails} setPlagiarismDetails={setPlagiarismDetails}
-          selectedFolderFilter={selectedFolderFilter} setSelectedFolderFilter={setSelectedFolderFilter}
-          newFolderName={newFolderName} setNewFolderName={setNewFolderName}
-          isAddingFolder={isAddingFolder} setIsAddingFolder={setIsAddingFolder}
-          language={language} activePlanId={activePlanId} user={user} t={t} getSourceLabel={getSourceLabel} formatHistoryLabel={formatHistoryLabel}
-          ActionButton={ActionButton} PanelRow={PanelRow} />
+            <div className="flex-1 overflow-y-auto p-4 thin-scroll">
+              <SidebarLibraryTab {...props}
+                workspaceTab={workspaceTab} setWorkspaceTab={setWorkspaceTab}
+                commentFilterTab={commentFilterTab} setCommentFilterTab={setCommentFilterTab}
+                suggestionSubTab={suggestionSubTab} setSuggestionSubTab={setSuggestionSubTab}
+                query={query} setQuery={setQuery}
+                isHistoryModalOpen={isHistoryModalOpen} setIsHistoryModalOpen={setIsHistoryModalOpen}
+                localIsExpanded={localIsExpanded} setLocalIsExpanded={setLocalIsExpanded}
+                scanStatus={scanStatus} setScanStatus={setScanStatus}
+                scanProgress={scanProgress} setScanProgress={setScanProgress}
+                similarityScore={similarityScore} setSimilarityScore={setSimilarityScore}
+                plagiarismDetails={plagiarismDetails} setPlagiarismDetails={setPlagiarismDetails}
+                selectedFolderFilter={selectedFolderFilter} setSelectedFolderFilter={setSelectedFolderFilter}
+                newFolderName={newFolderName} setNewFolderName={setNewFolderName}
+                isAddingFolder={isAddingFolder} setIsAddingFolder={setIsAddingFolder}
+                language={language} activePlanId={activePlanId} user={user} t={t} getSourceLabel={getSourceLabel} formatHistoryLabel={formatHistoryLabel}
+                ActionButton={ActionButton} PanelRow={PanelRow} />
+            </div>
           ) : workspaceTab === 'writing' ? (
-            <SidebarWritingTab {...props}
-          workspaceTab={workspaceTab} setWorkspaceTab={setWorkspaceTab}
-          commentFilterTab={commentFilterTab} setCommentFilterTab={setCommentFilterTab}
-          suggestionSubTab={suggestionSubTab} setSuggestionSubTab={setSuggestionSubTab}
-          query={query} setQuery={setQuery}
-          isHistoryModalOpen={isHistoryModalOpen} setIsHistoryModalOpen={setIsHistoryModalOpen}
-          localIsExpanded={localIsExpanded} setLocalIsExpanded={setLocalIsExpanded}
-          scanStatus={scanStatus} setScanStatus={setScanStatus}
-          scanProgress={scanProgress} setScanProgress={setScanProgress}
-          similarityScore={similarityScore} setSimilarityScore={setSimilarityScore}
-          plagiarismDetails={plagiarismDetails} setPlagiarismDetails={setPlagiarismDetails}
-          selectedFolderFilter={selectedFolderFilter} setSelectedFolderFilter={setSelectedFolderFilter}
-          newFolderName={newFolderName} setNewFolderName={setNewFolderName}
-          isAddingFolder={isAddingFolder} setIsAddingFolder={setIsAddingFolder}
-          language={language} activePlanId={activePlanId} user={user} t={t} getSourceLabel={getSourceLabel} formatHistoryLabel={formatHistoryLabel}
-          ActionButton={ActionButton} PanelRow={PanelRow} />
+            <div className="flex-1 overflow-y-auto p-4 thin-scroll">
+              <SidebarWritingTab {...props}
+                workspaceTab={workspaceTab} setWorkspaceTab={setWorkspaceTab}
+                commentFilterTab={commentFilterTab} setCommentFilterTab={setCommentFilterTab}
+                suggestionSubTab={suggestionSubTab} setSuggestionSubTab={setSuggestionSubTab}
+                query={query} setQuery={setQuery}
+                isHistoryModalOpen={isHistoryModalOpen} setIsHistoryModalOpen={setIsHistoryModalOpen}
+                localIsExpanded={localIsExpanded} setLocalIsExpanded={setLocalIsExpanded}
+                scanStatus={scanStatus} setScanStatus={setScanStatus}
+                scanProgress={scanProgress} setScanProgress={setScanProgress}
+                similarityScore={similarityScore} setSimilarityScore={setSimilarityScore}
+                plagiarismDetails={plagiarismDetails} setPlagiarismDetails={setPlagiarismDetails}
+                selectedFolderFilter={selectedFolderFilter} setSelectedFolderFilter={setSelectedFolderFilter}
+                newFolderName={newFolderName} setNewFolderName={setNewFolderName}
+                isAddingFolder={isAddingFolder} setIsAddingFolder={setIsAddingFolder}
+                language={language} activePlanId={activePlanId} user={user} t={t} getSourceLabel={getSourceLabel} formatHistoryLabel={formatHistoryLabel}
+                ActionButton={ActionButton} PanelRow={PanelRow} />
+            </div>
           ) : workspaceTab === 'document' ? (
-            <SidebarDocumentTab {...props} handleStartScan={handleStartScan}
-          workspaceTab={workspaceTab} setWorkspaceTab={setWorkspaceTab}
-          commentFilterTab={commentFilterTab} setCommentFilterTab={setCommentFilterTab}
-          suggestionSubTab={suggestionSubTab} setSuggestionSubTab={setSuggestionSubTab}
-          query={query} setQuery={setQuery}
-          isHistoryModalOpen={isHistoryModalOpen} setIsHistoryModalOpen={setIsHistoryModalOpen}
-          localIsExpanded={localIsExpanded} setLocalIsExpanded={setLocalIsExpanded}
-          scanStatus={scanStatus} setScanStatus={setScanStatus}
-          scanProgress={scanProgress} setScanProgress={setScanProgress}
-          similarityScore={similarityScore} setSimilarityScore={setSimilarityScore}
-          plagiarismDetails={plagiarismDetails} setPlagiarismDetails={setPlagiarismDetails}
-          selectedFolderFilter={selectedFolderFilter} setSelectedFolderFilter={setSelectedFolderFilter}
-          newFolderName={newFolderName} setNewFolderName={setNewFolderName}
-          isAddingFolder={isAddingFolder} setIsAddingFolder={setIsAddingFolder}
-          language={language} activePlanId={activePlanId} user={user} t={t} getSourceLabel={getSourceLabel} formatHistoryLabel={formatHistoryLabel}
-          ActionButton={ActionButton} PanelRow={PanelRow} />
+            <div className="flex-1 overflow-y-auto p-4 thin-scroll">
+              <SidebarDocumentTab {...props} handleStartScan={handleStartScan}
+                workspaceTab={workspaceTab} setWorkspaceTab={setWorkspaceTab}
+                commentFilterTab={commentFilterTab} setCommentFilterTab={setCommentFilterTab}
+                suggestionSubTab={suggestionSubTab} setSuggestionSubTab={setSuggestionSubTab}
+                query={query} setQuery={setQuery}
+                isHistoryModalOpen={isHistoryModalOpen} setIsHistoryModalOpen={setIsHistoryModalOpen}
+                localIsExpanded={localIsExpanded} setLocalIsExpanded={setLocalIsExpanded}
+                scanStatus={scanStatus} setScanStatus={setScanStatus}
+                scanProgress={scanProgress} setScanProgress={setScanProgress}
+                similarityScore={similarityScore} setSimilarityScore={setSimilarityScore}
+                plagiarismDetails={plagiarismDetails} setPlagiarismDetails={setPlagiarismDetails}
+                selectedFolderFilter={selectedFolderFilter} setSelectedFolderFilter={setSelectedFolderFilter}
+                newFolderName={newFolderName} setNewFolderName={setNewFolderName}
+                isAddingFolder={isAddingFolder} setIsAddingFolder={setIsAddingFolder}
+                language={language} activePlanId={activePlanId} user={user} t={t} getSourceLabel={getSourceLabel} formatHistoryLabel={formatHistoryLabel}
+                ActionButton={ActionButton} PanelRow={PanelRow} />
+            </div>
           ) : workspaceTab === 'comments' ? (
-            <SidebarCommentsTab {...props}
-          workspaceTab={workspaceTab} setWorkspaceTab={setWorkspaceTab}
-          commentFilterTab={commentFilterTab} setCommentFilterTab={setCommentFilterTab}
-          suggestionSubTab={suggestionSubTab} setSuggestionSubTab={setSuggestionSubTab}
-          query={query} setQuery={setQuery}
-          isHistoryModalOpen={isHistoryModalOpen} setIsHistoryModalOpen={setIsHistoryModalOpen}
-          localIsExpanded={localIsExpanded} setLocalIsExpanded={setLocalIsExpanded}
-          scanStatus={scanStatus} setScanStatus={setScanStatus}
-          scanProgress={scanProgress} setScanProgress={setScanProgress}
-          similarityScore={similarityScore} setSimilarityScore={setSimilarityScore}
-          plagiarismDetails={plagiarismDetails} setPlagiarismDetails={setPlagiarismDetails}
-          selectedFolderFilter={selectedFolderFilter} setSelectedFolderFilter={setSelectedFolderFilter}
-          newFolderName={newFolderName} setNewFolderName={setNewFolderName}
-          isAddingFolder={isAddingFolder} setIsAddingFolder={setIsAddingFolder}
-          language={language} activePlanId={activePlanId} user={user} t={t} getSourceLabel={getSourceLabel} formatHistoryLabel={formatHistoryLabel}
-          ActionButton={ActionButton} PanelRow={PanelRow} />
+            <div className="flex-1 overflow-y-auto p-4 thin-scroll">
+              <SidebarCommentsTab {...props}
+                workspaceTab={workspaceTab} setWorkspaceTab={setWorkspaceTab}
+                commentFilterTab={commentFilterTab} setCommentFilterTab={setCommentFilterTab}
+                suggestionSubTab={suggestionSubTab} setSuggestionSubTab={setSuggestionSubTab}
+                query={query} setQuery={setQuery}
+                isHistoryModalOpen={isHistoryModalOpen} setIsHistoryModalOpen={setIsHistoryModalOpen}
+                localIsExpanded={localIsExpanded} setLocalIsExpanded={setLocalIsExpanded}
+                scanStatus={scanStatus} setScanStatus={setScanStatus}
+                scanProgress={scanProgress} setScanProgress={setScanProgress}
+                similarityScore={similarityScore} setSimilarityScore={setSimilarityScore}
+                plagiarismDetails={plagiarismDetails} setPlagiarismDetails={setPlagiarismDetails}
+                selectedFolderFilter={selectedFolderFilter} setSelectedFolderFilter={setSelectedFolderFilter}
+                newFolderName={newFolderName} setNewFolderName={setNewFolderName}
+                isAddingFolder={isAddingFolder} setIsAddingFolder={setIsAddingFolder}
+                language={language} activePlanId={activePlanId} user={user} t={t} getSourceLabel={getSourceLabel} formatHistoryLabel={formatHistoryLabel}
+                ActionButton={ActionButton} PanelRow={PanelRow} />
+            </div>
           ) : workspaceTab === 'stats' ? (
             <div className="flex-1 overflow-y-auto p-4 thin-scroll">
               <div className="rounded-xl border border-indigo-100 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50/70 to-purple-50/40 dark:from-indigo-950/40 dark:to-slate-900 p-4">
