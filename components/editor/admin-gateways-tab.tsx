@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   IconLoader,
   IconCheck,
@@ -11,6 +11,10 @@ import {
 } from '@tabler/icons-react';
 import { Switch } from './editor-switch';
 import type { PaymentGateway } from '@/lib/api/payment-gateways';
+import { AdminGatewaysOverview } from './admin-gateways-overview';
+import { XenditCheckoutModal } from './xendit-checkout-modal';
+import { MidtransCheckoutModal } from './midtrans-checkout-modal';
+import { StripeCheckoutModal } from './stripe-checkout-modal';
 
 interface AdminGatewaysTabProps {
   isEn: boolean;
@@ -27,47 +31,50 @@ export function AdminGatewaysTab({
   togglingGatewayId,
   loadingGateways = false,
 }: AdminGatewaysTabProps) {
+  // Modal Simulator States (Khusus Akun Admin)
+  const [simulatedGateway, setSimulatedGateway] = useState<'xendit' | 'midtrans' | 'stripe' | null>(null);
+
   const getGatewayMeta = (id: string) => {
     switch (id) {
       case 'xendit':
         return {
           icon: <IconWallet className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />,
-          badgeColor: 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200/60 dark:border-indigo-800/60',
           providerName: 'Xendit Invoice Indonesia',
           supportedMethods: 'QRIS (Semua Bank & E-Wallet), BCA/Mandiri/BRI/BNI/Permata Virtual Account, OVO, Dana, ShopeePay',
           supportedMethodsEn: 'QRIS (All Banks & E-Wallets), BCA/Mandiri/BRI/BNI/Permata Virtual Accounts, OVO, Dana, ShopeePay',
           envDocs: 'XENDIT_SECRET_KEY, XENDIT_WEBHOOK_VERIFICATION_TOKEN',
           statusNote: isEn ? 'Official automated invoicing & webhook verification' : 'Sistem invoice otomatis resmi & verifikasi webhook langsung',
+          recommended: true,
         };
       case 'midtrans':
         return {
           icon: <IconBuildingBank className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />,
-          badgeColor: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/60',
           providerName: 'Midtrans Snap',
           supportedMethods: 'GoPay, QRIS, BCA/BNI/BRI/Mandiri Bill Virtual Account, Indomaret / Alfamart',
           supportedMethodsEn: 'GoPay, QRIS, BCA/BNI/BRI/Mandiri Bill Virtual Accounts, Convenience Stores',
           envDocs: 'MIDTRANS_SERVER_KEY, MIDTRANS_CLIENT_KEY',
           statusNote: isEn ? 'Integrated Snap popup for Indonesian payment methods' : 'Popup snap terintegrasi untuk metode pembayaran Indonesia',
+          recommended: false,
         };
       case 'stripe':
         return {
           icon: <IconCreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" />,
-          badgeColor: 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200/60 dark:border-blue-800/60',
           providerName: 'Stripe Global Card',
           supportedMethods: 'Visa, MasterCard, American Express, JCB, Apple Pay, Google Pay',
           supportedMethodsEn: 'Visa, MasterCard, American Express, JCB, Apple Pay, Google Pay',
           envDocs: 'STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY',
           statusNote: isEn ? 'Worldwide credit & debit card processing' : 'Pemrosesan kartu kredit & debit internasional global',
+          recommended: false,
         };
       default:
         return {
           icon: <IconCreditCard className="h-5 w-5 text-slate-600 dark:text-slate-400" />,
-          badgeColor: 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700',
           providerName: id,
           supportedMethods: 'Custom payment processing',
           supportedMethodsEn: 'Custom payment processing',
           envDocs: 'PAYMENT_GATEWAY_CONFIG',
           statusNote: isEn ? 'Third-party gateway' : 'Gateway pihak ketiga',
+          recommended: false,
         };
     }
   };
@@ -110,6 +117,13 @@ export function AdminGatewaysTab({
         </div>
       </div>
 
+      {/* Overview Analytics, Simulator & Webhook Endpoints */}
+      <AdminGatewaysOverview
+        isEn={isEn}
+        gatewaysList={gatewaysList}
+        onOpenSimulator={(gw) => setSimulatedGateway(gw)}
+      />
+
       {/* Main Table Card */}
       {loadingGateways ? (
         <div className="py-20 flex flex-col items-center justify-center gap-3 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-sm">
@@ -124,7 +138,7 @@ export function AdminGatewaysTab({
             <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="border-b border-slate-200/70 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/60 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  <th className="px-6 py-3.5 font-semibold min-w-[200px]">{isEn ? 'Gateway Provider' : 'Saluran Pembayaran'}</th>
+                  <th className="px-6 py-3.5 font-semibold min-w-[220px]">{isEn ? 'Gateway Provider' : 'Saluran Pembayaran'}</th>
                   <th className="px-6 py-3.5 font-semibold min-w-[260px]">{isEn ? 'Supported Methods' : 'Metode Pembayaran Didukung'}</th>
                   <th className="px-6 py-3.5 font-semibold min-w-[220px]">{isEn ? 'Config Keys (.env)' : 'Kunci Konfigurasi (.env)'}</th>
                   <th className="px-6 py-3.5 font-semibold min-w-[130px] text-center">{isEn ? 'Status' : 'Status'}</th>
@@ -148,9 +162,16 @@ export function AdminGatewaysTab({
                             {meta.icon}
                           </div>
                           <div className="flex flex-col min-w-0">
-                            <span className="font-bold text-slate-900 dark:text-white text-sm">
-                              {meta.providerName}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-900 dark:text-white text-sm">
+                                {meta.providerName}
+                              </span>
+                              {meta.recommended && (
+                                <span className="text-[9px] font-extrabold uppercase bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60 px-1.5 py-0.2 rounded">
+                                  {isEn ? 'Primary' : 'Utama'}
+                                </span>
+                              )}
+                            </div>
                             <span className="font-mono text-[10px] text-slate-400">
                               id: {gateway.id}
                             </span>
@@ -228,6 +249,36 @@ export function AdminGatewaysTab({
           </div>
         </div>
       )}
+
+      {/* Simulator Modals (Khusus Admin Testing) */}
+      <XenditCheckoutModal
+        isOpen={simulatedGateway === 'xendit'}
+        onClose={() => setSimulatedGateway(null)}
+        planId="pro"
+        planName="Pro Writer Plan (Demo)"
+        planPrice={99000}
+        onSuccess={() => setSimulatedGateway(null)}
+      />
+
+      <MidtransCheckoutModal
+        isOpen={simulatedGateway === 'midtrans'}
+        onClose={() => setSimulatedGateway(null)}
+        planId="pro"
+        planName="Pro Writer Plan (Demo)"
+        planPrice={99000}
+        planPeriod="month"
+        onSuccess={() => setSimulatedGateway(null)}
+      />
+
+      <StripeCheckoutModal
+        isOpen={simulatedGateway === 'stripe'}
+        onClose={() => setSimulatedGateway(null)}
+        planId="pro"
+        planName="Pro Writer Plan (Demo)"
+        planPrice={99000}
+        planPeriod="month"
+        onSuccess={() => setSimulatedGateway(null)}
+      />
     </div>
   );
 }
