@@ -137,7 +137,7 @@ async function callDirectGemini(prompt: string, model: string, customApiKey?: st
 
     if (!text) throw new Error('Google API returned empty text');
     return text;
-  }, customApiKey);
+  }, customApiKey, 'text');
 
   return result;
 }

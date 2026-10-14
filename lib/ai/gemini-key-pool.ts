@@ -11,10 +11,29 @@ class GeminiKeyPoolManager {
   private cooldownMap: Map<string, number> = new Map();
 
   /**
-   * Extract API keys from env or custom string (supports comma/space separation)
+   * Extract API keys from env or custom string with workload category support
    */
-  public parseKeys(customKeyStr?: string): string[] {
-    const rawKeys = customKeyStr || process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || '';
+  public parseKeys(customKeyStr?: string, category?: 'text' | 'vision' | 'pro' | 'institution'): string[] {
+    let rawKeys = customKeyStr || '';
+
+    // If no custom key, pick from the specific workload pool
+    if (!rawKeys) {
+      if (category === 'vision') {
+        rawKeys = process.env.GEMINI_FREE_VISION_KEYS || process.env.GEMINI_API_KEYS_VISION || '';
+      } else if (category === 'text') {
+        rawKeys = process.env.GEMINI_FREE_TEXT_KEYS || process.env.GEMINI_API_KEYS_TEXT || '';
+      } else if (category === 'pro') {
+        rawKeys = process.env.GEMINI_PRO_KEYS || '';
+      } else if (category === 'institution') {
+        rawKeys = process.env.GEMINI_INSTITUTION_KEYS || '';
+      }
+    }
+
+    // Fallback to standard general keys if specific category pool is not configured
+    if (!rawKeys) {
+      rawKeys = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || '';
+    }
+
     if (!rawKeys.trim()) return [];
 
     return rawKeys
@@ -85,9 +104,10 @@ class GeminiKeyPoolManager {
    */
   public async execute<T>(
     runnerFn: (apiKey: string) => Promise<T>,
-    customKeyStr?: string
+    customKeyStr?: string,
+    category?: 'text' | 'vision' | 'pro' | 'institution'
   ): Promise<{ result: T; usedKey: string; keyIndex: number }> {
-    const allKeys = this.parseKeys(customKeyStr);
+    const allKeys = this.parseKeys(customKeyStr, category);
 
     if (allKeys.length === 0) {
       throw new Error('No Gemini API Keys configured. Please set GEMINI_API_KEY in .env');

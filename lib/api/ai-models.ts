@@ -18,6 +18,7 @@ export interface AIModel {
   is_enabled: boolean;
   is_premium: boolean;
   access_tier?: 'free' | 'pro' | 'institution';
+  workload_category?: 'all' | 'text' | 'vision';
   provider_type?: 'gemini' | 'openrouter' | 'huggingface' | 'groq' | 'together' | 'custom_openai';
   base_url?: string;
   custom_api_key?: string;
@@ -34,10 +35,10 @@ export const DEFAULT_PROVIDERS: AIProvider[] = [
 ];
 
 const DEFAULT_MODELS: AIModel[] = [
-  { id: 'gemini', name: 'Gemini Flash (Direct)', model_id: 'gemini-1.5-flash', provider_id: 'gemini', is_enabled: true, is_premium: false, provider_type: 'gemini', updated_at: new Date().toISOString() },
-  { id: 'llama3', name: 'Llama 3 (Free OR)', model_id: 'meta-llama/llama-3-8b-instruct:free', provider_id: 'openrouter', is_enabled: true, is_premium: false, provider_type: 'openrouter', updated_at: new Date().toISOString() },
-  { id: 'gemma2', name: 'Gemma 2 (Free OR)', model_id: 'google/gemma-2-9b-it:free', provider_id: 'openrouter', is_enabled: true, is_premium: false, provider_type: 'openrouter', updated_at: new Date().toISOString() },
-  { id: 'claude', name: 'Claude 3.5 (Pro OR)', model_id: 'anthropic/claude-3.5-sonnet', provider_id: 'openrouter', is_enabled: true, is_premium: true, provider_type: 'openrouter', updated_at: new Date().toISOString() }
+  { id: 'gemini', name: 'Gemini Flash (Direct)', model_id: 'gemini-1.5-flash', provider_id: 'gemini', is_enabled: true, is_premium: false, provider_type: 'gemini', workload_category: 'all', updated_at: new Date().toISOString() },
+  { id: 'llama3', name: 'Llama 3 (Free OR)', model_id: 'meta-llama/llama-3-8b-instruct:free', provider_id: 'openrouter', is_enabled: true, is_premium: false, provider_type: 'openrouter', workload_category: 'text', updated_at: new Date().toISOString() },
+  { id: 'gemma2', name: 'Gemma 2 (Free OR)', model_id: 'google/gemma-2-9b-it:free', provider_id: 'openrouter', is_enabled: true, is_premium: false, provider_type: 'openrouter', workload_category: 'text', updated_at: new Date().toISOString() },
+  { id: 'claude', name: 'Claude 3.5 (Pro OR)', model_id: 'anthropic/claude-3.5-sonnet', provider_id: 'openrouter', is_enabled: true, is_premium: true, provider_type: 'openrouter', workload_category: 'all', updated_at: new Date().toISOString() }
 ];
 
 function getLocalStoredProviders(): AIProvider[] {
@@ -294,6 +295,8 @@ export async function updateAIModel(
       if (updates.is_enabled !== undefined) basePayload.is_enabled = updates.is_enabled;
       if (updates.is_premium !== undefined) basePayload.is_premium = updates.is_premium;
       if (updates.provider_type !== undefined) basePayload.provider_type = updates.provider_type;
+      if (updates.access_tier !== undefined) basePayload.access_tier = updates.access_tier;
+      if (updates.workload_category !== undefined) basePayload.workload_category = updates.workload_category;
 
       const { data: baseData } = await supabase
         .from('ai_models')

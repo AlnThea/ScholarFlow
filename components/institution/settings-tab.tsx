@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { IconX, IconCheck, IconLoader } from '@tabler/icons-react';
 import { Institution } from '@/lib/api/institutions';
+import { InstitutionAiKeysPanel } from './institution-ai-keys-panel';
 
 interface SettingsTabProps {
   isEn: boolean;
@@ -15,6 +16,8 @@ export function SettingsTab({ isEn, institution, onUpdateInstitution }: Settings
   const [name, setName] = useState(institution?.name || 'Universitas Negeri Malang');
   const [domains, setDomains] = useState<string[]>(institution?.domains || ['um.ac.id']);
   const [newDomain, setNewDomain] = useState('');
+  const [campusTextKey, setCampusTextKey] = useState(institution?.campus_text_key || '');
+  const [campusVisionKey, setCampusVisionKey] = useState(institution?.campus_vision_key || '');
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -22,6 +25,8 @@ export function SettingsTab({ isEn, institution, onUpdateInstitution }: Settings
     if (institution) {
       setName(institution.name);
       setDomains(institution.domains || []);
+      setCampusTextKey(institution.campus_text_key || '');
+      setCampusVisionKey(institution.campus_vision_key || '');
     }
   }, [institution]);
 
@@ -45,7 +50,9 @@ export function SettingsTab({ isEn, institution, onUpdateInstitution }: Settings
     try {
       await onUpdateInstitution({
         name: name.trim(),
-        domains
+        domains,
+        campus_text_key: campusTextKey.trim(),
+        campus_vision_key: campusVisionKey.trim()
       });
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -197,6 +204,15 @@ export function SettingsTab({ isEn, institution, onUpdateInstitution }: Settings
             </div>
           </div>
         </div>
+
+        {/* 3. Campus Dedicated AI Keys (Multi-Tenant Workload Isolation) */}
+        <InstitutionAiKeysPanel
+          isEn={isEn}
+          campusTextKey={campusTextKey}
+          onChangeCampusTextKey={setCampusTextKey}
+          campusVisionKey={campusVisionKey}
+          onChangeCampusVisionKey={setCampusVisionKey}
+        />
 
         <div className="pt-6 border-t border-slate-200 dark:border-slate-700 flex items-center gap-3">
           <button 

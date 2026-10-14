@@ -38,6 +38,7 @@ import { SidebarWritingTab } from './sidebar-writing-tab';
 import { SidebarDocumentTab } from './sidebar-document-tab';
 import { SidebarCommentsTab } from './sidebar-comments-tab';
 import { SidebarBurstinessTab } from './sidebar-burstiness-tab';
+import { SidebarStatsTab } from './sidebar-stats-tab';
 
 type SidebarProps = {
   activePlanId?: string | null;
@@ -75,6 +76,8 @@ type SidebarProps = {
   onInsertCitationCandidate: (candidate: CitationCandidate) => void;
   onParafrasePlagiat?: (sentence: string) => void;
   selectedAiModel: string;
+  aiModels?: any[];
+  aiProviders?: any[];
   isSynthesizing: boolean;
   synthesizedText: string | null;
   synthesizeError: string | null;
@@ -104,8 +107,13 @@ type SidebarProps = {
   onRejectSuggestion?: (id: string) => void;
   onResolveComment?: (id: string) => void;
   onCommentClick?: (comment: any) => void;
-  activeTab?: 'library' | 'writing' | 'document' | 'comments' | 'burstiness';
-  setActiveTab?: (tab: 'library' | 'writing' | 'document' | 'comments' | 'burstiness') => void;
+  activeTab?: 'library' | 'writing' | 'document' | 'comments' | 'burstiness' | 'stats';
+  setActiveTab?: (tab: 'library' | 'writing' | 'document' | 'comments' | 'burstiness' | 'stats') => void;
+  tokensUsed?: number;
+  monthlyQuota?: number;
+  isTokenQuotaModalOpen?: boolean;
+  onOpenTokenQuotaModal?: () => void;
+  onCloseTokenQuotaModal?: () => void;
 };
 
 function PanelRow({
@@ -444,17 +452,14 @@ export function EditorSidebar(props: SidebarProps) {
             </div>
           ) : workspaceTab === 'stats' ? (
             <div className="flex-1 overflow-y-auto p-4 thin-scroll">
-              <div className="rounded-xl border border-indigo-100 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50/70 to-purple-50/40 dark:from-indigo-950/40 dark:to-slate-900 p-4">
-                <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-400 font-bold text-sm mb-1">
-                  <IconCalculator className="h-4 w-4" />
-                  <span>{language === 'en' ? 'Statistical Output Interpreter' : 'Interpretasi Data Statistik'}</span>
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  {language === 'en' 
-                    ? 'Multimodal AI Data Analyst for SPSS, PSPP & SmartPLS output tables. Generates APA 7th Edition narrative interpretation directly into your manuscript.' 
-                    : 'Asisten AI Multimodal untuk tabel output SPSS, PSPP & SmartPLS. Menyusun narasi interpretasi akademik berstandar APA Edisi ke-7 langsung ke draf Anda.'}
-                </p>
-              </div>
+              <SidebarStatsTab
+                {...props}
+                language={language}
+                activePlanId={activePlanId}
+                editorJsRef={props.editorJsRef}
+                onContentChange={props.onContentChange}
+                setIsPlanModalOpen={props.setIsPlanModalOpen}
+              />
             </div>
           ) : null}
         </div>

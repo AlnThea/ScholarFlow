@@ -561,6 +561,8 @@ export function EditorLayout({
                   onInsertCitationCandidate={onInsertCitationCandidate}
                   onParafrasePlagiat={onParafrasePlagiat}
                   selectedAiModel={selectedAiModel}
+                  aiModels={aiModels}
+                  aiProviders={aiProviders}
                   isSynthesizing={isSynthesizing}
                   synthesizedText={synthesizedText}
                   synthesizeError={synthesizeError}

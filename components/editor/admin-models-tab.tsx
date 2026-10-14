@@ -3,6 +3,28 @@ import { IconLoader, IconEdit, IconGripVertical, IconArrowUp, IconArrowDown } fr
 import { Switch } from './editor-switch';
 import { reorderAIModels } from '@/lib/api/ai-models';
 
+function WorkloadBadge({ category, isEn }: { category?: 'all' | 'text' | 'vision'; isEn: boolean }) {
+  if (category === 'text') {
+    return (
+      <span className="text-[10px] font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/50 border border-teal-200/80 dark:border-teal-800/60 px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 w-max">
+        ✍️ {isEn ? 'Text Only' : 'Khusus Teks'}
+      </span>
+    );
+  }
+  if (category === 'vision') {
+    return (
+      <span className="text-[10px] font-bold text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/50 border border-violet-200/80 dark:border-violet-800/60 px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 w-max">
+        🖼️ {isEn ? 'Vision AI' : 'Vision AI'}
+      </span>
+    );
+  }
+  return (
+    <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/50 border border-blue-200/80 dark:border-blue-800/60 px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 w-max">
+      🌐 {isEn ? 'All-Rounder' : 'Serba Bisa'}
+    </span>
+  );
+}
+
 interface AdminModelsTabProps {
   isEn: boolean;
   aiModels: any[];
@@ -335,13 +357,14 @@ export function AdminModelsTab({
                 <th className="px-5 py-3 font-semibold min-w-[170px]">{isEn ? 'API Provider Type' : 'Tipe Provider API'}</th>
                 <th className="px-5 py-3 font-semibold min-w-[240px]">{isEn ? 'Real API Model ID' : 'ID Model API Asli'}</th>
                 <th className="px-5 py-3 font-semibold min-w-[130px]">{isEn ? 'Access Tier' : 'Hak Akses'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[120px]">{isEn ? 'Workload' : 'Beban Kerja'}</th>
                 <th className="px-5 py-3 font-semibold text-center w-[140px]">{isEn ? 'Actions' : 'Aksi'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs">
               {modelsList.filter(m => !m.is_premium).length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-slate-400 text-xs font-normal">
+                  <td colSpan={9} className="px-6 py-8 text-center text-slate-400 text-xs font-normal">
                     {isEn ? 'No Free Tier AI models added yet. Click Add New Model above.' : 'Belum ada model AI untuk Free Tier. Klik tombol Tambah Model Baru di atas.'}
                   </td>
                 </tr>
@@ -478,6 +501,11 @@ export function AdminModelsTab({
                       </span>
                     </td>
 
+                    {/* Workload Capability */}
+                    <td className="px-6 py-4 align-middle">
+                      <WorkloadBadge category={model.workload_category} isEn={isEn} />
+                    </td>
+
                     {/* Aksi */}
                     <td className="px-6 py-4 align-middle text-center">
                       <div className="flex items-center justify-center gap-2">
@@ -557,13 +585,14 @@ export function AdminModelsTab({
                 <th className="px-5 py-3 font-semibold min-w-[170px]">{isEn ? 'API Provider Type' : 'Tipe Provider API'}</th>
                 <th className="px-5 py-3 font-semibold min-w-[240px]">{isEn ? 'Real API Model ID' : 'ID Model API Asli'}</th>
                 <th className="px-5 py-3 font-semibold min-w-[130px]">{isEn ? 'Access Tier' : 'Hak Akses'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[120px]">{isEn ? 'Workload' : 'Beban Kerja'}</th>
                 <th className="px-5 py-3 font-semibold text-center w-[140px]">{isEn ? 'Actions' : 'Aksi'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs">
               {modelsList.filter(m => m.is_premium).length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-slate-400 text-xs font-normal">
+                  <td colSpan={9} className="px-6 py-8 text-center text-slate-400 text-xs font-normal">
                     {isEn ? 'No Pro Writer AI models added yet. Click Add New Model above and check "Pro Writer" tier.' : 'Belum ada model AI untuk Pro Writer. Klik tombol Tambah Model Baru di atas dan centang tier "Pro Writer".'}
                   </td>
                 </tr>
@@ -701,6 +730,11 @@ export function AdminModelsTab({
                       </span>
                     </td>
 
+                    {/* Workload Capability */}
+                    <td className="px-6 py-4 align-middle">
+                      <WorkloadBadge category={model.workload_category} isEn={isEn} />
+                    </td>
+
                     {/* Aksi */}
                     <td className="px-6 py-4 align-middle text-center">
                       <div className="flex items-center justify-center gap-2">
@@ -782,13 +816,14 @@ export function AdminModelsTab({
                 <th className="px-5 py-3 font-semibold min-w-[170px]">{isEn ? 'API Provider Type' : 'Tipe Provider API'}</th>
                 <th className="px-5 py-3 font-semibold min-w-[240px]">{isEn ? 'Real API Model ID' : 'ID Model API Asli'}</th>
                 <th className="px-5 py-3 font-semibold min-w-[130px]">{isEn ? 'Access Tier' : 'Hak Akses'}</th>
+                <th className="px-5 py-3 font-semibold min-w-[120px]">{isEn ? 'Workload' : 'Beban Kerja'}</th>
                 <th className="px-5 py-3 font-semibold text-center w-[140px]">{isEn ? 'Actions' : 'Aksi'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs">
               {modelsList.filter(m => m.access_tier === 'institution').length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-slate-400 text-xs font-normal">
+                  <td colSpan={9} className="px-6 py-8 text-center text-slate-400 text-xs font-normal">
                     {isEn 
                       ? 'No Campus-specific AI models added yet. Click Add New Model above and select "Campus / B2B" tier.' 
                       : 'Belum ada model AI khusus Kampus. Klik tombol Tambah Model Baru di atas dan pilih kategori "Institusi / Kampus".'}
@@ -891,6 +926,11 @@ export function AdminModelsTab({
                       <span className="text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200/60 px-2 py-1 rounded-md uppercase tracking-wider flex items-center gap-1 w-max">
                         🏛️ Campus B2B
                       </span>
+                    </td>
+
+                    {/* Workload Capability */}
+                    <td className="px-5 py-4 align-middle">
+                      <WorkloadBadge category={model.workload_category} isEn={isEn} />
                     </td>
 
                     {/* Aksi */}

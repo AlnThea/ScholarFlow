@@ -423,7 +423,12 @@ export function buildInlineMethods(props: EditorJsMethodsProps) {
                   contentEditable.innerText = text;
                   success = true;
                 } else {
-                  editorRef.current.blocks.update(currentIdx, { text });
+                  const targetBlock = editorRef.current.blocks.getBlockByIndex(currentIdx);
+                  if (targetBlock?.id) {
+                    editorRef.current.blocks.update(targetBlock.id, { text });
+                  } else {
+                    (editorRef.current.blocks as any).update(currentIdx, { text });
+                  }
                   success = true;
                 }
               } else {
@@ -507,5 +512,30 @@ export function buildInlineMethods(props: EditorJsMethodsProps) {
           calculateLiveStats();
         }
 ,
+    insertHtmlAtCursor: (html: string) => {
+      let success = false;
+      try {
+        success = document.execCommand('insertHTML', false, html);
+      } catch (e) {
+        success = false;
+      }
+
+      if (!success) {
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        const text = temp.innerText || temp.textContent || html;
+        if (editorRef.current && editorRef.current.blocks) {
+          const totalBlocks = editorRef.current.blocks.getBlocksCount();
+          editorRef.current.blocks.insert('paragraph', { text }, undefined, totalBlocks, true);
+        }
+      }
+
+      if (editorRef.current && editorRef.current.save) {
+        editorRef.current.save().then((outputData: any) => {
+          if (onContentChange) onContentChange(outputData);
+        }).catch(console.error);
+      }
+      calculateLiveStats();
+    },
   };
 }

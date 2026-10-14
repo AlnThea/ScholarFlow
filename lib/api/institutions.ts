@@ -22,6 +22,8 @@ export interface Institution {
   join_token?: string;
   department_quotas?: Record<string, number>;
   ai_policy?: InstitutionAiPolicy;
+  campus_text_key?: string;
+  campus_vision_key?: string;
   created_at?: string;
   updated_at?: string;
 }

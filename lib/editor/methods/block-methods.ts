@@ -365,5 +365,29 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
           }
         }
 ,
+    insertBlocks: async (newBlocks: Array<{ type: string; data: any }>) => {
+      if (!editorRef.current || !editorRef.current.blocks) return;
+      try {
+        const currentCount = editorRef.current.blocks.getBlocksCount();
+        const currentIdx = typeof activeBlockIndexRef.current === 'number' && activeBlockIndexRef.current >= 0
+          ? activeBlockIndexRef.current + 1
+          : currentCount;
+
+        for (let i = 0; i < newBlocks.length; i++) {
+          const blk = newBlocks[i];
+          await editorRef.current.blocks.insert(blk.type, blk.data, undefined, currentIdx + i, true);
+        }
+
+        if (editorRef.current.save) {
+          const outputData = await editorRef.current.save();
+          if (onContentChange) {
+            onContentChange(outputData);
+          }
+        }
+        calculateLiveStats();
+      } catch (err) {
+        console.error('Failed to insert blocks into EditorJS:', err);
+      }
+    },
   };
 }

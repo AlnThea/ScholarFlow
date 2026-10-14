@@ -183,17 +183,18 @@ Target: Membangun dasbor manajemen organisasi (B2B) kelas enterprise agar klien 
 ### Phase 11: Statistical Output Interpreter (SPSS/PSPP AI)
 Target: Membangun asisten AI "Data Analyst" multimodal di dalam editor yang mampu membaca gambar/tabel hasil software statistik dan mengubahnya menjadi narasi akademik berstandar APA.
 
-- [ ] **1. Navigation & Layout (Sidebar Integration)**: Menambahkan tab baru (ikon grafik) di Sidebar Kanan Editor yang dapat di-toggle (berdampingan dengan *Burstiness* dan *Dictionary*).
-- [ ] **2. The Dropzone (Input UI)**: Membangun area unggah (Drag & Drop) yang bereaksi terhadap file `.csv`, `.txt`, `.jpg`, `.png`, lengkap dengan fitur `Ctrl+V` (paste listener) dan thumbnail preview sebelum diolah.
-- [ ] **3. Analysis Configuration Panel**: Membuat antarmuka dropdown untuk mengatur parameter AI: Sumber Aplikasi (SPSS/SmartPLS), Jenis Uji (T-Test/ANOVA/Regresi), Bahasa Output (EN/ID), dan Gaya Penulisan (Thesis/Journal Mode).
-- [ ] **4. Multimodal AI Endpoint (`/api/v1/ai/interpret-stats`)**: Membangun backend route yang mampu memproses Multipart Form-Data (Gambar/Teks) dan mengirimkannya ke Google Gemini 1.5 Pro/Flash Vision dengan System Prompt ahli statistik.
-- [ ] **5. Execution & Result UI**: Membangun komponen hasil yang memiliki Skeleton Loading saat memproses, Error Handling (jika gambar buram), dan tombol aksi (Copy, Regenerate).
-- [ ] **6. EditorJS Insertion Bridge**: Membangun logika DOM/React untuk menyuntikkan narasi hasil interpretasi AI langsung ke dalam blok kanvas EditorJS aktif milik pengguna saat tombol "Insert" diklik.
-- [ ] **7. Security & Privacy Safeguards**: Menambahkan label peringatan privasi untuk tidak mengunggah data sensitif, serta memastikan sanitasi input sebelum dikirim ke LLM.
-- [ ] **8. Local History Logs**: Menyimpan 3-5 hasil interpretasi terakhir ke dalam `LocalStorage` browser agar hasil analisis tidak hilang jika pengguna melakukan refresh halaman secara tidak sengaja.
-- [ ] **9. Enterprise Paywall & BYOK**: Mengunci akses panel penuh ini di balik validasi `isFreePlan` (memunculkan modal Pricing), dan mengintegrasikan penggunaan token mandiri jika pengguna telah menyetel Custom API Key (BYOK).
-- [ ] **10. Pre-Processing Data Parser**: Membangun modul pembersih data (menggunakan PapaParse/Regex) untuk mem-parsing file CSV/Excel/HTML kotor menjadi *Markdown Table* yang bersih sebelum dikirim ke AI, guna menghemat biaya token API dan mencegah halusinasi.
-- [ ] **11. APA Table Generator (Post-Processing)**: Memprogram AI agar tidak hanya menghasilkan teks paragraf, tetapi juga me-render ulang matriks angka tersebut menjadi struktur tabel EditorJS berstandar APA Edisi ke-7, siap untuk disisipkan langsung ke dalam dokumen.
+- [x] **1. Navigation & Layout (Sidebar Integration)**: Menambahkan tab baru (ikon grafik/kalkulator) di Sidebar Kanan Editor yang dapat di-toggle (berdampingan dengan *Burstiness* dan *Writing*).
+- [x] **2. The Dropzone (Input UI)**: Membangun area unggah (Drag & Drop) yang bereaksi terhadap file `.csv`, `.txt`, `.jpg`, `.png`, lengkap dengan fitur `Ctrl+V` (paste listener) dan thumbnail preview sebelum diolah.
+- [x] **3. Analysis Configuration Panel**: Membuat antarmuka dropdown untuk mengatur parameter AI: Sumber Aplikasi (SPSS/SmartPLS/PSPP), Jenis Uji (T-Test/ANOVA/Regresi/Korelasi), Bahasa Output (EN/ID), dan Gaya Penulisan (Skripsi/Tesis/Jurnal).
+- [x] **4. Multimodal AI Endpoint (`/api/v1/ai/interpret-stats`)**: Membangun backend route yang mampu memproses input multimodal (Gambar screenshot SPSS & Data tabular) dan mengirimkannya ke Google Gemini Multimodal dengan System Prompt ahli metodologi kuantitatif berstandar APA 7th.
+- [x] **5. Execution & Result UI**: Membangun komponen hasil yang memiliki Skeleton Loading saat memproses, kartu ringkasan temuan kunci (df, t/F, p-value), Error Handling, dan tombol aksi (Copy, Reset).
+- [x] **6. EditorJS Insertion Bridge**: Membangun logika untuk menyuntikkan narasi hasil interpretasi AI langsung ke dalam blok EditorJS aktif (Heading + Paragraf beruntun) saat tombol "Insert to Document" diklik.
+- [x] **7. Security & Privacy Safeguards**: Menambahkan label peringatan privasi untuk tidak mengunggah data sensitif (PII), serta memastikan data hanya diproses secara ephemeral.
+- [x] **8. Local History Logs**: Menyimpan hasil interpretasi ke dalam `LocalStorage` browser agar hasil analisis tidak hilang jika pengguna melakukan refresh halaman secara tidak sengaja.
+- [x] **9. Enterprise Paywall & BYOK (Multi-Provider)**: Menambahkan selector multi-provider (Google Gemini, OpenAI GPT-4o, OpenRouter Claude 3.5 Sonnet) dengan opsi Custom API Key mandiri (BYOK) tersimpan di local client.
+- [x] **10. Pre-Processing Data Parser**: Membangun modul pembersih data untuk mem-parsing file CSV/TXT/gambar tangkapan layar SPSS kotor menjadi input terstruktur sebelum dikirim ke AI, guna menghemat biaya token API dan mencegah halusinasi.
+- [x] **11. APA Table Generator (Post-Processing)**: Memprogram AI agar menghasilkan teks narasi interpretasi serta matriks tabel berstandar APA Edisi ke-7, siap untuk disisipkan langsung ke dalam dokumen EditorJS.
+- [x] **12. Multi-Tenant Workload Segregation (Text vs Vision)**: Memisahkan jalur API Key untuk Free, Pro, Institusi/Kampus, dan BYOK antara Text vs Vision (multimodal) di Admin Model AI dan Pengaturan Portal Kampus guna mencegah 'Noisy Neighbor Problem' dan limit kuota bersama.
 
 ### Phase 12: Xendit Animated SaaS Payments & B2B Campus Admin Management
 Target: Membangun sistem pembayaran resmi Xendit (Invoice & Webhook) dengan animasi interaktif (Radar Scanner, Live Polling, Confetti Celebration), dan Halaman Kelola Institusi bagi Super Admin untuk onboarding kampus baru secara instan.
