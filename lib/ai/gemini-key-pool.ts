@@ -13,7 +13,10 @@ class GeminiKeyPoolManager {
   /**
    * Extract API keys from env or custom string with workload category support
    */
-  public parseKeys(customKeyStr?: string, category?: 'text' | 'vision' | 'pro' | 'institution'): string[] {
+  public parseKeys(
+    customKeyStr?: string,
+    category?: 'text' | 'vision' | 'pro' | 'institution' | 'pro_text' | 'pro_vision' | 'institution_text' | 'institution_vision'
+  ): string[] {
     let rawKeys = customKeyStr || '';
 
     // If no custom key, pick from the specific workload pool
@@ -22,10 +25,18 @@ class GeminiKeyPoolManager {
         rawKeys = process.env.GEMINI_FREE_VISION_KEYS || process.env.GEMINI_API_KEYS_VISION || '';
       } else if (category === 'text') {
         rawKeys = process.env.GEMINI_FREE_TEXT_KEYS || process.env.GEMINI_API_KEYS_TEXT || '';
+      } else if (category === 'pro_text') {
+        rawKeys = process.env.GEMINI_PRO_TEXT_KEYS || process.env.GEMINI_PRO_KEYS || '';
+      } else if (category === 'pro_vision') {
+        rawKeys = process.env.GEMINI_PRO_VISION_KEYS || process.env.GEMINI_PRO_KEYS || '';
+      } else if (category === 'institution_text') {
+        rawKeys = process.env.GEMINI_INSTITUTION_TEXT_KEYS || process.env.GEMINI_INSTITUTION_KEYS || '';
+      } else if (category === 'institution_vision') {
+        rawKeys = process.env.GEMINI_INSTITUTION_VISION_KEYS || process.env.GEMINI_INSTITUTION_KEYS || '';
       } else if (category === 'pro') {
-        rawKeys = process.env.GEMINI_PRO_KEYS || '';
+        rawKeys = process.env.GEMINI_PRO_KEYS || process.env.GEMINI_PRO_TEXT_KEYS || '';
       } else if (category === 'institution') {
-        rawKeys = process.env.GEMINI_INSTITUTION_KEYS || '';
+        rawKeys = process.env.GEMINI_INSTITUTION_KEYS || process.env.GEMINI_INSTITUTION_TEXT_KEYS || '';
       }
     }
 
@@ -105,7 +116,7 @@ class GeminiKeyPoolManager {
   public async execute<T>(
     runnerFn: (apiKey: string) => Promise<T>,
     customKeyStr?: string,
-    category?: 'text' | 'vision' | 'pro' | 'institution'
+    category?: 'text' | 'vision' | 'pro' | 'institution' | 'pro_text' | 'pro_vision' | 'institution_text' | 'institution_vision'
   ): Promise<{ result: T; usedKey: string; keyIndex: number }> {
     const allKeys = this.parseKeys(customKeyStr, category);
 
