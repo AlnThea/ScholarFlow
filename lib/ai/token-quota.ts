@@ -2,6 +2,7 @@
 // Monthly AI Token Quota & Fair Usage Policy Guard for Personal Users (Free & Pro)
 
 import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export const FREE_MONTHLY_TOKEN_QUOTA = 50_000;
 export const PRO_MONTHLY_TOKEN_QUOTA = 1_000_000;
@@ -105,7 +106,8 @@ export async function checkPersonalQuota(
   // 1. Try reading directly from Supabase profiles if userId is available
   if (userId) {
     try {
-      const { data, error } = await supabase
+      const dbClient = supabaseAdmin || supabase;
+      const { data, error } = await dbClient
         .from('profiles')
         .select('ai_tokens_used, ai_monthly_quota, ai_quota_reset_at, subscription_plan')
         .eq('id', userId)
@@ -120,7 +122,7 @@ export async function checkPersonalQuota(
         if (resetAt && new Date(resetAt).getTime() <= Date.now()) {
           used = 0;
           const nextReset = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-          await supabase
+          await dbClient
             .from('profiles')
             .update({ ai_tokens_used: 0, ai_quota_reset_at: nextReset })
             .eq('id', userId);
@@ -182,7 +184,8 @@ export async function recordPersonalTokenConsumption(
   // 1. Update Database if user logged in
   if (userId) {
     try {
-      const { data } = await supabase
+      const dbClient = supabaseAdmin || supabase;
+      const { data } = await dbClient
         .from('profiles')
         .select('ai_tokens_used, ai_monthly_quota')
         .eq('id', userId)
@@ -192,7 +195,7 @@ export async function recordPersonalTokenConsumption(
       const limit = typeof data?.ai_monthly_quota === 'number' ? data.ai_monthly_quota : defaultLimit;
       const newUsed = currentUsed + safeTokens;
 
-      await supabase
+      await dbClient
         .from('profiles')
         .update({ ai_tokens_used: newUsed })
         .eq('id', userId);

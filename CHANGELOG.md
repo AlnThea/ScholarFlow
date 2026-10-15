@@ -2,6 +2,22 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.9.1] - 2026-10-15 (AI Token Quota Consumption & Realtime Profile Synchronization Fix)
+
+### 🛡️ Service-Role Database Permissions & Accurate Quota Tracking
+- **Server-side Service Role Client (`lib/supabase-admin.ts`)**: Initialized privileged Supabase client utilizing `process.env.SUPABASE_SERVICE_KEY`, allowing backend route handlers to update user `ai_tokens_used` metrics without getting silently rejected by Row Level Security (`auth.uid() = id`).
+- **Engine DB Client Upgrade (`lib/ai/token-quota.ts`)**: Upgraded `checkPersonalQuota` and `recordPersonalTokenConsumption` to leverage `supabaseAdmin || supabase`.
+
+### ⚡ Client-Side State Synchronization & Paraphrase Studio Bridge
+- **Paraphrase Studio User Context (`components/editor/paraphrase-studio.tsx`)**:
+  - Connected `useAuth()` to provide `user.id` and `profile.subscription_plan` across all 3 concurrent `improveWriting` variations (`paraphrase`, `simplify`, `mimic`).
+  - Added token quota synchronization to local cache via `saveLocalQuotaState` and triggered `refreshProfile()` upon generation.
+  - Added proactive quota exhaustion handling that triggers `setIsPlanModalOpen(true)` if user reaches monthly allowance.
+- **Editor AI Hook Reactive Synchronization (`hooks/use-editor-ai.ts`)**:
+  - Created centralized `updateQuotaState` callback synchronizing `tokensUsed`, `monthlyQuota`, `localStorage`, and `refreshProfile()`.
+  - Linked `updateQuotaState` across `runImproveWriting`, `runParaphrase`, `runSummarize`, `runGenerateAbstract`, and `handleParafrasePlagiat`.
+- **Automated Verification**: Ran Vitest unit tests verifying 20/20 test cases pass.
+
 ## 🏛️ [v0.9.0] - 2026-10-15 (Multi-Tenant Campus Dedicated AI Key Resolver & Super Admin Key Config)
 
 ### 🔑 Per-Tenant Key Isolation & Resolution Engine

@@ -4,7 +4,7 @@ import { fetchAIModels, updateAIModel, createAIModel, deleteAIModel, type AIMode
 import { addAiHistoryEntry, type AiHistoryEntry } from '@/lib/editor/ai-history';
 import { extractTextFromContent } from '@/lib/editor/editor-utils';
 import { useAuth } from '@/components/auth/auth-provider';
-import { getLocalQuotaState } from '@/lib/ai/token-quota';
+import { getLocalQuotaState, saveLocalQuotaState } from '@/lib/ai/token-quota';
 
 export function useEditorAi(
   language: string,
@@ -18,10 +18,21 @@ export function useEditorAi(
   setSavedAt: (val: string) => void,
   hydrated: boolean
 ) {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const [tokensUsed, setTokensUsed] = useState<number>(0);
   const [monthlyQuota, setMonthlyQuota] = useState<number>(50000);
   const [isTokenQuotaModalOpen, setIsTokenQuotaModalOpen] = useState(false);
+
+  const updateQuotaState = useCallback((used?: number, limit?: number) => {
+    if (typeof used === 'number') {
+      setTokensUsed(used);
+      if (typeof limit === 'number') {
+        setMonthlyQuota(limit);
+        saveLocalQuotaState(used, limit);
+      }
+      refreshProfile?.();
+    }
+  }, [refreshProfile]);
 
   const [selectedText, setSelectedText] = useState('');
   const [improvedResult, setImprovedResult] = useState<ImproveWritingResponse | null>(null);
@@ -169,8 +180,7 @@ export function useEditorAi(
 
     try {
       const response = await improveWriting(selectedText, selectedAiTone, selectedAiModel, language, undefined, user?.id, profile?.subscription_plan || 'free');
-      if (typeof response.tokens_used === 'number') setTokensUsed(response.tokens_used);
-      if (typeof response.monthly_quota === 'number') setMonthlyQuota(response.monthly_quota);
+      updateQuotaState(response.tokens_used, response.monthly_quota);
       setImprovedResult(response);
       setContentBeforeApply(currentDocument?.content);
       setIsApplied(false);
@@ -194,7 +204,7 @@ export function useEditorAi(
     } finally {
       setIsImproving(false);
     }
-  }, [selectedText, selectedAiModel, selectedAiTone, currentDocument, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied, user, profile]);
+  }, [selectedText, selectedAiModel, selectedAiTone, currentDocument, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied, user, profile, updateQuotaState]);
 
   const runParaphrase = useCallback(async () => {
     if (!selectedText.trim()) return;
@@ -205,8 +215,7 @@ export function useEditorAi(
 
     try {
       const response = await improveWriting(selectedText, 'paraphrase', selectedAiModel, language, undefined, user?.id, profile?.subscription_plan || 'free');
-      if (typeof response.tokens_used === 'number') setTokensUsed(response.tokens_used);
-      if (typeof response.monthly_quota === 'number') setMonthlyQuota(response.monthly_quota);
+      updateQuotaState(response.tokens_used, response.monthly_quota);
       setImprovedResult(response);
       setContentBeforeApply(currentDocument?.content);
       setIsApplied(false);
@@ -230,7 +239,7 @@ export function useEditorAi(
     } finally {
       setIsImproving(false);
     }
-  }, [selectedText, selectedAiModel, currentDocument, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied, user, profile]);
+  }, [selectedText, selectedAiModel, currentDocument, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied, user, profile, updateQuotaState]);
 
   const runSummarize = useCallback(async () => {
     if (!selectedText.trim()) return;
@@ -241,8 +250,7 @@ export function useEditorAi(
 
     try {
       const response = await improveWriting(selectedText, 'summarize', selectedAiModel, language, undefined, user?.id, profile?.subscription_plan || 'free');
-      if (typeof response.tokens_used === 'number') setTokensUsed(response.tokens_used);
-      if (typeof response.monthly_quota === 'number') setMonthlyQuota(response.monthly_quota);
+      updateQuotaState(response.tokens_used, response.monthly_quota);
       setImprovedResult(response);
       setContentBeforeApply(currentDocument?.content);
       setIsApplied(false);
@@ -266,7 +274,7 @@ export function useEditorAi(
     } finally {
       setIsImproving(false);
     }
-  }, [selectedText, selectedAiModel, currentDocument, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied, user, profile]);
+  }, [selectedText, selectedAiModel, currentDocument, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied, user, profile, updateQuotaState]);
 
   const runGenerateAbstract = useCallback(async () => {
     setActiveSidebarTab('writing');
@@ -279,8 +287,7 @@ export function useEditorAi(
         throw new Error(language === 'en' ? 'Document is empty. Please write some content before generating abstract.' : 'Dokumen kosong. Silakan tulis isi dokumen sebelum membuat abstrak.');
       }
       const response = await generateAbstract(fullText, selectedAiModel, language, user?.id, profile?.subscription_plan || 'free');
-      if (typeof response.tokens_used === 'number') setTokensUsed(response.tokens_used);
-      if (typeof response.monthly_quota === 'number') setMonthlyQuota(response.monthly_quota);
+      updateQuotaState(response.tokens_used, response.monthly_quota);
       setImprovedResult({
         original_text: 'Document Context',
         improved_text: response.abstract_text,
@@ -309,7 +316,7 @@ export function useEditorAi(
     } finally {
       setIsImproving(false);
     }
-  }, [currentDocument, selectedAiModel, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied, user, profile]);
+  }, [currentDocument, selectedAiModel, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied, user, profile, updateQuotaState]);
 
   const handleParafrasePlagiat = useCallback(async (sentence: string) => {
     setActiveSidebarTab('writing');
@@ -319,8 +326,7 @@ export function useEditorAi(
 
     try {
       const response = await improveWriting(sentence, selectedAiTone, selectedAiModel, language, undefined, user?.id, profile?.subscription_plan || 'free');
-      if (typeof response.tokens_used === 'number') setTokensUsed(response.tokens_used);
-      if (typeof response.monthly_quota === 'number') setMonthlyQuota(response.monthly_quota);
+      updateQuotaState(response.tokens_used, response.monthly_quota);
       setImprovedResult(response);
       setContentBeforeApply(currentDocument?.content);
       setIsApplied(false);
@@ -344,7 +350,7 @@ export function useEditorAi(
     } finally {
       setIsImproving(false);
     }
-  }, [selectedAiModel, selectedAiTone, currentDocument, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied, user, profile]);
+  }, [selectedAiModel, selectedAiTone, currentDocument, language, setActiveSidebarTab, setContentBeforeApply, setIsApplied, user, profile, updateQuotaState]);
 
   const applyImprovedText = useCallback(() => {
     if (!improvedResult) return;

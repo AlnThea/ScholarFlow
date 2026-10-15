@@ -220,6 +220,11 @@ Target: Mengimplementasikan resolusi cerdas API Key per-kampus (`campus_text_key
 - [x] **4. Client Stats Tab Bridge (`components/editor/sidebar-stats-tab.tsx`)**: Meneruskan kredensial tenant saat interpretasi data statistik.
 - [x] **5. Automated Unit Testing**: Unit test di `__tests__/utils/tenant-key-resolver.test.ts` (9/9 tests passing).
 
+### Phase 15: AI Token Quota Consumption & Realtime Profile Synchronization
+Target: Memastikan konsumsi token AI pada seluruh fitur editor (termasuk Paraphrase Studio, Improve Writing, Summarize, Abstract, dan Analisis Statistik) memotong kuota pengguna secara persisten di database Supabase dan tersinkronisasi instan di UI.
 
-
-
+- [x] **1. Service Role Client (`lib/supabase-admin.ts`)**: Inisialisasi client Supabase dengan `SUPABASE_SERVICE_KEY` untuk operasi backend berhak penuh guna memperbarui kolom `ai_tokens_used` pada tabel `profiles` tanpa terblokir Row Level Security (RLS).
+- [x] **2. Quota Update Handler (`lib/ai/token-quota.ts`)**: Migrasi update database dari client anonim ke `supabaseAdmin || supabase`.
+- [x] **3. Paraphrase Studio Auth Bridge (`components/editor/paraphrase-studio.tsx`)**: Menginjeksi kredensial pengguna (`userId` dan `currentPlan`) ke pemanggilan AI concurrent, serta memperbarui cache `localStorage` dan trigger `refreshProfile()`.
+- [x] **4. Reactive State Hook (`hooks/use-editor-ai.ts`)**: Sinkronisasi reaktif `tokensUsed` dan `monthlyQuota` di semua aksi AI editor.
+- [x] **5. Comprehensive Unit Testing**: 20/20 test cases passing pada Vitest (`__tests__/utils/token-quota.test.ts`, `__tests__/utils/tenant-key-resolver.test.ts`, `__tests__/utils/sanitize.test.ts`).

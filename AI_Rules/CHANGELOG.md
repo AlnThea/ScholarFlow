@@ -1,5 +1,18 @@
 # ScholarFlow Changelog
 
+## v0.9.1 - AI Token Quota Consumption & Realtime Profile Synchronization Fix
+
+- **Server-side Service Role Client (`lib/supabase-admin.ts`)**: Created service-role Supabase client using `process.env.SUPABASE_SERVICE_KEY` with graceful fallback to `NEXT_PUBLIC_SUPABASE_ANON_KEY`, bypassing Row Level Security (RLS) constraints for server-side profile quota updates.
+- **Quota Tracking Reliability (`lib/ai/token-quota.ts`)**: Upgraded `checkPersonalQuota` and `recordPersonalTokenConsumption` to utilize `supabaseAdmin || supabase`, preventing silent RLS failures when updating `ai_tokens_used` on the `profiles` table.
+- **Paraphrase Studio User Context (`components/editor/paraphrase-studio.tsx`)**:
+  - Connected `useAuth()` to extract `userId` and `currentPlan` and injected them into all 3 concurrent `improveWriting` calls (`paraphrase`, `simplify`, and `mimic`).
+  - Added token quota synchronization to local cache via `saveLocalQuotaState` and triggered `refreshProfile()` upon successful generation.
+  - Added proactive quota exhaustion handling that triggers `setIsPlanModalOpen(true)` if user reaches monthly allowance.
+- **Editor AI Hook Reactive Synchronization (`hooks/use-editor-ai.ts`)**:
+  - Added `updateQuotaState` callback that synchronizes `tokensUsed`, `monthlyQuota`, updates `localStorage`, and triggers `refreshProfile()`.
+  - Linked `updateQuotaState` across all editor AI workflows: `runImproveWriting`, `runParaphrase`, `runSummarize`, `runGenerateAbstract`, and `handleParafrasePlagiat`.
+- **Automated Unit Testing**: Verified 20/20 Vitest unit test suite passing across all utility modules.
+
 ## v0.9.0 - Multi-Tenant Campus Dedicated AI Key Resolver & Super Admin Key Config
 
 - **Tenant Key Resolver Engine (`lib/ai/tenant-key-resolver.ts`)**: Built an intelligent per-campus API key resolver that queries user university affiliation via `institution_members` or `profiles.institution_id`, isolates campus rate limits (`campus_text_key` vs `campus_vision_key`), and implements in-memory caching (5-minute TTL) with tiered failover pools (`campus_byok` -> `campus_pool` -> `pro_pool` -> `free_pool`).

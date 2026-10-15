@@ -6,6 +6,8 @@ import { useLanguage } from '../i18n/language-context';
 import { calculateBurstiness } from '@/lib/editor/burstiness-engine';
 import { useDebounce } from 'use-debounce';
 import { improveWriting } from '@/lib/api/ai';
+import { useAuth } from '@/components/auth/auth-provider';
+import { saveLocalQuotaState } from '@/lib/ai/token-quota';
 
 export function ParaphraseStudio({ 
   content,
@@ -24,6 +26,8 @@ export function ParaphraseStudio({
 }) {
   const { language } = useLanguage();
   const isEn = language === 'en';
+  const { user, profile, refreshProfile } = useAuth();
+  const currentPlan = profile?.subscription_plan || activePlanId || 'free';
   const [selectedSentence, setSelectedSentence] = useState('');
   const [variations, setVariations] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -67,12 +71,19 @@ export function ParaphraseStudio({
       // Extract Author's Style Reference (Rest of the document)
       const styleRef = content.replace(textToParaphrase, '').trim().substring(0, 1500);
 
-      // Call AI for 3 variations concurrently (including Mimic My Voice)
+      // Call AI for 3 variations concurrently (including Mimic My Voice) with user context
       const [res1, res2, res3] = await Promise.all([
-        improveWriting(safeText, 'paraphrase', 'gemini', language),
-        improveWriting(safeText, 'simplify', 'gemini', language),
-        improveWriting(safeText, 'mimic', 'gemini', language, styleRef)
+        improveWriting(safeText, 'paraphrase', 'gemini', language, undefined, user?.id, currentPlan),
+        improveWriting(safeText, 'simplify', 'gemini', language, undefined, user?.id, currentPlan),
+        improveWriting(safeText, 'mimic', 'gemini', language, styleRef, user?.id, currentPlan)
       ]);
+
+      // Synchronize latest consumed tokens to local cache and refresh profile
+      const latestResult = res3 || res2 || res1;
+      if (latestResult && typeof latestResult.tokens_used === 'number') {
+        saveLocalQuotaState(latestResult.tokens_used, latestResult.monthly_quota);
+        refreshProfile?.();
+      }
 
       // Restore Citations
       const restoreCitations = (text: string) => {
@@ -88,8 +99,12 @@ export function ParaphraseStudio({
         restoreCitations(res2.improved_text),
         restoreCitations(res3.improved_text)
       ].filter(Boolean));
-    } catch (err) {
+    } catch (err: any) {
       console.error('AI generation failed', err);
+      const msg = err?.message || '';
+      if (msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('kuota')) {
+        setIsPlanModalOpen?.(true);
+      }
     } finally {
       setLoading(false);
     }
