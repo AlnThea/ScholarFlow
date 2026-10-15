@@ -1,5 +1,12 @@
 # ScholarFlow Changelog
 
+## v0.9.3 - Persistent AI Generation History & Cross-Session Restoration
+
+- **Client-Side Storage Engine (`lib/editor/ai-history.ts`)**: Built persistent `loadAiHistory` and `saveAiHistory` utilities with localStorage key `scholarflow.editor.ai-history.v1` and a FIFO capacity limit of 15 items, ensuring working AI drafts are retained across tab closes and browser refreshes.
+- **Hook State Hydration (`hooks/use-editor-ai.ts`)**: Integrated `loadAiHistory()` upon client mount inside `useEffect` to prevent SSR hydration mismatches, while persisting history changes automatically upon deleting single entries or clearing all history.
+- **Dark Mode & Bilingual History Modal (`components/editor/editor-sidebar.tsx`)**: Upgraded AI History Modal with full Dark Mode support (`dark:bg-slate-900`, `dark:border-slate-800`, `dark:text-slate-100`), tone badge highlights, model tag badges, side-by-side comparison (original draft vs AI polished result), one-click clipboard copy, and 'Apply to Canvas' integration.
+- **Zero Database Changes**: Required zero database schema modifications or migrations; client drafts remain fast and locally isolated without network latency.
+
 ## v0.9.2 - Resilient AI Transaction & Zero-Waste Token Guard
 
 - **Smart In-Memory Idempotency Cache (`lib/ai/idempotency-cache.ts`)**: Built a deterministic 64-bit double-pass FNV-1a hash caching engine with a 5-minute TTL to deduplicate identical AI prompts across both Edge and Node.js runtimes.

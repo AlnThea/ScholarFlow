@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { improveWriting, type ImproveWritingResponse, synthesizeLiteratureReview, generateAbstract } from '@/lib/api/ai';
 import { fetchAIModels, updateAIModel, createAIModel, deleteAIModel, type AIModel, fetchAIProviders, createAIProvider, updateAIProvider, deleteAIProvider, type AIProvider } from '@/lib/api/ai-models';
-import { addAiHistoryEntry, type AiHistoryEntry } from '@/lib/editor/ai-history';
+import { addAiHistoryEntry, loadAiHistory, saveAiHistory, type AiHistoryEntry } from '@/lib/editor/ai-history';
 import { extractTextFromContent } from '@/lib/editor/editor-utils';
 import { useAuth } from '@/components/auth/auth-provider';
 import { getLocalQuotaState, saveLocalQuotaState } from '@/lib/ai/token-quota';
@@ -43,6 +43,14 @@ export function useEditorAi(
   const [aiProviders, setAiProviders] = useState<AIProvider[]>([]);
   
   const [aiHistory, setAiHistory] = useState<AiHistoryEntry[]>([]);
+  
+  // Hydrate AI History from localStorage on client mount
+  useEffect(() => {
+    const saved = loadAiHistory();
+    if (saved && saved.length > 0) {
+      setAiHistory(saved);
+    }
+  }, []);
   const [aiError, setAiError] = useState<string | null>(null);
   const [isImproving, setIsImproving] = useState(false);
   
@@ -388,10 +396,15 @@ export function useEditorAi(
   }, [improvedResult, currentDocument, editorJsRef, setContentBeforeApply, setIsApplied, setSavedAt]);
 
   const deleteAiHistoryEntry = useCallback((id: string) => {
-    setAiHistory((current) => current.filter((item) => item.id !== id));
+    setAiHistory((current) => {
+      const next = current.filter((item) => item.id !== id);
+      saveAiHistory(next);
+      return next;
+    });
   }, []);
 
   const clearAiHistory = useCallback(() => {
+    saveAiHistory([]);
     setAiHistory([]);
   }, []);
 

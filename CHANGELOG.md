@@ -2,6 +2,14 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.9.3] - 2026-10-15 (Persistent AI Generation History & Cross-Session Restoration)
+
+### 📜 Local Storage Persistence & Session Safety
+- **Storage Engine (`lib/editor/ai-history.ts`)**: Built persistent `loadAiHistory` and `saveAiHistory` utilities with localStorage key `scholarflow.editor.ai-history.v1` and a FIFO capacity limit of 15 items, ensuring working AI drafts are retained across tab closes and browser refreshes.
+- **Hook State Hydration (`hooks/use-editor-ai.ts`)**: Hydrated `aiHistory` from client localStorage on mount within `useEffect`, keeping the history synchronized when entries are added, deleted individually, or cleared altogether.
+- **Enterprise Dark Mode & Bilingual Modal (`components/editor/editor-sidebar.tsx`)**: Upgraded the AI History Modal popup with full dark mode support (`dark:bg-slate-900`, `dark:border-slate-800`, `dark:text-slate-100`), tone pill indicators, model badges, side-by-side original vs. polished comparison, one-click clipboard copying, and direct 'Apply to Canvas' functionality.
+- **Zero Database Changes**: Operating purely on the client-side working storage layer, this feature requires zero Supabase table migrations, ensuring zero extra latency or cloud bandwidth overhead.
+
 ## ⚡ [v0.9.2] - 2026-10-15 (Resilient AI Transaction & Zero-Waste Token Guard)
 
 ### 🛡️ Smart Idempotency Cache & Zero-Waste Token Deduplication

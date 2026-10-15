@@ -239,3 +239,12 @@ Target: Menjamin integritas transaksi AI bebas buang token (*Zero-Waste Token*) 
 - [x] **3. Browser Safety Guard (`window.onbeforeunload`)**: Mencegah insiden tidak sengaja menekan refresh (F5/Ctrl+R) atau close tab saat AI sedang memproses di `useEditorAi`, `ParaphraseStudio`, dan `SidebarStatsTab`.
 - [x] **4. Micro-UX Visual Cache Badges**: Indikator `⚡ 0 Token (Cache Instan)` yang elegan di `SidebarWritingTab` dan `ParaphraseStudio` yang kompatibel dengan dark mode dan bilingual.
 - [x] **5. Unit Testing Verification**: 25/25 test cases passing pada Vitest (termasuk 5 test suite baru di `__tests__/utils/idempotency-cache.test.ts`).
+
+### Phase 17: Persistent AI Generation History & Cross-Session Restoration
+Target: Menjamin riwayat hasil polesan dan perbaikan naskah AI tetap tersimpan secara aman dan persisten bahkan ketika pengguna me-refresh atau menutup tab browser, dengan UI/UX modal profesional yang mendukung Dark Mode dan dwibahasa (EN/ID) tanpa memerlukan migrasi database.
+
+- [x] **1. Local Storage Persistence Engine (`lib/editor/ai-history.ts`)**: Implementasi `loadAiHistory` dan `saveAiHistory` dengan storage key `scholarflow.editor.ai-history.v1` (kapasitas 15 riwayat perbaikan naskah).
+- [x] **2. Hook State Hydration (`hooks/use-editor-ai.ts`)**: Hidrasi reaktif `aiHistory` dari `localStorage` saat client mount (`useEffect`), serta auto-persist saat penghapusan per-item maupun pembersihan seluruh riwayat.
+- [x] **3. Dark Mode & Bilingual History Modal (`components/editor/editor-sidebar.tsx`)**: Modal riwayat AI interaktif dengan perbandingan draf asli vs draf AI, filter label model/tone, tombol salin ke clipboard, dan tombol 'Terapkan ke Canvas' dengan kepatuhan penuh terhadap dark mode (`dark:bg-slate-900`, `dark:border-slate-800`, dll.) dan dwibahasa (EN/ID).
+- [x] **4. Zero Database Alteration**: Bebas dari perubahan skema database Supabase maupun migrasi SQL, seluruh draf kerja aman di client storage.
+

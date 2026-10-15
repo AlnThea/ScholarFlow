@@ -135,6 +135,11 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] **Browser Unload Guard (`window.onbeforeunload`)**: Proteksi pencegahan refresh / close tab yang tidak disengaja di `useEditorAi`, `ParaphraseStudio`, dan `SidebarStatsTab`.
   - [x] **Micro-UX Cache Hit Badges**: Badge `⚡ 0 Token (Cache Instan)` di `SidebarWritingTab` dan `ParaphraseStudio` yang responsif terhadap dark mode dan bilingual.
   - [x] **Unit Testing**: Vitest test suite di `__tests__/utils/idempotency-cache.test.ts` (5/5 tests passing, total 25/25 tests passing).
+- [x] **11. Persistent AI Generation History & Cross-Session Restoration**:
+  - [x] **Client-Side Persistence (`lib/editor/ai-history.ts`)**: `loadAiHistory` dan `saveAiHistory` dengan kunci storage `scholarflow.editor.ai-history.v1` (kapasitas 15 riwayat perbaikan naskah).
+  - [x] **Reactive Hook Integration (`hooks/use-editor-ai.ts`)**: Inisialisasi `aiHistory` saat client mount (`useEffect`), sinkronisasi otomatis saat penambahan draf baru, penghapusan satuan, maupun bersihkan semua.
+  - [x] **Dark Mode & Bilingual History Modal (`components/editor/editor-sidebar.tsx`)**: Modal riwayat AI interaktif dengan preview draf asli vs hasil polesan AI, filter tone, tombol salin ke clipboard, dan tombol 'Terapkan ke Canvas' dengan dukungan penuh Dark Mode dan dwibahasa (EN/ID).
+  - [x] **Zero Database Alteration**: Bebas dari migrasi database, sepenuhnya tersimpan aman di client session storage tanpa overhead database roundtrips.
 - [ ] Complete remaining UI pages & user-facing feature modules.
 
 
