@@ -647,6 +647,11 @@ export function EditorSidebar(props: SidebarProps) {
                           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800">
                             OpenRouter
                           </span>
+                        {item.source === 'cloud' && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            {language === 'en' ? 'Cloud Synced' : 'Cloud Tersinkron'}
+                          </span>
                         )}
                       </div>
                       <div className="flex items-center gap-3">

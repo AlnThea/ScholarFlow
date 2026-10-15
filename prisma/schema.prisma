@@ -41,6 +41,7 @@ model UserProfile {
 
   documents    DocumentEntry[]
   citations    CitationLibraryEntry[]
+  aiGenerations AiGenerationEntry[]
 
   @@map("profiles")
 }
@@ -222,6 +223,29 @@ model InstitutionAuditLogEntry {
   createdAt     DateTime  @default(now()) @map("created_at")
 
   @@map("institution_audit_logs")
+}
+
+model AiGenerationEntry {
+  id             String       @id @default(uuid())
+  userId         String       @map("user_id")
+  documentId     String?      @map("document_id")
+  featureType    String       @default("improve") @map("feature_type")
+  originalText   String?      @map("original_text") @db.Text
+  resultText     String?      @map("result_text") @db.Text
+  tone           String?      @default("academic")
+  model          String?      @default("gemini")
+  tokensConsumed Int          @default(0) @map("tokens_consumed")
+  status         String       @default("completed")
+  errorMessage   String?      @map("error_message")
+  metadata       Json?        @default("{}")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at")
+
+  user           UserProfile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([status])
+  @@map("ai_generations")
 }
 
 

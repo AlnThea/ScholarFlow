@@ -8,6 +8,7 @@ import { checkPersonalQuota, recordPersonalTokenConsumption, estimateTokens } fr
 import { geminiKeyPool } from '@/lib/ai/gemini-key-pool';
 import { resolveTenantKey } from '@/lib/ai/tenant-key-resolver';
 import { generateIdempotencyKey, getIdempotentAiResponse, setIdempotentAiResponse } from '@/lib/ai/idempotency-cache';
+import { createPendingAiGeneration, completeAiGeneration, failAiGeneration } from '@/lib/ai/server-ai-logger';
 
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
@@ -198,6 +199,18 @@ export async function POST(request: Request) {
 
     const prompt = buildPrompt(text, language);
 
+    // Server-Side Background Task Tracker (ChatGPT-Style Resilience)
+    let aiGenerationId: string | null = null;
+    if (userId) {
+      aiGenerationId = await createPendingAiGeneration({
+        userId,
+        featureType: 'abstract',
+        originalText: 'Document Context',
+        tone: 'abstract',
+        model,
+      });
+    }
+
     // If client requested SSE streaming
     if (stream && (model === 'gemini' || model === 'gemini-2.0-flash')) {
       try {
@@ -290,6 +303,9 @@ export async function POST(request: Request) {
     }
 
     if (!finalResult) {
+      if (aiGenerationId) {
+        await failAiGeneration(aiGenerationId, errors.join('; '));
+      }
       return NextResponse.json(
         fallbackResponse(
           text,
@@ -303,6 +319,20 @@ export async function POST(request: Request) {
     const tokensConsumed = estimateTokens(prompt) + estimateTokens(finalResult);
     const usageRecord = await recordPersonalTokenConsumption(userId, tokensConsumed, userPlan);
 
+    // Mark server generation as COMPLETED in Supabase
+    if (aiGenerationId) {
+      await completeAiGeneration(aiGenerationId, {
+        resultText: finalResult,
+        tokensConsumed,
+        metadata: {
+          tone: 'abstract',
+          model: successfulModelName || model,
+          disclaimer,
+          tenant_source: tenantKeyRes.source,
+        },
+      });
+    }
+
     const resultPayload = {
       abstract_text: finalResult,
       disclaimer: disclaimer,
@@ -314,6 +344,7 @@ export async function POST(request: Request) {
       tenant_source: tenantKeyRes.source,
       institution_name: tenantKeyRes.institutionName || null,
       is_idempotent_hit: false,
+      generation_id: aiGenerationId || undefined,
     };
 
     setIdempotentAiResponse(idempotencyKey, resultPayload);

@@ -1,5 +1,15 @@
 # ScholarFlow Changelog
 
+## v0.9.4 - Server-Side AI History Engine & System Architecture Suite (ChatGPT-Style Resilience)
+
+- **Supabase SQL Migration (`supabase/migrations/20261015000001_create_ai_generations_history.sql`)**: Created `public.ai_generations` table with granular Row Level Security (RLS) policies, indexes on `(user_id, created_at DESC)` and `status`, enabling background transaction persistence even if client disconnects at second 2.
+- **Universal Prisma Schema (`prisma/schema.prisma`)**: Added `AiGenerationEntry` model with relation to `UserProfile` for cross-database multi-ORM compatibility.
+- **Server AI Logger Engine (`lib/ai/server-ai-logger.ts`)**: Implemented `createPendingAiGeneration`, `completeAiGeneration`, `failAiGeneration`, and `fetchUserAiHistory` with service-role Supabase bypass.
+- **History API Endpoints (`app/api/v1/ai/history/route.ts`)**: Built RESTful `GET` (fetch recent 20 generations) and `DELETE` (delete single or clear all) routes.
+- **API Route Integration**: Injected server logging into `/api/v1/ai/improve` and `/api/v1/ai/abstract`.
+- **Client-Cloud Dual Sync**: Hydrated cloud history in `hooks/use-editor-ai.ts` via `mergeAiHistories` and added real-time `Cloud Synced` badge in the AI History modal.
+- **Architecture Documentation Suite (`doc/architecture/`)**: Authored 4 comprehensive architectural specifications with complete Mermaid Sequence Diagrams (`01-server-side-ai-history.md`, `02-smart-idempotency-cache.md`, `03-token-quota-synchronization.md`, `04-multi-tenant-campus-keys.md`, and `README.md`).
+
 ## v0.9.3 - Persistent AI Generation History & Cross-Session Restoration
 
 - **Client-Side Storage Engine (`lib/editor/ai-history.ts`)**: Built persistent `loadAiHistory` and `saveAiHistory` utilities with localStorage key `scholarflow.editor.ai-history.v1` and a FIFO capacity limit of 15 items, ensuring working AI drafts are retained across tab closes and browser refreshes.

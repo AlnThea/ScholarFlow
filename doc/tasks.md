@@ -248,3 +248,15 @@ Target: Menjamin riwayat hasil polesan dan perbaikan naskah AI tetap tersimpan s
 - [x] **3. Dark Mode & Bilingual History Modal (`components/editor/editor-sidebar.tsx`)**: Modal riwayat AI interaktif dengan perbandingan draf asli vs draf AI, filter label model/tone, tombol salin ke clipboard, dan tombol 'Terapkan ke Canvas' dengan kepatuhan penuh terhadap dark mode (`dark:bg-slate-900`, `dark:border-slate-800`, dll.) dan dwibahasa (EN/ID).
 - [x] **4. Zero Database Alteration**: Bebas dari perubahan skema database Supabase maupun migrasi SQL, seluruh draf kerja aman di client storage.
 
+### Phase 18: Server-Side AI History Engine & System Architecture Suite
+Target: Membangun sistem pencatatan AI berbasis server (ChatGPT-Style) yang persisten di Supabase sehingga pemrosesan AI tetap selesai dan tersimpan meskipun browser ditutup di detik ke-2, dilengkapi sinkronisasi cloud-client dan rangkaian dokumentasi arsitektur Mermaid sequence diagrams.
+
+- [x] **1. SQL Migration (`supabase/migrations/20261015000001_create_ai_generations_history.sql`)**: Tabel `ai_generations` dengan RLS dan indeks kronologi.
+- [x] **2. Universal Prisma Schema (`prisma/schema.prisma`)**: Model `AiGenerationEntry` dengan relasi ke `UserProfile`.
+- [x] **3. Server AI Logger (`lib/ai/server-ai-logger.ts`)**: Fungsi `createPendingAiGeneration`, `completeAiGeneration`, `failAiGeneration`, dan `fetchUserAiHistory` via service-role bypass.
+- [x] **4. History API Route (`app/api/v1/ai/history/route.ts`)**: Endpoint `GET` dan `DELETE` riwayat generasi AI.
+- [x] **5. API Route Handlers Integration**: Integrasi pencatatan server-side ke `/api/v1/ai/improve` dan `/api/v1/ai/abstract`.
+- [x] **6. Client-Cloud Dual Sync & UI Badging**: Sinkronisasi riwayat cloud pada `useEditorAi`, badge status `Cloud Synced` di modal riwayat.
+- [x] **7. Architecture Documentation Suite (`doc/architecture/`)**: 4 berkas dokumentasi mendalam lengkap dengan Mermaid Sequence Diagrams (`01-server-side-ai-history.md`, `02-smart-idempotency-cache.md`, `03-token-quota-synchronization.md`, `04-multi-tenant-campus-keys.md`, dan `README.md`).
+
+

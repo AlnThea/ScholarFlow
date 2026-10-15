@@ -126,3 +126,32 @@ export async function generateAbstract(
 
   return (await response.json()) as GenerateAbstractResponse;
 }
+
+export async function fetchCloudAiHistory(userId: string, limit: number = 20) {
+  if (!userId) return [];
+  try {
+    const res = await fetch(`/api/v1/ai/history?userId=${encodeURIComponent(userId)}&limit=${limit}`);
+    if (!res.ok) return [];
+    const json = await res.json();
+    return Array.isArray(json?.history) ? json.history : [];
+  } catch (err) {
+    console.warn('[AI API] Failed to fetch cloud AI history:', err);
+    return [];
+  }
+}
+
+export async function deleteCloudAiHistory(userId: string, id?: string, clearAll: boolean = false) {
+  if (!userId) return false;
+  try {
+    const res = await fetch('/api/v1/ai/history', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, id, clearAll }),
+    });
+    return res.ok;
+  } catch (err) {
+    console.warn('[AI API] Failed to delete cloud AI history:', err);
+    return false;
+  }
+}
+

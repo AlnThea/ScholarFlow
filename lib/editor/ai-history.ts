@@ -5,6 +5,7 @@ export type AiHistoryEntry = {
   tone: string;
   model: string;
   savedAt: string;
+  source?: 'cloud' | 'local';
 };
 
 const MAX_AI_HISTORY_ITEMS = 15;
@@ -43,8 +44,54 @@ export function addAiHistoryEntry(
   const filtered = history.filter(
     (item) => !(item.originalText === entry.originalText && item.tone === entry.tone)
   );
-  const nextHistory = [entry, ...filtered];
+  const nextHistory = [{ ...entry, source: entry.source || 'local' }, ...filtered];
   const sliced = nextHistory.slice(0, MAX_AI_HISTORY_ITEMS);
   saveAiHistory(sliced);
   return sliced;
 }
+
+export function convertCloudRecordToHistoryEntry(record: any): AiHistoryEntry {
+  let formattedTime = 'Barusan';
+  try {
+    if (record.created_at) {
+      formattedTime = new Date(record.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+  } catch (_) {}
+
+  return {
+    id: record.id,
+    originalText: record.original_text || '',
+    improvedText: record.result_text || '',
+    tone: record.tone || 'academic',
+    model: record.model || 'gemini',
+    savedAt: formattedTime,
+    source: 'cloud',
+  };
+}
+
+export function mergeAiHistories(
+  localHistory: AiHistoryEntry[],
+  cloudRecords: any[]
+): AiHistoryEntry[] {
+  const convertedCloud = cloudRecords.map(convertCloudRecordToHistoryEntry);
+  
+  // Combine: cloud records taking precedence for completed jobs, while preserving recent local drafts
+  const map = new Map<string, AiHistoryEntry>();
+  
+  // First add local
+  localHistory.forEach((item) => {
+    const key = `${item.originalText}___${item.tone}`;
+    map.set(key, item);
+  });
+
+  // Then add cloud (overwrites if identical, marked as cloud)
+  convertedCloud.forEach((item) => {
+    const key = `${item.originalText}___${item.tone}`;
+    map.set(key, item);
+  });
+
+  const merged = Array.from(map.values()).slice(0, MAX_AI_HISTORY_ITEMS);
+  saveAiHistory(merged);
+  return merged;
+}
+

@@ -2,6 +2,24 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.9.4] - 2026-10-15 (Server-Side AI History Engine & System Architecture Suite)
+
+### ☁️ ChatGPT-Style Server-Side AI History & Resilient Background Tasks
+- **Supabase SQL Migration (`supabase/migrations/20261015000001_create_ai_generations_history.sql`)**: Created `public.ai_generations` table with granular Row Level Security (RLS) policies and chronological indexes. Enables background transaction persistence even if the client disconnects at second 2.
+- **Universal Prisma Schema (`prisma/schema.prisma`)**: Integrated `AiGenerationEntry` model with relation to `UserProfile`.
+- **Server AI Logger Engine (`lib/ai/server-ai-logger.ts`)**: Built `createPendingAiGeneration`, `completeAiGeneration`, `failAiGeneration`, and `fetchUserAiHistory` with service-role Supabase bypass.
+- **History API Endpoints (`app/api/v1/ai/history/route.ts`)**: Implemented RESTful `GET` (fetch recent 20 generations) and `DELETE` (delete single or clear all) routes.
+- **API Route Handlers Integration**: Injected server logging into `/api/v1/ai/improve` and `/api/v1/ai/abstract`.
+- **Client-Cloud Dual Sync**: Hydrated cloud history in `hooks/use-editor-ai.ts` via `mergeAiHistories` and added real-time `Cloud Synced` badge in the AI History modal.
+
+### 🏛️ System Architecture Documentation Suite
+- Created `doc/architecture/` containing complete technical specifications and Mermaid Sequence Diagrams:
+  - `01-server-side-ai-history.md`: Server-Side AI Generation & Resilient Background Execution (ChatGPT-Style).
+  - `02-smart-idempotency-cache.md`: Smart Idempotency Cache & Zero-Waste Token Deduplication (5-Minute TTL).
+  - `03-token-quota-synchronization.md`: Personal AI Token Quota & Service-Role Quota Tracking.
+  - `04-multi-tenant-campus-keys.md`: Multi-Tenant Campus Dedicated AI Key Resolver & Workload Segregation.
+  - `README.md`: Index table and navigation guide.
+
 ## ⚡ [v0.9.3] - 2026-10-15 (Persistent AI Generation History & Cross-Session Restoration)
 
 ### 📜 Local Storage Persistence & Session Safety

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { improveWriting, type ImproveWritingResponse, synthesizeLiteratureReview, generateAbstract } from '@/lib/api/ai';
+import { improveWriting, type ImproveWritingResponse, synthesizeLiteratureReview, generateAbstract, fetchCloudAiHistory, deleteCloudAiHistory } from '@/lib/api/ai';
 import { fetchAIModels, updateAIModel, createAIModel, deleteAIModel, type AIModel, fetchAIProviders, createAIProvider, updateAIProvider, deleteAIProvider, type AIProvider } from '@/lib/api/ai-models';
-import { addAiHistoryEntry, loadAiHistory, saveAiHistory, type AiHistoryEntry } from '@/lib/editor/ai-history';
+import { addAiHistoryEntry, loadAiHistory, saveAiHistory, mergeAiHistories, type AiHistoryEntry } from '@/lib/editor/ai-history';
 import { extractTextFromContent } from '@/lib/editor/editor-utils';
 import { useAuth } from '@/components/auth/auth-provider';
 import { getLocalQuotaState, saveLocalQuotaState } from '@/lib/ai/token-quota';
@@ -44,13 +44,23 @@ export function useEditorAi(
   
   const [aiHistory, setAiHistory] = useState<AiHistoryEntry[]>([]);
   
-  // Hydrate AI History from localStorage on client mount
+  // Hydrate AI History from localStorage and Cloud Supabase on client mount / user login
   useEffect(() => {
     const saved = loadAiHistory();
     if (saved && saved.length > 0) {
       setAiHistory(saved);
     }
-  }, []);
+
+    if (user?.id) {
+      fetchCloudAiHistory(user.id).then((cloudRecords) => {
+        if (cloudRecords && cloudRecords.length > 0) {
+          setAiHistory((current) => mergeAiHistories(current, cloudRecords));
+        }
+      }).catch((err) => {
+        console.warn('[useEditorAi] Cloud AI history fetch ignored:', err);
+      });
+    }
+  }, [user?.id]);
   const [aiError, setAiError] = useState<string | null>(null);
   const [isImproving, setIsImproving] = useState(false);
   
@@ -401,12 +411,18 @@ export function useEditorAi(
       saveAiHistory(next);
       return next;
     });
-  }, []);
+    if (user?.id) {
+      deleteCloudAiHistory(user.id, id).catch(() => {});
+    }
+  }, [user?.id]);
 
   const clearAiHistory = useCallback(() => {
     saveAiHistory([]);
     setAiHistory([]);
-  }, []);
+    if (user?.id) {
+      deleteCloudAiHistory(user.id, undefined, true).catch(() => {});
+    }
+  }, [user?.id]);
 
   return {
     selectedText, setSelectedText,

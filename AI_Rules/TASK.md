@@ -135,11 +135,14 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] **Browser Unload Guard (`window.onbeforeunload`)**: Proteksi pencegahan refresh / close tab yang tidak disengaja di `useEditorAi`, `ParaphraseStudio`, dan `SidebarStatsTab`.
   - [x] **Micro-UX Cache Hit Badges**: Badge `⚡ 0 Token (Cache Instan)` di `SidebarWritingTab` dan `ParaphraseStudio` yang responsif terhadap dark mode dan bilingual.
   - [x] **Unit Testing**: Vitest test suite di `__tests__/utils/idempotency-cache.test.ts` (5/5 tests passing, total 25/25 tests passing).
-- [x] **11. Persistent AI Generation History & Cross-Session Restoration**:
-  - [x] **Client-Side Persistence (`lib/editor/ai-history.ts`)**: `loadAiHistory` dan `saveAiHistory` dengan kunci storage `scholarflow.editor.ai-history.v1` (kapasitas 15 riwayat perbaikan naskah).
-  - [x] **Reactive Hook Integration (`hooks/use-editor-ai.ts`)**: Inisialisasi `aiHistory` saat client mount (`useEffect`), sinkronisasi otomatis saat penambahan draf baru, penghapusan satuan, maupun bersihkan semua.
-  - [x] **Dark Mode & Bilingual History Modal (`components/editor/editor-sidebar.tsx`)**: Modal riwayat AI interaktif dengan preview draf asli vs hasil polesan AI, filter tone, tombol salin ke clipboard, dan tombol 'Terapkan ke Canvas' dengan dukungan penuh Dark Mode dan dwibahasa (EN/ID).
-  - [x] **Zero Database Alteration**: Bebas dari migrasi database, sepenuhnya tersimpan aman di client session storage tanpa overhead database roundtrips.
+- [x] **12. Server-Side AI History Engine & Architectural Documentation Suite**:
+  - [x] **Supabase SQL Migration (`supabase/migrations/20261015000001_create_ai_generations_history.sql`)**: Tabel `ai_generations` dengan RLS granular dan index kronologi.
+  - [x] **Prisma Schema Update (`prisma/schema.prisma`)**: Model `AiGenerationEntry` dengan relasi ke `UserProfile`.
+  - [x] **Server-Side AI Logger (`lib/ai/server-ai-logger.ts`)**: Fungsi pencatatan background `createPendingAiGeneration`, `completeAiGeneration`, `failAiGeneration`, dan `fetchUserAiHistory` menggunakan service role bypass.
+  - [x] **History API Route (`app/api/v1/ai/history/route.ts`)**: Endpoint `GET` dan `DELETE` riwayat generasi AI.
+  - [x] **AI Route Handlers Integration**: Integrasi pencatatan server-side ke `/api/v1/ai/improve` dan `/api/v1/ai/abstract`.
+  - [x] **Client-Cloud Dual Sync**: Hidrasi otomatis di `useEditorAi`, badge status `Cloud Synced` di modal, dan penghapusan tersinkron.
+  - [x] **Architecture Documentation Suite (`doc/architecture/`)**: 4 dokumen terperinci lengkap dengan Mermaid Sequence Diagrams (`01-server-side-ai-history.md`, `02-smart-idempotency-cache.md`, `03-token-quota-synchronization.md`, `04-multi-tenant-campus-keys.md`).
 - [ ] Complete remaining UI pages & user-facing feature modules.
 
 
