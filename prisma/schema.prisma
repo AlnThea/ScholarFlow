@@ -119,9 +119,12 @@ model AiModelEntry {
   isEnabled    Boolean  @default(true) @map("is_enabled")
   isPremium    Boolean  @default(false) @map("is_premium")
   providerType String?  @default("openrouter") @map("provider_type")
-  baseUrl      String?  @map("base_url")
-  customApiKey String?  @map("custom_api_key")
-  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+  baseUrl          String?  @map("base_url")
+  customApiKey     String?  @map("custom_api_key")
+  accessTier       String?  @default("free") @map("access_tier")
+  workloadCategory String?  @default("all") @map("workload_category")
+  displayOrder     Int?     @default(0) @map("display_order")
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("ai_models")
 }
@@ -182,6 +185,8 @@ model InstitutionEntry {
   contractStart    DateTime  @default(now()) @map("contract_start")
   contractEnd      DateTime  @map("contract_end")
   status           String    @default("active")
+  campusTextKey    String?   @map("campus_text_key")
+  campusVisionKey  String?   @map("campus_vision_key")
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at")
 
