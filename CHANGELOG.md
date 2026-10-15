@@ -2,6 +2,21 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.9.2] - 2026-10-15 (Resilient AI Transaction & Zero-Waste Token Guard)
+
+### 🛡️ Smart Idempotency Cache & Zero-Waste Token Deduplication
+- **Engine (`lib/ai/idempotency-cache.ts`)**: Built a deterministic 64-bit double-pass FNV-1a hash caching engine with a 5-minute TTL to deduplicate identical AI prompts across both Edge and Node.js runtimes.
+- **Deduplication Across All 4 AI Endpoints**:
+  - `/api/v1/ai/improve`: Returns cached response in 0.01s with `0` tokens charged if the user submits the same text and tone within 5 minutes.
+  - `/api/v1/ai/abstract`: Reuses recent context abstracts on page refreshes without re-calling Google Gemini.
+  - `/api/v1/ai/synthesize`: Deduplicates literature review synthesis for identical reference selections.
+  - `/api/v1/ai/interpret-stats`: Caches multimodal SPSS table analyses by combining user ID, config, and input data signatures.
+
+### 🛡️ Browser Safety Guard (`window.onbeforeunload`) & Micro-UX Badges
+- **Accidental Refresh/Close Prevention**: Integrated `beforeunload` event listeners in `useEditorAi`, `ParaphraseStudio`, and `SidebarStatsTab`, protecting users from losing active generations if they press F5, Ctrl+R, or Close Tab.
+- **Cache Hit Indicator**: Added visual `⚡ 0 Token (Cache Instan)` status indicators to `SidebarWritingTab` and `ParaphraseStudio` with full dark mode and bilingual (EN <-> ID) support.
+- **Unit Testing**: Added Vitest test suite in `__tests__/utils/idempotency-cache.test.ts` (5/5 tests passing, 25/25 tests passing in total suite).
+
 ## ⚡ [v0.9.1] - 2026-10-15 (AI Token Quota Consumption & Realtime Profile Synchronization Fix)
 
 ### 🛡️ Service-Role Database Permissions & Accurate Quota Tracking

@@ -3,7 +3,7 @@ import {
   IconBook, IconCheck, IconDownload, IconExternalLink, IconFileText,
   IconFilter, IconFolderOpen, IconLoader2, IconCirclePlus, IconQuote,
   IconSearch, IconSum, IconSparkles, IconWand, IconChevronLeft,
-  IconChevronRight, IconLanguage, IconX, IconClock, IconTrash, IconCopy, IconHistory
+  IconChevronRight, IconLanguage, IconX, IconClock, IconTrash, IconCopy, IconHistory, IconBolt
 } from '@tabler/icons-react';
 import { BurstinessChart } from './burstiness-chart';
 import { TokenQuotaBadge } from '@/components/ai/token-quota-badge';
@@ -171,9 +171,17 @@ export const SidebarWritingTab = (props: any) => {
                         </p>
                         <p className="text-sm leading-6 text-text dark:text-slate-300">{improvedText?.improved_text}</p>
                       </div>
-                      <div className="flex items-start gap-2 rounded-md border border-line dark:border-slate-700 bg-panel dark:bg-slate-800 p-3 text-xs leading-5 text-muted dark:text-slate-400">
-                        <IconSparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent dark:text-indigo-400" />
-                        <span>{improvedText?.disclaimer}</span>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-start gap-2 rounded-md border border-line dark:border-slate-700 bg-panel dark:bg-slate-800 p-2.5 text-xs leading-5 text-muted dark:text-slate-400 flex-1">
+                          <IconSparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent dark:text-indigo-400" />
+                          <span>{improvedText?.disclaimer}</span>
+                        </div>
+                        {improvedText?.is_idempotent_hit ? (
+                          <div className="flex items-center gap-1.5 rounded-md border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-300 shrink-0">
+                            <IconBolt className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                            <span>{isEn ? '0 Tokens (Instant Cache)' : '0 Token (Cache Instan)'}</span>
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   ) : null}

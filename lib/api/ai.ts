@@ -11,6 +11,7 @@ export type ImproveWritingResponse = {
   monthly_quota?: number;
   tokens_used?: number;
   percent_used?: number;
+  is_idempotent_hit?: boolean;
 };
 
 export async function improveWriting(
@@ -52,6 +53,7 @@ export type SynthesizeLiteratureResponse = {
   percent_used?: number;
   tenant_source?: string;
   institution_name?: string | null;
+  is_idempotent_hit?: boolean;
 };
 
 export async function synthesizeLiteratureReview(
@@ -95,6 +97,7 @@ export type GenerateAbstractResponse = {
   monthly_quota?: number;
   tokens_used?: number;
   percent_used?: number;
+  is_idempotent_hit?: boolean;
 };
 
 export async function generateAbstract(

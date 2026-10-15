@@ -51,6 +51,22 @@ export function useEditorAi(
   const [synthesizeError, setSynthesizeError] = useState<string | null>(null);
   const [synthesizeDisclaimer, setSynthesizeDisclaimer] = useState<string | null>(null);
 
+  // Browser safety guard: prevent accidental tab close / page refresh while AI is generating
+  useEffect(() => {
+    if (!isImproving && !isSynthesizing) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isImproving, isSynthesizing]);
+
   useEffect(() => {
     if (profile) {
       setTokensUsed(typeof profile.ai_tokens_used === 'number' ? profile.ai_tokens_used : 0);

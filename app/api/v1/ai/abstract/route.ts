@@ -7,6 +7,7 @@ import { defaultAiRateLimiter } from '@/lib/ai/rate-limiter';
 import { checkPersonalQuota, recordPersonalTokenConsumption, estimateTokens } from '@/lib/ai/token-quota';
 import { geminiKeyPool } from '@/lib/ai/gemini-key-pool';
 import { resolveTenantKey } from '@/lib/ai/tenant-key-resolver';
+import { generateIdempotencyKey, getIdempotentAiResponse, setIdempotentAiResponse } from '@/lib/ai/idempotency-cache';
 
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
@@ -159,6 +160,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Text parameter is required.' }, { status: 400 });
     }
 
+    // Smart Idempotency Cache Check (Deduplication within 5 minutes)
+    const idempotencyKey = generateIdempotencyKey(userId || 'anon', 'abstract', language, text);
+    const cachedResponse = getIdempotentAiResponse<any>(idempotencyKey);
+    if (cachedResponse) {
+      return NextResponse.json({
+        ...cachedResponse,
+        is_idempotent_hit: true,
+        tokens_consumed: 0,
+      });
+    }
+
     // Personal Token Quota Guard
     const quotaCheck = await checkPersonalQuota(userId, userPlan);
     if (!quotaCheck.allowed) {
@@ -291,7 +303,7 @@ export async function POST(request: Request) {
     const tokensConsumed = estimateTokens(prompt) + estimateTokens(finalResult);
     const usageRecord = await recordPersonalTokenConsumption(userId, tokensConsumed, userPlan);
 
-    return NextResponse.json({
+    const resultPayload = {
       abstract_text: finalResult,
       disclaimer: disclaimer,
       tokens_consumed: tokensConsumed,
@@ -301,7 +313,12 @@ export async function POST(request: Request) {
       percent_used: usageRecord.percentUsed,
       tenant_source: tenantKeyRes.source,
       institution_name: tenantKeyRes.institutionName || null,
-    });
+      is_idempotent_hit: false,
+    };
+
+    setIdempotentAiResponse(idempotencyKey, resultPayload);
+
+    return NextResponse.json(resultPayload);
   } catch (error) {
     console.error('Error in abstract generation API:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

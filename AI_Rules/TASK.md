@@ -129,7 +129,12 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] **Editor AI Hook Token Sync (`hooks/use-editor-ai.ts`)**: Sinkronisasi reaktif saldo token (`tokensUsed`, `monthlyQuota`) dan cache lokal via `saveLocalQuotaState` di semua aksi AI (`runImproveWriting`, `runParaphrase`, `runSummarize`, `runGenerateAbstract`, `handleParafrasePlagiat`).
   - [x] **Literature Review Synthesis Token Sync (`app/api/v1/ai/synthesize/route.ts` & `lib/api/ai.ts`)**: Menambahkan `checkPersonalQuota` guard, kalkulasi konsumsi token, dan sinkronisasi `updateQuotaState` pada `handleSynthesizeLiterature`.
   - [x] **SPSS / PSPP Statistical Interpreter Token Sync (`app/api/v1/ai/interpret-stats/route.ts` & `components/editor/sidebar-stats-tab.tsx`)**: Menambahkan `checkPersonalQuota` guard, kalkulasi multimodal vision token, dan sinkronisasi realtime `saveLocalQuotaState` & `refreshProfile()`.
-  - [x] **Automated Testing**: 20/20 Vitest unit test suite passing.
+- [x] **10. Resilient AI Transaction & Zero-Waste Token Guard**:
+  - [x] **Smart Idempotency Cache (`lib/ai/idempotency-cache.ts`)**: In-memory cache 5 menit dengan algoritma double-pass FNV-1a 64-bit deterministic hash untuk mendeduplikasi request yang identik.
+  - [x] **Zero-Waste Token Deduplication**: Terintegrasi ke 4 API AI (`/api/v1/ai/improve`, `/api/v1/ai/abstract`, `/api/v1/ai/synthesize`, `/api/v1/ai/interpret-stats`). Saat request identik terulang dalam 5 menit, hasil langsung dikembalikan instan dan **0 token dipotong**.
+  - [x] **Browser Unload Guard (`window.onbeforeunload`)**: Proteksi pencegahan refresh / close tab yang tidak disengaja di `useEditorAi`, `ParaphraseStudio`, dan `SidebarStatsTab`.
+  - [x] **Micro-UX Cache Hit Badges**: Badge `⚡ 0 Token (Cache Instan)` di `SidebarWritingTab` dan `ParaphraseStudio` yang responsif terhadap dark mode dan bilingual.
+  - [x] **Unit Testing**: Vitest test suite di `__tests__/utils/idempotency-cache.test.ts` (5/5 tests passing, total 25/25 tests passing).
 - [ ] Complete remaining UI pages & user-facing feature modules.
 
 

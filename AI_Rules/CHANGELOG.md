@@ -1,5 +1,17 @@
 # ScholarFlow Changelog
 
+## v0.9.2 - Resilient AI Transaction & Zero-Waste Token Guard
+
+- **Smart In-Memory Idempotency Cache (`lib/ai/idempotency-cache.ts`)**: Built a deterministic 64-bit double-pass FNV-1a hash caching engine with a 5-minute TTL to deduplicate identical AI prompts across both Edge and Node.js runtimes.
+- **Zero-Waste Token Deduplication Across 4 AI Endpoints**:
+  - `/api/v1/ai/improve`: Instantly serves identical text improvement, paraphrase, and mimic requests within 5 minutes with `0` tokens consumed.
+  - `/api/v1/ai/abstract`: Reuses recent context abstracts on page refreshes without re-calling Google Gemini.
+  - `/api/v1/ai/synthesize`: Deduplicates literature review synthesis for identical reference selections.
+  - `/api/v1/ai/interpret-stats`: Caches multimodal SPSS table analyses by combining user ID, config, and input data signatures.
+- **Browser Unload Guard (`window.onbeforeunload`)**: Implemented tab close and refresh protection in `useEditorAi`, `ParaphraseStudio`, and `SidebarStatsTab`, warning users if they accidentally press F5 or close the tab while an AI generation is in progress.
+- **Micro-UX Cache Badges**: Added visual `⚡ 0 Token (Cache Instan)` status indicators to `SidebarWritingTab` and `ParaphraseStudio` with full dark mode and bilingual (EN <-> ID) support.
+- **Automated Unit Testing**: Created `__tests__/utils/idempotency-cache.test.ts` (5/5 tests passing, 25/25 tests passing in total suite).
+
 ## v0.9.1 - AI Token Quota Consumption & Realtime Profile Synchronization Fix
 
 - **Server-side Service Role Client (`lib/supabase-admin.ts`)**: Created service-role Supabase client using `process.env.SUPABASE_SERVICE_KEY` with graceful fallback to `NEXT_PUBLIC_SUPABASE_ANON_KEY`, bypassing Row Level Security (RLS) constraints for server-side profile quota updates.

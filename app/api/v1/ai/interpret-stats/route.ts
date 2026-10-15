@@ -3,6 +3,7 @@ import { geminiKeyPool } from '@/lib/ai/gemini-key-pool';
 import { resolveTenantKey } from '@/lib/ai/tenant-key-resolver';
 import { StatsInterpretationResult } from '@/components/editor/stats-interpreter/stats-types';
 import { checkPersonalQuota, recordPersonalTokenConsumption, estimateTokens } from '@/lib/ai/token-quota';
+import { generateIdempotencyKey, getIdempotentAiResponse, setIdempotentAiResponse } from '@/lib/ai/idempotency-cache';
 
 export const maxDuration = 60; // 60 seconds timeout for multimodal vision
 
@@ -21,6 +22,25 @@ export async function POST(request: Request) {
     const isEn = config?.language === 'en';
     const effectiveUserId = userId || config?.userId;
     const effectiveUserPlan = userPlan || config?.userPlan || 'free';
+
+    // Smart Idempotency Cache Check (Deduplication within 5 minutes)
+    const inputSig = input.rawText || (input.base64Data ? `${input.base64Data.length}_${input.base64Data.slice(0, 80)}` : '');
+    const idempotencyKey = generateIdempotencyKey(
+      effectiveUserId || 'anon',
+      'interpret-stats',
+      config?.software,
+      config?.testType,
+      config?.language,
+      inputSig
+    );
+    const cachedResponse = getIdempotentAiResponse<any>(idempotencyKey);
+    if (cachedResponse) {
+      return NextResponse.json({
+        ...cachedResponse,
+        is_idempotent_hit: true,
+        tokens_consumed: 0,
+      });
+    }
 
     // Personal Token Quota Guard
     const quotaCheck = await checkPersonalQuota(effectiveUserId, effectiveUserPlan);
@@ -258,7 +278,7 @@ Do NOT wrap with backticks other than \`\`\`json and \`\`\`. Ensure the JSON is 
     const tokensConsumed = estimateTokens('x'.repeat(promptLength)) + estimateTokens(rawResponseText);
     const usageRecord = await recordPersonalTokenConsumption(effectiveUserId, tokensConsumed, effectiveUserPlan);
 
-    return NextResponse.json({
+    const resultPayload = {
       success: true,
       result: finalResult,
       providerUsed: provider,
@@ -270,7 +290,12 @@ Do NOT wrap with backticks other than \`\`\`json and \`\`\`. Ensure the JSON is 
       percent_used: usageRecord.percentUsed,
       tenant_source: tenantKeyRes.source,
       institution_name: tenantKeyRes.institutionName || null,
-    });
+      is_idempotent_hit: false,
+    };
+
+    setIdempotentAiResponse(idempotencyKey, resultPayload);
+
+    return NextResponse.json(resultPayload);
   } catch (error: any) {
     console.error('Stats interpretation error:', error);
     return NextResponse.json(

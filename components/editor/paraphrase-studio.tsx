@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IconWand, IconCheck, IconRefresh, IconAlertTriangle, IconShieldCheck } from '@tabler/icons-react';
 import { useLanguage } from '../i18n/language-context';
 import { calculateBurstiness } from '@/lib/editor/burstiness-engine';
@@ -32,6 +32,23 @@ export function ParaphraseStudio({
   const [variations, setVariations] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [applyingText, setApplyingText] = useState<string | null>(null);
+  const [isCacheHit, setIsCacheHit] = useState(false);
+
+  // Browser safety guard: prevent accidental tab close / page refresh while generating 3 variations
+  useEffect(() => {
+    if (!loading) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [loading]);
 
   const isFreePlan = activePlanId === 'free';
 
@@ -55,6 +72,7 @@ export function ParaphraseStudio({
     }
     if (!textToParaphrase) return;
     setSelectedSentence(textToParaphrase);
+    setIsCacheHit(false);
     setLoading(true);
     setVariations([]);
     
@@ -77,6 +95,9 @@ export function ParaphraseStudio({
         improveWriting(safeText, 'simplify', 'gemini', language, undefined, user?.id, currentPlan),
         improveWriting(safeText, 'mimic', 'gemini', language, styleRef, user?.id, currentPlan)
       ]);
+
+      const isFromCache = Boolean(res1?.is_idempotent_hit || res2?.is_idempotent_hit || res3?.is_idempotent_hit);
+      setIsCacheHit(isFromCache);
 
       // Synchronize latest consumed tokens to local cache and refresh profile
       const latestResult = res3 || res2 || res1;
@@ -206,6 +227,11 @@ export function ParaphraseStudio({
              <span className="flex items-center gap-1 text-[9px] font-bold text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 uppercase tracking-wider" title={isEn ? "Citations are locked and protected" : "Sitasi dikunci dan dilindungi"}>
                <IconShieldCheck className="w-3 h-3" /> SAFE-MODE
              </span>
+             {isCacheHit && (
+               <span className="flex items-center gap-1 text-[9px] font-bold text-emerald-700 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/60 uppercase tracking-wider">
+                 ⚡ 0 TOKEN
+               </span>
+             )}
              {isFreePlan && (
                <span className="text-[9px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800 uppercase tracking-wider">
                  PRO

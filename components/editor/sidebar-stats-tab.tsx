@@ -53,6 +53,22 @@ export function SidebarStatsTab({
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<StatsInterpretationResult | null>(null);
 
+  // Browser safety guard: prevent accidental tab close / page refresh while interpreting statistics
+  useEffect(() => {
+    if (!isLoading) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isLoading]);
+
   // Restore latest result from localStorage if available
   useEffect(() => {
     try {

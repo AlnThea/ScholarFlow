@@ -230,3 +230,12 @@ Target: Memastikan konsumsi token AI pada seluruh fitur editor (termasuk Paraphr
 - [x] **5. Literature Review Synthesis Token Sync (`app/api/v1/ai/synthesize/route.ts` & `lib/api/ai.ts`)**: Menambahkan proteksi `checkPersonalQuota`, kalkulasi konsumsi token, dan sinkronisasi kuota reaktif pada `handleSynthesizeLiterature`.
 - [x] **6. SPSS / PSPP Statistical Interpreter Token Sync (`app/api/v1/ai/interpret-stats/route.ts` & `components/editor/sidebar-stats-tab.tsx`)**: Menambahkan proteksi `checkPersonalQuota`, estimasi token multimodal vision, serta sinkronisasi `saveLocalQuotaState` dan `refreshProfile()`.
 - [x] **7. Comprehensive Unit Testing**: 20/20 test cases passing pada Vitest (`__tests__/utils/token-quota.test.ts`, `__tests__/utils/tenant-key-resolver.test.ts`, `__tests__/utils/sanitize.test.ts`).
+
+### Phase 16: Resilient AI Transaction & Zero-Waste Token Guard
+Target: Menjamin integritas transaksi AI bebas buang token (*Zero-Waste Token*) saat koneksi terputus/refresh mendadak dengan sistem Smart Idempotency Cache (5 menit), Browser Safety Guard (`beforeunload`), dan Indikator Status Mikro-UX profesional.
+
+- [x] **1. Smart In-Memory Idempotency Cache (`lib/ai/idempotency-cache.ts`)**: Modul deduplikasi instan berbasis hash deterministik 64-bit FNV-1a dengan TTL 5 menit.
+- [x] **2. Zero-Waste Deduplication Across All 4 AI Routes**: Integrasi pencegahan token ganda di `/api/v1/ai/improve`, `/api/v1/ai/abstract`, `/api/v1/ai/synthesize`, dan `/api/v1/ai/interpret-stats`. Saat request identik terulang dalam 5 menit, hasil kembali dalam 0.01 detik dan **0 token dipotong**.
+- [x] **3. Browser Safety Guard (`window.onbeforeunload`)**: Mencegah insiden tidak sengaja menekan refresh (F5/Ctrl+R) atau close tab saat AI sedang memproses di `useEditorAi`, `ParaphraseStudio`, dan `SidebarStatsTab`.
+- [x] **4. Micro-UX Visual Cache Badges**: Indikator `⚡ 0 Token (Cache Instan)` yang elegan di `SidebarWritingTab` dan `ParaphraseStudio` yang kompatibel dengan dark mode dan bilingual.
+- [x] **5. Unit Testing Verification**: 25/25 test cases passing pada Vitest (termasuk 5 test suite baru di `__tests__/utils/idempotency-cache.test.ts`).
