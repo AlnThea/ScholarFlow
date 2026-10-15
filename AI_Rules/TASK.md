@@ -122,11 +122,13 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] **Super Admin Modal Integration (`components/admin/institution-modal.tsx`)**: Form input `campus_text_key` & `campus_vision_key` dengan dark mode & bilingual i18n.
   - [x] **Client Stats Tab Bridge (`components/editor/sidebar-stats-tab.tsx`)**: Meneruskan kredensial tenant saat interpretasi data statistik.
   - [x] **Automated Unit Testing**: Unit test di `__tests__/utils/tenant-key-resolver.test.ts` (9/9 tests passing).
-- [x] **9. AI Token Consumption & Realtime Quota Synchronization Fix**:
+- [x] **9. Full App-Wide AI Token Consumption & Realtime Quota Synchronization**:
   - [x] **Server-side Service Role Bypass (`lib/supabase-admin.ts`)**: Inisialisasi Supabase client dengan `SUPABASE_SERVICE_KEY` untuk bypass RLS pada tabel `profiles` saat update saldo token.
   - [x] **Quota Deduction Update (`lib/ai/token-quota.ts`)**: Menggunakan `supabaseAdmin || supabase` pada `checkPersonalQuota` dan `recordPersonalTokenConsumption`.
   - [x] **Paraphrase Studio User Context (`components/editor/paraphrase-studio.tsx`)**: Mengirim `userId` dan `currentPlan` pada 3 panggilan concurrent `improveWriting` (`paraphrase`, `simplify`, `mimic`), sinkronisasi sisa kuota ke `localStorage`, dan `refreshProfile()`.
   - [x] **Editor AI Hook Token Sync (`hooks/use-editor-ai.ts`)**: Sinkronisasi reaktif saldo token (`tokensUsed`, `monthlyQuota`) dan cache lokal via `saveLocalQuotaState` di semua aksi AI (`runImproveWriting`, `runParaphrase`, `runSummarize`, `runGenerateAbstract`, `handleParafrasePlagiat`).
+  - [x] **Literature Review Synthesis Token Sync (`app/api/v1/ai/synthesize/route.ts` & `lib/api/ai.ts`)**: Menambahkan `checkPersonalQuota` guard, kalkulasi konsumsi token, dan sinkronisasi `updateQuotaState` pada `handleSynthesizeLiterature`.
+  - [x] **SPSS / PSPP Statistical Interpreter Token Sync (`app/api/v1/ai/interpret-stats/route.ts` & `components/editor/sidebar-stats-tab.tsx`)**: Menambahkan `checkPersonalQuota` guard, kalkulasi multimodal vision token, dan sinkronisasi realtime `saveLocalQuotaState` & `refreshProfile()`.
   - [x] **Automated Testing**: 20/20 Vitest unit test suite passing.
 - [ ] Complete remaining UI pages & user-facing feature modules.
 

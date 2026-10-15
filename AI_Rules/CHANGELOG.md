@@ -11,6 +11,12 @@
 - **Editor AI Hook Reactive Synchronization (`hooks/use-editor-ai.ts`)**:
   - Added `updateQuotaState` callback that synchronizes `tokensUsed`, `monthlyQuota`, updates `localStorage`, and triggers `refreshProfile()`.
   - Linked `updateQuotaState` across all editor AI workflows: `runImproveWriting`, `runParaphrase`, `runSummarize`, `runGenerateAbstract`, and `handleParafrasePlagiat`.
+- **Literature Review Synthesis Quota Guard (`app/api/v1/ai/synthesize/route.ts` & `lib/api/ai.ts`)**:
+  - Integrated `checkPersonalQuota` and `recordPersonalTokenConsumption` into `/api/v1/ai/synthesize`.
+  - Upgraded `synthesizeLiteratureReview` client function and `handleSynthesizeLiterature` hook to transmit user credentials and reactively update `updateQuotaState`.
+- **SPSS / PSPP Statistical Interpreter Quota Protection (`app/api/v1/ai/interpret-stats/route.ts` & `components/editor/sidebar-stats-tab.tsx`)**:
+  - Enforced `checkPersonalQuota` on multimodal vision and table analysis requests.
+  - Calculated consumed tokens and recorded usage, automatically synchronizing `saveLocalQuotaState` and triggering `refreshProfile()` upon successful analysis.
 - **Automated Unit Testing**: Verified 20/20 Vitest unit test suite passing across all utility modules.
 
 ## v0.9.0 - Multi-Tenant Campus Dedicated AI Key Resolver & Super Admin Key Config

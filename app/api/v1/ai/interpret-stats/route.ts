@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { geminiKeyPool } from '@/lib/ai/gemini-key-pool';
 import { resolveTenantKey } from '@/lib/ai/tenant-key-resolver';
 import { StatsInterpretationResult } from '@/components/editor/stats-interpreter/stats-types';
+import { checkPersonalQuota, recordPersonalTokenConsumption, estimateTokens } from '@/lib/ai/token-quota';
 
 export const maxDuration = 60; // 60 seconds timeout for multimodal vision
 
@@ -18,6 +19,27 @@ export async function POST(request: Request) {
     }
 
     const isEn = config?.language === 'en';
+    const effectiveUserId = userId || config?.userId;
+    const effectiveUserPlan = userPlan || config?.userPlan || 'free';
+
+    // Personal Token Quota Guard
+    const quotaCheck = await checkPersonalQuota(effectiveUserId, effectiveUserPlan);
+    if (!quotaCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: isEn
+            ? 'Monthly AI token quota exceeded. Please upgrade to Pro for 1,000,000 tokens or configure a custom API key.'
+            : 'Batas kuota token AI bulanan telah tercapai. Silakan tingkatkan ke Pro untuk 1.000.000 token atau gunakan API Key sendiri.',
+          quotaExceeded: true,
+          tokensUsed: quotaCheck.used,
+          monthlyQuota: quotaCheck.limit,
+          remainingTokens: quotaCheck.remaining,
+          percentUsed: quotaCheck.percentUsed
+        },
+        { status: 403 }
+      );
+    }
+
     const software = config?.software || 'spss';
     const testType = config?.testType || 'auto';
     const style = config?.style || 'thesis';
@@ -232,11 +254,20 @@ Do NOT wrap with backticks other than \`\`\`json and \`\`\`. Ensure the JSON is 
       modelUsed: usedModel,
     };
 
+    const promptLength = prompt.length + (input.rawText ? input.rawText.length : 1000);
+    const tokensConsumed = estimateTokens('x'.repeat(promptLength)) + estimateTokens(rawResponseText);
+    const usageRecord = await recordPersonalTokenConsumption(effectiveUserId, tokensConsumed, effectiveUserPlan);
+
     return NextResponse.json({
       success: true,
       result: finalResult,
       providerUsed: provider,
       modelUsed: usedModel,
+      tokens_consumed: tokensConsumed,
+      tokens_remaining: usageRecord.remaining,
+      monthly_quota: usageRecord.limit,
+      tokens_used: usageRecord.used,
+      percent_used: usageRecord.percentUsed,
       tenant_source: tenantKeyRes.source,
       institution_name: tenantKeyRes.institutionName || null,
     });

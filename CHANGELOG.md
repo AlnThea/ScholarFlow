@@ -16,6 +16,12 @@ All notable changes, architectural milestones, and UI improvements to the Schola
 - **Editor AI Hook Reactive Synchronization (`hooks/use-editor-ai.ts`)**:
   - Created centralized `updateQuotaState` callback synchronizing `tokensUsed`, `monthlyQuota`, `localStorage`, and `refreshProfile()`.
   - Linked `updateQuotaState` across `runImproveWriting`, `runParaphrase`, `runSummarize`, `runGenerateAbstract`, and `handleParafrasePlagiat`.
+- **Literature Review Synthesis Quota Guard (`app/api/v1/ai/synthesize/route.ts` & `lib/api/ai.ts`)**:
+  - Integrated `checkPersonalQuota` and `recordPersonalTokenConsumption` into `/api/v1/ai/synthesize`.
+  - Upgraded `synthesizeLiteratureReview` client function and `handleSynthesizeLiterature` hook to transmit user credentials and reactively update `updateQuotaState`.
+- **SPSS / PSPP Statistical Interpreter Quota Protection (`app/api/v1/ai/interpret-stats/route.ts` & `components/editor/sidebar-stats-tab.tsx`)**:
+  - Enforced `checkPersonalQuota` on multimodal vision and table analysis requests.
+  - Calculated consumed tokens and recorded usage, automatically synchronizing `saveLocalQuotaState` and triggering `refreshProfile()` upon successful analysis.
 - **Automated Verification**: Ran Vitest unit tests verifying 20/20 test cases pass.
 
 ## 🏛️ [v0.9.0] - 2026-10-15 (Multi-Tenant Campus Dedicated AI Key Resolver & Super Admin Key Config)

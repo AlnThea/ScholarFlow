@@ -159,17 +159,28 @@ export function useEditorAi(
         })
         .filter(Boolean);
         
-      const response = await synthesizeLiteratureReview(referencesData as any[], selectedAiModel, language);
+      const response = await synthesizeLiteratureReview(
+        referencesData as any[],
+        selectedAiModel,
+        language,
+        user?.id,
+        profile?.subscription_plan || 'free'
+      );
       setSynthesizedText(response.synthesized_text);
       if (response.disclaimer) {
         setSynthesizeDisclaimer(response.disclaimer);
       }
+      updateQuotaState(response.tokens_used, response.monthly_quota);
     } catch (error: any) {
-      setSynthesizeError(error.message || (language === 'en' ? 'Failed to synthesize literature review.' : 'Gagal mensintesis tinjauan pustaka.'));
+      const message = error.message || (language === 'en' ? 'Failed to synthesize literature review.' : 'Gagal mensintesis tinjauan pustaka.');
+      if (message.toLowerCase().includes('quota') || message.toLowerCase().includes('kuota')) {
+        setIsTokenQuotaModalOpen(true);
+      }
+      setSynthesizeError(message);
     } finally {
       setIsSynthesizing(false);
     }
-  }, [citationLibrary, activeReferenceIds, selectedAiModel, language]);
+  }, [citationLibrary, activeReferenceIds, selectedAiModel, language, user, profile, updateQuotaState]);
 
   const runImproveWriting = useCallback(async () => {
     if (!selectedText.trim()) return;

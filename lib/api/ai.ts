@@ -42,6 +42,18 @@ export async function improveWriting(
   return (await response.json()) as ImproveWritingResponse;
 }
 
+export type SynthesizeLiteratureResponse = {
+  synthesized_text: string;
+  disclaimer?: string;
+  tokens_consumed?: number;
+  tokens_remaining?: number;
+  monthly_quota?: number;
+  tokens_used?: number;
+  percent_used?: number;
+  tenant_source?: string;
+  institution_name?: string | null;
+};
+
 export async function synthesizeLiteratureReview(
   references: Array<{
     title: string;
@@ -54,7 +66,7 @@ export async function synthesizeLiteratureReview(
   language = 'en',
   userId?: string,
   userPlan?: string
-): Promise<{ synthesized_text: string; disclaimer?: string; tokens_consumed?: number; tokens_remaining?: number }> {
+): Promise<SynthesizeLiteratureResponse> {
   const response = await fetch('/api/v1/ai/synthesize', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -72,7 +84,7 @@ export async function synthesizeLiteratureReview(
     throw new Error(message);
   }
 
-  return (await response.json()) as { synthesized_text: string; disclaimer?: string; tokens_consumed?: number; tokens_remaining?: number };
+  return (await response.json()) as SynthesizeLiteratureResponse;
 }
 
 export type GenerateAbstractResponse = {

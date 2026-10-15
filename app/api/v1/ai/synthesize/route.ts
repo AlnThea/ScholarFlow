@@ -1,6 +1,7 @@
 // app/api/v1/ai/synthesize/route.ts
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { checkPersonalQuota, recordPersonalTokenConsumption, estimateTokens } from '@/lib/ai/token-quota';
 
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
@@ -174,6 +175,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'References array is required.' }, { status: 400 });
     }
 
+    // Personal Token Quota Guard
+    const quotaCheck = await checkPersonalQuota(userId, userPlan);
+    if (!quotaCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: language === 'en'
+            ? 'Monthly AI token quota exceeded. Please upgrade to Pro for 1,000,000 tokens or configure a custom API key.'
+            : 'Batas kuota token AI bulanan telah tercapai. Silakan tingkatkan ke Pro untuk 1.000.000 token atau gunakan API Key sendiri.',
+          quotaExceeded: true,
+          tokensUsed: quotaCheck.used,
+          monthlyQuota: quotaCheck.limit,
+          remainingTokens: quotaCheck.remaining,
+          percentUsed: quotaCheck.percentUsed
+        },
+        { status: 403 }
+      );
+    }
+
     // Multi-Tenant Campus Dedicated AI Key & Workload Resolver
     const tenantKeyRes = await resolveTenantKey({
       userId,
@@ -284,9 +303,17 @@ export async function POST(request: Request) {
       );
     }
 
+    const tokensConsumed = estimateTokens(prompt) + estimateTokens(finalResult);
+    const usageRecord = await recordPersonalTokenConsumption(userId, tokensConsumed, userPlan);
+
     return NextResponse.json({
       synthesized_text: finalResult,
       disclaimer: disclaimer,
+      tokens_consumed: tokensConsumed,
+      tokens_remaining: usageRecord.remaining,
+      monthly_quota: usageRecord.limit,
+      tokens_used: usageRecord.used,
+      percent_used: usageRecord.percentUsed,
       tenant_source: tenantKeyRes.source,
       institution_name: tenantKeyRes.institutionName || null,
     });

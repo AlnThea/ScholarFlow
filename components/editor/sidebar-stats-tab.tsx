@@ -10,6 +10,7 @@ import {
   IconWand,
 } from '@tabler/icons-react';
 import { useAuth } from '@/components/auth/auth-provider';
+import { saveLocalQuotaState } from '@/lib/ai/token-quota';
 import { StatsDropzone } from './stats-interpreter/stats-dropzone';
 import { StatsConfigPanel } from './stats-interpreter/stats-config-panel';
 import { StatsResultView } from './stats-interpreter/stats-result-view';
@@ -37,7 +38,7 @@ export function SidebarStatsTab({
   aiModels,
   selectedAiModel,
 }: SidebarStatsTabProps) {
-  const { user } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const isEn = language === 'en';
 
   const [inputData, setInputData] = useState<StatsInputData | null>(null);
@@ -104,7 +105,15 @@ export function SidebarStatsTab({
       const data = await response.json();
 
       if (!response.ok || !data.success) {
+        if (data.quotaExceeded || (data.error && (data.error.toLowerCase().includes('quota') || data.error.toLowerCase().includes('kuota')))) {
+          setIsPlanModalOpen?.(true);
+        }
         throw new Error(data.error || (isEn ? 'Failed to interpret statistical data.' : 'Gagal menginterpretasikan output statistik.'));
+      }
+
+      if (typeof data.tokens_used === 'number') {
+        saveLocalQuotaState(data.tokens_used, data.monthly_quota);
+        refreshProfile?.();
       }
 
       setResult(data.result);
@@ -115,7 +124,11 @@ export function SidebarStatsTab({
       }
     } catch (err: any) {
       console.error('Stats interpretation error:', err);
-      setError(err.message || (isEn ? 'An unexpected error occurred.' : 'Terjadi kesalahan sistem.'));
+      const errorMsg = err.message || (isEn ? 'An unexpected error occurred.' : 'Terjadi kesalahan sistem.');
+      if (errorMsg.toLowerCase().includes('quota') || errorMsg.toLowerCase().includes('kuota')) {
+        setIsPlanModalOpen?.(true);
+      }
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
