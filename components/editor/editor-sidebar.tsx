@@ -262,6 +262,7 @@ export function EditorSidebar(props: SidebarProps) {
 
   const { profile } = useAuth();
   const activePlanId = profile?.subscription_plan || 'free';
+  const isAdmin = profile?.role === 'admin';
 
   const [scanStatus, setScanStatus] = useState<'idle' | 'scanning' | 'completed'>('idle');
   const [scanProgress, setScanProgress] = useState(0);
@@ -632,21 +633,36 @@ export function EditorSidebar(props: SidebarProps) {
                                       ? (language === 'en' ? 'Abstract' : 'Abstrak')
                                       : (language === 'en' ? 'Academic' : 'Akademis')}
                         </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700 font-mono">
-                          {item.model.replace(" (Direct)", "").replace(" (Free OR)", "").replace(" (Pro OR)", "")}
-                        </span>
-                        {item.model.toLowerCase().includes('gemini') ? (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">
-                            Gemini Direct
-                          </span>
-                        ) : item.model.toLowerCase().includes('custom') ? (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800">
-                            Custom Proxy
-                          </span>
+                        {/* Model / Engine Badge: Branded for Regular Users, Detailed for Admins */}
+                        {isAdmin ? (
+                          <>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700 font-mono">
+                              {item.model.replace(" (Direct)", "").replace(" (Free OR)", "").replace(" (Pro OR)", "")}
+                            </span>
+                            {item.model.toLowerCase().includes('gemini') ? (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">
+                                Gemini Direct
+                              </span>
+                            ) : item.model.toLowerCase().includes('custom') ? (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800">
+                                Custom Proxy
+                              </span>
+                            ) : (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800">
+                                OpenRouter
+                              </span>
+                            )}
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                              Admin View
+                            </span>
+                          </>
                         ) : (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800">
-                            OpenRouter
+                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800 flex items-center gap-1.5 font-sans shadow-xs">
+                            <IconSparkles className="h-3 w-3 text-indigo-500 animate-pulse shrink-0" />
+                            ScholarFlow Academic AI
                           </span>
+                        )}
+
                         {item.source === 'cloud' && (
                           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800 flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />

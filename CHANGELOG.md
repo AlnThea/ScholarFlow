@@ -11,6 +11,7 @@ All notable changes, architectural milestones, and UI improvements to the Schola
 - **History API Endpoints (`app/api/v1/ai/history/route.ts`)**: Implemented RESTful `GET` (fetch recent 20 generations) and `DELETE` (delete single or clear all) routes.
 - **API Route Handlers Integration**: Injected server logging into `/api/v1/ai/improve` and `/api/v1/ai/abstract`.
 - **Client-Cloud Dual Sync**: Hydrated cloud history in `hooks/use-editor-ai.ts` via `mergeAiHistories` and added real-time `Cloud Synced` badge in the AI History modal.
+- **Enterprise White-Label Model Masking (`components/editor/editor-sidebar.tsx`)**: Replaced raw technical AI model names (`deepseek`, `gemini`, `claude`, etc.) with a prestigious `ScholarFlow Academic AI` brand badge for regular students/users, while maintaining granular raw model inspection and audit tags for Administrators.
 
 ### 🏛️ System Architecture Documentation Suite
 - Created `doc/architecture/` containing complete technical specifications and Mermaid Sequence Diagrams:

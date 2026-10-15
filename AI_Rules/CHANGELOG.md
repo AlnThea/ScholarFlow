@@ -8,6 +8,7 @@
 - **History API Endpoints (`app/api/v1/ai/history/route.ts`)**: Built RESTful `GET` (fetch recent 20 generations) and `DELETE` (delete single or clear all) routes.
 - **API Route Integration**: Injected server logging into `/api/v1/ai/improve` and `/api/v1/ai/abstract`.
 - **Client-Cloud Dual Sync**: Hydrated cloud history in `hooks/use-editor-ai.ts` via `mergeAiHistories` and added real-time `Cloud Synced` badge in the AI History modal.
+- **Enterprise White-Label Model Masking (`components/editor/editor-sidebar.tsx`)**: Replaced raw technical AI model names (`deepseek`, `gemini`, `claude`, etc.) with a prestigious `ScholarFlow Academic AI` brand badge for regular students/users, while maintaining granular raw model inspection and audit tags for Administrators.
 - **Architecture Documentation Suite (`doc/architecture/`)**: Authored 4 comprehensive architectural specifications with complete Mermaid Sequence Diagrams (`01-server-side-ai-history.md`, `02-smart-idempotency-cache.md`, `03-token-quota-synchronization.md`, `04-multi-tenant-campus-keys.md`, and `README.md`).
 
 ## v0.9.3 - Persistent AI Generation History & Cross-Session Restoration
