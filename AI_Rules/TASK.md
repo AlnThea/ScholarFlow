@@ -116,6 +116,12 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] UI Components: `TokenQuotaBadge` (responsive progress bar meter) and `TokenQuotaModal` (detailed tier comparison & 1-click upgrade).
   - [x] Editor Integration: Header Editor and Sidebar Writing Tab integration with automatic quota exhaustion modal trigger.
   - [x] Unit Testing: Vitest test suite in `__tests__/utils/token-quota.test.ts` (11/11 tests passing).
+- [x] **8. Phase 14: Multi-Tenant Campus Dedicated AI Key Resolver & Super Admin Key Config**:
+  - [x] **Engine & Resolver (`lib/ai/tenant-key-resolver.ts`)**: Resolusi cerdas API Key per-kampus (`campus_text_key` vs `campus_vision_key`) dengan in-memory caching dan failover pool.
+  - [x] **AI API Routes Integration**: Integrasi resolver ke `/api/v1/ai/improve`, `/api/v1/ai/abstract`, `/api/v1/ai/synthesize`, dan `/api/v1/ai/interpret-stats`.
+  - [x] **Super Admin Modal Integration (`components/admin/institution-modal.tsx`)**: Form input `campus_text_key` & `campus_vision_key` dengan dark mode & bilingual i18n.
+  - [x] **Client Stats Tab Bridge (`components/editor/sidebar-stats-tab.tsx`)**: Meneruskan kredensial tenant saat interpretasi data statistik.
+  - [x] **Automated Unit Testing**: Unit test di `__tests__/utils/tenant-key-resolver.test.ts` (9/9 tests passing).
 - [ ] Complete remaining UI pages & user-facing feature modules.
 
 

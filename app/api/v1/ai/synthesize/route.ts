@@ -67,51 +67,64 @@ function fallbackResponse(references: ReferenceInput[], disclaimer: string, lang
   };
 }
 
+import { geminiKeyPool } from '@/lib/ai/gemini-key-pool';
+import { resolveTenantKey } from '@/lib/ai/tenant-key-resolver';
+
 /**
- * Panggilan langsung ke API Google Gemini AI Studio
+ * Panggilan terpadu ke API Google Gemini dengan Multi-Key Failover Pool
  */
-async function callDirectGemini(prompt: string, model: string): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('GEMINI_API_KEY is not set');
-
-  const url = `${GEMINI_API_BASE_URL}/models/${model}:generateContent?key=${apiKey}`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: prompt }],
+async function callDirectGemini(
+  prompt: string,
+  model: string,
+  customApiKey?: string,
+  category?: any
+): Promise<string> {
+  const { result } = await geminiKeyPool.execute(
+    async (apiKey) => {
+      const url = `${GEMINI_API_BASE_URL}/models/${model}:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      ],
-      generationConfig: {
-        temperature: 0.3,
-        topP: 0.9,
-        maxOutputTokens: 2048,
-      },
-    }),
-  });
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: prompt }],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.3,
+            topP: 0.9,
+            maxOutputTokens: 2048,
+          },
+        }),
+      });
 
-  if (!response.ok) {
-    throw new Error(`Google API status ${response.status}`);
-  }
+      if (!response.ok) {
+        throw new Error(`Google API status ${response.status}`);
+      }
 
-  const result = await response.json();
-  const candidateParts = result?.candidates?.[0]?.content?.parts || [];
-  const text = candidateParts
-    .map((part: any) => (part?.text || '').trim())
-    .filter(Boolean)
-    .join('\n')
-    .trim();
+      const resJson = await response.json();
+      const candidateParts = resJson?.candidates?.[0]?.content?.parts || [];
+      const text = candidateParts
+        .map((part: any) => (part?.text || '').trim())
+        .filter(Boolean)
+        .join('\n')
+        .trim();
 
-  if (!text) {
-    throw new Error('Google API returned empty text');
-  }
+      if (!text) {
+        throw new Error('Google API returned empty text');
+      }
 
-  return text;
+      return text;
+    },
+    customApiKey,
+    category || 'text'
+  );
+
+  return result;
 }
 
 /**
@@ -155,11 +168,18 @@ async function callOpenRouter(prompt: string, model: string): Promise<string> {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { references, model = 'gemini', language = 'en' } = body;
+    const { references, model = 'gemini', language = 'en', userId, userPlan = 'free' } = body;
 
     if (!references || !Array.isArray(references) || references.length === 0) {
       return NextResponse.json({ error: 'References array is required.' }, { status: 400 });
     }
+
+    // Multi-Tenant Campus Dedicated AI Key & Workload Resolver
+    const tenantKeyRes = await resolveTenantKey({
+      userId,
+      userPlan,
+      category: 'text',
+    });
 
     const prompt = buildSynthesisPrompt(references, language);
 
@@ -187,7 +207,7 @@ export async function POST(request: Request) {
       if (chosenModel.id === 'gemini') {
         attempts.push({
           name: chosenModel.name,
-          run: () => callDirectGemini(prompt, chosenModel.model_id)
+          run: () => callDirectGemini(prompt, chosenModel.model_id, tenantKeyRes.customKey, tenantKeyRes.category)
         });
       } else {
         attempts.push({
@@ -198,7 +218,7 @@ export async function POST(request: Request) {
     } else if (model === 'gemini') {
       attempts.push({
         name: 'Gemini Flash (Direct)',
-        run: () => callDirectGemini(prompt, process.env.GEMINI_MODEL || 'gemini-1.5-flash')
+        run: () => callDirectGemini(prompt, process.env.GEMINI_MODEL || 'gemini-1.5-flash', tenantKeyRes.customKey, tenantKeyRes.category)
       });
     }
 
@@ -209,7 +229,7 @@ export async function POST(request: Request) {
         if (item.id === 'gemini') {
           attempts.push({
             name: `${item.name} (Fallback)`,
-            run: () => callDirectGemini(prompt, item.model_id)
+            run: () => callDirectGemini(prompt, item.model_id, tenantKeyRes.customKey, tenantKeyRes.category)
           });
         } else {
           attempts.push({
@@ -267,6 +287,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       synthesized_text: finalResult,
       disclaimer: disclaimer,
+      tenant_source: tenantKeyRes.source,
+      institution_name: tenantKeyRes.institutionName || null,
     });
   } catch (error) {
     console.error('Error in AI literature review synthesize API:', error);

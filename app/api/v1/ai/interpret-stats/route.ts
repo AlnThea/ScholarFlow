@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { geminiKeyPool } from '@/lib/ai/gemini-key-pool';
+import { resolveTenantKey } from '@/lib/ai/tenant-key-resolver';
 import { StatsInterpretationResult } from '@/components/editor/stats-interpreter/stats-types';
 
 export const maxDuration = 60; // 60 seconds timeout for multimodal vision
@@ -7,7 +8,7 @@ export const maxDuration = 60; // 60 seconds timeout for multimodal vision
 export async function POST(request: Request) {
   try {
     const payload = await request.json();
-    const { input, config, customApiKey } = payload;
+    const { input, config, customApiKey, userId, userPlan } = payload;
 
     if (!input || (!input.base64Data && !input.rawText)) {
       return NextResponse.json(
@@ -62,6 +63,13 @@ Instructions:
 }
 
 Do NOT wrap with backticks other than \`\`\`json and \`\`\`. Ensure the JSON is completely valid and parseable.`;
+
+    // Resolve Tenant Dedicated Campus Key for Vision/Multimodal Workload
+    const tenantKeyRes = await resolveTenantKey({
+      userId: userId || config?.userId,
+      userPlan: userPlan || config?.userPlan,
+      category: 'vision',
+    });
 
     let rawResponseText = '';
     let usedModel = '';
@@ -153,6 +161,9 @@ Do NOT wrap with backticks other than \`\`\`json and \`\`\`. Ensure the JSON is 
       usedModel =
         config?.aiModel || process.env.GEMINI_VISION_MODEL || process.env.GEMINI_MODEL || 'gemini-1.5-flash';
 
+      const keyToUse = effectiveCustomKey || tenantKeyRes.customKey;
+      const poolCategory = tenantKeyRes.category;
+
       const execution = await geminiKeyPool.execute(async (apiKey: string) => {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${usedModel}:generateContent?key=${apiKey}`;
         const response = await fetch(url, {
@@ -178,7 +189,7 @@ Do NOT wrap with backticks other than \`\`\`json and \`\`\`. Ensure the JSON is 
         }
 
         return await response.json();
-      }, effectiveCustomKey, 'vision');
+      }, keyToUse, poolCategory);
 
       rawResponseText = execution.result?.candidates?.[0]?.content?.parts?.[0]?.text || '';
     }
@@ -226,6 +237,8 @@ Do NOT wrap with backticks other than \`\`\`json and \`\`\`. Ensure the JSON is 
       result: finalResult,
       providerUsed: provider,
       modelUsed: usedModel,
+      tenant_source: tenantKeyRes.source,
+      institution_name: tenantKeyRes.institutionName || null,
     });
   } catch (error: any) {
     console.error('Stats interpretation error:', error);

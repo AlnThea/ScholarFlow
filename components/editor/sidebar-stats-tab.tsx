@@ -9,6 +9,7 @@ import {
   IconLoader2,
   IconWand,
 } from '@tabler/icons-react';
+import { useAuth } from '@/components/auth/auth-provider';
 import { StatsDropzone } from './stats-interpreter/stats-dropzone';
 import { StatsConfigPanel } from './stats-interpreter/stats-config-panel';
 import { StatsResultView } from './stats-interpreter/stats-result-view';
@@ -36,6 +37,7 @@ export function SidebarStatsTab({
   aiModels,
   selectedAiModel,
 }: SidebarStatsTabProps) {
+  const { user } = useAuth();
   const isEn = language === 'en';
 
   const [inputData, setInputData] = useState<StatsInputData | null>(null);
@@ -94,6 +96,8 @@ export function SidebarStatsTab({
         body: JSON.stringify({
           input: inputData,
           config,
+          userId: user?.id,
+          userPlan: activePlanId || 'free',
         }),
       });
 

@@ -211,5 +211,15 @@ Target: Membangun sistem pembayaran resmi Xendit (Invoice & Webhook) dengan anim
 - [x] **10. Campus Admin Analytics & Domain Whitelisting**: Grafik adopsi platform Recharts (Area/Pie Chart) dan penyetelan domain resmi (`@kampus.ac.id`) untuk auto-join mahasiswa.
 - [x] **11. Row Level Security (RLS) Database Hardening**: Menutup celah keamanan `UNRESTRICTED` pada tabel `ai_providers` dan mengaktifkan RLS dengan hak akses eksklusif Super Admin.
 
+### Phase 14: Multi-Tenant Campus Dedicated AI Key Resolver & Super Admin Key Config
+Target: Mengimplementasikan resolusi cerdas API Key per-kampus (`campus_text_key` vs `campus_vision_key`) dengan in-memory caching, menghubungkan seluruh API routes AI ke kunci dedicated kampus, dan menyediakan konfigurasi kunci di Super Admin Modal.
+
+- [x] **1. Engine & Resolver (`lib/ai/tenant-key-resolver.ts`)**: Resolusi cerdas API Key per-kampus dengan in-memory caching dan failover pool.
+- [x] **2. AI API Routes Integration**: Integrasi resolver ke `/api/v1/ai/improve`, `/api/v1/ai/abstract`, `/api/v1/ai/synthesize`, dan `/api/v1/ai/interpret-stats`.
+- [x] **3. Super Admin Modal Integration (`components/admin/institution-modal.tsx`)**: Form input `campus_text_key` & `campus_vision_key` dengan dark mode & bilingual i18n.
+- [x] **4. Client Stats Tab Bridge (`components/editor/sidebar-stats-tab.tsx`)**: Meneruskan kredensial tenant saat interpretasi data statistik.
+- [x] **5. Automated Unit Testing**: Unit test di `__tests__/utils/tenant-key-resolver.test.ts` (9/9 tests passing).
+
+
 
 

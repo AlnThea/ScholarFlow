@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { IconX, IconBuildingBank, IconMail, IconUsers, IconCalendar, IconWorld, IconCheck, IconLoader } from '@tabler/icons-react';
+import { IconX, IconBuildingBank, IconMail, IconUsers, IconCalendar, IconWorld, IconCheck, IconLoader, IconKey } from '@tabler/icons-react';
 import { Institution } from '@/lib/api/institutions';
 import { useLanguage } from '@/components/i18n/language-context';
 
@@ -28,6 +28,8 @@ export function InstitutionModal({
   const [contractStart, setContractStart] = useState('');
   const [contractEnd, setContractEnd] = useState('');
   const [status, setStatus] = useState<'active' | 'suspended' | 'expired'>('active');
+  const [campusTextKey, setCampusTextKey] = useState('');
+  const [campusVisionKey, setCampusVisionKey] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -39,6 +41,8 @@ export function InstitutionModal({
       setContractStart(editingInstitution.contract_start ? editingInstitution.contract_start.slice(0, 10) : '');
       setContractEnd(editingInstitution.contract_end ? editingInstitution.contract_end.slice(0, 10) : '');
       setStatus(editingInstitution.status);
+      setCampusTextKey(editingInstitution.campus_text_key || '');
+      setCampusVisionKey(editingInstitution.campus_vision_key || '');
     } else {
       setName('');
       setAdminEmail('');
@@ -50,6 +54,8 @@ export function InstitutionModal({
       nextYear.setFullYear(nextYear.getFullYear() + 1);
       setContractEnd(nextYear.toISOString().slice(0, 10));
       setStatus('active');
+      setCampusTextKey('');
+      setCampusVisionKey('');
     }
   }, [editingInstitution, isOpen]);
 
@@ -73,7 +79,9 @@ export function InstitutionModal({
         total_seats: Number(totalSeats) || 50,
         contract_start: new Date(contractStart).toISOString(),
         contract_end: new Date(contractEnd).toISOString(),
-        status
+        status,
+        campus_text_key: campusTextKey.trim() || undefined,
+        campus_vision_key: campusVisionKey.trim() || undefined
       });
       onClose();
     } finally {
@@ -216,6 +224,47 @@ export function InstitutionModal({
                 value={contractEnd}
                 onChange={(e) => setContractEnd(e.target.value)}
                 className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+
+          {/* Dedicated Campus AI Keys (BYOK Multi-Tenant Isolation) */}
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+            <div>
+              <label className="font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                <IconKey className="h-3.5 w-3.5 text-indigo-500" />
+                {isEn ? 'Dedicated Campus AI Keys (BYOK - Optional)' : 'API Key Khusus Kampus (BYOK - Opsional)'}
+              </label>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                {isEn
+                  ? 'Isolates rate limits and usage for this university. Leave empty to use platform shared campus pool.'
+                  : 'Mengisolasi kuota dan rate limit untuk kampus ini. Kosongkan untuk memakai pool bersama platform.'}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                {isEn ? 'Campus Text AI Key (Gemini Polish/Abstract/Synthesize)' : 'API Key Teks Kampus (Gemini Polish/Abstrak/Sintesis)'}
+              </label>
+              <input
+                type="password"
+                value={campusTextKey}
+                onChange={(e) => setCampusTextKey(e.target.value)}
+                placeholder="AIzaSy... (Gemini Text Key)"
+                className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 font-mono text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                {isEn ? 'Campus Vision & Multimodal Key (SPSS Interpreter)' : 'API Key Vision/Multimodal Kampus (Interpreter SPSS)'}
+              </label>
+              <input
+                type="password"
+                value={campusVisionKey}
+                onChange={(e) => setCampusVisionKey(e.target.value)}
+                placeholder="AIzaSy... (Gemini Multimodal/Vision Key)"
+                className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 font-mono text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
           </div>

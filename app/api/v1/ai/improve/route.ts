@@ -73,32 +73,42 @@ function fallbackResponse(text: string, tone: string, disclaimer: string) {
 }
 
 import { geminiKeyPool } from '@/lib/ai/gemini-key-pool';
+import { resolveTenantKey } from '@/lib/ai/tenant-key-resolver';
 
 /**
  * Streaming Gemini 2.0 Flash API via SSE ReadableStream
  */
-async function callDirectGeminiStream(prompt: string, model: string): Promise<ReadableStream> {
-  const { result } = await geminiKeyPool.execute(async (apiKey) => {
-    const geminiModel = model.includes('2.0') ? 'gemini-2.0-flash' : (process.env.GEMINI_MODEL || 'gemini-1.5-flash');
-    const url = `${GEMINI_API_BASE_URL}/models/${geminiModel}:streamGenerateContent?key=${apiKey}&alt=sse`;
+async function callDirectGeminiStream(
+  prompt: string,
+  model: string,
+  customApiKey?: string,
+  category?: any
+): Promise<ReadableStream> {
+  const { result } = await geminiKeyPool.execute(
+    async (apiKey) => {
+      const geminiModel = model.includes('2.0') ? 'gemini-2.0-flash' : (process.env.GEMINI_MODEL || 'gemini-1.5-flash');
+      const url = `${GEMINI_API_BASE_URL}/models/${geminiModel}:streamGenerateContent?key=${apiKey}&alt=sse`;
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.2, topP: 0.9, maxOutputTokens: 2048 },
-      }),
-    });
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.2, topP: 0.9, maxOutputTokens: 2048 },
+        }),
+      });
 
-    if (!response.ok || !response.body) {
-      const errObj: any = new Error(`Gemini Stream error ${response.status}`);
-      errObj.status = response.status;
-      throw errObj;
-    }
+      if (!response.ok || !response.body) {
+        const errObj: any = new Error(`Gemini Stream error ${response.status}`);
+        errObj.status = response.status;
+        throw errObj;
+      }
 
-    return response.body;
-  });
+      return response.body;
+    },
+    customApiKey,
+    category
+  );
 
   return result;
 }
@@ -106,10 +116,16 @@ async function callDirectGeminiStream(prompt: string, model: string): Promise<Re
 /**
  * Non-streaming direct Gemini API call with Multi-Key Failover Pool
  */
-async function callDirectGemini(prompt: string, model: string, customApiKey?: string): Promise<string> {
-  const { result } = await geminiKeyPool.execute(async (apiKey) => {
-    const geminiModel = model.includes('2.0') ? 'gemini-2.0-flash' : (process.env.GEMINI_MODEL || 'gemini-1.5-flash');
-    const url = `${GEMINI_API_BASE_URL}/models/${geminiModel}:generateContent?key=${apiKey}`;
+async function callDirectGemini(
+  prompt: string,
+  model: string,
+  customApiKey?: string,
+  category?: any
+): Promise<string> {
+  const { result } = await geminiKeyPool.execute(
+    async (apiKey) => {
+      const geminiModel = model.includes('2.0') ? 'gemini-2.0-flash' : (process.env.GEMINI_MODEL || 'gemini-1.5-flash');
+      const url = `${GEMINI_API_BASE_URL}/models/${geminiModel}:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -137,7 +153,7 @@ async function callDirectGemini(prompt: string, model: string, customApiKey?: st
 
     if (!text) throw new Error('Google API returned empty text');
     return text;
-  }, customApiKey, 'text');
+  }, customApiKey, category || 'text');
 
   return result;
 }
@@ -310,17 +326,30 @@ export async function POST(request: Request) {
       );
     }
 
+    // 3. Multi-Tenant Campus Dedicated AI Key & Workload Resolver
+    const tenantKeyRes = await resolveTenantKey({
+      userId,
+      userPlan,
+      category: 'text',
+    });
+
     const prompt = buildPrompt(text, tone, language, styleReference);
 
     // If client requested SSE streaming
     if (stream && (model === 'gemini' || model === 'gemini-2.0-flash')) {
       try {
-        const streamBody = await callDirectGeminiStream(prompt, model);
+        const streamBody = await callDirectGeminiStream(
+          prompt,
+          model,
+          tenantKeyRes.customKey,
+          tenantKeyRes.category
+        );
         return new Response(streamBody, {
           headers: {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
+            'X-Tenant-Source': tenantKeyRes.source,
           },
         });
       } catch (streamErr) {
@@ -365,7 +394,7 @@ export async function POST(request: Request) {
       } else if (providerType === 'custom_openai' || (baseUrl && baseUrl.trim().length > 0)) {
         return () => callCustomOpenAI(prompt, item.model_id, baseUrl, apiKey);
       } else if (providerType === 'gemini' || item.id === 'gemini' || item.model_id.includes('gemini')) {
-        return () => callDirectGemini(prompt, item.model_id, apiKey);
+        return () => callDirectGemini(prompt, item.model_id, apiKey || tenantKeyRes.customKey, tenantKeyRes.category);
       } else {
         return () => callOpenRouter(prompt, item.model_id);
       }
@@ -379,7 +408,7 @@ export async function POST(request: Request) {
     } else if (model === 'gemini') {
       attempts.push({
         name: 'Gemini 2.0 Flash (Direct)',
-        run: () => callDirectGemini(prompt, process.env.GEMINI_MODEL || 'gemini-2.0-flash')
+        run: () => callDirectGemini(prompt, process.env.GEMINI_MODEL || 'gemini-2.0-flash', tenantKeyRes.customKey, tenantKeyRes.category)
       });
     }
 
@@ -439,6 +468,8 @@ export async function POST(request: Request) {
       monthly_quota: usageRecord.limit,
       tokens_used: usageRecord.used,
       percent_used: usageRecord.percentUsed,
+      tenant_source: tenantKeyRes.source,
+      institution_name: tenantKeyRes.institutionName || null,
     });
   } catch (error) {
     console.error('Error in dynamic AI cascading improve API:', error);

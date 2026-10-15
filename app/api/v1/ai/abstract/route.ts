@@ -5,6 +5,8 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { defaultAiRateLimiter } from '@/lib/ai/rate-limiter';
 import { checkPersonalQuota, recordPersonalTokenConsumption, estimateTokens } from '@/lib/ai/token-quota';
+import { geminiKeyPool } from '@/lib/ai/gemini-key-pool';
+import { resolveTenantKey } from '@/lib/ai/tenant-key-resolver';
 
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
@@ -29,54 +31,74 @@ function fallbackResponse(text: string, disclaimer: string) {
   };
 }
 
-async function callDirectGeminiStream(prompt: string, model: string): Promise<ReadableStream> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('GEMINI_API_KEY is not set');
+async function callDirectGeminiStream(
+  prompt: string,
+  model: string,
+  customApiKey?: string,
+  category?: any
+): Promise<ReadableStream> {
+  const { result } = await geminiKeyPool.execute(
+    async (apiKey) => {
+      const geminiModel = model.includes('2.0') ? 'gemini-2.0-flash' : (process.env.GEMINI_MODEL || 'gemini-1.5-flash');
+      const url = `${GEMINI_API_BASE_URL}/models/${geminiModel}:streamGenerateContent?key=${apiKey}&alt=sse`;
 
-  const geminiModel = model.includes('2.0') ? 'gemini-2.0-flash' : (process.env.GEMINI_MODEL || 'gemini-1.5-flash');
-  const url = `${GEMINI_API_BASE_URL}/models/${geminiModel}:streamGenerateContent?key=${apiKey}&alt=sse`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.3, topP: 0.9, maxOutputTokens: 2048 },
+        }),
+      });
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.3, topP: 0.9, maxOutputTokens: 2048 },
-    }),
-  });
+      if (!response.ok || !response.body) throw new Error(`Gemini Stream error ${response.status}`);
+      return response.body;
+    },
+    customApiKey,
+    category || 'text'
+  );
 
-  if (!response.ok || !response.body) throw new Error(`Gemini Stream error ${response.status}`);
-  return response.body;
+  return result;
 }
 
-async function callDirectGemini(prompt: string, model: string): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('GEMINI_API_KEY is not set');
+async function callDirectGemini(
+  prompt: string,
+  model: string,
+  customApiKey?: string,
+  category?: any
+): Promise<string> {
+  const { result } = await geminiKeyPool.execute(
+    async (apiKey) => {
+      const geminiModel = model.includes('2.0') ? 'gemini-2.0-flash' : (process.env.GEMINI_MODEL || 'gemini-1.5-flash');
+      const url = `${GEMINI_API_BASE_URL}/models/${geminiModel}:generateContent?key=${apiKey}`;
 
-  const geminiModel = model.includes('2.0') ? 'gemini-2.0-flash' : (process.env.GEMINI_MODEL || 'gemini-1.5-flash');
-  const url = `${GEMINI_API_BASE_URL}/models/${geminiModel}:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.3, topP: 0.9, maxOutputTokens: 2048 },
+        }),
+      });
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.3, topP: 0.9, maxOutputTokens: 2048 },
-    }),
-  });
+      if (!response.ok) throw new Error(`Google API status ${response.status}`);
 
-  if (!response.ok) throw new Error(`Google API status ${response.status}`);
+      const resJson = await response.json();
+      const candidateParts = resJson?.candidates?.[0]?.content?.parts || [];
+      const text = candidateParts
+        .map((part: any) => (part?.text || '').trim())
+        .filter(Boolean)
+        .join('\n')
+        .trim();
 
-  const result = await response.json();
-  const candidateParts = result?.candidates?.[0]?.content?.parts || [];
-  const text = candidateParts
-    .map((part: any) => (part?.text || '').trim())
-    .filter(Boolean)
-    .join('\n')
-    .trim();
+      if (!text) throw new Error('Google API returned empty text');
+      return text;
+    },
+    customApiKey,
+    category || 'text'
+  );
 
-  if (!text) throw new Error('Google API returned empty text');
-  return text;
+  return result;
 }
 
 async function callOpenRouter(prompt: string, model: string): Promise<string> {
@@ -155,17 +177,30 @@ export async function POST(request: Request) {
       );
     }
 
+    // Multi-Tenant Campus Dedicated AI Key & Workload Resolver
+    const tenantKeyRes = await resolveTenantKey({
+      userId,
+      userPlan,
+      category: 'text',
+    });
+
     const prompt = buildPrompt(text, language);
 
     // If client requested SSE streaming
     if (stream && (model === 'gemini' || model === 'gemini-2.0-flash')) {
       try {
-        const streamBody = await callDirectGeminiStream(prompt, model);
+        const streamBody = await callDirectGeminiStream(
+          prompt,
+          model,
+          tenantKeyRes.customKey,
+          tenantKeyRes.category
+        );
         return new Response(streamBody, {
           headers: {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
+            'X-Tenant-Source': tenantKeyRes.source,
           },
         });
       } catch (streamErr) {
@@ -189,7 +224,7 @@ export async function POST(request: Request) {
       if (chosenModel.id === 'gemini') {
         attempts.push({
           name: chosenModel.name,
-          run: () => callDirectGemini(prompt, chosenModel.model_id)
+          run: () => callDirectGemini(prompt, chosenModel.model_id, tenantKeyRes.customKey, tenantKeyRes.category)
         });
       } else {
         attempts.push({
@@ -200,7 +235,7 @@ export async function POST(request: Request) {
     } else if (model === 'gemini') {
       attempts.push({
         name: 'Gemini 2.0 Flash (Direct)',
-        run: () => callDirectGemini(prompt, process.env.GEMINI_MODEL || 'gemini-2.0-flash')
+        run: () => callDirectGemini(prompt, process.env.GEMINI_MODEL || 'gemini-2.0-flash', tenantKeyRes.customKey, tenantKeyRes.category)
       });
     }
 
@@ -210,7 +245,7 @@ export async function POST(request: Request) {
         if (item.id === 'gemini') {
           attempts.push({
             name: `${item.name} (Fallback)`,
-            run: () => callDirectGemini(prompt, item.model_id)
+            run: () => callDirectGemini(prompt, item.model_id, tenantKeyRes.customKey, tenantKeyRes.category)
           });
         } else {
           attempts.push({
@@ -264,6 +299,8 @@ export async function POST(request: Request) {
       monthly_quota: usageRecord.limit,
       tokens_used: usageRecord.used,
       percent_used: usageRecord.percentUsed,
+      tenant_source: tenantKeyRes.source,
+      institution_name: tenantKeyRes.institutionName || null,
     });
   } catch (error) {
     console.error('Error in abstract generation API:', error);

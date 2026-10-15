@@ -1,5 +1,17 @@
 # ScholarFlow Changelog
 
+## v0.9.0 - Multi-Tenant Campus Dedicated AI Key Resolver & Super Admin Key Config
+
+- **Tenant Key Resolver Engine (`lib/ai/tenant-key-resolver.ts`)**: Built an intelligent per-campus API key resolver that queries user university affiliation via `institution_members` or `profiles.institution_id`, isolates campus rate limits (`campus_text_key` vs `campus_vision_key`), and implements in-memory caching (5-minute TTL) with tiered failover pools (`campus_byok` -> `campus_pool` -> `pro_pool` -> `free_pool`).
+- **AI Endpoints Integration**:
+  - `/api/v1/ai/improve`: Dynamic injection of resolved campus key and category pool into SSE streaming and direct generation runners, returning `tenant_source` and `institution_name` metadata.
+  - `/api/v1/ai/abstract`: Upgraded to `geminiKeyPool` multi-key failover and tenant key resolution.
+  - `/api/v1/ai/synthesize`: Upgraded to `geminiKeyPool` failover and campus tenant key resolution.
+  - `/api/v1/ai/interpret-stats`: Multimodal SPSS vision analysis now resolves and injects `campus_vision_key` dedicated for university stats workloads.
+- **Client Integration (`components/editor/sidebar-stats-tab.tsx`)**: Connected user session and active subscription tier to statistical interpreter API calls.
+- **Super Admin Key Config (`components/admin/institution-modal.tsx`)**: Added dedicated BYOK input fields for `campus_text_key` and `campus_vision_key` with Dark Mode and Bilingual (EN <-> ID) support.
+- **Automated Unit Testing**: Created comprehensive test suite in `__tests__/utils/tenant-key-resolver.test.ts` (9/9 tests passing in Vitest).
+
 ## v0.8.0 - Personal AI Token Quota & Fair Usage Policy Guard (Non-Campus Free & Pro)
 
 - **Database & Prisma Schema Migration**: Added `ai_tokens_used`, `ai_monthly_quota`, and `ai_quota_reset_at` columns to `profiles` table (`supabase/migrations/20261013000001_add_user_ai_token_quota.sql` and `prisma/schema.prisma`).
