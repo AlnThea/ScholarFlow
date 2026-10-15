@@ -652,9 +652,6 @@ export function EditorSidebar(props: SidebarProps) {
                                 OpenRouter
                               </span>
                             )}
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                              Admin View
-                            </span>
                           </>
                         ) : (
                           <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800 flex items-center gap-1.5 font-sans shadow-xs">
