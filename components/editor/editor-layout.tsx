@@ -21,6 +21,7 @@ import { VersionHistoryModal } from './modals/version-history-modal';
 import { PeerReviewModal } from './modals/peer-review-modal';
 import { CommandPaletteModal } from './modals/command-palette-modal';
 import { ShortcutsModal } from './modals/shortcuts-modal';
+import { LatexExportModal } from './modals/latex-export-modal';
 import { addSuggestion } from '@/lib/api/suggestions';
 import { IconSparkles } from '@tabler/icons-react';
 import 'katex/dist/katex.min.css';
@@ -321,6 +322,7 @@ export function EditorLayout({
   const [isPeerReviewModalOpen, setIsPeerReviewModalOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [isLatexExportModalOpen, setIsLatexExportModalOpen] = useState(false);
 
   // Global Keyboard Shortcuts (Phase 26)
   useEffect(() => {
@@ -396,6 +398,13 @@ export function EditorLayout({
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'h') {
         e.preventDefault();
         versionHistory.openVersionHistory?.();
+        return;
+      }
+
+      // Ctrl + Shift + X -> LaTeX Package Exporter
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'x') {
+        e.preventDefault();
+        setIsLatexExportModalOpen(true);
         return;
       }
     };
@@ -483,6 +492,9 @@ export function EditorLayout({
             activePlanId === 'pro' || activePlanId === 'enterprise'
           );
         }
+        break;
+      case 'export_latex':
+        setIsLatexExportModalOpen(true);
         break;
       case 'toggle_theme':
         toggleDarkMode();
@@ -604,6 +616,7 @@ export function EditorLayout({
             onOpenPeerReview={() => setIsPeerReviewModalOpen(true)}
             onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
             onOpenShortcuts={() => setIsShortcutsOpen(true)}
+            onOpenLatexExport={() => setIsLatexExportModalOpen(true)}
             activeUsers={activeUsers}
           />
 
@@ -1043,6 +1056,17 @@ export function EditorLayout({
         isOpen={isShortcutsOpen}
         onClose={() => setIsShortcutsOpen(false)}
         language={language}
+      />
+      <LatexExportModal
+        isOpen={isLatexExportModalOpen}
+        onClose={() => setIsLatexExportModalOpen(false)}
+        documentTitle={currentDocument?.title || (language === 'en' ? 'Untitled Manuscript' : 'Naskah Tanpa Judul')}
+        documentContent={currentDocument?.content}
+        citationLibrary={citationLibrary}
+        bibliographyEntries={bibliographyEntries}
+        language={language}
+        authorName={profile?.full_name || user?.email || 'ScholarFlow Author'}
+        authorEmail={user?.email || 'author@scholarflow.org'}
       />
       <OnboardingTour />
     </div>

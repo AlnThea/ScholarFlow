@@ -345,15 +345,15 @@ Target: Memberikan akses secepat kilat (spotlight search) ke seluruh fitur Schol
 ### Phase 27: Academic LaTeX & Journal Format Package Exporter (.tex + .bib Zip)
 Target: Mengompilasi naskah EditorJS menjadi paket dokumen LaTeX (.tex) standar publikasi (IEEE, ACM, Elsevier, Springer) lengkap dengan file referensi BibTeX (.bib) terpisah dalam format unduhan .zip.
 
-- [ ] **1. LaTeX AST Serializer (`lib/editor/latex-exporter.ts`)**: Konversi blok-blok EditorJS (paragraf, judul hierarkis, rumus KaTeX `$$`, tabel, gambar) ke sintaks LaTeX standar (`\documentclass`, `\section`, `\cite{...}`, `\begin{equation}`).
-- [ ] **2. BibTeX Package Bundler**: Ekstraksi seluruh rujukan yang disitasi ke dalam file `references.bib` terpisah yang tersinkronisasi dengan kunci sitasi `\cite{key}` di naskah utama.
-- [ ] **3. Journal Layout Templates Selector**: Dukungan preset template jurnal terkemuka:
+- [x] **1. LaTeX AST Serializer (`lib/editor/latex-exporter.ts`)**: Konversi blok-blok EditorJS (paragraf, judul hierarkis, rumus KaTeX `$$`, tabel, gambar) ke sintaks LaTeX standar (`\documentclass`, `\section`, `\cite{...}`, `\begin{equation}`) dengan penanganan token preserved untuk simbol math dan sitasi.
+- [x] **2. BibTeX Package Bundler**: Ekstraksi seluruh rujukan yang disitasi ke dalam file `references.bib` terpisah yang tersinkronisasi dengan kunci sitasi `\cite{key}` di naskah utama.
+- [x] **3. Journal Layout Templates Selector**: Dukungan 4 preset template jurnal terkemuka:
   - *IEEE Conference / Transactions* (Format dua kolom dengan paket `ieeetran`).
   - *Elsevier ScienceDirect* (Format `elsarticle` dengan nomor baris otomatis untuk peer review).
   - *ACM SIGCHI / Primary Template* (Format `acmart`).
   - *ArXiv Standard Pre-print* (Format artikel ilmiah umum).
-- [ ] **4. Export Modal & Zip Generator**: Mengemas file `.tex`, `.bib`, dan aset gambar ke dalam arsip `.zip` siap kompilasi di Overleaf atau TeX Live.
-- [ ] **5. Automated Testing**: Pengujian parser AST LaTeX dan generator `.bib` di Vitest.
+- [x] **4. Export Modal & Zip Generator (`components/editor/modals/latex-export-modal.tsx`)**: Modal interaktif dengan pemilih template jurnal, preview kode real-time, tab `main.tex` vs `references.bib`, salin ke clipboard, unduh `.tex` saja, dan pengemasan arsip `.zip` otomatis siap kompilasi Overleaf via JSZip.
+- [x] **5. Automated Testing**: 16/16 unit test komprehensif pada Vitest (`__tests__/utils/latex-exporter.test.ts`), total suite lulus 104/104 tests.
 
 ### Phase 28: Drag & Drop Reference Importer (.bib, .ris, & PDF metadata)
 Target: Memungkinkan peneliti menarik file dari Mendeley, Zotero, atau EndNote (.bib / .ris / PDF) langsung ke kanvas editor atau tab perpustakaan untuk otomatis mengisi sitasi.

@@ -4,7 +4,7 @@ import {
   IconLoader, IconFileWord, IconFileText, 
   IconBraces, IconBook, IconDatabase, IconBell, 
   IconShare, IconCreditCard, IconLayoutSidebarRightCollapse, 
-  IconSettings, IconHistory, IconMicroscope, IconSearch, IconKeyboard
+  IconSettings, IconHistory, IconMicroscope, IconSearch, IconKeyboard, IconCode
 } from '@tabler/icons-react';
 import { TokenQuotaBadge } from '@/components/ai/token-quota-badge';
 
@@ -41,6 +41,7 @@ export type EditorHeaderProps = {
   onOpenPeerReview?: () => void;
   onOpenCommandPalette?: () => void;
   onOpenShortcuts?: () => void;
+  onOpenLatexExport?: () => void;
   activeUsers?: any[];
 };
 
@@ -77,6 +78,7 @@ export const EditorHeader = ({
   onOpenPeerReview,
   onOpenCommandPalette,
   onOpenShortcuts,
+  onOpenLatexExport,
   activeUsers,
 }: EditorHeaderProps) => {
   const [showExportDropdown, setShowExportDropdown] = useState(false);
@@ -257,6 +259,28 @@ export const EditorHeader = ({
                     <IconFilePdf className="h-4 w-4 text-red-500 shrink-0" />
                     <span>PDF Document (.pdf)</span>
                   </button>
+
+                  {/* LaTeX & Journal Package (.tex + .bib Zip) */}
+                  {onOpenLatexExport && (
+                    <button
+                      onClick={() => {
+                        setShowExportDropdown(false);
+                        onOpenLatexExport();
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer group"
+                      title={language === 'en' 
+                        ? 'LaTeX & Journal Package: Export manuscript to .tex + .bib zip package with IEEE, Elsevier, or ACM templates for Overleaf.' 
+                        : 'Paket LaTeX & Jurnal: Ekspor naskah menjadi paket .tex + .bib zip siap kompilasi Overleaf standar IEEE, Elsevier, atau ACM.'}
+                    >
+                      <div className="flex items-center gap-2">
+                        <IconCode className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span>LaTeX Package (.tex + .bib)</span>
+                      </div>
+                      <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                        Overleaf / Zip
+                      </span>
+                    </button>
+                  )}
 
                   {/* Divider */}
                   <div className="h-px bg-slate-100 my-1" />

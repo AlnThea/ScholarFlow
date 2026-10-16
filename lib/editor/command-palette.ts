@@ -283,6 +283,19 @@ export function getAvailableCommands(language: 'en' | 'id'): CommandItem[] {
       badge: '.PDF',
     },
     {
+      id: 'cmd_export_latex',
+      title: isEn ? 'Export to LaTeX Package (.tex + .bib Zip)' : 'Ekspor Paket LaTeX Jurnal (.tex + .bib Zip)',
+      description: isEn ? 'Download Overleaf-ready ZIP with IEEE, Elsevier, or ACM templates' : 'Unduh paket ZIP siap Overleaf dengan template IEEE, Elsevier, atau ACM',
+      tooltip: isEn
+        ? 'Compiles manuscript blocks into standardized LaTeX document (.tex) and BibTeX references (.bib) bundled in an Overleaf-ready ZIP package.'
+        : 'Mengompilasi naskah menjadi dokumen LaTeX standar (.tex) dan rujukan BibTeX (.bib) terpadu dalam paket ZIP siap Overleaf.',
+      category: 'system',
+      shortcut: 'Ctrl + Shift + X',
+      keywords: ['latex', 'tex', 'overleaf', 'ieee', 'elsevier', 'acm', 'bibtex', 'zip', 'export'],
+      actionId: 'export_latex',
+      badge: 'Overleaf / Zip',
+    },
+    {
       id: 'cmd_toggle_theme',
       title: isEn ? 'Toggle Dark / Light Mode' : 'Ganti Tema Gelap / Terang',
       description: isEn ? 'Switch visual theme for comfortable day/night writing' : 'Beralih antara tema gelap dan terang untuk kenyamanan mata',
