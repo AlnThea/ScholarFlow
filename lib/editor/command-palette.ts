@@ -137,6 +137,19 @@ export function getAvailableCommands(language: 'en' | 'id'): CommandItem[] {
 
     // --- CITATIONS & FORMATTING ---
     {
+      id: 'cmd_import_references',
+      title: isEn ? 'Import Reference File (.bib, .ris, .pdf)' : 'Impor Berkas Referensi (.bib, .ris, .pdf)',
+      description: isEn ? 'Drag & drop or load citations from Mendeley, Zotero, EndNote' : 'Tarik & lepas atau muat sitasi dari Mendeley, Zotero, EndNote',
+      tooltip: isEn
+        ? 'Parses BibTeX (.bib), RIS (.ris), or PDF research papers and populates your manuscript bibliography library with verified metadata.'
+        : 'Membaca berkas BibTeX (.bib), RIS (.ris), atau PDF jurnal dan memasukkan metadata sitasi ke perpustakaan referensi naskah Anda.',
+      category: 'citations',
+      shortcut: 'Ctrl + Shift + U',
+      keywords: ['import', 'bibtex', 'bib', 'ris', 'mendeley', 'zotero', 'endnote', 'pdf', 'upload'],
+      actionId: 'import_references',
+      badge: 'BibTeX/RIS/PDF',
+    },
+    {
       id: 'cmd_find_citation',
       title: isEn ? 'Search Citations (Crossref & OpenAlex)' : 'Cari Sitasi (Crossref & OpenAlex)',
       description: isEn ? 'Find peer-reviewed papers by title, author, or DOI' : 'Cari paper ilmiah terindeks berdasarkan judul, penulis, atau DOI',

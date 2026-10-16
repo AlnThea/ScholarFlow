@@ -110,6 +110,14 @@ export function ShortcutsModal({ isOpen, onClose, language }: ShortcutsModalProp
 
     // Citations & Literature
     {
+      keys: ['Ctrl', 'Shift', 'U'],
+      actionEn: 'Import Reference File (.bib, .ris, .pdf)',
+      actionId: 'Impor Berkas Referensi (.bib, .ris, .pdf)',
+      tooltipEn: 'Drag & drop or upload BibTeX, RIS, or PDF files to auto-populate library citations.',
+      tooltipId: 'Tarik & lepas atau unggah file BibTeX, RIS, atau PDF untuk otomatis mengisi sitasi perpustakaan naskah.',
+      category: 'citations',
+    },
+    {
       keys: ['Ctrl', 'Shift', 'C'],
       actionEn: 'Search & Insert Citations',
       actionId: 'Cari & Sisipkan Sitasi',

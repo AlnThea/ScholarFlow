@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   IconBook, IconCheck, IconDownload, IconExternalLink, IconFileText,
   IconFilter, IconFolderOpen, IconLoader2, IconCirclePlus, IconQuote,
   IconSearch, IconSum, IconSparkles, IconWand, IconChevronLeft,
   IconChevronRight, IconLanguage, IconX, IconClock, IconTrash, IconCopy, IconHistory,
-  IconMessages
+  IconMessages, IconFileImport
 } from '@tabler/icons-react';
 import { BurstinessChart } from './burstiness-chart';
 import { PaperChatModal } from './modals/paper-chat-modal';
+import { ReferenceImportModal } from './modals/reference-import-modal';
+import { parseReferenceFile } from '@/lib/editor/reference-importer';
+import type { CitationCandidate } from '@/lib/api/citations';
 
 
 export const SidebarLibraryTab = (props: any) => {
@@ -40,6 +43,42 @@ export const SidebarLibraryTab = (props: any) => {
   const [activeChatPaper, setActiveChatPaper] = useState<any>(null);
   const [isPaperChatOpen, setIsPaperChatOpen] = useState(false);
 
+  // Phase 28: Reference File Importer
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importCandidates, setImportCandidates] = useState<CitationCandidate[]>([]);
+  const [importFileName, setImportFileName] = useState('');
+  const [isProcessingFiles, setIsProcessingFiles] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setIsProcessingFiles(true);
+    try {
+      const all: CitationCandidate[] = [];
+      for (const file of Array.from(files)) {
+        const parsed = await parseReferenceFile(file);
+        all.push(...parsed);
+      }
+      if (all.length > 0) {
+        setImportCandidates(all);
+        setImportFileName(files.length === 1 ? files[0].name : `${files.length} files`);
+        setIsImportModalOpen(true);
+      }
+    } catch (err) {
+      console.error('Failed to parse references:', err);
+    } finally {
+      setIsProcessingFiles(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleImportSelected = (selected: CitationCandidate[]) => {
+    selected.forEach((cand) => {
+      onInsertCitationCandidate?.(cand, true);
+    });
+  };
+
   const filteredCollections = React.useMemo(() => {
     const q = (query || '').trim().toLowerCase();
     let items = bibliographyEntries || [];
@@ -68,6 +107,36 @@ export const SidebarLibraryTab = (props: any) => {
                     placeholder={isEn ? "Search collections..." : "Cari referensi..."}
                     className="h-11 w-full rounded-md border border-line bg-panel pl-9 pr-3 text-sm outline-none transition placeholder:text-muted focus:border-accent/40 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
                   />
+                </div>
+
+                {/* Import References Action Button */}
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".bib,.bibtex,.ris,.pdf,.txt"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isProcessingFiles}
+                    className="w-full py-2 px-3 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs font-bold rounded-lg shadow-sm transition cursor-pointer flex items-center justify-center gap-2 group"
+                    title={
+                      isEn
+                        ? "Import .bib, .ris, or .pdf files from Mendeley, Zotero, or EndNote into your manuscript library"
+                        : "Impor berkas .bib, .ris, atau .pdf dari Mendeley, Zotero, atau EndNote ke perpustakaan referensi naskah Anda"
+                    }
+                  >
+                    <IconFileImport className="w-4 h-4 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform" />
+                    <span>
+                      {isProcessingFiles
+                        ? isEn ? 'Reading Files...' : 'Membaca Berkas...'
+                        : isEn ? 'Import References (.bib, .ris, .pdf)' : 'Impor Berkas (.bib, .ris, .pdf)'}
+                    </span>
+                  </button>
                 </div>
 
                 <div className="space-y-3">
@@ -291,6 +360,17 @@ export const SidebarLibraryTab = (props: any) => {
           userId={user?.id}
           userPlan={activePlanId || 'free'}
           onInsertToEditor={onInsertCitationText || onInsertSynthesizedText}
+        />
+      )}
+
+      {isImportModalOpen && importCandidates.length > 0 && (
+        <ReferenceImportModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          candidates={importCandidates}
+          fileName={importFileName}
+          language={language}
+          onImport={handleImportSelected}
         />
       )}
     </>

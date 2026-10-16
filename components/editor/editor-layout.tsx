@@ -22,6 +22,9 @@ import { PeerReviewModal } from './modals/peer-review-modal';
 import { CommandPaletteModal } from './modals/command-palette-modal';
 import { ShortcutsModal } from './modals/shortcuts-modal';
 import { LatexExportModal } from './modals/latex-export-modal';
+import { ReferenceImportModal } from './modals/reference-import-modal';
+import { ReferenceDropzone } from './reference-dropzone';
+import { parseReferenceFile } from '@/lib/editor/reference-importer';
 import { addSuggestion } from '@/lib/api/suggestions';
 import { IconSparkles } from '@tabler/icons-react';
 import 'katex/dist/katex.min.css';
@@ -324,6 +327,31 @@ export function EditorLayout({
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [isLatexExportModalOpen, setIsLatexExportModalOpen] = useState(false);
 
+  // Phase 28: Drag & Drop Reference Importer state
+  const [isReferenceImportModalOpen, setIsReferenceImportModalOpen] = useState(false);
+  const [importedCandidates, setImportedCandidates] = useState<CitationCandidate[]>([]);
+  const [importedFileName, setImportedFileName] = useState('');
+  const referenceFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleParsedReferences = (candidates: CitationCandidate[], fileName: string) => {
+    setImportedCandidates(candidates);
+    setImportedFileName(fileName);
+    setIsReferenceImportModalOpen(true);
+  };
+
+  const handleConfirmBatchImport = (selected: CitationCandidate[]) => {
+    selected.forEach((cand) => {
+      onInsertCitationCandidate?.(cand, true);
+    });
+    showAlertModal(
+      language === 'en' ? 'References Imported' : 'Referensi Diimpor',
+      language === 'en'
+        ? `Successfully imported ${selected.length} citation reference(s) into your library.`
+        : `Berhasil mengimpor ${selected.length} referensi kepustakaan ke perpustakaan naskah Anda.`,
+      'info'
+    );
+  };
+
   // Global Keyboard Shortcuts (Phase 26)
   useEffect(() => {
     const handleGlobalShortcuts = (e: KeyboardEvent) => {
@@ -405,6 +433,13 @@ export function EditorLayout({
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'x') {
         e.preventDefault();
         setIsLatexExportModalOpen(true);
+        return;
+      }
+
+      // Ctrl + Shift + U -> Import Reference File (.bib, .ris, .pdf)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'u') {
+        e.preventDefault();
+        referenceFileInputRef.current?.click();
         return;
       }
     };
@@ -495,6 +530,9 @@ export function EditorLayout({
         break;
       case 'export_latex':
         setIsLatexExportModalOpen(true);
+        break;
+      case 'import_references':
+        referenceFileInputRef.current?.click();
         break;
       case 'toggle_theme':
         toggleDarkMode();
@@ -1067,6 +1105,40 @@ export function EditorLayout({
         language={language}
         authorName={profile?.full_name || user?.email || 'ScholarFlow Author'}
         authorEmail={user?.email || 'author@scholarflow.org'}
+      />
+      <input
+        ref={referenceFileInputRef}
+        type="file"
+        multiple
+        accept=".bib,.bibtex,.ris,.pdf,.txt"
+        className="hidden"
+        onChange={async (e) => {
+          if (e.target.files && e.target.files.length > 0) {
+            const files = Array.from(e.target.files);
+            const all: CitationCandidate[] = [];
+            for (const f of files) {
+              const res = await parseReferenceFile(f);
+              all.push(...res);
+            }
+            if (all.length > 0) {
+              handleParsedReferences(all, files.length === 1 ? files[0].name : `${files.length} files`);
+            }
+            e.target.value = '';
+          }
+        }}
+      />
+      <ReferenceDropzone
+        onParsedCandidates={handleParsedReferences}
+        language={language}
+        onError={(msg) => showAlertModal(language === 'en' ? 'Import Notice' : 'Pemberitahuan Impor', msg, 'danger')}
+      />
+      <ReferenceImportModal
+        isOpen={isReferenceImportModalOpen}
+        onClose={() => setIsReferenceImportModalOpen(false)}
+        candidates={importedCandidates}
+        fileName={importedFileName}
+        language={language}
+        onImport={handleConfirmBatchImport}
       />
       <OnboardingTour />
     </div>

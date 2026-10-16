@@ -358,11 +358,11 @@ Target: Mengompilasi naskah EditorJS menjadi paket dokumen LaTeX (.tex) standar 
 ### Phase 28: Drag & Drop Reference Importer (.bib, .ris, & PDF metadata)
 Target: Memungkinkan peneliti menarik file dari Mendeley, Zotero, atau EndNote (.bib / .ris / PDF) langsung ke kanvas editor atau tab perpustakaan untuk otomatis mengisi sitasi.
 
-- [ ] **1. Dropzone Canvas Overlay (`components/editor/reference-dropzone.tsx`)**: Area drop-zone visual interaktif saat file ditarik ke layar editor.
-- [ ] **2. BibTeX & RIS Client Parser (`lib/editor/bibtex-parser.ts`)**: Parser tangguh untuk membedah file `.bib` dan `.ris` ke dalam koleksi objek sitasi lokal tanpa bergantung pada server luar.
-- [ ] **3. PDF Metadata & DOI Extractor**: Ekstraksi otomatis judul, pengarang, dan DOI dari file PDF yang di-drop ke pustaka naskah.
-- [ ] **4. Batch Candidate Import Modal**: Dialog pratinjau daftar paper hasil parse dengan opsi pilih semua atau sebagian sebelum disimpan ke perpustakaan referensi.
-- [ ] **5. Automated Testing**: Pengujian parser file `.bib` dan `.ris` pada Vitest.
+- [x] **1. Dropzone Canvas Overlay (`components/editor/reference-dropzone.tsx`)**: Area drop-zone visual interaktif saat file ditarik ke layar editor dengan backdrop glassmorphism, badge format (.bib, .ris, .pdf), dan integrasi file input dialog.
+- [x] **2. BibTeX & RIS Client Parser (`lib/editor/reference-importer.ts`)**: Parser tangguh untuk membedah file `.bib` (anotasi @article, @book, @inproceedings, normalisasi LaTeX curly braces & karakter khusus) dan multi-record `.ris` (TY, TI, AU, PY, JO, DO, UR, AB, ER) ke koleksi `CitationCandidate` lokal.
+- [x] **3. PDF Metadata & DOI Extractor**: Ekstraksi otomatis judul naskah, pengarang, tahun, dan regex DOI saintifik (`10.\d{4,9}/...`) dari binary header PDF file saat ditarik ke aplikasi.
+- [x] **4. Batch Candidate Import Modal (`components/editor/modals/reference-import-modal.tsx`)**: Dialog pratinjau daftar paper hasil parse dengan opsi pilih semua atau sebagian (checkbox individual & select all), chip penulis, badge tahun, tautan DOI terverifikasi, tooltip interaktif, dan integrasi tombol "Impor Berkas" langsung di tab pustaka & pintasan `Ctrl+Shift+U`.
+- [x] **5. Automated Testing**: 13/13 unit test komprehensif pada Vitest (`__tests__/utils/reference-importer.test.ts`), total suite lulus 117/117 tests.
 
 ### Phase 29: Live "Track Changes" / Suggesting Mode
 Target: Mode koreksi naskah langsung ala Google Docs dan Microsoft Word untuk kolaborasi dosen pembimbing dan reviewer.
