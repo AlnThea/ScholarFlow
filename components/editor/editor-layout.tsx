@@ -16,6 +16,8 @@ import { EditorBubbleMenu } from './editor-bubble-menu';
 import { EditorJsToolbar } from './editorjs-toolbar';
 import { useGhostwriter } from '@/hooks/use-ghostwriter';
 import { GhostwriterSuggestion } from './ghostwriter-suggestion';
+import { useVersionHistory } from '@/hooks/use-version-history';
+import { VersionHistoryModal } from './modals/version-history-modal';
 import { addSuggestion } from '@/lib/api/suggestions';
 import 'katex/dist/katex.min.css';
 
@@ -291,6 +293,20 @@ export function EditorLayout({
     setIsPlanModalOpen,
   });
 
+  const versionHistory = useVersionHistory({
+    documentId: currentDocument?.id,
+    documentTitle: currentDocument?.title,
+    currentContent: currentDocument?.content,
+    userId: user?.id,
+    authorName: profile?.full_name || user?.email,
+    language,
+    editorJsRef,
+    onContentChange,
+    showToast: (msg, type) => {
+      showAlertModal(type === 'error' ? 'Notice' : 'Success', msg, type === 'error' ? 'danger' : 'info');
+    },
+  });
+
   return (
     <ErrorBoundary>
     <div className="flex min-h-screen bg-slate-50/50">
@@ -396,6 +412,7 @@ export function EditorLayout({
             showRightSidebar={showRightSidebar}
             setShowRightSidebar={setShowRightSidebar}
             onOpenSettings={onOpenSettings}
+            onOpenVersionHistory={versionHistory.openVersionHistory}
             activeUsers={activeUsers}
           />
 
@@ -748,6 +765,23 @@ export function EditorLayout({
         activePlanId={activePlanId}
         language={language}
         onUpgrade={() => setIsPricingOpen(true)}
+      />
+      <VersionHistoryModal
+        isOpen={versionHistory.isVersionModalOpen}
+        onClose={versionHistory.closeVersionHistory}
+        revisions={versionHistory.revisions}
+        selectedRevision={versionHistory.selectedRevision}
+        onSelectRevision={versionHistory.setSelectedRevision}
+        diffChunks={versionHistory.diffChunks}
+        diffStats={versionHistory.diffStats}
+        activeDiffMode={versionHistory.activeDiffMode}
+        onChangeDiffMode={versionHistory.setActiveDiffMode}
+        onRestoreRevision={versionHistory.restoreRevision}
+        onCreateManualSnapshot={versionHistory.createManualSnapshot}
+        isLoading={versionHistory.isLoadingRevisions}
+        isRestoring={versionHistory.isRestoring}
+        language={language}
+        currentContent={currentDocument?.content}
       />
       <OnboardingTour />
     </div>

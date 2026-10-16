@@ -2,6 +2,35 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.9.7] - 2026-10-16 (Document Version History & Time-Machine Snapshot - Rollback & Visual Diff)
+
+### 🚀 Document Version History & Time Machine
+- **PostgreSQL & Supabase Migration (`supabase/migrations/20261016000001_create_document_revisions.sql`)**:
+  - Created `public.document_revisions` table with Row Level Security (RLS) policies allowing document authors and shared collaborators to view and create snapshots.
+  - Added indexes on `(document_id, created_at DESC)` and `(user_id)`.
+  - Added `DocumentRevision` model to universal `prisma/schema.prisma` with relation to `DocumentEntry`.
+- **LCS Word-Level Visual Diff Engine (`lib/editor/diff-engine.ts`)**:
+  - Implemented high-performance Longest Common Subsequence (LCS) word diff algorithm tracking changes (`added`, `removed`, `unchanged`).
+  - `extractPlainTextFromEditorJs` normalizes EditorJS block trees (paragraphs, lists, code, captions) and decodes HTML entities for clean text comparison.
+  - Quantitative diff statistics (`addedWords`, `removedWords`, `unchangedWords`) with net delta calculations.
+  - Bilingual relative time formatter (`formatRelativeTime`).
+- **Dual Revisions Storage & REST API (`lib/editor/version-history.ts` & `app/api/v1/documents/[id]/revisions/route.ts`)**:
+  - LocalStorage fast caching layer (`loadLocalRevisions`, `saveLocalRevisions`, `appendLocalRevision`) with a 30-item FIFO safety limit for offline accessibility.
+  - Background REST API with Supabase service-role bypass for seamless server persistence.
+- **Custom Hook Engine (`hooks/use-version-history.ts`)**:
+  - Smart background auto-snapshotting (every 15 minutes of active typing, or when document length changes by >= 80 words).
+  - Manual milestone checkpoints with custom change summaries.
+  - Automated pre-restore *Safety Backup* preventing accidental loss of current drafts when reverting.
+- **Time-Machine Modal UI (`components/editor/modals/version-history-modal.tsx`)**:
+  - Fullscreen slide-over drawer with chronological version timeline, badge classification (*Auto-save* vs *Checkpoint*), and word count counters.
+  - Interactive Diff Viewer supporting both **Unified Diff** (inline text flow with color highlights) and **Side-by-Side Split View** (Snapshot vs Current Canvas).
+  - One-click copy, custom confirmation restore dialog (zero native browser alerts), Dark Mode, and Bilingual (EN <-> ID) support.
+- **Editor Header Navigation Integration (`components/editor/editor-header.tsx`)**:
+  - Integrated "History" button with `IconHistory` in the header toolbar.
+
+### 🧪 Automated Testing
+- **Vitest Suite Expansion (`__tests__/utils/version-history.test.ts`)**: Added 11 unit tests covering plain text extraction, word diff computation, time formatting, and local storage caching. Total Vitest suite passing at **47/47 tests**.
+
 ## ⚡ [v0.9.6] - 2026-10-16 (Real-Time Inline AI Ghostwriter - Tab-to-Accept ala Jenni AI)
 
 ### 🚀 Real-Time Inline AI Ghostwriter Engine

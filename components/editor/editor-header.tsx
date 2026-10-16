@@ -4,7 +4,7 @@ import {
   IconLoader, IconFileWord, IconFileText, 
   IconBraces, IconBook, IconDatabase, IconBell, 
   IconShare, IconCreditCard, IconLayoutSidebarRightCollapse, 
-  IconSettings 
+  IconSettings, IconHistory
 } from '@tabler/icons-react';
 import { TokenQuotaBadge } from '@/components/ai/token-quota-badge';
 
@@ -37,6 +37,7 @@ export type EditorHeaderProps = {
   showRightSidebar: boolean;
   setShowRightSidebar: React.Dispatch<React.SetStateAction<boolean>>;
   onOpenSettings?: () => void;
+  onOpenVersionHistory?: () => void;
   activeUsers?: any[];
 };
 
@@ -69,6 +70,7 @@ export const EditorHeader = ({
   showRightSidebar,
   setShowRightSidebar,
   onOpenSettings,
+  onOpenVersionHistory,
   activeUsers,
 }: EditorHeaderProps) => {
   const [showExportDropdown, setShowExportDropdown] = useState(false);
@@ -426,6 +428,23 @@ export const EditorHeader = ({
             <IconLayoutSidebarRightCollapse className={`h-3.5 w-3.5 ${showRightSidebar ? 'text-indigo-650' : 'text-slate-500'}`} />
             {language === 'en' ? 'Research Assistant' : 'Asisten Riset'}
           </button>
+
+          {/* Version History Button */}
+          {currentDocument && onOpenVersionHistory && (
+            <>
+              {/* Divider */}
+              <div className="h-4 w-px bg-slate-200/80 dark:bg-slate-750 mx-0.5" />
+              <button
+                type="button"
+                onClick={onOpenVersionHistory}
+                className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-semibold text-slate-650 hover:bg-white hover:text-slate-800 transition cursor-pointer dark:text-slate-350 dark:hover:bg-slate-800 dark:hover:text-white"
+                title={language === 'en' ? 'Version History & Time Machine' : 'Riwayat Versi & Time Machine'}
+              >
+                <IconHistory className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                <span className="hidden sm:inline">{language === 'en' ? 'History' : 'Riwayat'}</span>
+              </button>
+            </>
+          )}
 
           {/* Settings Button */}
           {currentDocument && onOpenSettings && (

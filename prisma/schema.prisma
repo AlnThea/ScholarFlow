@@ -59,6 +59,7 @@ model DocumentEntry {
   user         UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
   suggestions  DocumentSuggestion[]
   comments     DocumentComment[]
+  revisions    DocumentRevision[]
 
   @@index([userId])
   @@map("documents")
@@ -91,6 +92,23 @@ model DocumentComment {
 
   @@index([documentId])
   @@map("document_comments")
+}
+
+model DocumentRevision {
+  id            String        @id @default(uuid())
+  documentId    String        @map("document_id")
+  userId        String        @map("user_id")
+  title         String        @default("Untitled Document")
+  content       String        @db.Text
+  wordCount     Int           @default(0) @map("word_count")
+  changeSummary String?       @map("change_summary")
+  isAutoSaved   Boolean       @default(false) @map("is_auto_saved")
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  document      DocumentEntry @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId, createdAt(sort: Desc)])
+  @@map("document_revisions")
 }
 
 model CitationLibraryEntry {

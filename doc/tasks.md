@@ -286,11 +286,12 @@ Target: Mengimplementasikan asisten penulisan prediktif real-time di kanvas edit
 ### Phase 21: Document Version History & Time-Machine Snapshot (Rollback & Visual Diff)
 Target: Menyediakan perlindungan draf naskah riset kelas enterprise dengan riwayat versi kronologis dan penampil perbedaan visual (*Visual Diff Viewer*).
 
-- [ ] **1. Revisions Data Storage (`document_revisions`)**: Skema penyimpanan snapshot naskah (isi JSON, jumlah kata, timestamp, dan catatan perubahan).
-- [ ] **2. Smart Auto-Snapshot**: Perekaman otomatis setiap 15-30 menit sesi penulisan aktif, serta tombol manual "Simpan Versi Saat Ini" pada header editor.
-- [ ] **3. Version History Slide-Over Panel**: UI panel daftar revisi terurut mundur lengkap dengan label waktu dan nama penulis.
-- [ ] **4. Visual Diff Viewer**: Tampilan perbandingan naskah saat ini dengan versi lama (teks hijau untuk penambahan, teks merah dicoret untuk penghapusan).
-- [ ] **5. One-Click Restore Action**: Tombol "Pulihkan Versi Ini" yang mengembalikan kanvas ke kondisi revisi yang dipilih secara aman.
+- [x] **1. Revisions Data Storage (`document_revisions`)**: Skema penyimpanan snapshot naskah di database (`supabase/migrations/20261016000001_create_document_revisions.sql` dan `prisma/schema.prisma`), RLS policies, dan cache localStorage (`lib/editor/version-history.ts`).
+- [x] **2. Smart Auto-Snapshot & Manual Checkpoint Engine (`hooks/use-version-history.ts`)**: Perekaman otomatis setiap 15 menit sesi penulisan aktif atau saat kata berubah >= 80 kata, tombol manual "Buat Snapshot", dan pencatatan cadangan keselamatan otomatis (*Safety Backup*) sebelum pemulihan.
+- [x] **3. Version History Slide-Over Panel (`components/editor/modals/version-history-modal.tsx`)**: UI panel daftar revisi terurut mundur lengkap dengan label waktu relatif/absolut, badge "Auto-save" vs "Manual Checkpoint", dan jumlah kata.
+- [x] **4. Visual Diff Viewer (`lib/editor/diff-engine.ts`)**: Mesin LCS word-by-word diff dengan tampilan Unified (sorotan hijau teks ditambah, merah dicoret teks dihapus) dan Split Side-by-Side View beserta counter statistik (+X kata, -Y kata).
+- [x] **5. One-Click Restore Action**: Tombol "Pulihkan Versi Ini" dengan modal konfirmasi kustom yang mengembalikan kanvas EditorJS secara mulus tanpa browser prompt/alert.
+- [x] **6. Automated Testing**: 11 unit test komprehensif pada Vitest (`__tests__/utils/version-history.test.ts`), total suite lulus 47/47 tests.
 
 ### Phase 22: Bidirectional Reactive In-Text Citation Style Transformer (APA ↔ IEEE ↔ Harvard ↔ Vancouver)
 Target: Membangun mesin transformasi format sitasi dua arah yang otomatis mengubah format sitasi in-text dan daftar pustaka saat gaya sitasi diubah oleh pengguna.

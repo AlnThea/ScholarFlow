@@ -1,5 +1,31 @@
 # ScholarFlow Changelog
 
+## v0.9.7 - Document Version History & Time-Machine Snapshot (Rollback & Visual Diff)
+
+- **PostgreSQL & Supabase Migration (`supabase/migrations/20261016000001_create_document_revisions.sql`)**:
+  - Created `public.document_revisions` table with RLS security policies, indexes on `(document_id, created_at DESC)` and `(user_id)`.
+  - Added `DocumentRevision` model to `prisma/schema.prisma` with relation to `DocumentEntry`.
+- **LCS Word-Level Visual Diff Engine (`lib/editor/diff-engine.ts`)**:
+  - Longest Common Subsequence (LCS) word diff algorithm computing fine-grained changes (`added`, `removed`, `unchanged`).
+  - `extractPlainTextFromEditorJs` text normalization and HTML entity decoder for clean comparison without DOM baggage.
+  - Quantitative diff statistics (`addedWords`, `removedWords`, `unchangedWords`).
+  - Bilingual relative time formatter (`formatRelativeTime`).
+- **Dual Revisions Storage & REST API (`lib/editor/version-history.ts` & `app/api/v1/documents/[id]/revisions/route.ts`)**:
+  - Fast client-side storage cache with FIFO capacity limit (max 30 revisions per doc).
+  - Background cloud persistence to Supabase via admin client bypass.
+- **Custom Hook Engine (`hooks/use-version-history.ts`)**:
+  - Periodic background auto-snapshotting (every 15 minutes of active writing, or when >= 80 words change).
+  - Manual milestone checkpoints with custom change notes.
+  - Automated pre-restore *Safety Backup* before reverting drafts.
+- **Time-Machine Modal UI (`components/editor/modals/version-history-modal.tsx`)**:
+  - Glassmorphism slide-over drawer with chronological version timeline, badge classification (*Auto-save* vs *Checkpoint*), and word count counters.
+  - Interactive Diff Viewer supporting both **Unified Diff** (inline text flow with color highlights) and **Side-by-Side Split View** (Snapshot vs Current Canvas).
+  - One-click copy, custom confirmation restore dialog (zero native browser alerts), Dark Mode, and Bilingual (EN <-> ID) support.
+- **Editor Header Navigation Integration (`components/editor/editor-header.tsx`)**:
+  - Added "History" button with `IconHistory` to header toolbar.
+- **Automated Unit Testing**:
+  - Added `__tests__/utils/version-history.test.ts` (11 unit tests). Vitest suite passing at 47/47 tests.
+
 ## v0.9.6 - Real-Time Inline AI Ghostwriter (Tab-to-Accept ala Jenni AI)
 
 - **Backend Autocomplete Predictive Route (`app/api/v1/ai/ghostwrite/route.ts`)**:

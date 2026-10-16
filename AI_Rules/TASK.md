@@ -156,12 +156,14 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] **Floating Suggestion UI (`components/editor/ghostwriter-suggestion.tsx`)**: Glassmorphism floating pill di samping caret kursor dengan badge `<kbd>Tab</kbd>` Accept dan `<kbd>Esc</kbd>` Dismiss, dark mode, dan bilingual EN/ID.
   - [x] **Toolbar Control Switch (`components/editor/ghostwriter-toggle.tsx`)**: Tombol toggle ON/OFF langsung pada EditorJS Toolbar dengan loading spinner dan tooltip shortcut.
   - [x] **Automated Unit Testing (`__tests__/utils/ghostwriter.test.ts`)**: 8/8 tests passing (total 36/36 tests passing pada test suite Vitest).
-- [ ] **15. Time-Machine Document Snapshot & Version History (Rollback & Visual Diff)**:
-  - [ ] Skema penyimpanan revisi dokumen berkala (`document_revisions`) dengan timestamp dan log aktivitas.
-  - [ ] Auto-snapshot cerdas setiap 15-30 menit penulisan aktif dan tombol manual "Simpan Versi".
-  - [ ] Time-Machine Modal / Panel dengan daftar versi kronologis.
-  - [ ] Side-by-side Visual Diff Viewer (sorotan hijau teks ditambah, merah dicoret teks dihapus).
-  - [ ] Aksi 1-klik "Pulihkan Versi Ini" (*Restore Version*) langsung ke kanvas editor.
+- [x] **15. Time-Machine Document Snapshot & Version History (Rollback & Visual Diff)**:
+  - [x] **Database & Prisma Schema (`document_revisions`)**: Tabel revisi PostgreSQL/Supabase dengan RLS dan index `(document_id, created_at DESC)`, serta model Prisma `DocumentRevision`.
+  - [x] **LCS Word-Level Diff Engine (`lib/editor/diff-engine.ts`)**: Komputasi diff presisi kata per kata dengan Longest Common Subsequence (LCS), ekstraksi teks EditorJS, dan kalkulasi statistik perubahan (`+X kata`, `-Y kata`).
+  - [x] **Dual Storage & Revisions API (`lib/editor/version-history.ts` & `app/api/v1/documents/[id]/revisions/route.ts`)**: Auto-fallback ke localStorage saat offline dengan FIFO capacity limit 30 item.
+  - [x] **Custom Hook Engine (`hooks/use-version-history.ts`)**: Auto-snapshot interval 15 menit penulisan aktif / delta >= 80 kata, tombol manual checkpoint, dan *Safety Backup* pre-restore.
+  - [x] **Time-Machine Modal UI (`components/editor/modals/version-history-modal.tsx`)**: Fullscreen slide-over drawer dengan garis waktu revisi, toggle Unified Diff vs Split Side-by-Side, modal konfirmasi kustom, Dark Mode, dan bilingual EN/ID.
+  - [x] **Header Navigation Integration (`components/editor/editor-header.tsx`)**: Tombol "History / Riwayat" di header editor.
+  - [x] **Automated Testing**: 11/11 tests passing pada `__tests__/utils/version-history.test.ts` (total 47/47 tests passing pada test suite).
 - [ ] **16. Bidirectional Reactive In-Text Citation Style Transformer (APA ↔ IEEE ↔ Harvard ↔ Vancouver)**:
   - [ ] In-text citation regex & AST transformer untuk merestrukturisasi format sitasi dalam teks kanvas secara dinamis.
   - [ ] Transformasi dua arah otomatis (misal: `(Smith et al., 2021)` ↔ `[1]`).
