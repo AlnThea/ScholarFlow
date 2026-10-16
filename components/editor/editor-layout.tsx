@@ -441,6 +441,8 @@ export function EditorLayout({
             isGhostwriterEnabled={ghostwriter.isEnabled}
             onToggleGhostwriter={ghostwriter.toggleEnabled}
             isGhostwriterLoading={ghostwriter.isLoading}
+            citationStyle={citationStyle || currentDocument?.settings?.citationStyle || 'apa'}
+            onChangeCitationStyle={onChangeCitationStyle}
           />
           {/* LaTeX Math Helper Panel */}
           <MathHelperPanel

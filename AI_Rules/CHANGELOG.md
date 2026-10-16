@@ -1,5 +1,24 @@
 # ScholarFlow Changelog
 
+## v0.9.8 - Bidirectional Reactive In-Text Citation Style Transformer (APA ↔ IEEE ↔ Harvard ↔ Vancouver)
+
+- **In-Text Citation AST Transformer (`lib/editor/citation-transformer.ts`)**:
+  - Implemented dynamic bidirectional transformer converting in-text citation tags across 6 international formats: APA 7th, IEEE, Harvard, Vancouver, Chicago, and MLA.
+  - Smart author family name parsing (`extractFamilyName`) handling both Western ("Ashish Vaswani") and Academic Comma ("Vaswani, Ashish") notations.
+  - Chronological scan algorithm (`extractReferenceIdsInOrder`) mapping citation appearance orders for numeric bracket generation (`[1]`, `[2]`).
+  - Seamless JSON block transformer (`transformEditorContentCitations`) replacing in-text labels without mutating document structure.
+- **Dynamic Bibliography Re-Indexing (`sortAndFormatBibliography`)**:
+  - Automatic re-indexing based on active citation style:
+    - **Numeric Styles (IEEE, Vancouver)**: Strictly sorted by order of appearance in the manuscript (`[1]`, `[2]`, `[3]`).
+    - **Author-Year Styles (APA, Harvard, MLA, Chicago)**: Strictly sorted alphabetically (A-Z) by first author's family name.
+- **Reactive Hook Engine Updates**:
+  - `hooks/use-editor-document.ts`: Upgraded `handleChangeCitationStyle` to immediately transform in-text citations on canvas, render to EditorJS, save to cloud, and display feedback toasts.
+  - `hooks/use-editor-citation.ts`: Integrated `sortAndFormatBibliography` into `bibliographyEntries` memo.
+- **Toolbar Citation Style Selector Component (`components/editor/citation-style-selector.tsx`)**:
+  - Interactive dropdown selector embedded on `EditorJsToolbar` beside the Citation button with sample previews, category badges (*Numeric* vs *Author-Year*), Dark Mode, and bilingual EN/ID.
+- **Automated Unit Testing**:
+  - Added `__tests__/utils/citation-transformer.test.ts` (13 unit tests). Vitest suite passing at 60/60 tests.
+
 ## v0.9.7 - Document Version History & Time-Machine Snapshot (Rollback & Visual Diff)
 
 - **PostgreSQL & Supabase Migration (`supabase/migrations/20261016000001_create_document_revisions.sql`)**:

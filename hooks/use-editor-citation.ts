@@ -3,6 +3,7 @@ import { searchCitations, type CitationCandidate } from '@/lib/api/citations';
 import { fetchCitationLibrary, saveCitationToLibrary } from '@/lib/api/citation-library';
 import { addCitationHistoryEntry, type CitationHistoryEntry } from '@/lib/editor/citation-history';
 import { formatBibliographyCandidate, serializeBibliographyText } from '@/lib/editor/bibliography';
+import { sortAndFormatBibliography, extractReferenceIdsInOrder } from '@/lib/editor/citation-transformer';
 import { serializeCitationCandidatesText } from '@/lib/editor/citation-export';
 import { downloadFile } from '@/lib/editor/editor-utils';
 import type { EditorJsMethods } from '@/hooks/use-editorjs-methods';
@@ -176,24 +177,23 @@ export function useEditorCitation(
     }
   }, [activeModalCitation, citationLibrary]);
 
-  // Bibliography Entries
+  // Bibliography Entries (reactively sorted: Numeric -> Order of appearance, Author-Year -> Alphabetical A-Z)
   const bibliographyEntries = useMemo(() => {
-    const uniqueActiveIds = Array.from(new Set(activeReferenceIds));
     const style = currentDocument?.settings?.citationStyle || 'apa';
     const lang = currentDocument?.settings?.citationLocale || 'en-US';
+    const orderedIds = extractReferenceIdsInOrder(currentDocument?.content);
     
-    return uniqueActiveIds
-      .map((id) => {
-        const candidate = citationLibrary[id];
-        if (!candidate) return null;
-        return {
-          referenceId: id,
-          label: candidate.citation_label,
-          formatted: formatBibliographyCandidate(candidate, style, lang)
-        };
-      })
-      .filter(Boolean) as Array<{ referenceId: string; label: string; formatted: string }>;
-  }, [citationLibrary, activeReferenceIds, currentDocument?.settings?.citationStyle, currentDocument?.settings?.citationLocale]);
+    // Combine unique reference IDs from document scan and live DOM state
+    const allUniqueIds = Array.from(new Set([...orderedIds, ...activeReferenceIds]));
+
+    return sortAndFormatBibliography(
+      allUniqueIds,
+      citationLibrary,
+      style,
+      orderedIds,
+      lang
+    );
+  }, [citationLibrary, activeReferenceIds, currentDocument?.content, currentDocument?.settings?.citationStyle, currentDocument?.settings?.citationLocale]);
 
   useEffect(() => {
     if (!hydrated) return;

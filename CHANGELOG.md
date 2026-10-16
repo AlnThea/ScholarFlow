@@ -2,6 +2,27 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.9.8] - 2026-10-16 (Bidirectional Reactive In-Text Citation Style Transformer)
+
+### 🚀 Citation Style Transformation Engine
+- **In-Text Citation AST Transformer (`lib/editor/citation-transformer.ts`)**:
+  - Full bidirectional format transformation across 6 international academic styles: APA 7th Edition, IEEE Numeric, Harvard, Vancouver, Chicago, and MLA 9th.
+  - Multi-author parser (`extractFamilyName`) handling Western, Comma-delimited, and single-word author names.
+  - Top-to-bottom document scan algorithm (`extractReferenceIdsInOrder`) resolving citation appearance sequence for IEEE/Vancouver numeric brackets (`[1]`, `[2]`).
+  - Seamless JSON block transformer (`transformEditorContentCitations`) converting in-text `<cite>` labels reactively without losing block alignments or styles.
+- **Dynamic Bibliography Re-Indexing (`sortAndFormatBibliography`)**:
+  - Automatically re-indexes bibliography references according to the target style's rules:
+    - **Numeric Styles (IEEE, Vancouver)**: Sorted strictly by appearance order in the manuscript (`[1]`, `[2]`, `[3]`).
+    - **Author-Year Styles (APA, Harvard, MLA, Chicago)**: Sorted strictly in alphabetical order (A-Z) by the first author's family name.
+- **Reactive Hooks Integration**:
+  - `hooks/use-editor-document.ts`: Enhanced `handleChangeCitationStyle` to immediately transform canvas content, re-render EditorJS live, save to database, and display toast notifications.
+  - `hooks/use-editor-citation.ts`: Upgraded `bibliographyEntries` memo with `sortAndFormatBibliography`.
+- **Toolbar Citation Style Selector Component (`components/editor/citation-style-selector.tsx`)**:
+  - Glassmorphic dropdown on `EditorJsToolbar` with format preview badges, sample indicators, Dark Mode, and bilingual EN/ID support.
+
+### 🧪 Automated Testing
+- **Vitest Suite Expansion (`__tests__/utils/citation-transformer.test.ts`)**: Added 13 unit tests covering author parsing, format labels, document order extraction, bidirectional transformation, and bibliography re-indexing. Total Vitest suite passing at **60/60 tests**.
+
 ## ⚡ [v0.9.7] - 2026-10-16 (Document Version History & Time-Machine Snapshot - Rollback & Visual Diff)
 
 ### 🚀 Document Version History & Time Machine

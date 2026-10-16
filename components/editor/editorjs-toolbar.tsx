@@ -24,6 +24,7 @@ import {
 } from '@tabler/icons-react';
 import type { EditorJsMethods } from '@/hooks/use-editorjs-methods';
 import { GhostwriterToggle } from './ghostwriter-toggle';
+import { CitationStyleSelector } from './citation-style-selector';
 
 type EditorToolbarProps = {
   language: string;
@@ -49,6 +50,8 @@ type EditorToolbarProps = {
   isGhostwriterEnabled?: boolean;
   onToggleGhostwriter?: () => void;
   isGhostwriterLoading?: boolean;
+  citationStyle?: string;
+  onChangeCitationStyle?: (style: any) => void;
 };
 
 export const EditorJsToolbar = ({
@@ -63,6 +66,8 @@ export const EditorJsToolbar = ({
   getBtnClass,
   currentAlignment,
   onInsertCitation,
+  citationStyle,
+  onChangeCitationStyle,
   setImageUrlInput,
   setIsImageModalOpen,
   handleHighlightButtonClick,
@@ -290,6 +295,16 @@ export const EditorJsToolbar = ({
         <IconAt className="h-4 w-4" />
         Citation
       </button>
+
+      {/* Citation Style Transformer Switcher */}
+      {onChangeCitationStyle && (
+        <CitationStyleSelector
+          currentStyle={citationStyle || 'apa'}
+          onChangeStyle={onChangeCitationStyle}
+          language={language as 'en' | 'id'}
+          compact={true}
+        />
+      )}
 
       <div className="h-5 w-px bg-slate-200 mx-1" />
 

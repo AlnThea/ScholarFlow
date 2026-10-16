@@ -296,10 +296,11 @@ Target: Menyediakan perlindungan draf naskah riset kelas enterprise dengan riway
 ### Phase 22: Bidirectional Reactive In-Text Citation Style Transformer (APA ↔ IEEE ↔ Harvard ↔ Vancouver)
 Target: Membangun mesin transformasi format sitasi dua arah yang otomatis mengubah format sitasi in-text dan daftar pustaka saat gaya sitasi diubah oleh pengguna.
 
-- [ ] **1. In-Text Citation AST Transformer**: Mesin regex/DOM traversal untuk mengidentifikasi seluruh penanda sitasi di dalam kanvas editor.
-- [ ] **2. Bidirectional Format Conversion**: Transformasi dinamis antara gaya Author-Year (APA: `(Smith & Doe, 2022)`) dengan gaya Numerik (IEEE/Vancouver: `[1]`).
-- [ ] **3. Dynamic Bibliography Re-Indexing**: Pengurutan ulang otomatis daftar pustaka di bagian akhir dokumen agar penomoran numerik selalu sinkron dengan urutan kemunculan sitasi di dalam teks.
-- [ ] **4. Toolbar Dropdown Integration**: Penyetelan instan melalui dropdown gaya sitasi di toolbar editor.
+- [x] **1. In-Text Citation AST Transformer (`lib/editor/citation-transformer.ts`)**: Mesin pemindai dan konversi tag sitasi `<cite data-citation="true" data-ref-id="...">` pada pohon blok JSON EditorJS.
+- [x] **2. Bidirectional Format Conversion**: Transformasi dinamis dua arah antara gaya Author-Year (APA: `(Smith & Doe, 2022)`, Harvard: `(Smith and Doe 2022)`) dengan gaya Numerik (IEEE: `[1]`, Vancouver: `(1)`).
+- [x] **3. Dynamic Bibliography Re-Indexing (`sortAndFormatBibliography`)**: Pengurutan ulang otomatis daftar pustaka (Numerik: mengikuti nomor urut kemunculan naskah; Author-Year: terurut alfabetis A-Z nama belakang penulis).
+- [x] **4. Toolbar Dropdown Integration (`components/editor/citation-style-selector.tsx`)**: Dropdown pemilih gaya sitasi di toolbar dengan preview sample, badge kategori, Dark Mode, dan bilingual EN/ID.
+- [x] **5. Automated Unit Testing**: 13 test cases komprehensif pada Vitest (`__tests__/utils/citation-transformer.test.ts`), total suite lulus 60/60 tests.
 
 ### Phase 23: Interactive "Chat with Paper / Literature" Assistant (Library Q&A)
 Target: Mengembangkan asisten Q&A literatur cerdas di dalam sidebar perpustakaan agar peneliti dapat menggali wawasan dari koleksi PDF/paper mereka secara instan.

@@ -18,6 +18,7 @@ import { fetchActivePresence, updatePresence, leavePresence, type UserPresence }
 import { fetchSuggestions, updateSuggestionStatus, type DocumentSuggestion } from '@/lib/api/suggestions';
 import { fetchComments, fetchNotifications, createNotification, resolveComment, markNotificationAsRead, markAllNotificationsAsRead, isValidUuid, type DocumentComment, type DocumentNotification } from '@/lib/api/comments';
 import { getContentComparisonString } from '@/lib/editor/editor-utils';
+import { transformEditorContentCitations } from '@/lib/editor/citation-transformer';
 
 export function useEditorDocument(showToast: (msg: string, type: 'success' | 'error' | 'info') => void, hydrated: boolean, editorJsRef: any) {
   const { language } = useLanguage();
@@ -414,13 +415,63 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
 
   const handleChangeCitationStyle = useCallback((style: string) => {
     if (!currentDocument) return;
-    
+
+    let citationLibrary: Record<string, any> = {};
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('scholarflow.editor.citation-library.v1');
+        if (stored) citationLibrary = JSON.parse(stored);
+      } catch (err) {
+        console.warn('Failed to parse citation library from localStorage:', err);
+      }
+    }
+
+    // Bidirectional transformation of in-text citations inside editor blocks
+    let finalContent = currentDocument.content;
+    let transformedCount = 0;
+
+    if (currentDocument.content) {
+      const transformResult = transformEditorContentCitations(
+        currentDocument.content,
+        style,
+        citationLibrary
+      );
+      finalContent = transformResult.newContent;
+      transformedCount = transformResult.transformedCount;
+
+      // Render updated content into live EditorJS instance
+      if (editorJsRef?.current?.render && transformedCount > 0) {
+        editorJsRef.current.render(finalContent).catch(console.error);
+      }
+    }
+
     const updatedSettings = { ...currentDocument.settings, citationStyle: style };
-    const updatedDoc = { ...currentDocument, settings: updatedSettings };
+    const updatedDoc = {
+      ...currentDocument,
+      content: finalContent,
+      settings: updatedSettings,
+    };
     setCurrentDocument(updatedDoc);
-    
-    triggerDebouncedSave(currentDocument.id, currentDocument.title, currentDocument.content, updatedSettings);
-  }, [currentDocument, triggerDebouncedSave]);
+
+    triggerDebouncedSave(currentDocument.id, currentDocument.title, finalContent, updatedSettings);
+
+    const styleName = style.toUpperCase();
+    if (transformedCount > 0) {
+      showToast(
+        language === 'en'
+          ? `Transformed ${transformedCount} in-text citations to ${styleName}`
+          : `Berhasil mengubah ${transformedCount} sitasi ke format ${styleName}`,
+        'success'
+      );
+    } else {
+      showToast(
+        language === 'en'
+          ? `Citation style set to ${styleName}`
+          : `Gaya sitasi diatur ke ${styleName}`,
+        'info'
+      );
+    }
+  }, [currentDocument, triggerDebouncedSave, editorJsRef, language, showToast]);
 
   const handleChangeDocumentSettings = useCallback((newSettings: DocumentSettings) => {
     if (!currentDocument) return;

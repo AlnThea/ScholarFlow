@@ -164,11 +164,12 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] **Time-Machine Modal UI (`components/editor/modals/version-history-modal.tsx`)**: Fullscreen slide-over drawer dengan garis waktu revisi, toggle Unified Diff vs Split Side-by-Side, modal konfirmasi kustom, Dark Mode, dan bilingual EN/ID.
   - [x] **Header Navigation Integration (`components/editor/editor-header.tsx`)**: Tombol "History / Riwayat" di header editor.
   - [x] **Automated Testing**: 11/11 tests passing pada `__tests__/utils/version-history.test.ts` (total 47/47 tests passing pada test suite).
-- [ ] **16. Bidirectional Reactive In-Text Citation Style Transformer (APA ↔ IEEE ↔ Harvard ↔ Vancouver)**:
-  - [ ] In-text citation regex & AST transformer untuk merestrukturisasi format sitasi dalam teks kanvas secara dinamis.
-  - [ ] Transformasi dua arah otomatis (misal: `(Smith et al., 2021)` ↔ `[1]`).
-  - [ ] Sinkronisasi dan re-indexing otomatis daftar pustaka di akhir dokumen mengikuti urutan kemunculan nomor sitasi.
-  - [ ] Pilihan gaya sitasi langsung dari dropdown toolbar header editor.
+- [x] **16. Bidirectional Reactive In-Text Citation Style Transformer (APA ↔ IEEE ↔ Harvard ↔ Vancouver)**:
+  - [x] **AST & In-Text Citation Transformer (`lib/editor/citation-transformer.ts`)**: Transformasi dua arah dinamis antara format Author-Year (`(Smith et al., 2021)`) dan Numerik (`[1]` / `(1)`).
+  - [x] **Reactive Bibliography Re-indexing**: Pengurutan ulang otomatis daftar pustaka (Numeric: *order of appearance* di naskah; Author-Year: alfabetis A-Z nama belakang penulis).
+  - [x] **Reactive Hook Engine (`hooks/use-editor-document.ts` & `hooks/use-editor-citation.ts`)**: Transformasi instan naskah EditorJS dan pembaruan `bibliographyEntries` memo secara mulus.
+  - [x] **Toolbar Citation Selector UI (`components/editor/citation-style-selector.tsx`)**: Dropdown pemilih gaya sitasi di toolbar dengan preview sample (`[1]` vs `(Vaswani et al., 2017)`), Dark Mode, dan bilingual EN/ID.
+  - [x] **Automated Unit Testing (`__tests__/utils/citation-transformer.test.ts`)**: 13/13 tests passing (total 60/60 tests passing pada test suite).
 - [ ] **17. Interactive "Chat with Paper / Literature" Assistant (Library Q&A)**:
   - [ ] Sub-panel interaktif "Tanya Paper" di dalam `SidebarLibraryTab` untuk mengeksplorasi referensi yang tersimpan.
   - [ ] RAG ekstraksi intisari metodologi, hipotesis, dan temuan utama dari dokumen paper PDF/metadata.
