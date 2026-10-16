@@ -205,6 +205,19 @@ export function useEditorAi(
         setSynthesizeDisclaimer(response.disclaimer);
       }
       updateQuotaState(response.tokens_used, response.monthly_quota);
+
+      const refSummary = (referencesData as any[]).map((r: any) => `[${r.label || 'Ref'}] ${r.title}`).join('; ');
+      setAiHistory((current) =>
+        addAiHistoryEntry(current, {
+          id: (response as any).generation_id || (Math.random().toString(36).substring(2, 9) + Date.now().toString(36)),
+          originalText: refSummary || (language === 'en' ? 'Synthesized Literature Review' : 'Sintesis Tinjauan Pustaka'),
+          improvedText: response.synthesized_text,
+          tone: 'synthesis',
+          model: selectedAiModel,
+          savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          source: (response as any).generation_id ? 'cloud' : 'local',
+        })
+      );
     } catch (error: any) {
       const message = error.message || (language === 'en' ? 'Failed to synthesize literature review.' : 'Gagal mensintesis tinjauan pustaka.');
       if (message.toLowerCase().includes('quota') || message.toLowerCase().includes('kuota')) {

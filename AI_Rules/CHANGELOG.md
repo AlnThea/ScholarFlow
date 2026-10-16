@@ -1,5 +1,21 @@
 # ScholarFlow Changelog
 
+## v0.9.5 - Full App-Wide Server-Side AI History Parity & Modular History Studio
+
+- **Server-Side AI History for Literature Review Synthesis (`app/api/v1/ai/synthesize/route.ts`)**: Integrated `createPendingAiGeneration`, `completeAiGeneration`, and `failAiGeneration` tracking so literature review synthesis jobs are recorded on Supabase backend with `generation_id` returned.
+- **Server-Side AI History for Statistical Interpreter (`app/api/v1/ai/interpret-stats/route.ts`)**: Integrated `createPendingAiGeneration`, `completeAiGeneration`, and `failAiGeneration` tracking for multimodal vision and tabular statistical analyses.
+- **Client AI History Synchronization**:
+  - `hooks/use-editor-ai.ts`: Updated `handleSynthesizeReview` to immediately record synthesized literature reviews into `aiHistory` with tone `synthesis`.
+  - `components/editor/sidebar-stats-tab.tsx`: Updated `handleInterpret` to record completed statistical analyses into client `aiHistory` with tone `statistical`.
+  - `lib/editor/ai-history.ts`: Upgraded `convertCloudRecordToHistoryEntry` to seamlessly support `synthesis` and `statistical` / `stats` records from Supabase cloud sync.
+- **Modular History Studio (`components/editor/modals/ai-history-modal.tsx`)**:
+  - Extracted inline modal JSX out of `components/editor/editor-sidebar.tsx`, reducing its file length from 756 to 571 lines.
+  - Added Category Filter Tabs with dynamic counter badges: *All*, *Polish (Academic)*, *Paraphrase*, *Abstract*, *Synthesis*, and *Stats*.
+  - Added Live Search Bar for searching original drafts or AI results by keyword.
+  - Added **Export AI Audit Report** feature (.md markdown download) for academic AI disclosure and university compliance.
+  - Micro-UX: Instant visual "Copied!" feedback and full Dark Mode / Bilingual (EN <-> ID) support.
+- **Automated Unit Testing**: Created `__tests__/utils/ai-history.test.ts` (3 tests). Total Vitest suite passing at 28/28 tests.
+
 ## v0.9.4 - Server-Side AI History Engine & System Architecture Suite (ChatGPT-Style Resilience)
 
 - **Supabase SQL Migration (`supabase/migrations/20261015000001_create_ai_generations_history.sql`)**: Created `public.ai_generations` table with granular Row Level Security (RLS) policies, indexes on `(user_id, created_at DESC)` and `status`, enabling background transaction persistence even if client disconnects at second 2.

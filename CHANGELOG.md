@@ -2,6 +2,26 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.9.5] - 2026-10-16 (Full App-Wide Server-Side AI History Parity & Modular History Studio)
+
+### 🚀 Server-Side AI History Full Parity
+- **Synthesis Route Logging (`app/api/v1/ai/synthesize/route.ts`)**: Integrated `createPendingAiGeneration`, `completeAiGeneration`, and `failAiGeneration` tracking so literature review synthesis jobs are persisted in the Supabase backend with `generation_id` returned.
+- **Statistical Output Interpreter Route Logging (`app/api/v1/ai/interpret-stats/route.ts`)**: Integrated server-side logging for multimodal vision (SPSS/PSPP table images) and tabular data interpretations.
+- **Client Reactive Synchronization**:
+  - `hooks/use-editor-ai.ts`: Updated `handleSynthesizeReview` to record synthesized literature reviews into `aiHistory` with tone `synthesis`.
+  - `components/editor/sidebar-stats-tab.tsx`: Updated `handleInterpret` to record completed statistical analyses into client `aiHistory` with tone `statistical`.
+  - `lib/editor/ai-history.ts`: Upgraded `convertCloudRecordToHistoryEntry` to seamlessly support `synthesis` and `statistical` / `stats` records from Supabase cloud sync.
+
+### 🎨 Modular AI History Studio (`components/editor/modals/ai-history-modal.tsx`)
+- **File Length Reduction**: Extracted modal JSX out of `components/editor/editor-sidebar.tsx`, trimming file length from 756 to 571 lines (strict adherence to `< 700 lines` guidelines).
+- **Category Filter Tabs**: Added interactive filter pills with dynamic count badges (*All*, *Polish (Academic)*, *Paraphrase*, *Abstract*, *Synthesis*, and *Stats*).
+- **Live Search Query**: Instant keyword filter across original drafts and AI-generated text.
+- **Academic AI Disclosure Exporter**: Downloadable AI Transparency statement (`.md` format) for university and journal submission ethics compliance.
+- **Micro-UX & Animations**: Animated "Copied!" feedback, glowing sparkles badge for ScholarFlow Academic AI, and full Dark Mode / Bilingual (EN <-> ID) support.
+
+### 🧪 Automated Testing
+- **Vitest Suite Expansion (`__tests__/utils/ai-history.test.ts`)**: Added 3 new unit tests covering deduplication, cloud record parsing, and local-cloud merging. Total test suite passing at **28/28 tests**.
+
 ## ⚡ [v0.9.4] - 2026-10-15 (Server-Side AI History Engine & System Architecture Suite)
 
 ### ☁️ ChatGPT-Style Server-Side AI History & Resilient Background Tasks

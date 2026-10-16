@@ -143,6 +143,13 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] **AI Route Handlers Integration**: Integrasi pencatatan server-side ke `/api/v1/ai/improve` dan `/api/v1/ai/abstract`.
   - [x] **Client-Cloud Dual Sync**: Hidrasi otomatis di `useEditorAi`, badge status `Cloud Synced` di modal, dan penghapusan tersinkron.
   - [x] **Architecture Documentation Suite (`doc/architecture/`)**: 4 dokumen terperinci lengkap dengan Mermaid Sequence Diagrams (`01-server-side-ai-history.md`, `02-smart-idempotency-cache.md`, `03-token-quota-synchronization.md`, `04-multi-tenant-campus-keys.md`).
+- [x] **13. Full App-Wide Server-Side AI History Parity & Modular History Studio (`AiHistoryModal`)**:
+  - [x] **Synthesize & Stats Routes**: Integrasi `createPendingAiGeneration`, `completeAiGeneration`, dan `failAiGeneration` ke `/api/v1/ai/synthesize` dan `/api/v1/ai/interpret-stats`.
+  - [x] **Client-Cloud Dual Sync**: Menyambungkan `handleSynthesizeReview` di `useEditorAi` dan `handleInterpret` di `SidebarStatsTab` ke `addAiHistoryEntry` dan cloud records.
+  - [x] **Modular Studio Component (`components/editor/modals/ai-history-modal.tsx`)**: Mengekstrak modal inline keluar dari `editor-sidebar.tsx` (memangkas file dari 756 menjadi 571 baris kode).
+  - [x] **Filter Kategori & Live Search**: Tab filter (All, Poles, Parafrase, Abstrak, Sintesis, Statistik) dengan badge jumlah dinamis dan search bar keyword.
+  - [x] **Academic AI Disclosure Export**: Fitur unduh Laporan Transparansi AI (.md) untuk kepatuhan etika riset jurnal & kampus.
+  - [x] **Automated Testing**: 28/28 test cases passing pada Vitest (`__tests__/utils/ai-history.test.ts`).
 - [ ] Complete remaining UI pages & user-facing feature modules.
 
 

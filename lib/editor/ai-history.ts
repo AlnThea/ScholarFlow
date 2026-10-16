@@ -62,7 +62,7 @@ export function convertCloudRecordToHistoryEntry(record: any): AiHistoryEntry {
     id: record.id,
     originalText: record.original_text || '',
     improvedText: record.result_text || '',
-    tone: record.tone || 'academic',
+    tone: record.tone || (record.feature_type === 'stats' ? 'statistical' : (record.feature_type || 'academic')),
     model: record.model || 'gemini',
     savedAt: formattedTime,
     source: 'cloud',

@@ -11,6 +11,7 @@ import {
 } from '@tabler/icons-react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { saveLocalQuotaState } from '@/lib/ai/token-quota';
+import { loadAiHistory, addAiHistoryEntry } from '@/lib/editor/ai-history';
 import { StatsDropzone } from './stats-interpreter/stats-dropzone';
 import { StatsConfigPanel } from './stats-interpreter/stats-config-panel';
 import { StatsResultView } from './stats-interpreter/stats-result-view';
@@ -135,8 +136,21 @@ export function SidebarStatsTab({
       setResult(data.result);
       try {
         localStorage.setItem('sf_latest_stats_result', JSON.stringify(data.result));
+        const currentHist = loadAiHistory();
+        const statsSummary = inputData.rawText
+          ? inputData.rawText.slice(0, 150)
+          : `[${config.software.toUpperCase()}] ${data.result?.testType || config.testType} Table`;
+        addAiHistoryEntry(currentHist, {
+          id: data.generation_id || (Math.random().toString(36).substring(2, 9) + Date.now().toString(36)),
+          originalText: statsSummary,
+          improvedText: data.result?.narrativeAPA || data.result?.summary || (isEn ? 'Statistical analysis completed.' : 'Analisis statistik selesai.'),
+          tone: 'statistical',
+          model: data.modelUsed || 'gemini',
+          savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          source: data.generation_id ? 'cloud' : 'local',
+        });
       } catch (err) {
-        console.warn('Could not cache stats result to localStorage:', err);
+        console.warn('Could not cache stats result to localStorage / AI history:', err);
       }
     } catch (err: any) {
       console.error('Stats interpretation error:', err);

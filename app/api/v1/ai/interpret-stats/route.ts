@@ -4,6 +4,7 @@ import { resolveTenantKey } from '@/lib/ai/tenant-key-resolver';
 import { StatsInterpretationResult } from '@/components/editor/stats-interpreter/stats-types';
 import { checkPersonalQuota, recordPersonalTokenConsumption, estimateTokens } from '@/lib/ai/token-quota';
 import { generateIdempotencyKey, getIdempotentAiResponse, setIdempotentAiResponse } from '@/lib/ai/idempotency-cache';
+import { createPendingAiGeneration, completeAiGeneration, failAiGeneration } from '@/lib/ai/server-ai-logger';
 
 export const maxDuration = 60; // 60 seconds timeout for multimodal vision
 
@@ -115,6 +116,27 @@ Do NOT wrap with backticks other than \`\`\`json and \`\`\`. Ensure the JSON is 
 
     let rawResponseText = '';
     let usedModel = '';
+
+    // Server-Side Background Task Tracker (ChatGPT-Style Resilience)
+    let aiGenerationId: string | null = null;
+    const statsSummary = input.rawText
+      ? input.rawText.slice(0, 300)
+      : `[${software.toUpperCase()}] ${testType} test table analysis`;
+    if (effectiveUserId) {
+      aiGenerationId = await createPendingAiGeneration({
+        userId: effectiveUserId,
+        featureType: 'stats',
+        originalText: statsSummary,
+        tone: 'statistical',
+        model: config?.aiModel || (provider === 'gemini' ? (process.env.GEMINI_VISION_MODEL || 'gemini-1.5-flash') : 'claude-3.5-sonnet'),
+        metadata: {
+          software,
+          testType,
+          provider,
+          inputType: input.type || (input.base64Data ? 'image' : 'text'),
+        },
+      });
+    }
 
     // Handle OpenAI Direct or OpenRouter
     if (provider === 'openai' || provider === 'openrouter') {
@@ -278,6 +300,22 @@ Do NOT wrap with backticks other than \`\`\`json and \`\`\`. Ensure the JSON is 
     const tokensConsumed = estimateTokens('x'.repeat(promptLength)) + estimateTokens(rawResponseText);
     const usageRecord = await recordPersonalTokenConsumption(effectiveUserId, tokensConsumed, effectiveUserPlan);
 
+    // Mark server generation as COMPLETED in Supabase
+    if (aiGenerationId) {
+      await completeAiGeneration(aiGenerationId, {
+        resultText: finalResult.narrativeAPA || rawResponseText,
+        tokensConsumed,
+        metadata: {
+          tone: 'statistical',
+          model: usedModel || provider,
+          software,
+          testType,
+          tenant_source: tenantKeyRes.source,
+          hasTable: !!finalResult.apaTableMarkdown,
+        },
+      });
+    }
+
     const resultPayload = {
       success: true,
       result: finalResult,
@@ -291,6 +329,7 @@ Do NOT wrap with backticks other than \`\`\`json and \`\`\`. Ensure the JSON is 
       tenant_source: tenantKeyRes.source,
       institution_name: tenantKeyRes.institutionName || null,
       is_idempotent_hit: false,
+      generation_id: aiGenerationId || undefined,
     };
 
     setIdempotentAiResponse(idempotencyKey, resultPayload);
@@ -298,6 +337,9 @@ Do NOT wrap with backticks other than \`\`\`json and \`\`\`. Ensure the JSON is 
     return NextResponse.json(resultPayload);
   } catch (error: any) {
     console.error('Stats interpretation error:', error);
+    if (aiGenerationId) {
+      await failAiGeneration(aiGenerationId, error.message || 'Failed to interpret statistical data.');
+    }
     return NextResponse.json(
       {
         error: error.message || 'Failed to interpret statistical data.',

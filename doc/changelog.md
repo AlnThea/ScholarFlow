@@ -27,6 +27,7 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 - Mengekstrak **Dashboard View & Admin Panel** (>1.100 baris kode) ke dalam components/editor/dashboard-view.tsx.
 - Menggantikan kode dashboard di dalam ditor-layout.tsx dengan komponen <DashboardView />.
 - Memastikan semua _props_ dikirimkan dengan benar tanpa merusak fungsionalitas.
+- Mengekstrak **AI History Modal** ke dalam `components/editor/modals/ai-history-modal.tsx`, memangkas ukuran `components/editor/editor-sidebar.tsx` dari 756 baris menjadi 571 baris kode.
 
 **Selanjutnya:**
 - Mengimplementasikan pemindahan logika dan komponen React dari `editor-layout.tsx` ke file-file tersebut.

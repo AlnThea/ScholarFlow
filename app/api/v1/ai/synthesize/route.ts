@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { checkPersonalQuota, recordPersonalTokenConsumption, estimateTokens } from '@/lib/ai/token-quota';
 import { generateIdempotencyKey, getIdempotentAiResponse, setIdempotentAiResponse } from '@/lib/ai/idempotency-cache';
+import { createPendingAiGeneration, completeAiGeneration, failAiGeneration } from '@/lib/ai/server-ai-logger';
 
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
@@ -215,6 +216,23 @@ export async function POST(request: Request) {
 
     const prompt = buildSynthesisPrompt(references, language);
 
+    // Server-Side Background Task Tracker (ChatGPT-Style Resilience)
+    let aiGenerationId: string | null = null;
+    const refSummary = references.map(r => `[${r.label || 'Ref'}] ${r.title || ''}`).join('; ');
+    if (userId) {
+      aiGenerationId = await createPendingAiGeneration({
+        userId,
+        featureType: 'synthesize',
+        originalText: refSummary || 'Literature Reference List',
+        tone: 'synthesis',
+        model,
+        metadata: {
+          referenceCount: references.length,
+          language,
+        },
+      });
+    }
+
     // 1. Ambil seluruh model AI dari database Supabase (untuk fallback dinamis)
     const { data: dbModels, error: dbError } = await supabase
       .from('ai_models')
@@ -305,6 +323,9 @@ export async function POST(request: Request) {
     }
 
     if (!finalResult) {
+      if (aiGenerationId) {
+        await failAiGeneration(aiGenerationId, errors.join('; '));
+      }
       return NextResponse.json(
         fallbackResponse(
           references,
@@ -319,6 +340,21 @@ export async function POST(request: Request) {
     const tokensConsumed = estimateTokens(prompt) + estimateTokens(finalResult);
     const usageRecord = await recordPersonalTokenConsumption(userId, tokensConsumed, userPlan);
 
+    // Mark server generation as COMPLETED in Supabase
+    if (aiGenerationId) {
+      await completeAiGeneration(aiGenerationId, {
+        resultText: finalResult,
+        tokensConsumed,
+        metadata: {
+          tone: 'synthesis',
+          model: successfulModelName || model,
+          disclaimer,
+          tenant_source: tenantKeyRes.source,
+          reference_count: references.length,
+        },
+      });
+    }
+
     const resultPayload = {
       synthesized_text: finalResult,
       disclaimer: disclaimer,
@@ -330,6 +366,7 @@ export async function POST(request: Request) {
       tenant_source: tenantKeyRes.source,
       institution_name: tenantKeyRes.institutionName || null,
       is_idempotent_hit: false,
+      generation_id: aiGenerationId || undefined,
     };
 
     setIdempotentAiResponse(idempotencyKey, resultPayload);

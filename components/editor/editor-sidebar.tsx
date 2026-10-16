@@ -39,6 +39,7 @@ import { SidebarDocumentTab } from './sidebar-document-tab';
 import { SidebarCommentsTab } from './sidebar-comments-tab';
 import { SidebarBurstinessTab } from './sidebar-burstiness-tab';
 import { SidebarStatsTab } from './sidebar-stats-tab';
+import { AiHistoryModal } from './modals/ai-history-modal';
 
 type SidebarProps = {
   activePlanId?: string | null;
@@ -555,200 +556,16 @@ export function EditorSidebar(props: SidebarProps) {
       </aside>
 
       {/* AI History Modal popup */}
-      {isHistoryModalOpen && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in text-slate-800 dark:text-slate-100">
-          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-2xl w-full max-w-2xl flex flex-col gap-5 animate-scale-in max-h-[85vh]">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 shrink-0">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-xl">
-                  <IconHistory className="h-5 w-5" />
-                </div>
-                <div className="flex flex-col">
-                  <h3 className="text-base font-extrabold text-slate-800 dark:text-slate-100">{t('ai.title')}</h3>
-                  <span className="text-xs text-slate-400 dark:text-slate-400">
-                    {language === 'en' ? `Total ${aiHistory.length} changes recorded` : `Total ${aiHistory.length} perubahan dicatat`}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                {aiHistory.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (confirm(t('ai.delete_history_confirm'))) {
-                        onClearAiHistory();
-                      }
-                    }}
-                    className="text-xs font-bold text-rose-600 hover:text-rose-800 transition cursor-pointer"
-                  >
-                    {language === 'en' ? 'Clear All' : 'Bersihkan Semua'}
-                  </button>
-                )}
-                <button
-                  onClick={() => setIsHistoryModalOpen(false)}
-                  className="p-1 rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition cursor-pointer"
-                >
-                  <IconX className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Modal Body: Cards list */}
-            <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-4">
-              {aiHistory.length > 0 ? (
-                aiHistory.map((item) => (
-                  <div
-                    key={item.id}
-                    className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 p-4 shadow-sm hover:shadow-md transition duration-200 border-l-4 border-l-indigo-500 flex flex-col gap-3"
-                  >
-                    {/* Header: Tone, Model, Time, and Delete button */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-md ${item.tone === 'simplify'
-                          ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40'
-                          : item.tone === 'shorten'
-                            ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-100 dark:border-rose-900/40'
-                            : item.tone === 'expand'
-                              ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40'
-                              : item.tone === 'paraphrase'
-                                ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-400 border border-sky-100 dark:border-sky-900/40'
-                                : item.tone === 'summarize'
-                                  ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400 border border-purple-100 dark:border-purple-900/40'
-                                  : item.tone === 'abstract'
-                                    ? 'bg-orange-50 dark:bg-orange-950/60 text-orange-700 dark:text-orange-400 border border-orange-100 dark:border-orange-900/40'
-                                    : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/40'
-                          }`}>
-                          {item.tone === 'simplify'
-                            ? (language === 'en' ? 'Simplify' : 'Sederhana')
-                            : item.tone === 'shorten'
-                              ? (language === 'en' ? 'Condense' : 'Ringkas')
-                              : item.tone === 'expand'
-                                ? (language === 'en' ? 'Elaborate' : 'Elaborasi')
-                                : item.tone === 'paraphrase'
-                                  ? (language === 'en' ? 'Paraphrase' : 'Parafrase')
-                                  : item.tone === 'summarize'
-                                    ? (language === 'en' ? 'Summarize' : 'Ringkasan')
-                                    : item.tone === 'abstract'
-                                      ? (language === 'en' ? 'Abstract' : 'Abstrak')
-                                      : (language === 'en' ? 'Academic' : 'Akademis')}
-                        </span>
-                        {/* Model / Engine Badge: Branded for Regular Users, Detailed for Admins */}
-                        {isAdmin ? (
-                          <>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700 font-mono">
-                              {item.model.replace(" (Direct)", "").replace(" (Free OR)", "").replace(" (Pro OR)", "")}
-                            </span>
-                            {item.model.toLowerCase().includes('gemini') ? (
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">
-                                Gemini Direct
-                              </span>
-                            ) : item.model.toLowerCase().includes('custom') ? (
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800">
-                                Custom Proxy
-                              </span>
-                            ) : (
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800">
-                                OpenRouter
-                              </span>
-                            )}
-                          </>
-                        ) : (
-                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800 flex items-center gap-1.5 font-sans shadow-xs">
-                            <IconSparkles className="h-3 w-3 text-indigo-500 animate-pulse shrink-0" />
-                            ScholarFlow Academic AI
-                          </span>
-                        )}
-
-                        {item.source === 'cloud' && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            {language === 'en' ? 'Cloud Synced' : 'Cloud Tersinkron'}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs text-slate-400 dark:text-slate-400 font-medium font-mono">{item.savedAt}</span>
-                        <button
-                          type="button"
-                          onClick={() => onDeleteAiHistoryEntry(item.id)}
-                          className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
-                          title={language === 'en' ? 'Delete entry' : 'Hapus entri'}
-                        >
-                          <IconTrash className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Preview Area: Original vs AI Result */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                      <div className="flex flex-col gap-1.5 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 text-left">
-                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">{language === 'en' ? 'Original Draft:' : 'Draf Asli:'}</span>
-                        <p className="text-slate-500 dark:text-slate-400 italic leading-relaxed">"{item.originalText}"</p>
-                      </div>
-                      <div className="flex flex-col gap-1.5 bg-indigo-50/20 dark:bg-indigo-950/30 p-3 rounded-xl border border-indigo-100/60 dark:border-indigo-900/40 text-left">
-                        <span className="text-[9px] font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider">{language === 'en' ? 'AI Polished Result:' : 'Hasil Poles AI:'}</span>
-                        <p className="text-slate-700 dark:text-slate-200 font-semibold leading-relaxed">"{item.improvedText}"</p>
-                      </div>
-                    </div>
-
-                    {/* Actions bar */}
-                    <div className="flex items-center justify-end gap-2 border-t border-slate-100/60 dark:border-slate-800 pt-3">
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            await navigator.clipboard.writeText(item.improvedText);
-                            alert(language === 'en' ? 'Copied to clipboard!' : 'Disalin ke clipboard!');
-                          } catch (err) {
-                            console.error('Failed to copy text:', err);
-                          }
-                        }}
-                        className="px-4 py-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5"
-                      >
-                        <IconCopy className="h-4 w-4" />
-                        {language === 'en' ? 'Copy' : 'Salin'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          onInsertSynthesizedText(item.improvedText);
-                          setIsHistoryModalOpen(false);
-                        }}
-                        className="px-4.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
-                      >
-                        <IconCheck className="h-4 w-4" />
-                        {language === 'en' ? 'Apply to Canvas' : 'Terapkan ke Canvas'}
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="py-16 text-center flex flex-col items-center justify-center gap-2">
-                  <IconHistory className="h-12 w-12 text-slate-300 dark:text-slate-600" />
-                  <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">{t('ai.no_history')}</span>
-                  <span className="text-xs text-slate-400 dark:text-slate-400 text-center">
-                    {language === 'en'
-                      ? 'Use the AI assistant to polish your writing and its changes will appear here.'
-                      : 'Gunakan asisten AI untuk memoles tulisan Anda dan catatannya akan muncul di sini.'
-                    }
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="flex items-center justify-end border-t border-slate-100 dark:border-slate-800 pt-3 shrink-0">
-              <button
-                onClick={() => setIsHistoryModalOpen(false)}
-                className="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition cursor-pointer"
-              >
-                {language === 'en' ? 'Close' : 'Tutup'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AiHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        aiHistory={aiHistory}
+        onDeleteAiHistoryEntry={onDeleteAiHistoryEntry}
+        onClearAiHistory={onClearAiHistory}
+        onApplyText={onInsertSynthesizedText}
+        isAdmin={isAdmin}
+        language={language}
+      />
     </>
   );
 }
