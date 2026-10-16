@@ -22,6 +22,7 @@ import { PeerReviewModal } from './modals/peer-review-modal';
 import { CommandPaletteModal } from './modals/command-palette-modal';
 import { ShortcutsModal } from './modals/shortcuts-modal';
 import { addSuggestion } from '@/lib/api/suggestions';
+import { IconSparkles } from '@tabler/icons-react';
 import 'katex/dist/katex.min.css';
 
 import { useDataService } from '@/lib/services';
@@ -760,6 +761,45 @@ export function EditorLayout({
                   onDismiss={ghostwriter.dismissSuggestion}
                   language={language}
                 />
+
+                {/* Floating Quick Action Button with Rich Interactive Tooltip Balloon */}
+                <div className="fixed bottom-6 right-6 md:right-10 z-30">
+                  <div className="relative group/fab">
+                    <button
+                      type="button"
+                      onClick={() => setIsCommandPaletteOpen(true)}
+                      className="flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold text-xs shadow-lg hover:shadow-indigo-500/30 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border border-indigo-400/40"
+                      title={isEn
+                        ? 'Spotlight Quick Actions (Ctrl+K): Click to search AI tools, citations, Reviewer #2, and styles.'
+                        : 'Pusat Perintah Kilat (Ctrl+K): Klik untuk membuka seluruh menu AI, sitasi jurnal, Reviewer #2, dan gaya sitasi.'}
+                    >
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                      </span>
+                      <IconSparkles className="h-4 w-4 text-amber-300" />
+                      <span className="hidden sm:inline font-bold">
+                        {isEn ? 'Quick Actions' : 'Perintah Cepat'}
+                      </span>
+                      <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[9px] font-mono font-bold rounded bg-indigo-900/60 text-indigo-100 border border-indigo-400/30">
+                        Ctrl K
+                      </kbd>
+                    </button>
+
+                    {/* Interactive Tooltip Balloon on Hover */}
+                    <div className="pointer-events-none absolute bottom-full right-0 mb-3 w-64 rounded-xl bg-slate-900/95 dark:bg-slate-800/95 text-white p-3 text-left text-[11px] leading-relaxed shadow-xl border border-slate-700/80 opacity-0 group-hover/fab:opacity-100 transition-opacity duration-200 z-50">
+                      <div className="flex items-center gap-1.5 font-bold text-amber-400 mb-1">
+                        <span>⚡</span>
+                        <span>{isEn ? 'Universal Command Center' : 'Pusat Perintah Universal'}</span>
+                      </div>
+                      <p className="text-slate-300 text-[10.5px]">
+                        {isEn
+                          ? 'Click here or press Ctrl+K to open all tools: citations, Reviewer #2, LaTeX math, and exports!'
+                          : 'Klik di sini atau tekan Ctrl+K untuk membuka seluruh menu: sitasi, Reviewer #2, rumus KaTeX, dan ekspor!'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </main>
 
               {/* Right Panel - Citation Results, Plagiarism Checker, & AI */}

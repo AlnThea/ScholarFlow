@@ -133,24 +133,39 @@ export const EditorHeader = ({
           )}
         </div>
 
-        {/* Academic Command Palette (Ctrl+K) Quick Search Button */}
+        {/* Academic Command Palette (Ctrl+K) Quick Search Button with Rich Tooltip */}
         {onOpenCommandPalette && (
-          <button
-            type="button"
-            onClick={onOpenCommandPalette}
-            className="hidden md:inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-100/90 hover:bg-slate-200/90 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-600 dark:text-slate-350 hover:text-slate-900 dark:hover:text-white border border-slate-200/70 dark:border-slate-700/80 text-xs font-medium transition cursor-pointer shadow-2xs group"
-            title={language === 'en' 
-              ? 'Academic Command Palette (Ctrl+K): Spotlight search for citations, AI tools, Reviewer #2, styles & exports.' 
-              : 'Palet Perintah Akademis (Ctrl+K): Pencarian spotlight kilat untuk sitasi, alat AI, Reviewer #2, gaya sitasi & ekspor.'}
-          >
-            <IconSearch className="h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" />
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-normal">
-              {language === 'en' ? 'Quick Actions...' : 'Cari Perintah...'}
-            </span>
-            <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.2 text-[9px] font-mono font-bold rounded bg-white dark:bg-slate-700 text-slate-500 dark:text-slate-300 border border-slate-300/60 dark:border-slate-600 shadow-2xs">
-              Ctrl K
-            </kbd>
-          </button>
+          <div className="relative group/search">
+            <button
+              type="button"
+              onClick={onOpenCommandPalette}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100/90 hover:bg-slate-200/90 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200/80 dark:border-slate-700 text-xs font-semibold transition cursor-pointer shadow-2xs"
+              title={language === 'en' 
+                ? 'Spotlight Command Palette (Ctrl+K): Click to search and launch any tool, citation, Reviewer #2, or setting.' 
+                : 'Palet Perintah Spotlight (Ctrl+K): Klik untuk mencari dan membuka fitur apapun, sitasi, Reviewer #2, atau pengaturan.'}
+            >
+              <IconSearch className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <span className="text-[11px] font-medium text-slate-600 dark:text-slate-350">
+                {language === 'en' ? 'Search features, AI, citations...' : 'Cari fitur, AI, sitasi...'}
+              </span>
+              <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.2 text-[9px] font-mono font-bold rounded bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-200 border border-slate-300/60 dark:border-slate-600 shadow-2xs">
+                Ctrl K
+              </kbd>
+            </button>
+
+            {/* Hover Tooltip Popup Balloon */}
+            <div className="pointer-events-none absolute top-full left-0 mt-2 w-72 rounded-xl bg-slate-900/95 dark:bg-slate-800/95 text-white p-3 text-left text-[11px] leading-relaxed shadow-xl border border-slate-700/80 opacity-0 group-hover/search:opacity-100 transition-opacity duration-200 z-50">
+              <div className="flex items-center gap-1.5 font-bold text-amber-400 mb-1">
+                <span>⚡</span>
+                <span>{language === 'en' ? 'Spotlight Quick Search' : 'Pencarian Perintah Kilat'}</span>
+              </div>
+              <p className="text-slate-300 text-[10.5px]">
+                {language === 'en'
+                  ? 'Click here or press Ctrl+K to open all tools: citations, Reviewer #2, LaTeX math, and exports!'
+                  : 'Klik di sini atau tekan Ctrl+K untuk membuka seluruh menu: sitasi, Reviewer #2, rumus KaTeX, dan ekspor!'}
+              </p>
+            </div>
+          </div>
         )}
 
         <div className="flex items-center gap-0.5 bg-slate-100/80 p-0.5 rounded-lg border border-slate-200/50">
