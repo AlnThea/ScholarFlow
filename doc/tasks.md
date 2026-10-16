@@ -342,6 +342,47 @@ Target: Memberikan akses secepat kilat (spotlight search) ke seluruh fitur Schol
 - [x] **5. Editor Header Quick Access Pills (`components/editor/editor-header.tsx`)**: Tombol pill pencarian `[🔍 Quick Actions... Ctrl K]` dan tombol pintasan `[⌨️]` dengan tooltip informatif dwibahasa dan dark mode support.
 - [x] **6. Automated Unit Testing**: 10/10 unit test komprehensif pada Vitest (`__tests__/utils/command-palette.test.ts`), total suite lulus 88/88 tests.
 
+### Phase 27: Academic LaTeX & Journal Format Package Exporter (.tex + .bib Zip)
+Target: Mengompilasi naskah EditorJS menjadi paket dokumen LaTeX (.tex) standar publikasi (IEEE, ACM, Elsevier, Springer) lengkap dengan file referensi BibTeX (.bib) terpisah dalam format unduhan .zip.
+
+- [ ] **1. LaTeX AST Serializer (`lib/editor/latex-exporter.ts`)**: Konversi blok-blok EditorJS (paragraf, judul hierarkis, rumus KaTeX `$$`, tabel, gambar) ke sintaks LaTeX standar (`\documentclass`, `\section`, `\cite{...}`, `\begin{equation}`).
+- [ ] **2. BibTeX Package Bundler**: Ekstraksi seluruh rujukan yang disitasi ke dalam file `references.bib` terpisah yang tersinkronisasi dengan kunci sitasi `\cite{key}` di naskah utama.
+- [ ] **3. Journal Layout Templates Selector**: Dukungan preset template jurnal terkemuka:
+  - *IEEE Conference / Transactions* (Format dua kolom dengan paket `ieeetran`).
+  - *Elsevier ScienceDirect* (Format `elsarticle` dengan nomor baris otomatis untuk peer review).
+  - *ACM SIGCHI / Primary Template* (Format `acmart`).
+  - *ArXiv Standard Pre-print* (Format artikel ilmiah umum).
+- [ ] **4. Export Modal & Zip Generator**: Mengemas file `.tex`, `.bib`, dan aset gambar ke dalam arsip `.zip` siap kompilasi di Overleaf atau TeX Live.
+- [ ] **5. Automated Testing**: Pengujian parser AST LaTeX dan generator `.bib` di Vitest.
+
+### Phase 28: Drag & Drop Reference Importer (.bib, .ris, & PDF metadata)
+Target: Memungkinkan peneliti menarik file dari Mendeley, Zotero, atau EndNote (.bib / .ris / PDF) langsung ke kanvas editor atau tab perpustakaan untuk otomatis mengisi sitasi.
+
+- [ ] **1. Dropzone Canvas Overlay (`components/editor/reference-dropzone.tsx`)**: Area drop-zone visual interaktif saat file ditarik ke layar editor.
+- [ ] **2. BibTeX & RIS Client Parser (`lib/editor/bibtex-parser.ts`)**: Parser tangguh untuk membedah file `.bib` dan `.ris` ke dalam koleksi objek sitasi lokal tanpa bergantung pada server luar.
+- [ ] **3. PDF Metadata & DOI Extractor**: Ekstraksi otomatis judul, pengarang, dan DOI dari file PDF yang di-drop ke pustaka naskah.
+- [ ] **4. Batch Candidate Import Modal**: Dialog pratinjau daftar paper hasil parse dengan opsi pilih semua atau sebagian sebelum disimpan ke perpustakaan referensi.
+- [ ] **5. Automated Testing**: Pengujian parser file `.bib` dan `.ris` pada Vitest.
+
+### Phase 29: Live "Track Changes" / Suggesting Mode
+Target: Mode koreksi naskah langsung ala Google Docs dan Microsoft Word untuk kolaborasi dosen pembimbing dan reviewer.
+
+- [ ] **1. Suggesting Mode Toggle & State (`components/editor/suggesting-mode.tsx`)**: Mode tombol beralih antara "Editing" (Sunting Langsung) dan "Suggesting" (Menyarankan).
+- [ ] **2. Inline Visual Diff Markup**:
+  - Teks yang dihapus otomatis diberi coretan warna merah (`strikethrough`).
+  - Teks baru yang ditambahkan otomatis diberi garis bawah warna hijau.
+- [ ] **3. Review Action Floating Chips**: Tombol `[✓ Terima]` dan `[✕ Tolak]` di sisi margin kanvas untuk setiap perubahan yang disarankan.
+- [ ] **4. Batch Accept/Reject Controls**: Tombol "Terima Semua Perubahan" atau "Tolak Semua" untuk mempermudah finalisasi naskah.
+- [ ] **5. Automated Testing**: Pengujian siklus diff suggesting dan state accept/reject di Vitest.
+
+### Phase 30: Figure & Table Scientific Auto-Numbering Engine
+Target: Penomoran otomatis dinamis Gambar X dan Tabel Y dengan cross-referencing interaktif di dalam badan teks naskah.
+
+- [ ] **1. Cross-Reference AST Manager (`lib/editor/cross-reference.ts`)**: Pengindeksan otomatis urutan kemunculan blok gambar (`Gambar 1`, `Gambar 2`) dan tabel (`Tabel 1`, `Tabel 2`).
+- [ ] **2. In-Text Anchor Mention (`@fig` / `@tab`)**: Kemampuan menyisipkan rujukan seperti *"sebagaimana diperlihatkan pada Gambar 1"* yang otomatis memperbarui nomor jika urutan gambar bergeser.
+- [ ] **3. Interactive Clickable Hyperlinks**: Klik rujukan di teks langsung melompat (*smooth scroll*) ke posisi gambar atau tabel terkait di naskah.
+- [ ] **4. Automated Testing**: Pengujian kalkulasi penomoran ulang dinamis di Vitest.
+
 
 
 
