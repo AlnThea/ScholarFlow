@@ -117,6 +117,7 @@ type SidebarProps = {
   onCloseTokenQuotaModal?: () => void;
   citationLibrary?: Record<string, CitationCandidate>;
   onInsertCitationText?: (text: string, referenceId?: string, label?: string) => void;
+  onOpenPeerReview?: () => void;
 };
 
 function PanelRow({

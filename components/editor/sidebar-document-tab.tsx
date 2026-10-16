@@ -3,7 +3,8 @@ import {
   IconBook, IconCheck, IconDownload, IconExternalLink, IconFileText,
   IconFilter, IconFolderOpen, IconLoader2, IconCirclePlus, IconQuote,
   IconSearch, IconSum, IconSparkles, IconWand, IconChevronLeft,
-  IconChevronRight, IconLanguage, IconX, IconClock, IconTrash, IconCopy, IconHistory
+  IconChevronRight, IconLanguage, IconX, IconClock, IconTrash, IconCopy, IconHistory,
+  IconMicroscope
 } from '@tabler/icons-react';
 
 
@@ -29,6 +30,7 @@ export const SidebarDocumentTab = (props: any) => {
     setScanStatus, scanProgress, setScanProgress, similarityScore, setSimilarityScore,
     handleStartScan, plagiarismDetails, setPlagiarismDetails, selectedFolderFilter, setSelectedFolderFilter,
     newFolderName, setNewFolderName, isAddingFolder, setIsAddingFolder,
+    onOpenPeerReview,
     t, getSourceLabel, formatHistoryLabel, ActionButton, PanelRow
   } = props;
 
@@ -234,6 +236,40 @@ export const SidebarDocumentTab = (props: any) => {
                       )}
                     </div>
                   )}
+                </section>
+
+                {/* Reviewer #2 Simulator & Journal Readiness Section */}
+                <section className="rounded-lg border border-rose-200/70 dark:border-rose-900/40 bg-gradient-to-b from-rose-50/40 via-white to-white dark:from-rose-950/20 dark:via-slate-800 dark:to-slate-800 p-3 shadow-xs">
+                  <div className="mb-2.5 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 rounded-md bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300">
+                        <IconMicroscope className="h-3.5 w-3.5" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                          {isEn ? 'Reviewer #2 Simulator' : 'Simulasi Reviewer #2'}
+                          <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300">
+                            Scopus/SINTA
+                          </span>
+                        </h3>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-slate-600 dark:text-slate-350 leading-relaxed mb-3">
+                    {isEn
+                      ? 'Simulate strict, hyper-critical blind peer review to audit methodology flaws, novelty gaps, and citation vulnerabilities before submission.'
+                      : 'Simulasi peer review buta yang ketat & kritis untuk menguji kelemahan metodologi, celah kebaruan (novelty), dan sitasi sebelum submit ke jurnal target.'}
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => onOpenPeerReview?.()}
+                    className="w-full py-2 px-3 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <IconMicroscope className="h-3.5 w-3.5" />
+                    <span>{isEn ? 'Launch Reviewer #2 Audit' : 'Buka Audit Reviewer #2'}</span>
+                  </button>
                 </section>
 
                 <section className="rounded-lg border border-line dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm">

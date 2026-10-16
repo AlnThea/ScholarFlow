@@ -4,7 +4,7 @@ import {
   IconLoader, IconFileWord, IconFileText, 
   IconBraces, IconBook, IconDatabase, IconBell, 
   IconShare, IconCreditCard, IconLayoutSidebarRightCollapse, 
-  IconSettings, IconHistory
+  IconSettings, IconHistory, IconMicroscope
 } from '@tabler/icons-react';
 import { TokenQuotaBadge } from '@/components/ai/token-quota-badge';
 
@@ -38,6 +38,7 @@ export type EditorHeaderProps = {
   setShowRightSidebar: React.Dispatch<React.SetStateAction<boolean>>;
   onOpenSettings?: () => void;
   onOpenVersionHistory?: () => void;
+  onOpenPeerReview?: () => void;
   activeUsers?: any[];
 };
 
@@ -71,6 +72,7 @@ export const EditorHeader = ({
   setShowRightSidebar,
   onOpenSettings,
   onOpenVersionHistory,
+  onOpenPeerReview,
   activeUsers,
 }: EditorHeaderProps) => {
   const [showExportDropdown, setShowExportDropdown] = useState(false);
@@ -442,6 +444,23 @@ export const EditorHeader = ({
               >
                 <IconHistory className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
                 <span className="hidden sm:inline">{language === 'en' ? 'History' : 'Riwayat'}</span>
+              </button>
+            </>
+          )}
+
+          {/* Peer Reviewer #2 Simulation Button */}
+          {currentDocument && onOpenPeerReview && (
+            <>
+              {/* Divider */}
+              <div className="h-4 w-px bg-slate-200/80 dark:bg-slate-750 mx-0.5" />
+              <button
+                type="button"
+                onClick={onOpenPeerReview}
+                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 hover:text-rose-800 transition cursor-pointer dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-900/60 border border-rose-200/80 dark:border-rose-800/80 shadow-xs"
+                title={language === 'en' ? 'Reviewer #2 Simulator & Journal Readiness Audit' : 'Simulasi Reviewer #2 & Audit Kesiapan Jurnal'}
+              >
+                <IconMicroscope className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" />
+                <span className="hidden sm:inline">{language === 'en' ? 'Reviewer #2' : 'Reviewer #2'}</span>
               </button>
             </>
           )}

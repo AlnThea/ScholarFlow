@@ -18,6 +18,7 @@ import { useGhostwriter } from '@/hooks/use-ghostwriter';
 import { GhostwriterSuggestion } from './ghostwriter-suggestion';
 import { useVersionHistory } from '@/hooks/use-version-history';
 import { VersionHistoryModal } from './modals/version-history-modal';
+import { PeerReviewModal } from './modals/peer-review-modal';
 import { addSuggestion } from '@/lib/api/suggestions';
 import 'katex/dist/katex.min.css';
 
@@ -314,6 +315,8 @@ export function EditorLayout({
     return extractTextFromContent(currentDocument.content);
   }, [currentDocument?.content]);
 
+  const [isPeerReviewModalOpen, setIsPeerReviewModalOpen] = useState(false);
+
   return (
     <ErrorBoundary>
     <div className="flex min-h-screen bg-slate-50/50">
@@ -420,6 +423,7 @@ export function EditorLayout({
             setShowRightSidebar={setShowRightSidebar}
             onOpenSettings={onOpenSettings}
             onOpenVersionHistory={versionHistory.openVersionHistory}
+            onOpenPeerReview={() => setIsPeerReviewModalOpen(true)}
             activeUsers={activeUsers}
           />
 
@@ -650,6 +654,7 @@ export function EditorLayout({
                   onOpenTokenQuotaModal={onOpenTokenQuotaModal}
                   citationLibrary={citationLibrary}
                   onInsertCitationText={onInsertCitationText}
+                  onOpenPeerReview={() => setIsPeerReviewModalOpen(true)}
                 />
               )}
             </div>
@@ -799,6 +804,15 @@ export function EditorLayout({
         isRestoring={versionHistory.isRestoring}
         language={language}
         currentContent={currentDocument?.content}
+      />
+      <PeerReviewModal
+        isOpen={isPeerReviewModalOpen}
+        onClose={() => setIsPeerReviewModalOpen(false)}
+        documentId={currentDocument?.id || 'doc-default'}
+        documentTitle={currentDocument?.title || (language === 'en' ? 'Untitled Manuscript' : 'Naskah Tanpa Judul')}
+        documentContent={activeDocumentText}
+        language={language}
+        activePlanId={activePlanId}
       />
       <OnboardingTour />
     </div>
