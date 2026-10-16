@@ -109,4 +109,7 @@ export type EditorLayoutProps = {
   isTokenQuotaModalOpen?: boolean;
   onOpenTokenQuotaModal?: () => void;
   onCloseTokenQuotaModal?: () => void;
+  citationLibrary?: Record<string, CitationCandidate>;
+  onInsertCitationText?: (text: string, referenceId?: string, label?: string) => void;
 };
+

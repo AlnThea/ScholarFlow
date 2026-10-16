@@ -42,6 +42,7 @@ model UserProfile {
   documents    DocumentEntry[]
   citations    CitationLibraryEntry[]
   aiGenerations AiGenerationEntry[]
+  paperConversations PaperConversationEntry[]
 
   @@map("profiles")
 }
@@ -265,5 +266,25 @@ model AiGenerationEntry {
   @@index([status])
   @@map("ai_generations")
 }
+
+model PaperConversationEntry {
+  id           String      @id @default(uuid())
+  userId       String      @map("user_id")
+  referenceId  String      @map("reference_id")
+  paperTitle   String?     @map("paper_title")
+  paperAuthors String[]    @default([]) @map("paper_authors")
+  paperYear    Int?        @map("paper_year")
+  messages     Json        @default("[]")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @default(now()) @updatedAt @map("updated_at")
+
+  user         UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, referenceId])
+  @@index([userId, referenceId])
+  @@index([updatedAt(sort: Desc)])
+  @@map("paper_conversations")
+}
+
 
 

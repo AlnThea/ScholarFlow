@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   IconBook, IconCheck, IconDownload, IconExternalLink, IconFileText,
   IconFilter, IconFolderOpen, IconLoader2, IconCirclePlus, IconQuote,
   IconSearch, IconSum, IconSparkles, IconWand, IconChevronLeft,
-  IconChevronRight, IconLanguage, IconX, IconClock, IconTrash, IconCopy, IconHistory
+  IconChevronRight, IconLanguage, IconX, IconClock, IconTrash, IconCopy, IconHistory,
+  IconMessages
 } from '@tabler/icons-react';
 import { BurstinessChart } from './burstiness-chart';
+import { PaperChatModal } from './modals/paper-chat-modal';
 
 
 export const SidebarLibraryTab = (props: any) => {
@@ -29,10 +31,14 @@ export const SidebarLibraryTab = (props: any) => {
     setScanStatus, scanProgress, setScanProgress, similarityScore, setSimilarityScore,
     plagiarismDetails, setPlagiarismDetails, selectedFolderFilter, setSelectedFolderFilter,
     newFolderName, setNewFolderName, isAddingFolder, setIsAddingFolder,
+    citationLibrary, onInsertCitationText,
     t, getSourceLabel, formatHistoryLabel, ActionButton, PanelRow
   } = props;
 
   const isEn = language === 'en';
+
+  const [activeChatPaper, setActiveChatPaper] = useState<any>(null);
+  const [isPaperChatOpen, setIsPaperChatOpen] = useState(false);
 
   const filteredCollections = React.useMemo(() => {
     const q = (query || '').trim().toLowerCase();
@@ -211,21 +217,55 @@ export const SidebarLibraryTab = (props: any) => {
                               </div>
                             )}
 
-                            {/* Folder assignment dropdown */}
-                            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-50 dark:border-slate-700/50">
-                              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Folder:</span>
-                              <select
-                                value={folderAssignments[entry.referenceId] || ''}
-                                onChange={(e: any) => onAssignFolder(entry.referenceId, e.target.value)}
-                                className="border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-[10px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 outline-none cursor-pointer focus:border-indigo-500 transition max-w-[150px]"
+                            {/* Folder assignment & Chat with Paper action */}
+                            <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-50 dark:border-slate-700/50 flex-wrap">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Folder:</span>
+                                <select
+                                  value={folderAssignments[entry.referenceId] || ''}
+                                  onChange={(e: any) => onAssignFolder(entry.referenceId, e.target.value)}
+                                  className="border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-[10px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 outline-none cursor-pointer focus:border-indigo-500 transition max-w-[120px]"
+                                >
+                                  <option value="">{isEn ? 'No Folder' : 'Tanpa Folder'}</option>
+                                  {folders.map((f: any) => (
+                                    <option key={f} value={f}>
+                                      📁 {f}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const candidate = citationLibrary?.[entry.referenceId] || {
+                                    reference_id: entry.referenceId,
+                                    title: entry.label,
+                                    authors: [],
+                                    year: null,
+                                    journal: null,
+                                    abstract: null,
+                                    citation_label: entry.label,
+                                  };
+                                  setActiveChatPaper({
+                                    referenceId: candidate.reference_id || entry.referenceId,
+                                    title: candidate.title || entry.label,
+                                    authors: candidate.authors || [],
+                                    year: candidate.year || null,
+                                    journal: candidate.journal || candidate.source || null,
+                                    abstract: candidate.abstract || null,
+                                    doi: candidate.doi || null,
+                                    url: candidate.url || null,
+                                    citationLabel: candidate.citation_label || entry.label,
+                                  });
+                                  setIsPaperChatOpen(true);
+                                }}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 border border-indigo-200 dark:border-indigo-800 rounded transition cursor-pointer"
+                                title={isEn ? 'Ask questions about this paper' : 'Tanya jawab seputar isi paper ini'}
                               >
-                                <option value="">{isEn ? 'No Folder' : 'Tanpa Folder'}</option>
-                                {folders.map((f: any) => (
-                                  <option key={f} value={f}>
-                                    📁 {f}
-                                  </option>
-                                ))}
-                              </select>
+                                <IconMessages className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+                                <span>{isEn ? 'Chat Paper' : 'Tanya Paper'}</span>
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -238,6 +278,22 @@ export const SidebarLibraryTab = (props: any) => {
                   )}
                 </div>
               </div>
+
+      {isPaperChatOpen && activeChatPaper && (
+        <PaperChatModal
+          isOpen={isPaperChatOpen}
+          onClose={() => {
+            setIsPaperChatOpen(false);
+            setActiveChatPaper(null);
+          }}
+          paper={activeChatPaper}
+          language={isEn ? 'en' : 'id'}
+          userId={user?.id}
+          userPlan={activePlanId || 'free'}
+          onInsertToEditor={onInsertCitationText || onInsertSynthesizedText}
+        />
+      )}
     </>
+
   );
 };

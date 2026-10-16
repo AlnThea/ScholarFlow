@@ -305,9 +305,13 @@ Target: Membangun mesin transformasi format sitasi dua arah yang otomatis mengub
 ### Phase 23: Interactive "Chat with Paper / Literature" Assistant (Library Q&A)
 Target: Mengembangkan asisten Q&A literatur cerdas di dalam sidebar perpustakaan agar peneliti dapat menggali wawasan dari koleksi PDF/paper mereka secara instan.
 
-- [ ] **1. Interactive Paper Q&A Panel**: Tab/modal tanya-jawab di dalam `SidebarLibraryTab`.
-- [ ] **2. Contextual Insight Extraction**: AI mengekstraksi dan menjawab pertanyaan metodologi, jumlah sampel, temuan kunci, dan batasan riset berdasarkan paper terpilih.
-- [ ] **3. Citation Insertion Bridge**: Tombol "Kutip Jawaban ke Editor" yang otomatis menyisipkan narasi jawaban beserta sitasi resmi ke posisi kursor kanvas.
+- [x] **1. SQL Migration (`supabase/migrations/20261016000002_create_paper_conversations.sql`)**: Skema tabel `paper_conversations` dengan RLS policies, constraint `unique_user_paper_chat`, dan indeks pencarian riwayat obrolan paper.
+- [x] **2. Universal Prisma Schema (`prisma/schema.prisma`)**: Model `PaperConversationEntry` dengan relasi `UserProfile`.
+- [x] **3. Paper Chat API Route (`app/api/v1/ai/paper-chat/route.ts`)**: Endpoint POST/GET/DELETE dengan Gemini failover pool, deduplikasi idempotency cache (5 min TTL), kuota token personal, dan pencatatan ChatGPT-style logger (`paper_qa`).
+- [x] **4. Client Helper & State Hydration (`lib/ai/paper-chat.ts`)**: Fungsi `loadPaperChatHistory`, `cacheLocalPaperChat`, dan `clearPaperChatHistory` dengan sinkronisasi cloud-first dan fallback offline localStorage.
+- [x] **5. Interactive Paper Chat Modal (`components/editor/modals/paper-chat-modal.tsx`)**: Modal percakapan interaktif dengan quick academic question pills (Metodologi, Sampel & Dataset, Temuan Kunci, Batasan Riset, Sintesis Sitasi), dark mode support, dan dwibahasa (EN/ID).
+- [x] **6. Citation Insertion Bridge**: Tombol 1-klik "Kutip Jawaban ke Naskah" yang menginjeksi kalimat sintesis naskah lengkap dengan tag `<cite data-citation="true" data-ref-id="...">` ke kursor aktif EditorJS dan mengaktifkan pengindeksan reaktif daftar pustaka.
+- [x] **7. Automated Unit Testing**: 6/6 unit test komprehensif pada Vitest (`__tests__/utils/paper-chat.test.ts`), total suite lulus 66/66 tests.
 
 ### Phase 24: Plagiarism & AI-Likeness Real-Time Warning Barometer (Academic Integrity Index)
 Target: Membangun sistem barometer orisinalitas naskah real-time untuk memprediksi potensi deteksi AI dan kesiapan submisi ke jurnal ilmiah atau Turnitin.

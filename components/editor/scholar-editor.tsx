@@ -445,6 +445,25 @@ export function ScholarEditor() {
     }
   };
 
+  const handleInsertCitationText = (text: string, referenceId?: string, label?: string) => {
+    if (!text) return;
+    if (editorJsRef.current) {
+      let htmlToInsert = text;
+      if (referenceId && !text.includes('data-citation="true"')) {
+        const citeLabel = label || 'Ref';
+        if (text.includes(`[${citeLabel}]`)) {
+          htmlToInsert = text.replace(
+            `[${citeLabel}]`,
+            `<cite data-citation="true" data-ref-id="${referenceId}" class="text-indigo-600 font-semibold not-italic cursor-pointer hover:underline"> [${citeLabel}]</cite>`
+          );
+        } else {
+          htmlToInsert = `${text} <cite data-citation="true" data-ref-id="${referenceId}" class="text-indigo-600 font-semibold not-italic cursor-pointer hover:underline"> [${citeLabel}]</cite>`;
+        }
+      }
+      (editorJsRef.current as any).insertHtmlAtCursor?.(htmlToInsert);
+    }
+  };
+
   return (
     <>
       <EditorLayout
@@ -656,6 +675,8 @@ export function ScholarEditor() {
         isTokenQuotaModalOpen={isTokenQuotaModalOpen}
         onOpenTokenQuotaModal={() => setIsTokenQuotaModalOpen(true)}
         onCloseTokenQuotaModal={() => setIsTokenQuotaModalOpen(false)}
+        citationLibrary={citationLibrary}
+        onInsertCitationText={handleInsertCitationText}
       />
 
       <RemoteUpdateBanner

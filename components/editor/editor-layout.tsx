@@ -146,6 +146,8 @@ export function EditorLayout({
   isTokenQuotaModalOpen,
   onOpenTokenQuotaModal,
   onCloseTokenQuotaModal,
+  citationLibrary,
+  onInsertCitationText,
 }: EditorLayoutProps) {
   const {
     mounted,
@@ -635,6 +637,8 @@ export function EditorLayout({
                   tokensUsed={tokensUsed}
                   monthlyQuota={monthlyQuota}
                   onOpenTokenQuotaModal={onOpenTokenQuotaModal}
+                  citationLibrary={citationLibrary}
+                  onInsertCitationText={onInsertCitationText}
                 />
               )}
             </div>

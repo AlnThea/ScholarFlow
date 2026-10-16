@@ -28,6 +28,7 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 - Menggantikan kode dashboard di dalam ditor-layout.tsx dengan komponen <DashboardView />.
 - Memastikan semua _props_ dikirimkan dengan benar tanpa merusak fungsionalitas.
 - Mengekstrak **AI History Modal** ke dalam `components/editor/modals/ai-history-modal.tsx`, memangkas ukuran `components/editor/editor-sidebar.tsx` dari 756 baris menjadi 571 baris kode.
+- **Phase 23 (v0.9.9)**: Mengembangkan asisten interaktif **Chat with Paper / Literature Q&A** (`components/editor/modals/paper-chat-modal.tsx`, `app/api/v1/ai/paper-chat/route.ts`, `lib/ai/paper-chat.ts`) dengan quick question pills akademis, ekstraksi metodologi/sampel/temuan/batasan, jembatan 1-klik kutip jawaban ke editor dengan tag `<cite>`, dan tabel sinkronisasi cloud `paper_conversations` (`supabase/migrations/20261016000002_create_paper_conversations.sql`).
 
 **Selanjutnya:**
 - Mengimplementasikan pemindahan logika dan komponen React dari `editor-layout.tsx` ke file-file tersebut.
