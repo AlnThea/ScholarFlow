@@ -1,5 +1,28 @@
 # ScholarFlow Changelog
 
+## v0.9.6 - Real-Time Inline AI Ghostwriter (Tab-to-Accept ala Jenni AI)
+
+- **Backend Autocomplete Predictive Route (`app/api/v1/ai/ghostwrite/route.ts`)**:
+  - Implemented low-latency academic autocomplete prediction route with `temperature: 0.25` and `maxOutputTokens: 120`.
+  - Built-in prompt engineer (`buildGhostwritePrompt`) tailoring continuations in English and formal Indonesian based on document title and the preceding context (600 characters).
+  - Multi-tenant campus key resolver (`resolveTenantKey`), personal token quota validation (`checkPersonalQuota`), and server-side tracking (`createPendingAiGeneration`, `completeAiGeneration`, `failAiGeneration`).
+  - 5-minute Smart Idempotency caching (`generateIdempotencyKey`) preventing duplicate token burns on identical keystroke pauses.
+- **Ghostwriter Hook Engine (`hooks/use-ghostwriter.ts`)**:
+  - Auto-triggers predictions after a 1300ms pause in typing when the cursor is at the end of an academic sentence or paragraph.
+  - Dynamically calculates caret coordinates via `window.getSelection().getRangeAt(0).getBoundingClientRect()` for precision floating positioning.
+  - Non-destructive DOM insertion: appends prediction text via synthetic `input` event and updates active block in EditorJS without DOM corruption or cursor jumping.
+  - Keyboard handlers: `<kbd>Tab</kbd>` to accept full suggestion, `<kbd>Esc</kbd>` to dismiss, and `<kbd>Ctrl+J</kbd>` / `<kbd>Cmd+J</kbd>` to toggle Ghostwriter on/off.
+  - Persistence: user toggle preference is saved in `localStorage`.
+- **Floating Ghostwriter Suggestion Component (`components/editor/ghostwriter-suggestion.tsx`)**:
+  - Glassmorphism floating pill near the cursor with `IconSparkles`, italic academic text preview, and `<kbd>Tab</kbd> Accept` and `<kbd>Esc</kbd> Dismiss` buttons.
+  - Full Dark Mode compatibility (`dark:bg-slate-900/95`, `dark:border-slate-700`, `dark:text-slate-100`) and dynamic bilingual support (`isEn ? ... : ...`).
+- **Toolbar Quick Switch (`components/editor/ghostwriter-toggle.tsx` & `components/editor/editorjs-toolbar.tsx`)**:
+  - Toggle button integrated right on the EditorJS toolbar showing active status, loading spinner, and keyboard shortcut hint.
+- **Quota Limit Protection**:
+  - Zero native browser `window.alert()`; automatically triggers the application's existing `TokenQuotaModal` / `LimitWarningModal` when monthly tokens are exhausted.
+- **Automated Unit Testing**:
+  - Added `__tests__/utils/ghostwriter.test.ts` (8 test cases testing prompt builders, idempotency caching, and keyboard rules). Total test suite passing at 36/36 tests.
+
 ## v0.9.5 - Full App-Wide Server-Side AI History Parity & Modular History Studio
 
 - **Server-Side AI History for Literature Review Synthesis (`app/api/v1/ai/synthesize/route.ts`)**: Integrated `createPendingAiGeneration`, `completeAiGeneration`, and `failAiGeneration` tracking so literature review synthesis jobs are recorded on Supabase backend with `generation_id` returned.

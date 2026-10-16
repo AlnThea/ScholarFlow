@@ -23,6 +23,7 @@ import {
   IconCalculator
 } from '@tabler/icons-react';
 import type { EditorJsMethods } from '@/hooks/use-editorjs-methods';
+import { GhostwriterToggle } from './ghostwriter-toggle';
 
 type EditorToolbarProps = {
   language: string;
@@ -45,6 +46,9 @@ type EditorToolbarProps = {
   isMathHelperOpen: boolean;
   setIsMathHelperOpen: React.Dispatch<React.SetStateAction<boolean>>;
   statusLabel: string;
+  isGhostwriterEnabled?: boolean;
+  onToggleGhostwriter?: () => void;
+  isGhostwriterLoading?: boolean;
 };
 
 export const EditorJsToolbar = ({
@@ -68,6 +72,9 @@ export const EditorJsToolbar = ({
   isMathHelperOpen,
   setIsMathHelperOpen,
   statusLabel,
+  isGhostwriterEnabled,
+  onToggleGhostwriter,
+  isGhostwriterLoading,
 }: EditorToolbarProps) => {
   return (
     <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-100 bg-white px-6 py-2.5 lg:sticky lg:top-[57px] z-10 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
@@ -350,8 +357,18 @@ export const EditorJsToolbar = ({
         <IconCalculator className="h-4 w-4 text-indigo-500" />
       </button>
 
-      <div className="ml-auto text-xs font-medium text-slate-400 bg-slate-100/50 px-2 py-1 rounded">
-        {statusLabel}
+      <div className="ml-auto flex items-center gap-2">
+        {onToggleGhostwriter && (
+          <GhostwriterToggle
+            isEnabled={!!isGhostwriterEnabled}
+            onToggle={onToggleGhostwriter}
+            isLoading={isGhostwriterLoading}
+            language={language}
+          />
+        )}
+        <div className="text-xs font-medium text-slate-400 bg-slate-100/50 dark:bg-slate-800/50 px-2 py-1 rounded">
+          {statusLabel}
+        </div>
       </div>
     </div>
   );

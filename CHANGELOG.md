@@ -2,6 +2,30 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.9.6] - 2026-10-16 (Real-Time Inline AI Ghostwriter - Tab-to-Accept ala Jenni AI)
+
+### 🚀 Real-Time Inline AI Ghostwriter Engine
+- **Predictive Autocomplete Endpoint (`app/api/v1/ai/ghostwrite/route.ts`)**:
+  - Low-latency academic text prediction with `temperature: 0.25` and `maxOutputTokens: 120`.
+  - Contextual prompt builder (`buildGhostwritePrompt`) tailoring suggestions based on paper title and the preceding context (last 600 chars) for both English and formal Indonesian.
+  - Multi-tenant campus key resolver (`resolveTenantKey`), personal token quota validation (`checkPersonalQuota`), and server-side tracking (`createPendingAiGeneration`, `completeAiGeneration`, `failAiGeneration`).
+  - 5-minute Smart Idempotency caching (`generateIdempotencyKey`) avoiding redundant Gemini API calls.
+- **Ghostwriter Hook Engine (`hooks/use-ghostwriter.ts`)**:
+  - Debounced predictive trigger (`1300ms` typing pause) activating when typing pauses at the end of a sentence or paragraph.
+  - Caret coordinate calculation via `Range.getBoundingClientRect()` positioning the suggestion directly beside the cursor.
+  - Non-destructive DOM insertion via synthetic `input` event on the active contenteditable block without disrupting EditorJS internal state.
+  - Keyboard shortcuts: `<kbd>Tab</kbd>` to accept full suggestion, `<kbd>Esc</kbd>` to dismiss, and `<kbd>Ctrl+J</kbd>` / `<kbd>Cmd+J</kbd>` to toggle Ghostwriter on/off.
+- **Floating Ghostwriter Suggestion Component (`components/editor/ghostwriter-suggestion.tsx`)**:
+  - Glassmorphism floating pill near the cursor with `IconSparkles`, italic academic continuation preview, and action buttons.
+  - Fully responsive with Dark Mode (`dark:bg-slate-900/95`, `dark:border-slate-700`, `dark:text-slate-100`) and Bilingual (EN <-> ID) support.
+- **EditorJS Toolbar Quick Switch (`components/editor/ghostwriter-toggle.tsx`)**:
+  - Direct toggle button on the main toolbar with active indicator, loading spinner, and shortcut tooltip.
+- **Quota Limit Protection**:
+  - Uses existing application modal portals (`TokenQuotaModal` / `LimitWarningModal`) when monthly quota is exhausted; never relies on native browser `window.alert()`.
+
+### 🧪 Automated Testing
+- **Vitest Suite Expansion (`__tests__/utils/ghostwriter.test.ts`)**: Added 8 unit tests covering prompt construction, context truncation, idempotency key generation, and keyboard shortcuts. Total Vitest suite passing at **36/36 tests**.
+
 ## ⚡ [v0.9.5] - 2026-10-16 (Full App-Wide Server-Side AI History Parity & Modular History Studio)
 
 ### 🚀 Server-Side AI History Full Parity

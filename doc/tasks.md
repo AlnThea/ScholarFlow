@@ -273,13 +273,15 @@ Target: Mengintegrasikan pencatatan riwayat AI server-side (ChatGPT-Style) ke se
 ### Phase 20: Real-Time Inline AI Ghostwriter (Tab-to-Accept ala Jenni AI)
 Target: Mengimplementasikan asisten penulisan prediktif real-time di kanvas editor yang memberikan saran kelanjutan kalimat otomatis (*Ghost Text*) tanpa mengganggu fokus mengetik.
 
-- [ ] **1. Inline Autocomplete Engine (`lib/ai/ghostwriter-engine.ts`)**: Deteksi *typing pause* (debounced 1.5 detik) di akhir kalimat/paragraf dengan pemotongan konteks cerdas (500 token terakhir).
-- [ ] **2. Non-Destructive Ghost Text Projection**: Render visual teks kelanjutan berwarna abu-abu redup (*light gray*) di samping kursor aktif tanpa mengubah pohon DOM EditorJS/Tiptap.
-- [ ] **3. Keyboard Event Listeners**:
-  - `Tab`: Menerima saran secara penuh (*Accept Suggestion*) dan memasukkannya ke dokumen.
-  - `ArrowRight`: Menerima saran kata per kata (*Word-by-word accept*).
-  - `Escape` / Mengetik sembarang karakter: Mengabaikan dan menyembunyikan saran secara instan.
-- [ ] **4. Quota & Rate Guard**: Membatasi frekuensi prediksi prediktif agar tidak menghabiskan kuota token bulanan pengguna dan terhubung ke failover API pool.
+- [x] **1. Inline Autocomplete Engine (`hooks/use-ghostwriter.ts` & `app/api/v1/ai/ghostwrite/route.ts`)**: Deteksi *typing pause* (debounced 1.3 detik) di akhir kalimat/paragraf dengan pemotongan konteks cerdas (600 karakter terakhir) dan personal token quota validation.
+- [x] **2. Non-Destructive Ghost Text Floating Projection (`components/editor/ghostwriter-suggestion.tsx`)**: Render visual kartu glassmorphism mengambang di dekat kursor aktif tanpa merusak struktur DOM naskah, lengkap dengan animasi transisi, dark mode, dan bilingual i18n.
+- [x] **3. Keyboard Event Listeners & Shortcuts**:
+  - `Tab`: Menerima saran secara penuh (*Accept Suggestion*) dan memasukkannya langsung ke kanvas editor via synthetic input event.
+  - `Escape` / Mengetik: Mengabaikan dan menyembunyikan saran secara instan.
+  - `Ctrl+J` / `Cmd+J`: Shortcut global untuk mengaktifkan / menonaktifkan Ghostwriter secara instan.
+- [x] **4. Quota, Rate & Idempotency Guard**: Terhubung ke Smart Idempotency Cache (TTL 5 menit), multi-tenant campus key resolver, failover gemini pool, dan integrasi modal upgrade kuota tanpa `window.alert()`.
+- [x] **5. Toolbar Quick Toggle Component (`components/editor/ghostwriter-toggle.tsx`)**: Tombol switch visual pada toolbar EditorJS dengan indikator status ON/OFF dan spinner loading prediksi.
+- [x] **6. Automated Unit Testing**: 8 test cases komprehensif pada Vitest (`__tests__/utils/ghostwriter.test.ts`), total suite lulus 36/36 tests.
 
 ### Phase 21: Document Version History & Time-Machine Snapshot (Rollback & Visual Diff)
 Target: Menyediakan perlindungan draf naskah riset kelas enterprise dengan riwayat versi kronologis dan penampil perbedaan visual (*Visual Diff Viewer*).

@@ -14,6 +14,8 @@ import { DashboardView } from './dashboard-view';
 import { MathHelperPanel } from './math-helper-panel';
 import { EditorBubbleMenu } from './editor-bubble-menu';
 import { EditorJsToolbar } from './editorjs-toolbar';
+import { useGhostwriter } from '@/hooks/use-ghostwriter';
+import { GhostwriterSuggestion } from './ghostwriter-suggestion';
 import { addSuggestion } from '@/lib/api/suggestions';
 import 'katex/dist/katex.min.css';
 
@@ -281,6 +283,14 @@ export function EditorLayout({
 
   const isAnyModalOpen = isPlanModalOpen || isModelModalOpen || isImageModalOpen || isMathModalOpen;
 
+  const ghostwriter = useGhostwriter({
+    language,
+    documentTitle: currentDocument?.title,
+    editorJsRef,
+    onContentChange,
+    setIsPlanModalOpen,
+  });
+
   return (
     <ErrorBoundary>
     <div className="flex min-h-screen bg-slate-50/50">
@@ -411,6 +421,9 @@ export function EditorLayout({
             isMathHelperOpen={isMathHelperOpen}
             setIsMathHelperOpen={setIsMathHelperOpen}
             statusLabel={statusLabel}
+            isGhostwriterEnabled={ghostwriter.isEnabled}
+            onToggleGhostwriter={ghostwriter.toggleEnabled}
+            isGhostwriterLoading={ghostwriter.isLoading}
           />
           {/* LaTeX Math Helper Panel */}
           <MathHelperPanel
@@ -520,6 +533,17 @@ export function EditorLayout({
                     setInsertLinkCallback({ save: onSave, unlink: onUnlink });
                     setIsLinkModalOpen(true);
                   }}
+                  onEditorKeyDown={ghostwriter.handleEditorKeyDown}
+                  onEditorKeyUp={ghostwriter.onEditorInputOrSelectionChange}
+                />
+
+                <GhostwriterSuggestion
+                  suggestion={ghostwriter.suggestion}
+                  isLoading={ghostwriter.isLoading}
+                  coords={ghostwriter.coords}
+                  onAccept={ghostwriter.acceptSuggestion}
+                  onDismiss={ghostwriter.dismissSuggestion}
+                  language={language}
                 />
               </main>
 

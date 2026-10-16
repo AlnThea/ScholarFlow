@@ -25,6 +25,8 @@ interface EditorJsEditorProps {
   onCitationSearchCancel?: () => void;
   onEditInlineEquation?: (formula: string, onSave: (newFormula: string) => void) => void;
   onInsertLinkRequest?: (defaultUrl: string, onSave: (url: string) => void, onUnlink?: () => void) => void;
+  onEditorKeyDown?: (e: React.KeyboardEvent) => boolean;
+  onEditorKeyUp?: (e: React.KeyboardEvent) => void;
 }
 
 export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>(({
@@ -39,7 +41,9 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
   onCitationSearchChange,
   onCitationSearchCancel,
   onEditInlineEquation,
-  onInsertLinkRequest
+  onInsertLinkRequest,
+  onEditorKeyDown,
+  onEditorKeyUp,
 }, ref) => {
   const editorRef = useRef<EditorJS | null>(null);
   const undoRef = useRef<any>(null);
@@ -700,6 +704,12 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         }}
         onKeyDown={(e) => {
           if (readOnly) return;
+
+          // Check if external editor keydown handler (e.g. Ghostwriter autocomplete) handles the event
+          if (onEditorKeyDown && onEditorKeyDown(e)) {
+            return;
+          }
+
           // Keyboard shortcut for inline math (Ctrl+Shift+M or Alt+M)
           if ((e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'm') || (e.altKey && e.key.toLowerCase() === 'm')) {
             e.preventDefault();
@@ -725,6 +735,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           if (readOnly) return;
           syncActiveBlockType();
           calculateLiveStats();
+          onEditorKeyUp?.(e);
 
           // Double check search span typing
           const selection = window.getSelection();

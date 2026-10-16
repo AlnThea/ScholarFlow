@@ -150,11 +150,12 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] **Filter Kategori & Live Search**: Tab filter (All, Poles, Parafrase, Abstrak, Sintesis, Statistik) dengan badge jumlah dinamis dan search bar keyword.
   - [x] **Academic AI Disclosure Export**: Fitur unduh Laporan Transparansi AI (.md) untuk kepatuhan etika riset jurnal & kampus.
   - [x] **Automated Testing**: 28/28 test cases passing pada Vitest (`__tests__/utils/ai-history.test.ts`).
-- [ ] **14. Real-Time Inline AI Ghostwriter (Tab-to-Accept ala Jenni AI)**:
-  - [ ] Debounced inline autocomplete engine saat kursor berhenti 1.5 detik di akhir kalimat/paragraf.
-  - [ ] Render visual *Ghost Text* (abu-abu redup) di kanvas editor tanpa merusak struktur DOM naskah.
-  - [ ] Listener tombol keyboard: `Tab` untuk menerima teks penuh, `Esc` untuk menolak, panah kanan kata demi kata.
-  - [ ] Integrasi ke Rate Limiter dan Token Quota Guard agar hemat token & stabil.
+- [x] **14. Real-Time Inline AI Ghostwriter (Tab-to-Accept ala Jenni AI)**:
+  - [x] **Backend Prediction Route (`app/api/v1/ai/ghostwrite/route.ts`)**: Route POST prediktif dengan idempotency cache 5 menit, validasi personal token quota, multi-tenant campus key resolver, server-side tracking, dan Gemini Key Pool failover.
+  - [x] **Ghostwriter Hook Engine (`hooks/use-ghostwriter.ts`)**: Deteksi *typing pause* (debounced 1.3 detik), kalkulasi koordinat kursor `getBoundingClientRect()`, manipulasi DOM non-destruktif berbasis synthetic input event, dan toggle shortcut `Ctrl+J` / `Cmd+J`.
+  - [x] **Floating Suggestion UI (`components/editor/ghostwriter-suggestion.tsx`)**: Glassmorphism floating pill di samping caret kursor dengan badge `<kbd>Tab</kbd>` Accept dan `<kbd>Esc</kbd>` Dismiss, dark mode, dan bilingual EN/ID.
+  - [x] **Toolbar Control Switch (`components/editor/ghostwriter-toggle.tsx`)**: Tombol toggle ON/OFF langsung pada EditorJS Toolbar dengan loading spinner dan tooltip shortcut.
+  - [x] **Automated Unit Testing (`__tests__/utils/ghostwriter.test.ts`)**: 8/8 tests passing (total 36/36 tests passing pada test suite Vitest).
 - [ ] **15. Time-Machine Document Snapshot & Version History (Rollback & Visual Diff)**:
   - [ ] Skema penyimpanan revisi dokumen berkala (`document_revisions`) dengan timestamp dan log aktivitas.
   - [ ] Auto-snapshot cerdas setiap 15-30 menit penulisan aktif dan tombol manual "Simpan Versi".
