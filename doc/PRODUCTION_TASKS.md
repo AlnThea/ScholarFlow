@@ -145,3 +145,28 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
   - [x] Fitur Edit, Delete, dan pengelompokan referensi.
 - [x] **7.3 Bulk Import & PDF Upload**
   - [x] Integrasi import file `.ris` / `BibTeX` dan upload PDF untuk ekstraksi metadata otomatis.
+
+---
+
+### ✍️ EPIC 8: Next-Gen Academic Writing & Document Intelligence (Phases 20 - 24)
+- [ ] **8.1 Real-Time Inline AI Ghostwriter (Tab to Accept ala Jenni AI)**
+  - [ ] Debounced completion engine (1.5s typing pause) dengan pemotongan konteks cerdas.
+  - [ ] Non-destructive Ghost Text visual render di kursor kanvas.
+  - [ ] Interaksi tombol keyboard: `Tab` (accept all), `ArrowRight` (word-by-word), `Esc` (dismiss).
+- [ ] **8.2 Document Version History & Time-Machine Snapshot (Diff & Rollback)**
+  - [ ] Skema database/storage `document_revisions` untuk snapshot berkala & manual.
+  - [ ] Slide-over Version History panel dengan Visual Diff Viewer (penambahan hijau, penghapusan merah).
+  - [ ] 1-klik restore version mengembalikan naskah kanvas ke kondisi revisi yang dipilih.
+- [ ] **8.3 Bidirectional In-Text Citation Style Transformer (APA ↔ IEEE ↔ Harvard ↔ Vancouver)**
+  - [ ] AST & regex transformer mengubah penanda sitasi di dalam teks kanvas secara dinamis.
+  - [ ] Re-indexing & re-ordering otomatis daftar pustaka (Bibliography) mengikuti urutan sitasi numerik.
+  - [ ] Switcher dropdown di toolbar editor mendukung APA, IEEE, Harvard, Vancouver, dan MLA.
+- [ ] **8.4 Interactive Library Paper Q&A Assistant ("Chat with Papers")**
+  - [ ] Sub-panel tanya-jawab literatur di dalam `SidebarLibraryTab`.
+  - [ ] Ekstraksi metodologi, temuan kunci, dan limitasi dari paper referensi PDF/metadata.
+  - [ ] Tombol aksi "Kutip Jawaban ke Editor" menyertakan sitasi ilmiah otomatis.
+- [ ] **8.5 Plagiarism & AI-Likeness Real-Time Warning Barometer (Academic Integrity Index)**
+  - [ ] Mesin kalkulasi komposit: Burstiness, Perplexity, Lexical Repetition, dan klise AI.
+  - [ ] UI Barometer / Gauge Meter di sudut kanvas editor (0-100% orisinalitas).
+  - [ ] Heatmap sorotan interaktif memandu ke kalimat berisiko tinggi dengan parafrase instan.
+

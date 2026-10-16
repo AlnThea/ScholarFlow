@@ -150,6 +150,30 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] **Filter Kategori & Live Search**: Tab filter (All, Poles, Parafrase, Abstrak, Sintesis, Statistik) dengan badge jumlah dinamis dan search bar keyword.
   - [x] **Academic AI Disclosure Export**: Fitur unduh Laporan Transparansi AI (.md) untuk kepatuhan etika riset jurnal & kampus.
   - [x] **Automated Testing**: 28/28 test cases passing pada Vitest (`__tests__/utils/ai-history.test.ts`).
+- [ ] **14. Real-Time Inline AI Ghostwriter (Tab-to-Accept ala Jenni AI)**:
+  - [ ] Debounced inline autocomplete engine saat kursor berhenti 1.5 detik di akhir kalimat/paragraf.
+  - [ ] Render visual *Ghost Text* (abu-abu redup) di kanvas editor tanpa merusak struktur DOM naskah.
+  - [ ] Listener tombol keyboard: `Tab` untuk menerima teks penuh, `Esc` untuk menolak, panah kanan kata demi kata.
+  - [ ] Integrasi ke Rate Limiter dan Token Quota Guard agar hemat token & stabil.
+- [ ] **15. Time-Machine Document Snapshot & Version History (Rollback & Visual Diff)**:
+  - [ ] Skema penyimpanan revisi dokumen berkala (`document_revisions`) dengan timestamp dan log aktivitas.
+  - [ ] Auto-snapshot cerdas setiap 15-30 menit penulisan aktif dan tombol manual "Simpan Versi".
+  - [ ] Time-Machine Modal / Panel dengan daftar versi kronologis.
+  - [ ] Side-by-side Visual Diff Viewer (sorotan hijau teks ditambah, merah dicoret teks dihapus).
+  - [ ] Aksi 1-klik "Pulihkan Versi Ini" (*Restore Version*) langsung ke kanvas editor.
+- [ ] **16. Bidirectional Reactive In-Text Citation Style Transformer (APA ↔ IEEE ↔ Harvard ↔ Vancouver)**:
+  - [ ] In-text citation regex & AST transformer untuk merestrukturisasi format sitasi dalam teks kanvas secara dinamis.
+  - [ ] Transformasi dua arah otomatis (misal: `(Smith et al., 2021)` ↔ `[1]`).
+  - [ ] Sinkronisasi dan re-indexing otomatis daftar pustaka di akhir dokumen mengikuti urutan kemunculan nomor sitasi.
+  - [ ] Pilihan gaya sitasi langsung dari dropdown toolbar header editor.
+- [ ] **17. Interactive "Chat with Paper / Literature" Assistant (Library Q&A)**:
+  - [ ] Sub-panel interaktif "Tanya Paper" di dalam `SidebarLibraryTab` untuk mengeksplorasi referensi yang tersimpan.
+  - [ ] RAG ekstraksi intisari metodologi, hipotesis, dan temuan utama dari dokumen paper PDF/metadata.
+  - [ ] Tombol aksi 1-klik "Kutip Jawaban ke Editor" dengan sitasi rujukan otomatis.
+- [ ] **18. Plagiarism & AI-Likeness Real-Time Warning Barometer (Pre-Submission Readiness Score)**:
+  - [ ] Kalkulator terpadu mengukur skor orisinalitas (0-100%) berbasis gabungan Burstiness, Perplexity, dan klise AI.
+  - [ ] UI Gauge Meter / Barometer di pojok kanvas editor dengan level risiko (Hijau, Kuning, Merah).
+  - [ ] Heatmap sorotan interaktif yang memandu peneliti ke kalimat monoton berisiko tinggi dengan saran parafrase instan.
 - [ ] Complete remaining UI pages & user-facing feature modules.
 
 

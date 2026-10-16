@@ -270,5 +270,48 @@ Target: Mengintegrasikan pencatatan riwayat AI server-side (ChatGPT-Style) ke se
 - [x] **6. Academic AI Disclosure Exporter**: Tombol ekspor laporan transparansi AI (.md) yang siap dilampirkan mahasiswa/peneliti pada naskah skripsi/jurnal ilmiah.
 - [x] **7. Automated Unit Testing**: 28/28 unit tests passing pada Vitest (`__tests__/utils/ai-history.test.ts`).
 
+### Phase 20: Real-Time Inline AI Ghostwriter (Tab-to-Accept ala Jenni AI)
+Target: Mengimplementasikan asisten penulisan prediktif real-time di kanvas editor yang memberikan saran kelanjutan kalimat otomatis (*Ghost Text*) tanpa mengganggu fokus mengetik.
+
+- [ ] **1. Inline Autocomplete Engine (`lib/ai/ghostwriter-engine.ts`)**: Deteksi *typing pause* (debounced 1.5 detik) di akhir kalimat/paragraf dengan pemotongan konteks cerdas (500 token terakhir).
+- [ ] **2. Non-Destructive Ghost Text Projection**: Render visual teks kelanjutan berwarna abu-abu redup (*light gray*) di samping kursor aktif tanpa mengubah pohon DOM EditorJS/Tiptap.
+- [ ] **3. Keyboard Event Listeners**:
+  - `Tab`: Menerima saran secara penuh (*Accept Suggestion*) dan memasukkannya ke dokumen.
+  - `ArrowRight`: Menerima saran kata per kata (*Word-by-word accept*).
+  - `Escape` / Mengetik sembarang karakter: Mengabaikan dan menyembunyikan saran secara instan.
+- [ ] **4. Quota & Rate Guard**: Membatasi frekuensi prediksi prediktif agar tidak menghabiskan kuota token bulanan pengguna dan terhubung ke failover API pool.
+
+### Phase 21: Document Version History & Time-Machine Snapshot (Rollback & Visual Diff)
+Target: Menyediakan perlindungan draf naskah riset kelas enterprise dengan riwayat versi kronologis dan penampil perbedaan visual (*Visual Diff Viewer*).
+
+- [ ] **1. Revisions Data Storage (`document_revisions`)**: Skema penyimpanan snapshot naskah (isi JSON, jumlah kata, timestamp, dan catatan perubahan).
+- [ ] **2. Smart Auto-Snapshot**: Perekaman otomatis setiap 15-30 menit sesi penulisan aktif, serta tombol manual "Simpan Versi Saat Ini" pada header editor.
+- [ ] **3. Version History Slide-Over Panel**: UI panel daftar revisi terurut mundur lengkap dengan label waktu dan nama penulis.
+- [ ] **4. Visual Diff Viewer**: Tampilan perbandingan naskah saat ini dengan versi lama (teks hijau untuk penambahan, teks merah dicoret untuk penghapusan).
+- [ ] **5. One-Click Restore Action**: Tombol "Pulihkan Versi Ini" yang mengembalikan kanvas ke kondisi revisi yang dipilih secara aman.
+
+### Phase 22: Bidirectional Reactive In-Text Citation Style Transformer (APA ↔ IEEE ↔ Harvard ↔ Vancouver)
+Target: Membangun mesin transformasi format sitasi dua arah yang otomatis mengubah format sitasi in-text dan daftar pustaka saat gaya sitasi diubah oleh pengguna.
+
+- [ ] **1. In-Text Citation AST Transformer**: Mesin regex/DOM traversal untuk mengidentifikasi seluruh penanda sitasi di dalam kanvas editor.
+- [ ] **2. Bidirectional Format Conversion**: Transformasi dinamis antara gaya Author-Year (APA: `(Smith & Doe, 2022)`) dengan gaya Numerik (IEEE/Vancouver: `[1]`).
+- [ ] **3. Dynamic Bibliography Re-Indexing**: Pengurutan ulang otomatis daftar pustaka di bagian akhir dokumen agar penomoran numerik selalu sinkron dengan urutan kemunculan sitasi di dalam teks.
+- [ ] **4. Toolbar Dropdown Integration**: Penyetelan instan melalui dropdown gaya sitasi di toolbar editor.
+
+### Phase 23: Interactive "Chat with Paper / Literature" Assistant (Library Q&A)
+Target: Mengembangkan asisten Q&A literatur cerdas di dalam sidebar perpustakaan agar peneliti dapat menggali wawasan dari koleksi PDF/paper mereka secara instan.
+
+- [ ] **1. Interactive Paper Q&A Panel**: Tab/modal tanya-jawab di dalam `SidebarLibraryTab`.
+- [ ] **2. Contextual Insight Extraction**: AI mengekstraksi dan menjawab pertanyaan metodologi, jumlah sampel, temuan kunci, dan batasan riset berdasarkan paper terpilih.
+- [ ] **3. Citation Insertion Bridge**: Tombol "Kutip Jawaban ke Editor" yang otomatis menyisipkan narasi jawaban beserta sitasi resmi ke posisi kursor kanvas.
+
+### Phase 24: Plagiarism & AI-Likeness Real-Time Warning Barometer (Academic Integrity Index)
+Target: Membangun sistem barometer orisinalitas naskah real-time untuk memprediksi potensi deteksi AI dan kesiapan submisi ke jurnal ilmiah atau Turnitin.
+
+- [ ] **1. Composite Integrity Engine**: Menggabungkan metrik Burstiness (variasi panjang kalimat), Lexical Repetition, Perplexity, dan deteksi pola frasa klise robotik.
+- [ ] **2. UI Gauge Meter / Barometer**: Visualisasi status orisinalitas (0-100%) di kanvas editor dengan klasifikasi risiko (Hijau: Human-like, Kuning: Sedang, Merah: Monoton).
+- [ ] **3. Interactive Heatmap Navigation**: Menyorot kalimat-kalimat yang paling berisiko di kanvas editor dan menghubungkannya langsung ke Paraphrase Studio untuk perbaikan 1-klik.
+
+
 
 
