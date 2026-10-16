@@ -29,6 +29,7 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 - Memastikan semua _props_ dikirimkan dengan benar tanpa merusak fungsionalitas.
 - Mengekstrak **AI History Modal** ke dalam `components/editor/modals/ai-history-modal.tsx`, memangkas ukuran `components/editor/editor-sidebar.tsx` dari 756 baris menjadi 571 baris kode.
 - **Phase 23 (v0.9.9)**: Mengembangkan asisten interaktif **Chat with Paper / Literature Q&A** (`components/editor/modals/paper-chat-modal.tsx`, `app/api/v1/ai/paper-chat/route.ts`, `lib/ai/paper-chat.ts`) dengan quick question pills akademis, ekstraksi metodologi/sampel/temuan/batasan, jembatan 1-klik kutip jawaban ke editor dengan tag `<cite>`, dan tabel sinkronisasi cloud `paper_conversations` (`supabase/migrations/20261016000002_create_paper_conversations.sql`).
+- **Phase 24 (v1.0.0)**: Membangun **Plagiarism & AI-Likeness Real-Time Warning Barometer (Academic Integrity Index)** (`lib/editor/academic-integrity.ts`, `components/editor/academic-integrity-barometer.tsx`, `components/editor/academic-integrity-pill.tsx`) dengan visualisasi speedometer SVG real-time, 4 sub-gauge metrik (Burstiness CV, Lexical Diversity TTR, Densitas Klise AI, Cadence Balance), penyorot kanvas heatmap interaktif, dan navigasi 1-klik ke Paraphrase Studio untuk humanisasi kalimat.
 
 **Selanjutnya:**
 - Mengimplementasikan pemindahan logika dan komponen React dari `editor-layout.tsx` ke file-file tersebut.

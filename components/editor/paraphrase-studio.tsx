@@ -23,12 +23,20 @@ export function ParaphraseStudio({
   onContentChange?: (content: any) => void;
   activePlanId?: string | null;
   setIsPlanModalOpen?: (open: boolean) => void;
+  externalTargetSentence?: string;
 }) {
   const { language } = useLanguage();
   const isEn = language === 'en';
   const { user, profile, refreshProfile } = useAuth();
   const currentPlan = profile?.subscription_plan || activePlanId || 'free';
   const [selectedSentence, setSelectedSentence] = useState('');
+
+  useEffect(() => {
+    if (externalTargetSentence) {
+      setSelectedSentence(externalTargetSentence);
+    }
+  }, [externalTargetSentence]);
+
   const [variations, setVariations] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [applyingText, setApplyingText] = useState<string | null>(null);

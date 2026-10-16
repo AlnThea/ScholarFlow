@@ -46,7 +46,7 @@ import { type UserPresence } from '@/lib/api/presence';
 
 
 import type { EditorLayoutProps } from './types';
-import { findMostRelevantSentence } from '@/lib/editor/editor-utils';
+import { findMostRelevantSentence, extractTextFromContent } from '@/lib/editor/editor-utils';
 
 
 
@@ -309,6 +309,11 @@ export function EditorLayout({
     },
   });
 
+  const activeDocumentText = useMemo(() => {
+    if (!currentDocument?.content) return '';
+    return extractTextFromContent(currentDocument.content);
+  }, [currentDocument?.content]);
+
   return (
     <ErrorBoundary>
     <div className="flex min-h-screen bg-slate-50/50">
@@ -445,6 +450,12 @@ export function EditorLayout({
             isGhostwriterLoading={ghostwriter.isLoading}
             citationStyle={citationStyle || currentDocument?.settings?.citationStyle || 'apa'}
             onChangeCitationStyle={onChangeCitationStyle}
+            documentContent={activeDocumentText}
+            onOpenIntegrityTab={() => {
+              setShowRightSidebar(true);
+              setIsRightSidebarExpanded(true);
+              setActiveSidebarTab?.('burstiness');
+            }}
           />
           {/* LaTeX Math Helper Panel */}
           <MathHelperPanel

@@ -7,6 +7,7 @@ import { BurstinessChart } from './burstiness-chart';
 import { ParaphraseStudio } from './paraphrase-studio';
 import { extractTextFromContent } from '@/lib/editor/editor-utils';
 import { calculateBurstiness, AI_BUZZWORDS } from '@/lib/editor/burstiness-engine';
+import { AcademicIntegrityBarometer } from './academic-integrity-barometer';
 
 export const SidebarBurstinessTab = (props: any) => {
   const {
@@ -17,6 +18,7 @@ export const SidebarBurstinessTab = (props: any) => {
   const isFreePlan = props.activePlanId === 'free';
   const [analyzeAll, setAnalyzeAll] = useState(false);
   const [heatmapActive, setHeatmapActive] = useState(false);
+  const [selectedSentenceForStudio, setSelectedSentenceForStudio] = useState<string>('');
 
   useEffect(() => {
     // Only touch DOM if heatmap is actually active or needs cleanup
@@ -132,6 +134,15 @@ export const SidebarBurstinessTab = (props: any) => {
   return (
     <>
       <div className="space-y-3 pb-20">
+        {/* Academic Integrity Barometer & AI-Likeness Gauge (Phase 24) */}
+        <AcademicIntegrityBarometer
+          content={activeContent}
+          language={isEn ? 'en' : 'id'}
+          isHeatmapActive={heatmapActive}
+          onToggleHeatmap={() => setHeatmapActive(!heatmapActive)}
+          onSelectSentenceForParaphrase={(sent) => setSelectedSentenceForStudio(sent)}
+        />
+
         <section className="rounded-lg border border-line dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -223,6 +234,7 @@ export const SidebarBurstinessTab = (props: any) => {
           onContentChange={props.onContentChange}
           activePlanId={props.activePlanId}
           setIsPlanModalOpen={props.setIsPlanModalOpen}
+          externalTargetSentence={selectedSentenceForStudio}
         />
 
         {/* Export Report Action */}

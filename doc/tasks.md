@@ -316,9 +316,19 @@ Target: Mengembangkan asisten Q&A literatur cerdas di dalam sidebar perpustakaan
 ### Phase 24: Plagiarism & AI-Likeness Real-Time Warning Barometer (Academic Integrity Index)
 Target: Membangun sistem barometer orisinalitas naskah real-time untuk memprediksi potensi deteksi AI dan kesiapan submisi ke jurnal ilmiah atau Turnitin.
 
-- [ ] **1. Composite Integrity Engine**: Menggabungkan metrik Burstiness (variasi panjang kalimat), Lexical Repetition, Perplexity, dan deteksi pola frasa klise robotik.
-- [ ] **2. UI Gauge Meter / Barometer**: Visualisasi status orisinalitas (0-100%) di kanvas editor dengan klasifikasi risiko (Hijau: Human-like, Kuning: Sedang, Merah: Monoton).
-- [ ] **3. Interactive Heatmap Navigation**: Menyorot kalimat-kalimat yang paling berisiko di kanvas editor dan menghubungkannya langsung ke Paraphrase Studio untuk perbaikan 1-klik.
+- [x] **1. Composite Integrity Engine (`lib/editor/academic-integrity.ts`)**: Formula komposit multi-dimensi menggabungkan Burstiness CV (35%), Lexical Diversity / Type-Token Ratio (25%), Densitas Kata Klise AI (20%), dan Variasi Sintaksis (20%) dengan klasifikasi risiko real-time (Hijau: Human-Authored, Kuning: Variasi Sedang, Merah: Pola AI Monoton).
+- [x] **2. UI Speedometer Barometer Gauge (`components/editor/academic-integrity-barometer.tsx`)**: Visualisasi busur setengah lingkaran SVG speedometer dengan jarum animasi real-time (-90° s.d. +90°), 4 sub-gauge metrik, rekomendasi perbaikan dinamis, dark mode, dan bilingual.
+- [x] **3. Compact Toolbar Indicator Pill (`components/editor/academic-integrity-pill.tsx` & `components/editor/editorjs-toolbar.tsx`)**: Badge indikator orisinalitas ringkas di toolbar editor dengan color coding adaptif dan 1-klik buka panel barometer.
+- [x] **4. Interactive Heatmap & Jump-to-Paraphrase Bridge**: Navigasi daftar kalimat berisiko tinggi dengan auto-scroll dan penyorotan kanvas, serta integrasi 1-klik ke `ParaphraseStudio` untuk humanisasi kalimat instan.
+- [x] **5. Automated Unit Testing**: 6/6 unit test komprehensif pada Vitest (`__tests__/utils/academic-integrity.test.ts`), total suite lulus 72/72 tests.
+
+### Phase 25: AI Peer Reviewer & Journal Readiness Audit Simulation (Reviewer #2 Simulator)
+Target: Mensimulasikan penilaian reviewer jurnal ilmiah top-tier (Reviewer #2) untuk mengevaluasi naskah secara objektif sebelum disubmit ke jurnal terindeks Scopus/Sinta.
+
+- [ ] **1. Multi-Dimensional Journal Rubric Engine**: Evaluasi kejelasan metodologi, signifikansi kontribusi, koherensi argumen, dan kesesuaian sitasi.
+- [ ] **2. Simulated Critical Feedback Drawer**: Panel slide-over yang menampilkan komentar kritis, potensi celah pertanyaan reviewer, dan checklist kesiapan submisi (Accept / Minor Revision / Major Revision / Reject).
+- [ ] **3. 1-Click Actionable Improvement Bridges**: Menghubungkan temuan reviewer langsung ke alat poles/parafrase editor terkait.
+
 
 
 

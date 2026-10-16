@@ -25,8 +25,11 @@ import {
 import type { EditorJsMethods } from '@/hooks/use-editorjs-methods';
 import { GhostwriterToggle } from './ghostwriter-toggle';
 import { CitationStyleSelector } from './citation-style-selector';
+import { AcademicIntegrityPill } from './academic-integrity-pill';
 
 type EditorToolbarProps = {
+  documentContent?: string;
+  onOpenIntegrityTab?: () => void;
   language: string;
   editorMode: 'edit' | 'suggest';
   setEditorMode: (mode: 'edit' | 'suggest') => void;
@@ -80,6 +83,8 @@ export const EditorJsToolbar = ({
   isGhostwriterEnabled,
   onToggleGhostwriter,
   isGhostwriterLoading,
+  documentContent,
+  onOpenIntegrityTab,
 }: EditorToolbarProps) => {
   return (
     <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-100 bg-white px-6 py-2.5 lg:sticky lg:top-[57px] z-10 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
@@ -373,6 +378,13 @@ export const EditorJsToolbar = ({
       </button>
 
       <div className="ml-auto flex items-center gap-2">
+        {documentContent && (
+          <AcademicIntegrityPill
+            content={documentContent}
+            language={language as any}
+            onClick={onOpenIntegrityTab}
+          />
+        )}
         {onToggleGhostwriter && (
           <GhostwriterToggle
             isEnabled={!!isGhostwriterEnabled}
