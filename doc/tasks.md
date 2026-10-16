@@ -332,6 +332,17 @@ Target: Mensimulasikan penilaian reviewer jurnal ilmiah top-tier (Reviewer #2) u
 - [x] **5. Client-Side Dual-State Cache**: Penyimpanan otomatis hasil audit di `localStorage` (`scholarflow.peer_review.v1.[docId]`) dengan dukungan fallback offline yang tangguh.
 - [x] **6. Automated Unit Testing**: 6/6 unit test komprehensif pada Vitest (`__tests__/utils/peer-reviewer.test.ts`), total suite lulus 78/78 tests.
 
+### Phase 26: Academic Command Palette (Ctrl+K) & Global Keyboard Shortcuts Hub
+Target: Memberikan akses secepat kilat (spotlight search) ke seluruh fitur ScholarFlow serta panduan visual pintasan keyboard dengan tooltip informatif di setiap perintah.
+
+- [x] **1. Academic Command Engine (`lib/editor/command-palette.ts`)**: Definisi 18+ perintah akademis terstruktur dalam 7 kategori (Reviewer, Integritas, Sitasi, AI, Sisip Elemen, Format Sitasi, Navigasi/Sistem), algoritma filter multi-keyword dan pencarian cerdas, serta metadata kategori dwibahasa (EN/ID).
+- [x] **2. Spotlight Command Palette Modal (`components/editor/modals/command-palette-modal.tsx`)**: Modal pencarian `Ctrl + K` / `Cmd + K` responsif dengan input pencarian otomatis, filter pill kategori, navigasi tombol panah (`↑`, `↓`, `Enter`, `Esc`), dan **laci preview tooltip penjelasan mendalam** yang menampilkan manfaat aksi yang sedang dipilih secara real-time.
+- [x] **3. Keyboard Shortcuts Cheat Sheet Modal (`components/editor/modals/shortcuts-modal.tsx`)**: Panduan visual pintasan keyboard lengkap (diakses via `?` atau tombol di header) dengan visualisasi tombol kbd modern, pencarian filter pintasan, dan penjelasan fungsi setiap kombinasi tombol.
+- [x] **4. Global Key Listener & Action Dispatcher (`components/editor/editor-layout.tsx`)**: Perekam shortcut global (`Ctrl+K`, `?`, `Ctrl+Shift+R`, `Ctrl+Shift+I`, `Ctrl+Shift+D`, `Ctrl+Shift+C`, `Ctrl+M`, `Ctrl+H`) dengan pengecualian cerdas saat fokus di input teks.
+- [x] **5. Editor Header Quick Access Pills (`components/editor/editor-header.tsx`)**: Tombol pill pencarian `[🔍 Quick Actions... Ctrl K]` dan tombol pintasan `[⌨️]` dengan tooltip informatif dwibahasa dan dark mode support.
+- [x] **6. Automated Unit Testing**: 10/10 unit test komprehensif pada Vitest (`__tests__/utils/command-palette.test.ts`), total suite lulus 88/88 tests.
+
+
 
 
 

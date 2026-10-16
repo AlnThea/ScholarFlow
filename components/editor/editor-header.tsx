@@ -4,7 +4,7 @@ import {
   IconLoader, IconFileWord, IconFileText, 
   IconBraces, IconBook, IconDatabase, IconBell, 
   IconShare, IconCreditCard, IconLayoutSidebarRightCollapse, 
-  IconSettings, IconHistory, IconMicroscope
+  IconSettings, IconHistory, IconMicroscope, IconSearch, IconKeyboard
 } from '@tabler/icons-react';
 import { TokenQuotaBadge } from '@/components/ai/token-quota-badge';
 
@@ -39,6 +39,8 @@ export type EditorHeaderProps = {
   onOpenSettings?: () => void;
   onOpenVersionHistory?: () => void;
   onOpenPeerReview?: () => void;
+  onOpenCommandPalette?: () => void;
+  onOpenShortcuts?: () => void;
   activeUsers?: any[];
 };
 
@@ -73,6 +75,8 @@ export const EditorHeader = ({
   onOpenSettings,
   onOpenVersionHistory,
   onOpenPeerReview,
+  onOpenCommandPalette,
+  onOpenShortcuts,
   activeUsers,
 }: EditorHeaderProps) => {
   const [showExportDropdown, setShowExportDropdown] = useState(false);
@@ -128,6 +132,26 @@ export const EditorHeader = ({
             </>
           )}
         </div>
+
+        {/* Academic Command Palette (Ctrl+K) Quick Search Button */}
+        {onOpenCommandPalette && (
+          <button
+            type="button"
+            onClick={onOpenCommandPalette}
+            className="hidden md:inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-100/90 hover:bg-slate-200/90 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-600 dark:text-slate-350 hover:text-slate-900 dark:hover:text-white border border-slate-200/70 dark:border-slate-700/80 text-xs font-medium transition cursor-pointer shadow-2xs group"
+            title={language === 'en' 
+              ? 'Academic Command Palette (Ctrl+K): Spotlight search for citations, AI tools, Reviewer #2, styles & exports.' 
+              : 'Palet Perintah Akademis (Ctrl+K): Pencarian spotlight kilat untuk sitasi, alat AI, Reviewer #2, gaya sitasi & ekspor.'}
+          >
+            <IconSearch className="h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" />
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-normal">
+              {language === 'en' ? 'Quick Actions...' : 'Cari Perintah...'}
+            </span>
+            <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.2 text-[9px] font-mono font-bold rounded bg-white dark:bg-slate-700 text-slate-500 dark:text-slate-300 border border-slate-300/60 dark:border-slate-600 shadow-2xs">
+              Ctrl K
+            </kbd>
+          </button>
+        )}
 
         <div className="flex items-center gap-0.5 bg-slate-100/80 p-0.5 rounded-lg border border-slate-200/50">
           {/* Export Dropdown */}
@@ -477,6 +501,22 @@ export const EditorHeader = ({
                 title={language === 'en' ? 'Document & Research Settings' : 'Pengaturan Dokumen & Riset'}
               >
                 <IconSettings className="h-4 w-4" />
+              </button>
+            </>
+          )}
+
+          {/* Keyboard Shortcuts Cheat Sheet Button */}
+          {onOpenShortcuts && (
+            <>
+              {/* Divider */}
+              <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
+              <button
+                type="button"
+                onClick={onOpenShortcuts}
+                className="p-1.5 rounded-md hover:bg-white text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white transition cursor-pointer flex items-center justify-center shrink-0"
+                title={language === 'en' ? 'Keyboard Shortcuts Cheat Sheet (?)' : 'Panduan Pintasan Keyboard (?)'}
+              >
+                <IconKeyboard className="h-4 w-4" />
               </button>
             </>
           )}

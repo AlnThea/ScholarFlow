@@ -19,6 +19,8 @@ import { GhostwriterSuggestion } from './ghostwriter-suggestion';
 import { useVersionHistory } from '@/hooks/use-version-history';
 import { VersionHistoryModal } from './modals/version-history-modal';
 import { PeerReviewModal } from './modals/peer-review-modal';
+import { CommandPaletteModal } from './modals/command-palette-modal';
+import { ShortcutsModal } from './modals/shortcuts-modal';
 import { addSuggestion } from '@/lib/api/suggestions';
 import 'katex/dist/katex.min.css';
 
@@ -316,6 +318,181 @@ export function EditorLayout({
   }, [currentDocument?.content]);
 
   const [isPeerReviewModalOpen, setIsPeerReviewModalOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+
+  // Global Keyboard Shortcuts (Phase 26)
+  useEffect(() => {
+    const handleGlobalShortcuts = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isInput = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable;
+
+      // Ctrl + K or Cmd + K -> Command Palette Spotlight
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+        return;
+      }
+
+      // If user is actively typing inside an input element, do not intercept regular keys
+      if (isInput) return;
+
+      // ? -> Shortcuts Cheat Sheet
+      if (e.key === '?') {
+        e.preventDefault();
+        setIsShortcutsOpen(true);
+        return;
+      }
+
+      // Ctrl + Shift + R -> Reviewer #2 Simulation
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        setIsPeerReviewModalOpen(true);
+        return;
+      }
+
+      // Ctrl + Shift + I -> Academic Integrity Barometer
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'i') {
+        e.preventDefault();
+        setShowRightSidebar(true);
+        setIsRightSidebarExpanded(true);
+        setActiveSidebarTab?.('burstiness');
+        return;
+      }
+
+      // Ctrl + Shift + D -> Dark / Light Theme
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        toggleDarkMode();
+        return;
+      }
+
+      // Ctrl + Shift + C -> Search Citations
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        setShowRightSidebar(true);
+        setActiveSidebarTab?.('library');
+        onFindCitation?.();
+        return;
+      }
+
+      // Ctrl + Shift + P -> Chat with Paper
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        setShowRightSidebar(true);
+        setActiveSidebarTab?.('library');
+        return;
+      }
+
+      // Ctrl + M -> LaTeX Math
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'm') {
+        e.preventDefault();
+        setIsMathModalOpen(true);
+        return;
+      }
+
+      // Ctrl + H -> Version History
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'h') {
+        e.preventDefault();
+        versionHistory.openVersionHistory?.();
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalShortcuts);
+    return () => window.removeEventListener('keydown', handleGlobalShortcuts);
+  }, [toggleDarkMode, setActiveSidebarTab, setShowRightSidebar, setIsRightSidebarExpanded, onFindCitation, setIsMathModalOpen, versionHistory]);
+
+  const handleExecuteCommand = (actionId: string) => {
+    switch (actionId) {
+      case 'open_peer_review':
+        setIsPeerReviewModalOpen(true);
+        break;
+      case 'open_integrity_barometer':
+        setShowRightSidebar(true);
+        setIsRightSidebarExpanded(true);
+        setActiveSidebarTab?.('burstiness');
+        break;
+      case 'open_paper_chat':
+        setShowRightSidebar(true);
+        setActiveSidebarTab?.('library');
+        break;
+      case 'toggle_ghostwriter':
+        ghostwriter.toggleEnabled();
+        break;
+      case 'improve_writing':
+        onImproveWriting?.();
+        break;
+      case 'open_paraphrase':
+        onParaphrase?.();
+        break;
+      case 'generate_abstract':
+        onGenerateAbstract?.();
+        break;
+      case 'search_citation':
+        setShowRightSidebar(true);
+        setActiveSidebarTab?.('library');
+        onFindCitation?.();
+        break;
+      case 'set_style_apa':
+        onChangeCitationStyle?.('apa');
+        break;
+      case 'set_style_ieee':
+        onChangeCitationStyle?.('ieee');
+        break;
+      case 'set_style_harvard':
+        onChangeCitationStyle?.('harvard');
+        break;
+      case 'set_style_vancouver':
+        onChangeCitationStyle?.('vancouver');
+        break;
+      case 'insert_math':
+        setIsMathModalOpen(true);
+        break;
+      case 'insert_bibliography':
+        onInsertBibliography?.();
+        break;
+      case 'insert_image':
+        onInsertImageSample?.();
+        break;
+      case 'open_version_history':
+        versionHistory.openVersionHistory?.();
+        break;
+      case 'open_shortcuts':
+        setIsShortcutsOpen(true);
+        break;
+      case 'export_word':
+        if (currentDocument && currentDocument.content) {
+          exportToWordFile(
+            currentDocument.title || 'Manuscript',
+            currentDocument.content.blocks || [],
+            bibliographyEntries.map((b: any) => (typeof b === 'string' ? b : b.text || '')),
+            language,
+            activePlanId === 'pro' || activePlanId === 'enterprise'
+          );
+        }
+        break;
+      case 'export_pdf':
+        if (currentDocument && currentDocument.content) {
+          exportToPdfFile(
+            currentDocument.title || 'Manuscript',
+            currentDocument.content.blocks || [],
+            bibliographyEntries.map((b: any) => (typeof b === 'string' ? b : b.text || '')),
+            language,
+            activePlanId === 'pro' || activePlanId === 'enterprise'
+          );
+        }
+        break;
+      case 'toggle_theme':
+        toggleDarkMode();
+        break;
+      case 'toggle_language':
+        setLanguage((prev: string) => (prev === 'en' ? 'id' : 'en'));
+        break;
+      default:
+        break;
+    }
+  };
 
   return (
     <ErrorBoundary>
@@ -424,6 +601,8 @@ export function EditorLayout({
             onOpenSettings={onOpenSettings}
             onOpenVersionHistory={versionHistory.openVersionHistory}
             onOpenPeerReview={() => setIsPeerReviewModalOpen(true)}
+            onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+            onOpenShortcuts={() => setIsShortcutsOpen(true)}
             activeUsers={activeUsers}
           />
 
@@ -813,6 +992,17 @@ export function EditorLayout({
         documentContent={activeDocumentText}
         language={language}
         activePlanId={activePlanId}
+      />
+      <CommandPaletteModal
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        language={language}
+        onExecuteCommand={handleExecuteCommand}
+      />
+      <ShortcutsModal
+        isOpen={isShortcutsOpen}
+        onClose={() => setIsShortcutsOpen(false)}
+        language={language}
       />
       <OnboardingTour />
     </div>
