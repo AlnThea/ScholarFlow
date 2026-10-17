@@ -144,6 +144,14 @@ export function ShortcutsModal({ isOpen, onClose, language }: ShortcutsModalProp
 
     // Editor Formatting & Math
     {
+      keys: ['Ctrl', 'Shift', 'B'],
+      actionEn: 'Insert Figure / Table Cross-Reference',
+      actionId: 'Sisipkan Rujukan Gambar / Tabel',
+      tooltipEn: 'Opens cross-reference picker to cite figures or tables with auto-numbering (@fig, @tab).',
+      tooltipId: 'Buka pemilih rujukan silang untuk mengutip gambar atau tabel dengan penomoran otomatis (@fig, @tab).',
+      category: 'citations',
+    },
+    {
       keys: ['Ctrl', 'M'],
       actionEn: 'Insert LaTeX Math Formula',
       actionId: 'Sisipkan Rumus Matematika LaTeX',

@@ -379,10 +379,11 @@ Target: Mode koreksi naskah langsung ala Google Docs dan Microsoft Word untuk ko
 ### Phase 30: Figure & Table Scientific Auto-Numbering Engine
 Target: Penomoran otomatis dinamis Gambar X dan Tabel Y dengan cross-referencing interaktif di dalam badan teks naskah.
 
-- [ ] **1. Cross-Reference AST Manager (`lib/editor/cross-reference.ts`)**: Pengindeksan otomatis urutan kemunculan blok gambar (`Gambar 1`, `Gambar 2`) dan tabel (`Tabel 1`, `Tabel 2`).
-- [ ] **2. In-Text Anchor Mention (`@fig` / `@tab`)**: Kemampuan menyisipkan rujukan seperti *"sebagaimana diperlihatkan pada Gambar 1"* yang otomatis memperbarui nomor jika urutan gambar bergeser.
-- [ ] **3. Interactive Clickable Hyperlinks**: Klik rujukan di teks langsung melompat (*smooth scroll*) ke posisi gambar atau tabel terkait di naskah.
-- [ ] **4. Automated Testing**: Pengujian kalkulasi penomoran ulang dinamis di Vitest.
+- [x] **1. Cross-Reference AST Manager (`lib/editor/cross-reference.ts`)**: Pengindeksan otomatis urutan kemunculan blok gambar (`Gambar 1`, `Gambar 2` / `Figure 1`, `Figure 2`) dan tabel (`Tabel 1`, `Tabel 2` / `Table 1`, `Table 2`), ekstraksi takarir (*caption*), dan deteksi preview tabel.
+- [x] **2. In-Text Anchor Mention (`@fig` / `@tab`)**: Kemampuan menyisipkan rujukan seperti *"sebagaimana diperlihatkan pada Gambar 1"* yang otomatis memperbarui nomor secara reaktif jika urutan gambar/tabel bergeser (`updateHtmlCrossReferences`, `reindexContentCrossReferences`), serta dukungan shorthand syntax (`@fig:1`, `@tab:1`).
+- [x] **3. Interactive Clickable Hyperlinks**: Klik rujukan di teks langsung melompat (*smooth scroll*) ke posisi blok gambar atau tabel terkait di naskah lengkap dengan efek sorotan animasi cincin (*pulsing highlight ring*).
+- [x] **4. Modal Dialog & Toolbar Quick Access (`components/editor/modals/cross-reference-modal.tsx`)**: Dialog interaktif pemilih rujukan dengan tab filter, pencarian takarir, tombol sisipkan, dan tombol pintasan keyboard `Ctrl + Shift + B`.
+- [x] **5. Automated Testing**: 11/11 unit test komprehensif pada Vitest (`__tests__/utils/cross-reference.test.ts`), total suite lulus 140/140 tests.
 
 
 

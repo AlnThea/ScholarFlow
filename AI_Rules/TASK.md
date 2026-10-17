@@ -188,6 +188,8 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] Parser BibTeX & RIS, regex ekstraksi DOI PDF, dan modal import seleksi batch (13/13 tests).
 - [x] **23. Live "Track Changes" / Suggesting Mode**:
   - [x] Mode beralih Direct Edit vs Suggesting, visual diff markup `<del>` (merah) & `<ins>` (hijau), floating action chips, tombol batch Accept/Reject All, dan shortcut `Ctrl+Shift+S` (12/12 tests).
+- [x] **24. Figure & Table Scientific Auto-Numbering Engine**:
+  - [x] Pengindeksan sekuensial gambar & tabel, pembaruan reaktif rujukan silang (`updateHtmlCrossReferences`, `reindexContentCrossReferences`), shorthand `@fig`/`@tab`, modal dialog pemilih rujukan, interaksi jump *smooth scroll* dengan sorotan cincin animasi, dan shortcut `Ctrl+Shift+B` (11/11 tests).
 - [ ] Complete remaining UI pages & user-facing feature modules.
 
 

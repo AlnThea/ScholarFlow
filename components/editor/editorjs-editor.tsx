@@ -662,6 +662,26 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
             }
           }
 
+          // Handle scientific cross-reference click (jump to figure/table)
+          const crossRefLink = target.closest('.sf-cross-ref, [data-cross-ref="true"]');
+          if (crossRefLink) {
+            e.preventDefault();
+            const targetId = crossRefLink.getAttribute('data-target-id');
+            const holderEl = document.getElementById(holderId);
+            if (targetId && holderEl) {
+              const targetBlock = (holderEl.querySelector(`[data-id="${targetId}"]`) ||
+                                   holderEl.querySelector(`#${targetId}`) ||
+                                   holderEl.querySelector(`[data-block-id="${targetId}"]`)) as HTMLElement | null;
+              if (targetBlock) {
+                targetBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                targetBlock.classList.add('ring-4', 'ring-indigo-500', 'shadow-2xl', 'rounded-2xl', 'transition-all', 'duration-300');
+                setTimeout(() => {
+                  targetBlock?.classList.remove('ring-4', 'ring-indigo-500', 'shadow-2xl', 'rounded-2xl', 'transition-all', 'duration-300');
+                }, 2500);
+              }
+            }
+          }
+
           // Handle inline math editing on click
           const mathSpan = target.closest('.sf-inline-math') as HTMLElement | null;
           if (mathSpan && !readOnly) {

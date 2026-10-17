@@ -9,6 +9,9 @@ const ALLOWED_ATTRIBUTES = [
   'data-author',
   'data-old-text',
   'data-new-text',
+  'data-cross-ref',
+  'data-ref-type',
+  'data-target-id',
   'contenteditable',
   'target',
   'rel'

@@ -2,6 +2,30 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v1.5.0] - 2026-10-17 (Phase 30: Figure & Table Scientific Auto-Numbering Engine)
+
+### 🚀 Scientific Cross-Referencing & Auto-Numbering Engine
+- **Cross-Reference AST Engine (`lib/editor/cross-reference.ts`)**:
+  - Sequential extraction and numbering of all `image` ("Figure X" / "Gambar X") and `table` ("Table Y" / "Tabel Y") blocks across active manuscript.
+  - Generates interactive, accessible in-text citation anchors with `data-cross-ref="true"`, `data-ref-type`, and `data-target-id`.
+  - Reactive in-text re-numbering engine (`updateHtmlCrossReferences`, `reindexContentCrossReferences`): automatically updates in-text anchor labels whenever figures or tables are reordered, inserted, or removed.
+  - Shorthand syntax parsing (`@fig:1`, `@tab:1`, `@fig:blockId`) converting quick shorthand typing into interactive anchors.
+- **EditorJS DOM Methods (`lib/editor/methods/cross-reference-methods.ts`)**:
+  - Implemented `insertCrossReference`, `scrollToScientificItem`, and `refreshCrossReferences`.
+  - Interactive smooth scroll on click: clicking cross-reference links in the editor canvas centers the target figure/table with an animated pulsing highlight ring.
+- **Cross-Reference Picker Modal (`components/editor/modals/cross-reference-modal.tsx`)**:
+  - Dialog with tabbed views (All, Figures, Tables), real-time search filtering, figure/table snippet previews, 1-click insertion, and manual re-index trigger.
+  - Fully responsive with Dark Mode and bilingual EN/ID support.
+- **Toolbar & Shortcut Integration**:
+  - Added dedicated Bookmark button (`IconBookmark`) on `EditorJsToolbar`.
+  - Registered `cmd_insert_cross_reference` and `cmd_refresh_cross_references` in `lib/editor/command-palette.ts`.
+  - Added global keyboard shortcut `Ctrl + Shift + B` and cheat sheet entry in `shortcuts-modal.tsx`.
+- **XSS & Security Hardening (`lib/utils/sanitize.ts`)**:
+  - Added `data-cross-ref`, `data-ref-type`, and `data-target-id` to DOMPurify allowed attributes.
+
+### 🧪 Automated Testing
+- **Vitest Suite Expansion (`__tests__/utils/cross-reference.test.ts`)**: Added 11 unit tests covering sequential numbering, bilingual labels, custom markup generation, in-text re-indexing, and shorthand parsing. Total Vitest suite passing at **140/140 tests**.
+
 ## ⚡ [v1.4.0] - 2026-10-17 (Phase 29: Live "Track Changes" / Suggesting Mode)
 
 ### 🚀 Track Changes & Suggesting Mode Engine

@@ -183,4 +183,6 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
   - [x] Parser BibTeX & RIS, regex ekstraksi DOI PDF, dan modal import seleksi batch.
 - [x] **9.5 Live "Track Changes" / Suggesting Mode**
   - [x] Mode beralih Direct Edit vs Suggesting, visual diff markup `<del>` (merah) & `<ins>` (hijau), floating action chips, tombol batch Accept/Reject All, dan shortcut `Ctrl+Shift+S`.
+- [x] **9.6 Figure & Table Scientific Auto-Numbering Engine (Phase 30)**
+  - [x] Pengindeksan sekuensial gambar & tabel, pembaruan reaktif rujukan silang di badan teks, shorthand `@fig`/`@tab`, modal dialog pemilih rujukan, interaksi jump *smooth scroll* dengan sorotan cincin animasi, dan shortcut `Ctrl+Shift+B`.
 

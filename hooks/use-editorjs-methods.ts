@@ -6,6 +6,7 @@ import { buildInlineMethods } from '@/lib/editor/methods/inline-methods';
 import { buildCitationMethods } from '@/lib/editor/methods/citation-methods';
 import { buildCommentMethods } from '@/lib/editor/methods/comment-methods';
 import { buildSuggestionMethods } from '@/lib/editor/methods/suggestion-methods';
+import { buildCrossReferenceMethods } from '@/lib/editor/methods/cross-reference-methods';
 
 export interface EditorJsMethodsProps {
   editorRef: MutableRefObject<EditorJS | null>;
@@ -38,6 +39,7 @@ export function buildEditorJsMethods(props: EditorJsMethodsProps) {
     ...buildCitationMethods(props),
     ...buildCommentMethods(props),
     ...buildSuggestionMethods(props),
+    ...buildCrossReferenceMethods(props),
   };
 }
 

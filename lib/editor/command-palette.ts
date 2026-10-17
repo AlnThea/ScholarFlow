@@ -280,6 +280,30 @@ export function getAvailableCommands(language: 'en' | 'id'): CommandItem[] {
       keywords: ['image', 'figure', 'gambar', 'diagram', 'chart', 'foto'],
       actionId: 'insert_image',
     },
+    {
+      id: 'cmd_insert_cross_reference',
+      title: isEn ? 'Insert Figure / Table Cross-Reference' : 'Sisipkan Rujukan Gambar / Tabel',
+      description: isEn ? 'Auto-numbered in-text scientific citation (@fig, @tab)' : 'Rujukan silang gambar & tabel berpenomoran otomatis (@fig, @tab)',
+      tooltip: isEn
+        ? 'Inserts an interactive cross-reference anchor linking to a specific figure or table with dynamic auto-numbering and 1-click smooth scroll.'
+        : 'Menyisipkan tautan rujukan ilmiah ke Gambar atau Tabel tertentu dengan penomoran otomatis dan kemampuan lompat langsung saat diklik.',
+      category: 'insert',
+      shortcut: 'Ctrl + Shift + B',
+      keywords: ['cross reference', 'rujukan', 'figure', 'table', 'gambar', 'tabel', 'anchor', 'fig', 'tab'],
+      actionId: 'insert_cross_reference',
+      badge: 'Auto-Number',
+    },
+    {
+      id: 'cmd_refresh_cross_references',
+      title: isEn ? 'Re-index Figure & Table Numbers' : 'Hitung Ulang Nomor Gambar & Tabel',
+      description: isEn ? 'Recalculate sequential numbers after moving blocks' : 'Perbarui nomor urut gambar dan tabel setelah memindahkan blok naskah',
+      tooltip: isEn
+        ? 'Scans all figures and tables in the document and re-indexes in-text references to reflect their new sequential appearance order.'
+        : 'Memindai seluruh gambar dan tabel serta menyinkronkan kembali nomor rujukan di badan teks sesuai urutan kemunculan terbaru.',
+      category: 'insert',
+      keywords: ['reindex', 'refresh', 're-number', 'urutkan ulang', 'nomor gambar', 'nomor tabel'],
+      actionId: 'refresh_cross_references',
+    },
 
     // --- NAVIGATION & SYSTEM ---
     {

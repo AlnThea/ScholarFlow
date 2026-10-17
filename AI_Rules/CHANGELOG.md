@@ -1,5 +1,27 @@
 # ScholarFlow Changelog
 
+## v1.5.0 - Figure & Table Scientific Auto-Numbering & Cross-Reference Engine
+
+- **Cross-Reference AST Engine (`lib/editor/cross-reference.ts`)**:
+  - Implemented automatic sequential indexing for image blocks (`Figure X` / `Gambar X`) and table blocks (`Table Y` / `Tabel Y`) with caption extraction and table preview snippets.
+  - Interactive in-text anchor generator with secure HTML attribute escaping (`data-cross-ref="true"`, `data-ref-type`, `data-target-id`).
+  - Reactive in-text re-numbering engine (`updateHtmlCrossReferences`, `reindexContentCrossReferences`): automatically updates in-text anchor labels whenever figures or tables are reordered or removed.
+  - Shorthand syntax parsing (`@fig:1`, `@tab:1`, `@fig:blockId`) converting quick shorthand typing into interactive anchors.
+- **EditorJS DOM Methods (`lib/editor/methods/cross-reference-methods.ts`)**:
+  - Implemented `insertCrossReference`, `scrollToScientificItem`, and `refreshCrossReferences`.
+  - Interactive smooth scroll on click: clicking cross-reference links in the editor canvas centers the target figure/table with an animated pulsing highlight ring.
+- **Cross-Reference Picker Modal (`components/editor/modals/cross-reference-modal.tsx`)**:
+  - Dialog with tabbed views (All, Figures, Tables), real-time search filtering, figure/table snippet previews, 1-click insertion, and manual re-index trigger.
+  - Fully responsive with Dark Mode and bilingual EN/ID support.
+- **Toolbar & Shortcut Integration**:
+  - Added dedicated Bookmark button (`IconBookmark`) on `EditorJsToolbar`.
+  - Registered `cmd_insert_cross_reference` and `cmd_refresh_cross_references` in `lib/editor/command-palette.ts`.
+  - Added global keyboard shortcut `Ctrl + Shift + B` and cheat sheet entry in `shortcuts-modal.tsx`.
+- **XSS & Security Hardening (`lib/utils/sanitize.ts`)**:
+  - Added `data-cross-ref`, `data-ref-type`, and `data-target-id` to DOMPurify allowed attributes.
+- **Automated Unit Testing**:
+  - Added `__tests__/utils/cross-reference.test.ts` (11 unit tests). Vitest suite passing at 140/140 tests.
+
 ## v1.4.0 - Live "Track Changes" / Suggesting Mode (Google Docs & Word Style Revision Flow)
 
 - **Inline Visual Diff Markup Engine (`lib/editor/suggesting-engine.ts`)**:

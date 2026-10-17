@@ -20,7 +20,8 @@ import {
   IconAlignCenter,
   IconAlignRight,
   IconAlignJustified,
-  IconCalculator
+  IconCalculator,
+  IconBookmark
 } from '@tabler/icons-react';
 import type { EditorJsMethods } from '@/hooks/use-editorjs-methods';
 import { GhostwriterToggle } from './ghostwriter-toggle';
@@ -31,6 +32,7 @@ import { SuggestingModeControl } from './suggesting-mode';
 type EditorToolbarProps = {
   documentContent?: string;
   onOpenIntegrityTab?: () => void;
+  onOpenCrossReferenceModal?: () => void;
   language: string;
   editorMode: 'edit' | 'suggest';
   setEditorMode: (mode: 'edit' | 'suggest') => void;
@@ -92,6 +94,7 @@ export const EditorJsToolbar = ({
   isGhostwriterLoading,
   documentContent,
   onOpenIntegrityTab,
+  onOpenCrossReferenceModal,
 }: EditorToolbarProps) => {
   return (
     <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-2.5 lg:sticky lg:top-[57px] z-10 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
@@ -324,13 +327,23 @@ export const EditorJsToolbar = ({
         <IconTable className="h-4 w-4" />
       </button>
       <button
-        className="p-1.5 rounded hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition"
+        className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition"
         title="Insert Code Block"
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => editorJsRef.current?.insertCodeBlock()}
       >
-        <IconCode className="h-4 w-4 text-indigo-600" />
+        <IconCode className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
       </button>
+      {onOpenCrossReferenceModal && (
+        <button
+          className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition"
+          title={language === 'id' ? 'Sisipkan Rujukan Gambar/Tabel (@fig, @tab)' : 'Insert Figure/Table Cross-Reference (@fig, @tab)'}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={onOpenCrossReferenceModal}
+        >
+          <IconBookmark className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+        </button>
+      )}
 
       <div className="h-5 w-px bg-slate-200 mx-1" />
 

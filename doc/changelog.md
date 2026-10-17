@@ -37,6 +37,8 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 
 - **Phase 29 (v1.4.0)**: Menghadirkan **Live "Track Changes" / Suggesting Mode** (components/editor/suggesting-mode.tsx, components/editor/suggesting-chips.tsx, lib/editor/suggesting-engine.ts, lib/editor/methods/suggestion-methods.ts) dengan toggle mode segmented (Editing vs Suggesting), markup coretan merah <del> dan garis bawah hijau <ins>, sanitasi atribut preservasi XSS, floating chips tinjauan usulan, dropdown review batch "Terima Semua" / "Tolak Semua", serta pendaftaran aksi pintasan keyboard Ctrl+Shift+S.
 
+- **Phase 30 (v1.5.0)**: Mengembangkan **Figure & Table Scientific Auto-Numbering Engine** (lib/editor/cross-reference.ts, lib/editor/methods/cross-reference-methods.ts, components/editor/modals/cross-reference-modal.tsx) dengan pengindeksan sekuensial otomatis Gambar & Tabel, pembaruan reaktif rujukan silang di badan teks saat posisi blok berpindah, pemetaan shorthand syntax (@fig, @tab), modal dialog pemilih rujukan, interaksi klik lompat *smooth scroll* dengan sorotan cincin animasi, dan pintasan Ctrl+Shift+B.
+
 **Selanjutnya:**
 - Mengimplementasikan pemindahan logika dan komponen React dari `editor-layout.tsx` ke file-file tersebut.
 - Menyambungkan (import) komponen yang diekstrak kembali ke `editor-layout.tsx` tanpa merusak *state* atau menghapus fungsionalitas aslinya.

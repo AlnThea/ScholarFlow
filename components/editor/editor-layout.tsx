@@ -26,6 +26,7 @@ import { ReferenceImportModal } from './modals/reference-import-modal';
 import { ReferenceDropzone } from './reference-dropzone';
 import { parseReferenceFile } from '@/lib/editor/reference-importer';
 import { SuggestingChips } from './suggesting-chips';
+import { CrossReferenceModal } from './modals/cross-reference-modal';
 import { addSuggestion } from '@/lib/api/suggestions';
 import { IconSparkles } from '@tabler/icons-react';
 import 'katex/dist/katex.min.css';
@@ -334,6 +335,7 @@ export function EditorLayout({
   const [isReferenceImportModalOpen, setIsReferenceImportModalOpen] = useState(false);
   const [importedCandidates, setImportedCandidates] = useState<CitationCandidate[]>([]);
   const [importedFileName, setImportedFileName] = useState('');
+  const [isCrossReferenceModalOpen, setIsCrossReferenceModalOpen] = useState(false);
   const referenceFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleParsedReferences = (candidates: CitationCandidate[], fileName: string) => {
@@ -452,6 +454,13 @@ export function EditorLayout({
         setEditorMode((prev: 'edit' | 'suggest') => (prev === 'edit' ? 'suggest' : 'edit'));
         return;
       }
+
+      // Ctrl + Shift + B -> Insert Cross-Reference (@fig / @tab)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setIsCrossReferenceModalOpen(true);
+        return;
+      }
     };
 
     window.addEventListener('keydown', handleGlobalShortcuts);
@@ -518,6 +527,12 @@ export function EditorLayout({
         break;
       case 'insert_image':
         onInsertImageSample?.();
+        break;
+      case 'insert_cross_reference':
+        setIsCrossReferenceModalOpen(true);
+        break;
+      case 'refresh_cross_references':
+        editorJsRef.current?.refreshCrossReferences?.(language as 'en' | 'id');
         break;
       case 'open_version_history':
         versionHistory.openVersionHistory?.();
@@ -685,6 +700,7 @@ export function EditorLayout({
             pendingSuggestionsCount={suggestions?.filter((s: any) => s.status === 'pending').length || 0}
             onBatchAcceptSuggestions={onBatchAcceptSuggestions}
             onBatchRejectSuggestions={onBatchRejectSuggestions}
+            onOpenCrossReferenceModal={() => setIsCrossReferenceModalOpen(true)}
             editorJsRef={editorJsRef}
             currentBlockType={currentBlockType}
             currentFontSize={currentFontSize}
@@ -1180,6 +1196,18 @@ export function EditorLayout({
         fileName={importedFileName}
         language={language}
         onImport={handleConfirmBatchImport}
+      />
+      <CrossReferenceModal
+        isOpen={isCrossReferenceModalOpen}
+        onClose={() => setIsCrossReferenceModalOpen(false)}
+        documentContent={currentDocument?.content}
+        language={language as 'en' | 'id'}
+        onInsertReference={(targetId, type, index, label) => {
+          editorJsRef.current?.insertCrossReference?.(targetId, type, index, language as 'en' | 'id', label);
+        }}
+        onRefreshReferences={() => {
+          editorJsRef.current?.refreshCrossReferences?.(language as 'en' | 'id');
+        }}
       />
       <OnboardingTour />
     </div>

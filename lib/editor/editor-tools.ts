@@ -240,6 +240,9 @@ export interface EditorJsMethods {
   batchAcceptAllSuggestions?: () => void;
   batchRejectAllSuggestions?: () => void;
   scrollToSuggestionMark?: (suggestionId: string) => void;
+  insertCrossReference?: (targetId: string, type: 'figure' | 'table', index: number, language?: 'en' | 'id', customText?: string) => void;
+  scrollToScientificItem?: (targetId: string) => void;
+  refreshCrossReferences?: (language?: 'en' | 'id') => Promise<void>;
 }
 
 export function scrambleHtmlText(html: string): string {
