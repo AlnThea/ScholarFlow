@@ -2,6 +2,32 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v1.4.0] - 2026-10-17 (Phase 29: Live "Track Changes" / Suggesting Mode)
+
+### 🚀 Track Changes & Suggesting Mode Engine
+- **Core Suggesting & Diff Engine (`lib/editor/suggesting-engine.ts`)**:
+  - Semantic inline visual diff markup generator (`createSuggestionMarkup`): wraps deleted text in `<del class="sf-suggestion-del ...">` with strikethrough styling and proposed additions in `<ins class="sf-suggestion-ins ...">` with emerald underline styling.
+  - Safe HTML escaping (`escapeHtml`) preventing malformed DOM injection and escaping special entities.
+  - Targeted resolution engines (`applyAcceptSuggestionToHtml`, `applyRejectSuggestionToHtml`) that cleanly unwrap and remove diff nodes while preserving surrounding content and neighboring suggestions.
+  - Batch resolution utilities and EditorJS block transformer (`transformEditorBlocksSuggestion`).
+  - AST suggestion extractor (`extractSuggestionsFromHtml`) indexing embedded suggestion metadata (author, dates, status).
+- **EditorJS DOM Suggestion Methods (`lib/editor/methods/suggestion-methods.ts`)**:
+  - Implemented `addSuggestionMark`, `acceptSuggestion`, `rejectSuggestion`, `batchAcceptAllSuggestions`, `batchRejectAllSuggestions`, and `scrollToSuggestionMark` on active DOM contenteditables.
+  - Connected `buildSuggestionMethods` into `hooks/use-editorjs-methods.ts` and `lib/editor/editor-tools.ts`.
+- **Suggesting Mode Segmented Control (`components/editor/suggesting-mode.tsx`)**:
+  - Dual-mode segmented button on toolbar switching between Direct Edit ("Sunting" ✍️) and Suggesting ("Menyarankan" 💡).
+  - Dynamic pending suggestion count badge and dropdown review actions ("Terima Semua Usulan" / "Tolak Semua Usulan").
+- **Review Action Floating Chips (`components/editor/suggesting-chips.tsx`)**:
+  - Interactive floating cards on canvas margin displaying reviewer persona, timestamp, visual strikethrough/underline diff preview, and 1-click `[✓ Terima / Accept]` and `[✕ Tolak / Reject]` actions.
+- **XSS & Security Hardening (`lib/utils/sanitize.ts`)**:
+  - Preserved `del` and `ins` tags in DOMPurify `ADD_TAGS` along with custom tracking attributes (`data-suggestion-id`, `data-author`, `data-old-text`, `data-new-text`).
+- **Command Palette & Keyboard Shortcut Hub Integration**:
+  - Registered commands (`cmd_toggle_suggesting_mode`, `cmd_batch_accept_suggestions`, `cmd_batch_reject_suggestions`) in `lib/editor/command-palette.ts`.
+  - Added global shortcut `Ctrl + Shift + S` in `components/editor/editor-layout.tsx` and cheat sheet entry in `components/editor/modals/shortcuts-modal.tsx`.
+
+### 🧪 Automated Testing
+- **Vitest Suite Expansion (`__tests__/utils/suggesting-mode.test.ts`)**: Added 12 unit tests covering markup generation, single accept/reject, batch transformations, and block tree updates. Total Vitest suite passing at **129/129 tests**.
+
 ## ⚡ [v0.9.8] - 2026-10-16 (Bidirectional Reactive In-Text Citation Style Transformer)
 
 ### 🚀 Citation Style Transformation Engine

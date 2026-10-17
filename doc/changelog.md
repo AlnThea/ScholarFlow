@@ -1,4 +1,4 @@
-# Refactoring Changelog
+﻿# Refactoring Changelog
 
 Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkaitan dengan upaya merapikan (refactoring) komponen-komponen berukuran raksasa di dalam ScholarFlow.
 
@@ -34,6 +34,8 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 - **Phase 26 (v1.1.0)**: Menghadirkan **Academic Command Palette (Ctrl+K) & Global Keyboard Shortcuts Hub** (`lib/editor/command-palette.ts`, `components/editor/modals/command-palette-modal.tsx`, `components/editor/modals/shortcuts-modal.tsx`) dengan pencarian spotlight cepat, 7 kategori aksi terorganisir, drawer tooltip penjelasan manfaat aksi real-time, cheat sheet visual pintasan keyboard (tombol `?`), tombol akses cepat di header, dan navigasi keyboard penuh.
 - **Phase 27 (v1.2.0)**: Membangun **Academic LaTeX & Journal Format Package Exporter (.tex + .bib Zip)** (`lib/editor/latex-exporter.ts`, `components/editor/modals/latex-export-modal.tsx`) dengan konversi blok naskah ke sintaks LaTeX standar, 4 template jurnal ilmiah (IEEE 2-Column, Elsevier elsarticle, ACM SIGCONF, arXiv Pre-print), bundler BibTeX otomatis, live code preview, tombol salin kode, dan pengemasan arsip .zip siap kompilasi Overleaf via JSZip.
 - **Phase 28 (v1.3.0)**: Mengembangkan **Drag & Drop Reference Importer (.bib, .ris, & PDF metadata)** (`lib/editor/reference-importer.ts`, `components/editor/reference-dropzone.tsx`, `components/editor/modals/reference-import-modal.tsx`) dengan dukungan ekstraksi file BibTeX Zotero/Overleaf, multi-record RIS Mendeley/EndNote, ekstraksi DOI saintifik & judul dari dokumen PDF, modal pratinjau seleksi batch paper dengan tooltip informatif, tombol "Impor Berkas" langsung di tab Pustaka sidebar, serta pintasan keyboard `Ctrl+Shift+U` dan Command Palette.
+
+- **Phase 29 (v1.4.0)**: Menghadirkan **Live "Track Changes" / Suggesting Mode** (components/editor/suggesting-mode.tsx, components/editor/suggesting-chips.tsx, lib/editor/suggesting-engine.ts, lib/editor/methods/suggestion-methods.ts) dengan toggle mode segmented (Editing vs Suggesting), markup coretan merah <del> dan garis bawah hijau <ins>, sanitasi atribut preservasi XSS, floating chips tinjauan usulan, dropdown review batch "Terima Semua" / "Tolak Semua", serta pendaftaran aksi pintasan keyboard Ctrl+Shift+S.
 
 **Selanjutnya:**
 - Mengimplementasikan pemindahan logika dan komponen React dari `editor-layout.tsx` ke file-file tersebut.

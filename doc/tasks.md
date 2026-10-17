@@ -367,13 +367,14 @@ Target: Memungkinkan peneliti menarik file dari Mendeley, Zotero, atau EndNote (
 ### Phase 29: Live "Track Changes" / Suggesting Mode
 Target: Mode koreksi naskah langsung ala Google Docs dan Microsoft Word untuk kolaborasi dosen pembimbing dan reviewer.
 
-- [ ] **1. Suggesting Mode Toggle & State (`components/editor/suggesting-mode.tsx`)**: Mode tombol beralih antara "Editing" (Sunting Langsung) dan "Suggesting" (Menyarankan).
-- [ ] **2. Inline Visual Diff Markup**:
-  - Teks yang dihapus otomatis diberi coretan warna merah (`strikethrough`).
-  - Teks baru yang ditambahkan otomatis diberi garis bawah warna hijau.
-- [ ] **3. Review Action Floating Chips**: Tombol `[✓ Terima]` dan `[✕ Tolak]` di sisi margin kanvas untuk setiap perubahan yang disarankan.
-- [ ] **4. Batch Accept/Reject Controls**: Tombol "Terima Semua Perubahan" atau "Tolak Semua" untuk mempermudah finalisasi naskah.
-- [ ] **5. Automated Testing**: Pengujian siklus diff suggesting dan state accept/reject di Vitest.
+- [x] **1. Suggesting Mode Toggle & State (`components/editor/suggesting-mode.tsx`)**: Mode tombol beralih antara "Editing" (Sunting Langsung) dan "Suggesting" (Menyarankan), status counter pending badge, dark mode, dan dwibahasa (EN/ID).
+- [x] **2. Inline Visual Diff Markup (`lib/editor/suggesting-engine.ts`)**:
+  - Teks yang dihapus otomatis diberi tag `<del>` coretan warna merah (`line-through`).
+  - Teks baru yang ditambahkan otomatis diberi tag `<ins>` garis bawah warna hijau (`underline`).
+  - Wrapper aman `sf-suggestion-wrapper` dengan preservasi atribut XSS (`data-suggestion-id`, `data-author`, `data-old-text`, `data-new-text`) di `DOMPurify`.
+- [x] **3. Review Action Floating Chips (`components/editor/suggesting-chips.tsx`)**: Kartu review usulan melayang di kanvas dengan preview diff inline, avatar author, timestamp, tombol `[✓ Terima / Accept]`, dan `[✕ Tolak / Reject]` dengan navigasi smooth scroll ke posisi mark naskah.
+- [x] **4. Batch Accept/Reject Controls**: Menu dropdown "Terima Semua Usulan" (Accept All) dan "Tolak Semua Usulan" (Reject All) langsung di toolbar editor, jembatan integrasi di `scholar-editor.tsx`, dan pendaftaran ke Academic Command Palette (`Ctrl+K`) serta pintasan global `Ctrl+Shift+S`.
+- [x] **5. Automated Testing**: 12/12 unit test komprehensif pada Vitest (`__tests__/utils/suggesting-mode.test.ts`), total suite lulus 129/129 tests.
 
 ### Phase 30: Figure & Table Scientific Auto-Numbering Engine
 Target: Penomoran otomatis dinamis Gambar X dan Tabel Y dengan cross-referencing interaktif di dalam badan teks naskah.

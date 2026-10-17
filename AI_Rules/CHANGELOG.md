@@ -1,5 +1,25 @@
 # ScholarFlow Changelog
 
+## v1.4.0 - Live "Track Changes" / Suggesting Mode (Google Docs & Word Style Revision Flow)
+
+- **Inline Visual Diff Markup Engine (`lib/editor/suggesting-engine.ts`)**:
+  - Implemented semantic `<del>` (old text with strikethrough & rose background) and `<ins>` (new text with underline & emerald background) generation with character escaping and attribute isolation.
+  - Granular single suggestion accept/reject resolution (`applyAcceptSuggestionToHtml`, `applyRejectSuggestionToHtml`) and batch transformers (`transformEditorBlocksSuggestion`).
+  - AST suggestion extractor (`extractSuggestionsFromHtml`) tracking suggestion item metadata.
+- **EditorJS DOM Suggestion Methods (`lib/editor/methods/suggestion-methods.ts`)**:
+  - Created `addSuggestionMark`, `acceptSuggestion`, `rejectSuggestion`, `batchAcceptAllSuggestions`, `batchRejectAllSuggestions`, and `scrollToSuggestionMark` on active DOM contenteditables.
+- **Suggesting Mode Segmented Control (`components/editor/suggesting-mode.tsx`)**:
+  - Segmented pill switcher between Direct Edit (Sunting ✍️) and Suggesting (Menyarankan 💡) with dynamic pending count badge and batch review dropdown.
+- **Review Action Floating Chips (`components/editor/suggesting-chips.tsx`)**:
+  - Canvas floating reviewer cards with diff preview, author persona, timestamp, and instant 1-click `[✓ Terima]` and `[✕ Tolak]` action chips.
+- **DOMPurify XSS Hardening (`lib/utils/sanitize.ts`)**:
+  - Allowed `<del>`, `<ins>`, and attributes `data-suggestion-id`, `data-author`, `data-old-text`, `data-new-text`.
+- **Command Palette & Shortcut Hub**:
+  - Registered `cmd_toggle_suggesting_mode`, `cmd_batch_accept_suggestions`, `cmd_batch_reject_suggestions` in `lib/editor/command-palette.ts`.
+  - Added global shortcut `Ctrl + Shift + S` and cheat sheet documentation in `shortcuts-modal.tsx`.
+- **Automated Unit Testing**:
+  - Added `__tests__/utils/suggesting-mode.test.ts` (12 unit tests). Vitest passing at 129/129 tests.
+
 ## v0.9.8 - Bidirectional Reactive In-Text Citation Style Transformer (APA ↔ IEEE ↔ Harvard ↔ Vancouver)
 
 - **In-Text Citation AST Transformer (`lib/editor/citation-transformer.ts`)**:

@@ -667,6 +667,28 @@ export function ScholarEditor() {
             fetchSuggestions(currentDocument.id).then(setSuggestions);
           });
         }}
+        onBatchAcceptSuggestions={() => {
+          if (!currentDocument?.id) return;
+          const pending = suggestions.filter(s => s.status === 'pending');
+          if (pending.length === 0) return;
+          editorJsRef.current?.batchAcceptAllSuggestions?.();
+          pending.forEach(s => {
+            acceptedLocallyRef.current.add(s.id);
+            processedAcceptedSuggestionsRef.current.add(s.id);
+            updateSuggestionStatus(currentDocument.id, s.id, 'accepted');
+          });
+          fetchSuggestions(currentDocument.id).then(setSuggestions);
+        }}
+        onBatchRejectSuggestions={() => {
+          if (!currentDocument?.id) return;
+          const pending = suggestions.filter(s => s.status === 'pending');
+          if (pending.length === 0) return;
+          editorJsRef.current?.batchRejectAllSuggestions?.();
+          pending.forEach(s => {
+            updateSuggestionStatus(currentDocument.id, s.id, 'rejected');
+          });
+          fetchSuggestions(currentDocument.id).then(setSuggestions);
+        }}
         onResolveComment={handleResolveComment}
         onCommentClick={handleCommentClick}
         activeSidebarTab={activeSidebarTab} setActiveSidebarTab={setActiveSidebarTab}

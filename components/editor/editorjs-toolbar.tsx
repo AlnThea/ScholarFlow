@@ -26,6 +26,7 @@ import type { EditorJsMethods } from '@/hooks/use-editorjs-methods';
 import { GhostwriterToggle } from './ghostwriter-toggle';
 import { CitationStyleSelector } from './citation-style-selector';
 import { AcademicIntegrityPill } from './academic-integrity-pill';
+import { SuggestingModeControl } from './suggesting-mode';
 
 type EditorToolbarProps = {
   documentContent?: string;
@@ -33,6 +34,9 @@ type EditorToolbarProps = {
   language: string;
   editorMode: 'edit' | 'suggest';
   setEditorMode: (mode: 'edit' | 'suggest') => void;
+  pendingSuggestionsCount?: number;
+  onBatchAcceptSuggestions?: () => void;
+  onBatchRejectSuggestions?: () => void;
   editorJsRef: React.RefObject<EditorJsMethods | null>;
   currentBlockType: string;
   currentFontSize: string;
@@ -61,6 +65,9 @@ export const EditorJsToolbar = ({
   language,
   editorMode,
   setEditorMode,
+  pendingSuggestionsCount,
+  onBatchAcceptSuggestions,
+  onBatchRejectSuggestions,
   editorJsRef,
   currentBlockType,
   currentFontSize,
@@ -87,36 +94,19 @@ export const EditorJsToolbar = ({
   onOpenIntegrityTab,
 }: EditorToolbarProps) => {
   return (
-    <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-100 bg-white px-6 py-2.5 lg:sticky lg:top-[57px] z-10 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
-      {/* Mode Switcher Toggle (Edit Langsung vs Mode Sugesti) */}
-      <div data-tour="toolbar-modes" className="flex items-center rounded-lg bg-slate-100/90 p-0.5 border border-slate-200/80 mr-1.5 shrink-0">
-        <button
-          type="button"
-          onClick={() => setEditorMode('edit')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${editorMode === 'edit'
-            ? 'bg-white text-indigo-700 shadow-xs'
-            : 'text-slate-500 hover:text-slate-800'
-            }`}
-          title={language === 'id' ? 'Mode Edit Langsung' : 'Direct Edit Mode'}
-        >
-          <span>✍️</span>
-          <span className="hidden sm:inline">{language === 'id' ? 'Edit Langsung' : 'Direct Edit'}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setEditorMode('suggest')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${editorMode === 'suggest'
-            ? 'bg-amber-500 text-white shadow-xs'
-            : 'text-slate-500 hover:text-slate-800'
-            }`}
-          title={language === 'id' ? 'Mode Sugesti / Track Changes' : 'Suggesting Mode'}
-        >
-          <span>💡</span>
-          <span className="hidden sm:inline">{language === 'id' ? 'Mode Sugesti' : 'Suggesting'}</span>
-        </button>
-      </div>
+    <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-2.5 lg:sticky lg:top-[57px] z-10 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+      {/* Mode Switcher Toggle (Edit Langsung vs Mode Sugesti) & Batch Review Controls */}
+      <SuggestingModeControl
+        editorMode={editorMode}
+        setEditorMode={setEditorMode}
+        pendingCount={pendingSuggestionsCount}
+        onBatchAcceptAll={onBatchAcceptSuggestions}
+        onBatchRejectAll={onBatchRejectSuggestions}
+        language={language as 'en' | 'id'}
+        className="mr-1.5 shrink-0"
+      />
 
-      <div className="h-5 w-px bg-slate-200 mx-1 hidden sm:block" />
+      <div className="h-5 w-px bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block" />
 
       {/* Undo / Redo */}
       <div data-tour="toolbar-undo-redo" className="flex items-center gap-0.5">

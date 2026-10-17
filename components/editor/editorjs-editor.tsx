@@ -20,6 +20,7 @@ interface EditorJsEditorProps {
   onStatsChange?: (stats: { wordCount: number; characterCount: number; citationCount: number; activeReferenceIds?: string[] }) => void;
   onCiteClick?: (refId: string, label: string, citedSentence: string) => void;
   onCommentMarkClick?: (commentId: string) => void;
+  onSuggestionMarkClick?: (suggestionId: string) => void;
   onContentChange?: (content: any) => void;
   onCitationSearchChange?: (query: string, rect: DOMRect) => void;
   onCitationSearchCancel?: () => void;
@@ -37,6 +38,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
   onStatsChange,
   onCiteClick,
   onCommentMarkClick,
+  onSuggestionMarkClick,
   onContentChange,
   onCitationSearchChange,
   onCitationSearchCancel,
@@ -648,6 +650,15 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
             const commentId = commentMark.getAttribute('data-comment-id');
             if (commentId && onCommentMarkClick) {
               onCommentMarkClick(commentId);
+            }
+          }
+
+          // Handle suggestion mark click (Track Changes)
+          const suggestionMark = target.closest('.sf-suggestion-wrapper, .sf-suggestion-del, .sf-suggestion-ins');
+          if (suggestionMark) {
+            const sugId = suggestionMark.getAttribute('data-suggestion-id');
+            if (sugId && onSuggestionMarkClick) {
+              onSuggestionMarkClick(sugId);
             }
           }
 

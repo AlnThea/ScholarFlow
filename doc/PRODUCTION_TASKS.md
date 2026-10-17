@@ -149,24 +149,38 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
 ---
 
 ### ✍️ EPIC 8: Next-Gen Academic Writing & Document Intelligence (Phases 20 - 24)
-- [ ] **8.1 Real-Time Inline AI Ghostwriter (Tab to Accept ala Jenni AI)**
-  - [ ] Debounced completion engine (1.5s typing pause) dengan pemotongan konteks cerdas.
-  - [ ] Non-destructive Ghost Text visual render di kursor kanvas.
-  - [ ] Interaksi tombol keyboard: `Tab` (accept all), `ArrowRight` (word-by-word), `Esc` (dismiss).
-- [ ] **8.2 Document Version History & Time-Machine Snapshot (Diff & Rollback)**
-  - [ ] Skema database/storage `document_revisions` untuk snapshot berkala & manual.
-  - [ ] Slide-over Version History panel dengan Visual Diff Viewer (penambahan hijau, penghapusan merah).
-  - [ ] 1-klik restore version mengembalikan naskah kanvas ke kondisi revisi yang dipilih.
-- [ ] **8.3 Bidirectional In-Text Citation Style Transformer (APA ↔ IEEE ↔ Harvard ↔ Vancouver)**
-  - [ ] AST & regex transformer mengubah penanda sitasi di dalam teks kanvas secara dinamis.
-  - [ ] Re-indexing & re-ordering otomatis daftar pustaka (Bibliography) mengikuti urutan sitasi numerik.
-  - [ ] Switcher dropdown di toolbar editor mendukung APA, IEEE, Harvard, Vancouver, dan MLA.
-- [ ] **8.4 Interactive Library Paper Q&A Assistant ("Chat with Papers")**
-  - [ ] Sub-panel tanya-jawab literatur di dalam `SidebarLibraryTab`.
-  - [ ] Ekstraksi metodologi, temuan kunci, dan limitasi dari paper referensi PDF/metadata.
-  - [ ] Tombol aksi "Kutip Jawaban ke Editor" menyertakan sitasi ilmiah otomatis.
-- [ ] **8.5 Plagiarism & AI-Likeness Real-Time Warning Barometer (Academic Integrity Index)**
-  - [ ] Mesin kalkulasi komposit: Burstiness, Perplexity, Lexical Repetition, dan klise AI.
-  - [ ] UI Barometer / Gauge Meter di sudut kanvas editor (0-100% orisinalitas).
-  - [ ] Heatmap sorotan interaktif memandu ke kalimat berisiko tinggi dengan parafrase instan.
+- [x] **8.1 Real-Time Inline AI Ghostwriter (Tab to Accept ala Jenni AI)**
+  - [x] Debounced completion engine (1.3s typing pause) dengan pemotongan konteks cerdas.
+  - [x] Non-destructive Ghost Text visual render di kursor kanvas.
+  - [x] Interaksi tombol keyboard: `Tab` (accept all), `Esc` (dismiss), `Ctrl+J` (toggle).
+- [x] **8.2 Document Version History & Time-Machine Snapshot (Diff & Rollback)**
+  - [x] Skema database/storage `document_revisions` untuk snapshot berkala & manual.
+  - [x] Slide-over Version History panel dengan Visual Diff Viewer (penambahan hijau, penghapusan merah).
+  - [x] 1-klik restore version mengembalikan naskah kanvas ke kondisi revisi yang dipilih.
+- [x] **8.3 Bidirectional In-Text Citation Style Transformer (APA ↔ IEEE ↔ Harvard ↔ Vancouver)**
+  - [x] AST & regex transformer mengubah penanda sitasi di dalam teks kanvas secara dinamis.
+  - [x] Re-indexing & re-ordering otomatis daftar pustaka (Bibliography) mengikuti urutan sitasi numerik.
+  - [x] Switcher dropdown di toolbar editor mendukung APA, IEEE, Harvard, Vancouver, dan MLA.
+- [x] **8.4 Interactive Library Paper Q&A Assistant ("Chat with Papers")**
+  - [x] Sub-panel tanya-jawab literatur di dalam `SidebarLibraryTab`.
+  - [x] Ekstraksi metodologi, temuan kunci, dan limitasi dari paper referensi PDF/metadata.
+  - [x] Tombol aksi "Kutip Jawaban ke Editor" menyertakan sitasi ilmiah otomatis.
+- [x] **8.5 Plagiarism & AI-Likeness Real-Time Warning Barometer (Academic Integrity Index)**
+  - [x] Mesin kalkulasi komposit: Burstiness, Perplexity, Lexical Repetition, dan klise AI.
+  - [x] UI Barometer / Gauge Meter di sudut kanvas editor (0-100% orisinalitas).
+  - [x] Heatmap sorotan interaktif memandu ke kalimat berisiko tinggi dengan parafrase instan.
+
+---
+
+### 🔬 EPIC 9: Peer Review & Scientific Publication Engine (Phases 25 - 29)
+- [x] **9.1 AI Peer Reviewer & Journal Readiness Audit Simulation (Reviewer #2 Simulator)**
+  - [x] Evaluasi metodologi, klaim kebaruan, koherensi alur argumen, checklist kesiapan submit Scopus/SINTA.
+- [x] **9.2 Academic Command Palette (Ctrl+K) & Shortcuts Hub**
+  - [x] Spotlight search 18+ perintah akademis, visual cheat sheet pintasan (`?`), dan drawer penjelasan manfaat aksi.
+- [x] **9.3 Academic LaTeX & Journal Format Package Exporter (.tex + .bib Zip)**
+  - [x] Serializer blok ke LaTeX standar IEEE, Elsevier, ACM, arXiv, bundler BibTeX otomatis, dan zip generator Overleaf.
+- [x] **9.4 Drag & Drop Reference Importer (.bib, .ris, & PDF metadata)**
+  - [x] Parser BibTeX & RIS, regex ekstraksi DOI PDF, dan modal import seleksi batch.
+- [x] **9.5 Live "Track Changes" / Suggesting Mode**
+  - [x] Mode beralih Direct Edit vs Suggesting, visual diff markup `<del>` (merah) & `<ins>` (hijau), floating action chips, tombol batch Accept/Reject All, dan shortcut `Ctrl+Shift+S`.
 

@@ -75,6 +75,41 @@ export function getAvailableCommands(language: 'en' | 'id'): CommandItem[] {
       badge: 'Realtime',
     },
     {
+      id: 'cmd_toggle_suggesting_mode',
+      title: isEn ? 'Toggle Suggesting / Track Changes Mode' : 'Ganti Mode Sugesti / Track Changes',
+      description: isEn ? 'Switch between direct editing and proposing tracked edits' : 'Beralih antara sunting langsung dan mode usulan perubahan',
+      tooltip: isEn
+        ? 'Switches between direct editing mode and suggesting mode (Track Changes). In suggesting mode, edits are marked with red strikethrough for deletions and green underline for additions.'
+        : 'Beralih antara mode sunting langsung dan mode saran (Track Changes). Perubahan teks akan otomatis ditandai dengan coretan merah untuk hapusan dan garis bawah hijau untuk penambahan.',
+      category: 'review',
+      shortcut: 'Ctrl + Shift + S',
+      keywords: ['suggest', 'suggesting', 'track changes', 'saran', 'usulan', 'koreksi'],
+      actionId: 'toggle_suggesting_mode',
+      badge: 'Track Changes',
+    },
+    {
+      id: 'cmd_batch_accept_suggestions',
+      title: isEn ? 'Accept All Suggestions' : 'Terima Semua Usulan Perubahan',
+      description: isEn ? 'Approve all pending tracked changes across the document' : 'Setujui seluruh usulan perubahan naskah yang masih tertunda',
+      tooltip: isEn
+        ? 'Batch approves all pending suggestions in the document: removes struck-through deleted text and merges inserted additions into the clean canvas text.'
+        : 'Menerima dan menyetujui seluruh usulan perubahan naskah sekaligus: membuang teks yang dicoret dan menggabungkan teks tambahan baru ke badan naskah.',
+      category: 'review',
+      keywords: ['accept all', 'terima semua', 'approve all', 'setujui semua', 'track changes'],
+      actionId: 'batch_accept_suggestions',
+    },
+    {
+      id: 'cmd_batch_reject_suggestions',
+      title: isEn ? 'Reject All Suggestions' : 'Tolak Semua Usulan Perubahan',
+      description: isEn ? 'Discard all pending tracked changes and restore original text' : 'Batalkan seluruh usulan perubahan dan pulihkan teks naskah semula',
+      tooltip: isEn
+        ? 'Batch rejects all pending suggestions in the document: removes inserted additions and restores original struck-through text.'
+        : 'Menolak seluruh usulan perubahan naskah sekaligus: membatalkan teks tambahan baru dan memulihkan kembali teks asli yang dicoret.',
+      category: 'review',
+      keywords: ['reject all', 'tolak semua', 'discard all', 'batalkan semua', 'track changes'],
+      actionId: 'batch_reject_suggestions',
+    },
+    {
       id: 'cmd_paper_chat',
       title: isEn ? 'Chat with Paper / Literature Q&A' : 'Tanya Paper / Literature Q&A',
       description: isEn ? 'Ask methodology and findings from your library references' : 'Gali wawasan metodologi, temuan kunci, dan sintesis dari paper rujukan',

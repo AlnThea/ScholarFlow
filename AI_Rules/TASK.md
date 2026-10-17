@@ -170,14 +170,24 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] **Reactive Hook Engine (`hooks/use-editor-document.ts` & `hooks/use-editor-citation.ts`)**: Transformasi instan naskah EditorJS dan pembaruan `bibliographyEntries` memo secara mulus.
   - [x] **Toolbar Citation Selector UI (`components/editor/citation-style-selector.tsx`)**: Dropdown pemilih gaya sitasi di toolbar dengan preview sample (`[1]` vs `(Vaswani et al., 2017)`), Dark Mode, dan bilingual EN/ID.
   - [x] **Automated Unit Testing (`__tests__/utils/citation-transformer.test.ts`)**: 13/13 tests passing (total 60/60 tests passing pada test suite).
-- [ ] **17. Interactive "Chat with Paper / Literature" Assistant (Library Q&A)**:
-  - [ ] Sub-panel interaktif "Tanya Paper" di dalam `SidebarLibraryTab` untuk mengeksplorasi referensi yang tersimpan.
-  - [ ] RAG ekstraksi intisari metodologi, hipotesis, dan temuan utama dari dokumen paper PDF/metadata.
-  - [ ] Tombol aksi 1-klik "Kutip Jawaban ke Editor" dengan sitasi rujukan otomatis.
-- [ ] **18. Plagiarism & AI-Likeness Real-Time Warning Barometer (Pre-Submission Readiness Score)**:
-  - [ ] Kalkulator terpadu mengukur skor orisinalitas (0-100%) berbasis gabungan Burstiness, Perplexity, dan klise AI.
-  - [ ] UI Gauge Meter / Barometer di pojok kanvas editor dengan level risiko (Hijau, Kuning, Merah).
-  - [ ] Heatmap sorotan interaktif yang memandu peneliti ke kalimat monoton berisiko tinggi dengan saran parafrase instan.
+- [x] **17. Interactive "Chat with Paper / Literature" Assistant (Library Q&A)**:
+  - [x] Sub-panel interaktif "Tanya Paper" di dalam `SidebarLibraryTab` untuk mengeksplorasi referensi yang tersimpan.
+  - [x] RAG ekstraksi intisari metodologi, hipotesis, dan temuan utama dari dokumen paper PDF/metadata.
+  - [x] Tombol aksi 1-klik "Kutip Jawaban ke Editor" dengan sitasi rujukan otomatis `<cite>` dan unit test 6/6 passing.
+- [x] **18. Plagiarism & AI-Likeness Real-Time Warning Barometer (Pre-Submission Readiness Score)**:
+  - [x] Kalkulator terpadu mengukur skor orisinalitas (0-100%) berbasis gabungan Burstiness CV, TTR, dan densitas klise AI.
+  - [x] UI Speedometer SVG di toolbar editor dengan color coding adaptif (Hijau, Kuning, Merah).
+  - [x] Heatmap sorotan interaktif yang memandu peneliti ke kalimat monoton berisiko tinggi dengan navigasi 1-klik ke Paraphrase Studio (6/6 unit tests).
+- [x] **19. AI Peer Reviewer #2 & Journal Readiness Simulation**:
+  - [x] Audit metodologi, kebaruan (*novelty claim*), alur argumen, checklist kesiapan submisi Scopus/SINTA, dan slide-over modal persona Reviewer #2 (6/6 tests).
+- [x] **20. Academic Command Palette (Ctrl+K) & Shortcuts Hub**:
+  - [x] Spotlight search 18+ perintah akademis, drawer preview penjelasan aksi, visual cheat sheet pintasan (tombol `?`), dan navigasi keyboard (10/10 tests).
+- [x] **21. Academic LaTeX & Journal Package Exporter (.tex + .bib Zip)**:
+  - [x] Serializer blok ke LaTeX standar IEEE, Elsevier, ACM, arXiv, bundler BibTeX otomatis, dan zip generator Overleaf (16/16 tests).
+- [x] **22. Drag & Drop Reference Importer (.bib, .ris, & PDF metadata)**:
+  - [x] Parser BibTeX & RIS, regex ekstraksi DOI PDF, dan modal import seleksi batch (13/13 tests).
+- [x] **23. Live "Track Changes" / Suggesting Mode**:
+  - [x] Mode beralih Direct Edit vs Suggesting, visual diff markup `<del>` (merah) & `<ins>` (hijau), floating action chips, tombol batch Accept/Reject All, dan shortcut `Ctrl+Shift+S` (12/12 tests).
 - [ ] Complete remaining UI pages & user-facing feature modules.
 
 

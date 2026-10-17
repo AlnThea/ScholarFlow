@@ -101,6 +101,8 @@ export type EditorLayoutProps = {
   activeUsers?: UserPresence[];
   onAcceptSuggestion?: (id: string) => void;
   onRejectSuggestion?: (id: string) => void;
+  onBatchAcceptSuggestions?: () => void;
+  onBatchRejectSuggestions?: () => void;
   onResolveComment?: (id: string) => void;
   onCommentClick?: (comment: any) => void;
   activeSidebarTab?: 'library' | 'writing' | 'document' | 'comments' | 'burstiness' | 'stats'; setActiveSidebarTab?: (tab: 'library' | 'writing' | 'document' | 'comments' | 'burstiness' | 'stats') => void;

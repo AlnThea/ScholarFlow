@@ -25,6 +25,7 @@ import { LatexExportModal } from './modals/latex-export-modal';
 import { ReferenceImportModal } from './modals/reference-import-modal';
 import { ReferenceDropzone } from './reference-dropzone';
 import { parseReferenceFile } from '@/lib/editor/reference-importer';
+import { SuggestingChips } from './suggesting-chips';
 import { addSuggestion } from '@/lib/api/suggestions';
 import { IconSparkles } from '@tabler/icons-react';
 import 'katex/dist/katex.min.css';
@@ -146,6 +147,8 @@ export function EditorLayout({
   activeUsers = [],
   onAcceptSuggestion,
   onRejectSuggestion,
+  onBatchAcceptSuggestions,
+  onBatchRejectSuggestions,
   onResolveComment,
   onCommentClick,
   activeSidebarTab, setActiveSidebarTab,
@@ -442,6 +445,13 @@ export function EditorLayout({
         referenceFileInputRef.current?.click();
         return;
       }
+
+      // Ctrl + Shift + S -> Toggle Suggesting Mode (Track Changes)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        setEditorMode((prev: 'edit' | 'suggest') => (prev === 'edit' ? 'suggest' : 'edit'));
+        return;
+      }
     };
 
     window.addEventListener('keydown', handleGlobalShortcuts);
@@ -464,6 +474,15 @@ export function EditorLayout({
         break;
       case 'toggle_ghostwriter':
         ghostwriter.toggleEnabled();
+        break;
+      case 'toggle_suggesting_mode':
+        setEditorMode(editorMode === 'edit' ? 'suggest' : 'edit');
+        break;
+      case 'batch_accept_suggestions':
+        onBatchAcceptSuggestions?.();
+        break;
+      case 'batch_reject_suggestions':
+        onBatchRejectSuggestions?.();
         break;
       case 'improve_writing':
         onImproveWriting?.();
@@ -663,6 +682,9 @@ export function EditorLayout({
             language={language}
             editorMode={editorMode}
             setEditorMode={setEditorMode}
+            pendingSuggestionsCount={suggestions?.filter((s: any) => s.status === 'pending').length || 0}
+            onBatchAcceptSuggestions={onBatchAcceptSuggestions}
+            onBatchRejectSuggestions={onBatchRejectSuggestions}
             editorJsRef={editorJsRef}
             currentBlockType={currentBlockType}
             currentFontSize={currentFontSize}
@@ -778,6 +800,12 @@ export function EditorLayout({
                     setShowRightSidebar(true);
                     setIsRightSidebarExpanded(true);
                   }}
+                  onSuggestionMarkClick={(sugId) => {
+                    setShowRightSidebar(true);
+                    setIsRightSidebarExpanded(true);
+                    setActiveSidebarTab?.('comments');
+                    editorJsRef.current?.scrollToSuggestionMark?.(sugId);
+                  }}
                   onContentChange={onContentChange}
                   onCitationSearchChange={(query, rect) => {
                     setBubbleMenuRect(rect);
@@ -812,6 +840,19 @@ export function EditorLayout({
                   onDismiss={ghostwriter.dismissSuggestion}
                   language={language}
                 />
+
+                {/* Floating Suggestion Review Chips for Live Track Changes */}
+                {editorMode === 'suggest' && suggestions && suggestions.length > 0 && onAcceptSuggestion && onRejectSuggestion && (
+                  <div className="fixed bottom-20 right-6 md:right-10 z-20 w-80 max-w-[calc(100vw-3rem)] animate-in fade-in slide-in-from-bottom-2">
+                    <SuggestingChips
+                      suggestions={suggestions}
+                      onAccept={onAcceptSuggestion}
+                      onReject={onRejectSuggestion}
+                      onScrollTo={(id) => editorJsRef.current?.scrollToSuggestionMark?.(id)}
+                      language={language as 'en' | 'id'}
+                    />
+                  </div>
+                )}
 
                 {/* Floating Quick Action Button with Rich Interactive Tooltip Balloon */}
                 <div className="fixed bottom-6 right-6 md:right-10 z-30">

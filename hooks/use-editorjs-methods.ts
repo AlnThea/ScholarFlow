@@ -5,6 +5,7 @@ import { buildBlockMethods } from '@/lib/editor/methods/block-methods';
 import { buildInlineMethods } from '@/lib/editor/methods/inline-methods';
 import { buildCitationMethods } from '@/lib/editor/methods/citation-methods';
 import { buildCommentMethods } from '@/lib/editor/methods/comment-methods';
+import { buildSuggestionMethods } from '@/lib/editor/methods/suggestion-methods';
 
 export interface EditorJsMethodsProps {
   editorRef: MutableRefObject<EditorJS | null>;
@@ -36,6 +37,7 @@ export function buildEditorJsMethods(props: EditorJsMethodsProps) {
     ...buildInlineMethods(props),
     ...buildCitationMethods(props),
     ...buildCommentMethods(props),
+    ...buildSuggestionMethods(props),
   };
 }
 

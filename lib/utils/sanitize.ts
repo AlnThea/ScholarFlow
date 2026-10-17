@@ -5,6 +5,10 @@ const ALLOWED_ATTRIBUTES = [
   'data-formula',
   'data-ref-id',
   'data-citation',
+  'data-suggestion-id',
+  'data-author',
+  'data-old-text',
+  'data-new-text',
   'contenteditable',
   'target',
   'rel'
@@ -24,7 +28,7 @@ export const sanitizeHtml = (html: string): string => {
   
   return DOMPurify.sanitize(html, {
     ADD_ATTR: ALLOWED_ATTRIBUTES,
-    ADD_TAGS: ['cite'], // Ensure <cite> is allowed
+    ADD_TAGS: ['cite', 'del', 'ins'], // Ensure <cite>, <del>, <ins> are allowed
   });
 };
 

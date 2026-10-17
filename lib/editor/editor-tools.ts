@@ -237,6 +237,9 @@ export interface EditorJsMethods {
   addSuggestionMark?: (suggestionId: string, oldText: string, newText: string, authorName?: string) => void;
   acceptSuggestion?: (suggestionId: string) => void;
   rejectSuggestion?: (suggestionId: string) => void;
+  batchAcceptAllSuggestions?: () => void;
+  batchRejectAllSuggestions?: () => void;
+  scrollToSuggestionMark?: (suggestionId: string) => void;
 }
 
 export function scrambleHtmlText(html: string): string {

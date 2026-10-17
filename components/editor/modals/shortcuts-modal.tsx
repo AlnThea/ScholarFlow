@@ -100,6 +100,14 @@ export function ShortcutsModal({ isOpen, onClose, language }: ShortcutsModalProp
       category: 'ai',
     },
     {
+      keys: ['Ctrl', 'Shift', 'S'],
+      actionEn: 'Toggle Track Changes (Suggesting Mode)',
+      actionId: 'Toggle Mode Sugesti / Track Changes',
+      tooltipEn: 'Switch between direct editing and proposing tracked edits with red strikethrough & green underline.',
+      tooltipId: 'Beralih antara mode sunting langsung dan mode saran dengan coretan merah & garis bawah hijau.',
+      category: 'ai',
+    },
+    {
       keys: ['Tab'],
       actionEn: 'Accept Ghostwriter Suggestion',
       actionId: 'Terima Saran Kalimat Ghostwriter',
