@@ -15,7 +15,8 @@ export function ParaphraseStudio({
   editorJsRef,
   onContentChange,
   activePlanId,
-  setIsPlanModalOpen
+  setIsPlanModalOpen,
+  externalTargetSentence
 }: { 
   content: string;
   currentDocument?: any;
@@ -110,7 +111,7 @@ export function ParaphraseStudio({
       // Synchronize latest consumed tokens to local cache and refresh profile
       const latestResult = res3 || res2 || res1;
       if (latestResult && typeof latestResult.tokens_used === 'number') {
-        saveLocalQuotaState(latestResult.tokens_used, latestResult.monthly_quota);
+        saveLocalQuotaState(latestResult.tokens_used, latestResult.monthly_quota || 0);
         refreshProfile?.();
       }
 

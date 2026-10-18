@@ -17,7 +17,7 @@ describe('Bidirectional Reactive Citation Style Transformer Unit Tests', () => {
     source: 'Advances in Neural Information Processing Systems (NeurIPS)',
     citation_label: 'Vaswani et al., 2017',
     doi: '10.5555/3295222.3295349',
-  };
+  } as any as CitationCandidate;
 
   const candidate2: CitationCandidate = {
     reference_id: 'ref-transformer-2',
@@ -27,7 +27,7 @@ describe('Bidirectional Reactive Citation Style Transformer Unit Tests', () => {
     source: 'Nature',
     citation_label: 'LeCun & Bengio, 2015',
     doi: '10.1038/nature14539',
-  };
+  } as any as CitationCandidate;
 
   const candidate3: CitationCandidate = {
     reference_id: 'ref-transformer-3',
@@ -36,7 +36,7 @@ describe('Bidirectional Reactive Citation Style Transformer Unit Tests', () => {
     year: 1948,
     source: 'Bell System Technical Journal',
     citation_label: 'Shannon, 1948',
-  };
+  } as any as CitationCandidate;
 
   const mockLibrary: Record<string, CitationCandidate> = {
     'ref-transformer-1': candidate1,

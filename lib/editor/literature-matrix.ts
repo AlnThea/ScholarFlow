@@ -29,11 +29,11 @@ export interface CitationItemForMatrix {
   id?: string;
   title?: string;
   authors?: string | string[];
-  year?: string | number;
-  journal?: string;
-  venue?: string;
-  abstract?: string;
-  doi?: string;
+  year?: string | number | null;
+  journal?: string | null;
+  venue?: string | null;
+  abstract?: string | null;
+  doi?: string | null;
 }
 
 /**
@@ -176,7 +176,7 @@ export function extractLiteratureMatrix(
     const firstAuthor = authorsRaw.split(',')[0].trim().split(' ').pop() || 'Study';
     const citationKey = `(${firstAuthor}, ${year})`;
 
-    const inferred = inferMatrixFieldsFromAbstract(item.abstract, title, language);
+    const inferred = inferMatrixFieldsFromAbstract(item.abstract || '', title, language);
 
     rows.push({
       id: `matrix-row-${item.id || key || counter}`,

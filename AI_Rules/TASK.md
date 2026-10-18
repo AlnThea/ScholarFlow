@@ -214,10 +214,28 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] Academic style & formality linter engine (`lib/editor/academic-linter.ts`): kamus aturan saintifik dwibahasa (EN / ID), deteksi kata non-formal, kontraksi, klaim tanpa data, bias orang pertama, dan kalkulator skor formalitas akademik.
   - [x] Academic Linter Modal (`components/editor/modals/academic-linter-modal.tsx`) dengan filter kategori, badge predikat Grade A-D, dan aksi 1-klik penggantian teks resmi.
   - [x] Kartu integrasi linter pada tab Dokumen sidebar (`components/editor/sidebar-document-tab.tsx`).
-  - [x] Pendaftaran aksi `cmd_academic_linter` di `lib/editor/command-palette.ts` dan pintasan `Ctrl + Shift + L` di `shortcuts-modal.tsx`.
-  - [x] Automated Unit Testing: 9/9 tests passing (`__tests__/utils/academic-linter.test.ts`), total test suite lulus 184/184 tests across 20 test files.
+  - [x] **29. Phase 40: Canvas & Document Editor Interaction Hardening & Data Flow Reliability**:
+  - [x] Sinkronisasi `holderId` mention sitasi (`@cite` / `@ref`) ke `editorjs-holder` dengan pencarian fallback.
+  - [x] Jembatan injeksi tabel Literature Matrix via `editorJsRef.current.insertBlocks([tableBlock])`.
+  - [x] Persistensi auto-save outline `AcademicScaffoldModal` dan target linter ke `#editorjs-holder`.
+  - [x] Fallback sitasi sidebar saat kursor tidak aktif.
+- [x] **30. Phase 41: Editor Canvas Lifecycle, Block Persistence & Rich Content Bridge**:
+  - [x] Ketersediaan metode kembar `renderContent` & `render` pada `buildBlockMethods`.
+  - [x] Insersi teks AI History Studio langsung ke kanvas via `customText`.
+  - [x] Injeksi HTML kontekstual utuh tanpa memangkas tag `<cite>` via `createContextualFragment`.
+  - [x] Auto-save persistensi blok toolbar/menu ke database/cloud.
+  - [x] Penggantian markup sugesti tanpa duplikasi teks target.
+- [x] **31. Phase 42: Latent Compilation, Icon Import, API Key Pool & Scoping Resilience Audit**:
+  - [x] Koreksi typo impor ikon Tabler (`IconTextSpellcheck`, `IconBook`).
+  - [x] Destrukturisasi prop `externalTargetSentence` pada `ParaphraseStudio` & fallback `monthly_quota || 0`.
+  - [x] Penambahan kolom `institution?: string | null` pada `UserProfile` di `components/auth/auth-provider.tsx`.
+  - [x] Hardening props `editor-layout.tsx` (`user?.id`, `'error'`, `PeerReviewModal` caller).
+  - [x] Scope variable asynchronous `aiGenerationId` pada `interpret-stats/route.ts` dan rotasi multi-kunci `generate-outline/route.ts`.
+  - [x] Verifikasi 0 compiler error `npx tsc --noEmit` dan 218/218 Vitest tests lulus pada 27 file.
+
 ## Do Not Work On Yet
 - SPSS / PSPP (Strategy decided: "AI Output Interpreter" - user uploads output tables, AI interprets and drafts academic narrative to editor. Do not build a full SPSS clone).
 - SEM PLS
 - Journal publishing
 - Realtime collaboration
+

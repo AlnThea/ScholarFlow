@@ -9,6 +9,7 @@ import { createPendingAiGeneration, completeAiGeneration, failAiGeneration } fro
 export const maxDuration = 60; // 60 seconds timeout for multimodal vision
 
 export async function POST(request: Request) {
+  let aiGenerationId: string | null = null;
   try {
     const payload = await request.json();
     const { input, config, customApiKey, userId, userPlan } = payload;
@@ -118,7 +119,7 @@ Do NOT wrap with backticks other than \`\`\`json and \`\`\`. Ensure the JSON is 
     let usedModel = '';
 
     // Server-Side Background Task Tracker (ChatGPT-Style Resilience)
-    let aiGenerationId: string | null = null;
+    aiGenerationId = null;
     const statsSummary = input.rawText
       ? input.rawText.slice(0, 300)
       : `[${software.toUpperCase()}] ${testType} test table analysis`;

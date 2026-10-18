@@ -1,5 +1,15 @@
 # ScholarFlow Changelog
 
+## v0.42.0 - Latent Compilation, Icon Import, API Key Pool & Scoping Resilience Audit
+
+- **Codebase-Wide Static Typing, Icon Imports & API Rotation Hardening (`components/editor/modals/academic-linter-modal.tsx`, `components/editor/sidebar-document-tab.tsx`, `components/editor/modals/concept-map-modal.tsx`, `components/editor/modals/literature-matrix-modal.tsx`, `components/editor/paraphrase-studio.tsx`, `components/editor/editor-layout.tsx`, `components/auth/auth-provider.tsx`, `lib/editor/literature-matrix.ts`, `app/api/v1/ai/interpret-stats/route.ts`, `app/api/v1/ai/paper-chat/route.ts`, `app/api/v1/ai/peer-review/route.ts`, `app/api/v1/ai/generate-outline/route.ts`)**:
+  - **Tabler Icons Imports**: Replaced missing `IconSpellCheck` with `IconTextSpellcheck` and `IconBookOpen` with `IconBook`.
+  - **Component Props & State Destructuring**: Destructured `externalTargetSentence` in `ParaphraseStudio` and added fallback quota `latestResult.monthly_quota || 0`.
+  - **Auth UserProfile Enhancement**: Added optional `institution?: string | null` to `UserProfile` in `components/auth/auth-provider.tsx`.
+  - **Editor Layout Resilience**: Fixed `currentUser?.id` to `user?.id`, aligned `showAlertModal` type `'danger'` to `'error'`, aligned `PeerReviewModal` props (`userId`, `userPlan`), and safely cast `editorJsRef.current` for `saveCleanContent`.
+  - **AI Routes Key Rotation & Scoping**: Lifted `aiGenerationId` outside `try` in `interpret-stats`, corrected `geminiKeyPool.execute<string>` argument signatures and return mapping in `paper-chat` and `peer-review`, and upgraded `generate-outline` to automated key rotation.
+  - **Automated Verification**: Clean `tsc --noEmit` compilation (0 errors) and 100% test pass rate (**218/218 Vitest tests across 27 files**).
+
 ## v0.41.0 - Editor Canvas Lifecycle, Block Persistence & Rich Content Bridge
 
 - **Canvas Lifecycle & Rich Content Persistence Hardening (`lib/editor/methods/block-methods.ts`, `hooks/use-editor-document.ts`, `hooks/use-version-history.ts`, `components/editor/scholar-editor.tsx`, `lib/editor/methods/inline-methods.ts`, `lib/editor/methods/suggestion-methods.ts`)**:

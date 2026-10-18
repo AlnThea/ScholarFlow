@@ -149,7 +149,7 @@ async function callGeminiForPaperChat(
   modelName: string,
   customApiKey?: string
 ): Promise<string> {
-  const { result } = await geminiKeyPool.execute(
+  const { result } = await geminiKeyPool.execute<string>(
     async (apiKey) => {
       const url = `${GEMINI_API_BASE_URL}/models/${modelName}:generateContent?key=${apiKey}`;
       const response = await fetch(url, {
@@ -187,7 +187,7 @@ async function callGeminiForPaperChat(
 
       return text;
     },
-    { customKey: customApiKey }
+    customApiKey
   );
 
   return result;
@@ -340,7 +340,7 @@ export async function POST(request: NextRequest) {
       rawOutput = await callGeminiForPaperChat(
         prompt,
         'gemini-1.5-flash',
-        tenantKeyRes?.apiKey || undefined
+        tenantKeyRes?.customKey || undefined
       );
 
       // Clean markdown JSON fences if present
@@ -372,12 +372,16 @@ export async function POST(request: NextRequest) {
     let quotaRemaining = quotaCheck.remaining;
     if (userId) {
       const quotaRecord = await recordPersonalTokenConsumption(userId, actualTokens);
-      quotaRemaining = quotaRecord.remainingTokens;
+      quotaRemaining = quotaRecord.remaining;
 
       if (aiGenerationId) {
-        await completeAiGeneration(aiGenerationId, actualTokens, answer, {
-          extractedInsights,
-          suggestedCitationSentence,
+        await completeAiGeneration(aiGenerationId, {
+          resultText: answer,
+          tokensConsumed: actualTokens,
+          metadata: {
+            extractedInsights,
+            suggestedCitationSentence,
+          },
         });
       }
     }

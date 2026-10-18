@@ -14,7 +14,7 @@ describe('Phase 38: Cross-Paper Concept Map & Citation Network Visualizer Unit T
     const keywords = extractPaperKeywords(title, abstract);
     expect(keywords.length).toBeGreaterThan(0);
     const joined = keywords.join(' ').toLowerCase();
-    expect(joined).toContain('deep learning' || 'learning' || 'neural' || 'renewable');
+    expect(joined.includes('learning') || joined.includes('neural') || joined.includes('renewable')).toBe(true);
     expect(keywords).not.toContain('the');
     expect(keywords).not.toContain('and');
   });

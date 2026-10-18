@@ -2,6 +2,32 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.42.0] - 2026-10-18 (Phase 42: Latent Compilation, Icon Import, API Key Pool & Scoping Resilience Audit)
+
+### 🛡️ Codebase-Wide Static Typing, Icon Imports & API Rotation Hardening
+- **Tabler Icons Import Resolution**:
+  - Replaced non-existent `IconSpellCheck` with official `IconTextSpellcheck` in `AcademicLinterModal` and `SidebarDocumentTab`.
+  - Replaced non-existent `IconBookOpen` with official `IconBook` in `ConceptMapModal` and `LiteratureMatrixModal`.
+- **Component Props & State Destructuring**:
+  - Added missing `externalTargetSentence` destructuring to `ParaphraseStudio` props in `components/editor/paraphrase-studio.tsx`.
+  - Added safe fallback `latestResult.monthly_quota || 0` when invoking `saveLocalQuotaState`.
+  - Added `institution?: string | null` to `UserProfile` in `components/auth/auth-provider.tsx` for seamless multi-tenant campus attribution.
+  - Aligned `CitationItemForMatrix` in `lib/editor/literature-matrix.ts` with nullable properties from `CitationCandidate`.
+- **Editor Layout State & Modal Bridge Hardening**:
+  - Replaced stale `currentUser?.id` with `user?.id` on `AcademicScaffoldModal` in `components/editor/editor-layout.tsx`.
+  - Corrected `showAlertModal` type from `'danger'` to `'error'` across `versionHistory` toast and `ReferenceDropzone`.
+  - Refactored language toggling to directly pass toggled string (`setLanguage(language === 'en' ? 'id' : 'en')`).
+  - Aligned `PeerReviewModal` caller props (`userId={user?.id}`, `userPlan={activePlanId || 'free'}`).
+  - Added safe runtime assertion for `(editorJsRef.current as any)?.saveCleanContent`.
+- **AI Key Rotation & Server Logger Route Resilience**:
+  - `interpret-stats`: Lifted `let aiGenerationId` outside `try` block to ensure background failure logging in `catch`.
+  - `paper-chat` & `peer-review`: Fixed `geminiKeyPool.execute<string>` argument signature (`customApiKey` instead of `{ customKey: ... }`), mapped `tenantKeyRes.customKey`, fixed `quotaRecord.remaining`, and passed object payload to `completeAiGeneration`.
+  - `generate-outline`: Upgraded to automatic key rotation and failover via `geminiKeyPool.execute`, fixed tenant key resolver parameters, corrected `recordPersonalTokenConsumption` argument ordering, and hardened `completeAiGeneration`.
+- **Test Hardening & Static Check Cleanliness**:
+  - Resolved `tsc --noEmit` type assertions across `__tests__/utils/editor-interaction-hardening.test.ts` and `__tests__/utils/citation-transformer.test.ts`.
+  - Cleaned up boolean expression in `__tests__/utils/concept-map.test.ts`.
+  - Verified 100% clean compilation (`npx tsc --noEmit` -> 0 errors) and 100% test pass rate (**218/218 Vitest tests across 27 files**).
+
 ## ⚡ [v0.41.0] - 2026-10-18 (Phase 41: Editor Canvas Lifecycle, Block Persistence & Rich Content Bridge)
 
 ### 🚀 Canvas Lifecycle & Rich Content Persistence Hardening

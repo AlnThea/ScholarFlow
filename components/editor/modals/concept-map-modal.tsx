@@ -8,7 +8,7 @@ import {
   IconCheck,
   IconSparkles,
   IconRefresh,
-  IconBookOpen,
+  IconBook,
   IconZoomIn,
   IconInfoCircle,
   IconLayersLinked
@@ -181,7 +181,7 @@ export const ConceptMapModal: React.FC<ConceptMapModalProps> = ({
             {graph.nodes.length === 0 ? (
               <div className="flex flex-col items-center justify-center text-center p-8">
                 <div className="w-16 h-16 rounded-2xl bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 flex items-center justify-center mb-4 border border-violet-200/60 dark:border-violet-800/40">
-                  <IconBookOpen className="w-8 h-8" />
+                  <IconBook className="w-8 h-8" />
                 </div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white mb-2">
                   {isEn ? 'No Citation Papers in Library' : 'Belum Ada Paper Referensi di Pustaka'}

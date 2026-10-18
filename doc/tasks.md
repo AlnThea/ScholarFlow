@@ -612,6 +612,32 @@ Target: Memperbaiki 5 bug logika interaksi kanvas EditorJS (Method Mismatch `ren
 - [x] **6. Automated Unit Testing**:
   - Unit test suite di `__tests__/utils/editor-lifecycle-hardening.test.ts` (4/4 tests passing, total suite lulus **218/218 tests across 27 test files**).
 
+### Phase 42: Latent Compilation, Icon Import, API Key Pool & Scoping Resilience Audit
+Target: Melakukan audit statis komprehensif (`tsc --noEmit`), memperbaiki typo impor ikon Tabler, menyelaraskan destrukturisasi prop dan fallback quota komponen, memperbaiki error scope variabel asynchronous pada rute AI (`interpret-stats`, `paper-chat`, `peer-review`, `generate-outline`), serta memastikan kompilasi 100% bersih dan kelulusan penuh seluruh unit test suite.
+
+- [x] **1. Tabler Icons Import Typos Correction**:
+  - Mengganti `IconSpellCheck` menjadi `IconTextSpellcheck` di `AcademicLinterModal` dan `SidebarDocumentTab`.
+  - Mengganti `IconBookOpen` menjadi `IconBook` di `ConceptMapModal` dan `LiteratureMatrixModal`.
+- [x] **2. Component Props & Quota Fallback Hardening**:
+  - Mendestrukturkan `externalTargetSentence` pada `ParaphraseStudio` props dan menambahkan fallback `latestResult.monthly_quota || 0`.
+  - Menambahkan kolom `institution?: string | null` pada `UserProfile` di `components/auth/auth-provider.tsx`.
+  - Memperbarui `CitationItemForMatrix` di `lib/editor/literature-matrix.ts` agar mendukung nilai `null` sesuai interface `CitationCandidate`.
+- [x] **3. Editor Layout & Modals Resilience**:
+  - Memperbaiki `currentUser?.id` menjadi `user?.id` pada `AcademicScaffoldModal`.
+  - Mengubah alert type dari `'danger'` ke `'error'` pada notifikasi impor file rujukan dan riwayat versi.
+  - Memperbarui prop pemanggil `PeerReviewModal` (`userId`, `userPlan`).
+  - Menambahkan type assertion aman `(editorJsRef.current as any)?.saveCleanContent`.
+- [x] **4. AI API Routes Scoping & Key Rotation Hardening**:
+  - Mengangkat deklarasi `let aiGenerationId: string | null = null;` ke luar blok `try` pada `app/api/v1/ai/interpret-stats/route.ts` agar error logging di blok `catch` berjalan tanpa *ReferenceError*.
+  - Menyelaraskan signature pemanggilan `geminiKeyPool.execute<string>` (`customApiKey` alih-alih `{ customKey }`) pada `paper-chat` dan `peer-review`.
+  - Memetakan `tenantKeyRes.customKey`, memperbaiki properti `quotaRecord.remaining`, dan memformat payload objek untuk `completeAiGeneration`.
+  - Memodernisasi `app/api/v1/ai/generate-outline/route.ts` dengan rotasi multi-kunci otomatis via `geminiKeyPool.execute`.
+- [x] **5. Test Hardening & Automated Verification**:
+  - Menyelaraskan mock object di `__tests__/utils/editor-interaction-hardening.test.ts` dan `__tests__/utils/citation-transformer.test.ts`.
+  - Memperbaiki boolean assertion pada `__tests__/utils/concept-map.test.ts`.
+  - Memverifikasi keberhasilan penuh `npx tsc --noEmit` dengan **0 compile error** dan **218/218 Vitest tests across 27 files**.
+
+
 
 
 

@@ -79,5 +79,15 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
   - **Penggantian Teks Sugesti Tanpa Duplikasi**: Memperbaiki `addSuggestionMark` di `suggestion-methods.ts` agar menggantikan `oldText` dengan markup usulan alih-alih menduplikasi teks, serta menambahkan dispatching event `input` pada seluruh aksi tinjauan usulan.
   - Menambahkan pengujian otomatis Vitest (`__tests__/utils/editor-lifecycle-hardening.test.ts`) dengan kelulusan penuh **218/218 tests across 27 test files**.
 
+- **Phase 42 (v0.42.0)**: Mengembangkan **Latent Compilation, Icon Import, API Key Pool & Scoping Resilience Audit** (`components/editor/modals/academic-linter-modal.tsx`, `components/editor/sidebar-document-tab.tsx`, `components/editor/modals/concept-map-modal.tsx`, `components/editor/modals/literature-matrix-modal.tsx`, `components/editor/paraphrase-studio.tsx`, `components/editor/editor-layout.tsx`, `components/auth/auth-provider.tsx`, `lib/editor/literature-matrix.ts`, `app/api/v1/ai/interpret-stats/route.ts`, `app/api/v1/ai/paper-chat/route.ts`, `app/api/v1/ai/peer-review/route.ts`, `app/api/v1/ai/generate-outline/route.ts`, `__tests__/utils/concept-map.test.ts`, `__tests__/utils/editor-interaction-hardening.test.ts`, `__tests__/utils/citation-transformer.test.ts`):
+  - **Koreksi Impor Ikon Tabler**: Memperbaiki `IconSpellCheck` menjadi `IconTextSpellcheck` dan `IconBookOpen` menjadi `IconBook` yang sempat memicu error kompilasi Next.js.
+  - **Destrukturisasi & Fallback State Props**: Mendestrukturkan `externalTargetSentence` pada `ParaphraseStudio` serta menambahkan fallback aman `latestResult.monthly_quota || 0`.
+  - **Penambahan Atribut Institusi pada `UserProfile`**: Menambahkan kolom `institution?: string | null` pada `UserProfile` (`components/auth/auth-provider.tsx`) untuk modal slide-deck dan submission package.
+  - **Ketahanan Modals & Layout Editor**: Mengganti `currentUser?.id` menjadi `user?.id`, menyelaraskan tipe alert dari `'danger'` menjadi `'error'`, meneruskan bahasa langsung pada `setLanguage`, serta memperbarui prop `PeerReviewModal` (`userId`, `userPlan`).
+  - **Audit Rute API AI Key Pool & Logging**: Mengangkat scope variabel `aiGenerationId` di luar blok `try` pada `interpret-stats`, memperbaiki signature panggilan `geminiKeyPool.execute<string>`, memetakan `tenantKeyRes.customKey`, serta menyelaraskan payload `completeAiGeneration`.
+  - **Upgrade Rotasi Kunci `generate-outline`**: Memodernisasi `generate-outline` agar memanfaatkan rotasi multi-kunci otomatis via `geminiKeyPool.execute` dengan failover instan.
+  - **Kompilasi TypeScript Bersih & Pengujian 100%**: Menuntaskan seluruh error kompilasi (`npx tsc --noEmit` -> 0 errors) dan mempertahankan kelulusan penuh **218/218 tests across 27 files**.
+
+
 
 

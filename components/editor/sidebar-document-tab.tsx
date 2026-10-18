@@ -4,7 +4,7 @@ import {
   IconFilter, IconFolderOpen, IconLoader2, IconCirclePlus, IconQuote,
   IconSearch, IconSum, IconSparkles, IconWand, IconChevronLeft,
   IconChevronRight, IconLanguage, IconX, IconClock, IconTrash, IconCopy, IconHistory,
-  IconMicroscope, IconLayersLinked, IconSpellCheck, IconPresentation, IconTable, IconFileCertificate, IconShare, IconPackage
+  IconMicroscope, IconLayersLinked, IconTextSpellcheck, IconPresentation, IconTable, IconFileCertificate, IconShare, IconPackage
 } from '@tabler/icons-react';
 
 
@@ -173,7 +173,7 @@ export const SidebarDocumentTab = (props: any) => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="p-1 rounded-md bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">
-                        <IconSpellCheck className="h-3.5 w-3.5" />
+                        <IconTextSpellcheck className="h-3.5 w-3.5" />
                       </div>
                       <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
                         {isEn ? 'Academic Style Linter' : 'Linter Gaya Akademis'}
@@ -193,7 +193,7 @@ export const SidebarDocumentTab = (props: any) => {
                     onClick={() => onOpenLinter?.()}
                     className="w-full py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <IconSpellCheck className="h-3.5 w-3.5" />
+                    <IconTextSpellcheck className="h-3.5 w-3.5" />
                     <span>{isEn ? 'Launch Style Audit' : 'Audit Gaya Bahasa'}</span>
                   </button>
                 </section>

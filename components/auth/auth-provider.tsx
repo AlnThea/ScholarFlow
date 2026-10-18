@@ -13,6 +13,7 @@ export type UserProfile = {
   subscription_plan: string;
   subscription_status: string;
   subscription_end: string | null;
+  institution?: string | null;
   preferences?: Record<string, any>;
   ai_tokens_used?: number;
   ai_monthly_quota?: number;

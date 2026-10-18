@@ -196,7 +196,7 @@ async function callGeminiForPeerReview(
   modelName: string,
   customApiKey?: string
 ): Promise<string> {
-  const { result } = await geminiKeyPool.execute(
+  const { result } = await geminiKeyPool.execute<string>(
     async (apiKey) => {
       const url = `${GEMINI_API_BASE_URL}/models/${modelName}:generateContent?key=${apiKey}`;
       const response = await fetch(url, {
@@ -223,7 +223,7 @@ async function callGeminiForPeerReview(
       if (!text) throw new Error('Gemini returned an empty peer review response.');
       return text;
     },
-    { customKey: customApiKey }
+    customApiKey
   );
 
   return result;
@@ -319,7 +319,7 @@ export async function POST(request: NextRequest) {
       const rawOutput = await callGeminiForPeerReview(
         prompt,
         'gemini-1.5-flash',
-        tenantKeyRes?.apiKey || undefined
+        tenantKeyRes?.customKey || undefined
       );
 
       const cleaned = rawOutput
@@ -358,9 +358,13 @@ export async function POST(request: NextRequest) {
     if (userId) {
       await recordPersonalTokenConsumption(userId, actualTokens);
       if (aiGenerationId) {
-        await completeAiGeneration(aiGenerationId, actualTokens, report.executiveSummary, {
-          verdict: report.overallVerdict,
-          readinessScore: report.readinessScore,
+        await completeAiGeneration(aiGenerationId, {
+          resultText: report.executiveSummary,
+          tokensConsumed: actualTokens,
+          metadata: {
+            verdict: report.overallVerdict,
+            readinessScore: report.readinessScore,
+          },
         });
       }
     }

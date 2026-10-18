@@ -32,16 +32,16 @@ describe('Phase 40: Canvas & Document Editor Interaction Hardening', () => {
       doi: '10.5555/3295222.3295349',
     };
 
-    const apa = formatInTextCitationLabel(candidate, 'apa', 1);
+    const apa = formatInTextCitationLabel(candidate as any, 'apa', 1);
     expect(apa).toBe('(Vaswani & Shazeer, 2017)');
 
-    const ieee = formatInTextCitationLabel(candidate, 'ieee', 3);
+    const ieee = formatInTextCitationLabel(candidate as any, 'ieee', 3);
     expect(ieee).toBe('[3]');
 
-    const harvard = formatInTextCitationLabel(candidate, 'harvard', 1);
+    const harvard = formatInTextCitationLabel(candidate as any, 'harvard', 1);
     expect(harvard).toBe('(Vaswani and Shazeer 2017)');
 
-    const vancouver = formatInTextCitationLabel(candidate, 'vancouver', 5);
+    const vancouver = formatInTextCitationLabel(candidate as any, 'vancouver', 5);
     expect(vancouver).toBe('(5)');
   });
 
@@ -70,7 +70,7 @@ describe('Phase 40: Canvas & Document Editor Interaction Hardening', () => {
     const mentionMatch = extractMentionQuery(textNode.textContent!);
     expect(mentionMatch).not.toBeNull();
 
-    const result = injectMentionCitationToDom(candidate, 'apa', 1, mentionMatch);
+    const result = injectMentionCitationToDom(candidate as any, 'apa', 1, mentionMatch);
     expect(result.success).toBe(true);
     expect(result.referenceId).toBe('he2016deep');
     expect(result.label).toBe('(He & Zhang, 2016)');

@@ -12,7 +12,7 @@ import {
   IconPlus,
   IconFilter,
   IconFileText,
-  IconBookOpen,
+  IconBook,
   IconArrowRight
 } from '@tabler/icons-react';
 import {
@@ -254,7 +254,7 @@ export const LiteratureMatrixModal: React.FC<LiteratureMatrixModalProps> = ({
           {filteredRows.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-8">
               <div className="w-16 h-16 rounded-2xl bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-4 border border-teal-200/60 dark:border-teal-800/40">
-                <IconBookOpen className="w-8 h-8" />
+                <IconBook className="w-8 h-8" />
               </div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white mb-2">
                 {isEn ? 'No Research References in Library' : 'Belum Ada Paper Referensi di Pustaka'}

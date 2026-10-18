@@ -259,6 +259,27 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
 - [x] **14.5 Safe Suggestion Text Replacement & DOM Event Dispatching**
   - [x] Memperbaiki `addSuggestionMark` di `lib/editor/methods/suggestion-methods.ts` agar menggantikan teks target (`oldText`) dengan markup usulan alih-alih menduplikasi teks, serta menambahkan dispatching event `input` pada seluruh aksi tinjauan usulan.
 
+---
+
+### 🛡️ EPIC 15: Latent Compilation, Icon Import, API Key Pool & Scoping Resilience Audit (Phase 42)
+- [x] **15.1 Tabler Icons Import Resolution**
+  - [x] Mengoreksi impor ikon yang salah atau tidak terdaftar (`IconSpellCheck` -> `IconTextSpellcheck` pada `AcademicLinterModal` & `SidebarDocumentTab`; `IconBookOpen` -> `IconBook` pada `ConceptMapModal` & `LiteratureMatrixModal`).
+- [x] **15.2 Component Props & Quota Fallback Destructuring**
+  - [x] Mendestrukturkan prop `externalTargetSentence` pada `ParaphraseStudio` dan menambahkan fallback `latestResult.monthly_quota || 0` saat memanggil `saveLocalQuotaState`.
+  - [x] Menambahkan kolom `institution?: string | null` pada `UserProfile` (`components/auth/auth-provider.tsx`).
+- [x] **15.3 Editor Layout & Modal Props Hardening**
+  - [x] Mengganti `currentUser?.id` menjadi `user?.id` pada `AcademicScaffoldModal` di `editor-layout.tsx`.
+  - [x] Menyelaraskan alert modal type dari `'danger'` ke `'error'` pada notifikasi impor dan version history.
+  - [x] Memperbarui prop `PeerReviewModal` caller (`userId={user?.id}`, `userPlan={activePlanId || 'free'}`).
+  - [x] Menambahkan type cast aman `(editorJsRef.current as any)?.saveCleanContent`.
+- [x] **15.4 AI Key Pool & Background Generation Logging Scoping**
+  - [x] Mengangkat deklarasi `let aiGenerationId: string | null = null;` ke luar blok `try` pada `interpret-stats/route.ts` sehingga error catch block dapat mencatat kegagalan generasi ke Supabase.
+  - [x] Mengoreksi signature panggilan `geminiKeyPool.execute<string>` (`customApiKey` alih-alih `{ customKey }`), memetakan `tenantKeyRes.customKey`, serta merestrukturisasi payload `completeAiGeneration`.
+  - [x] Memodernisasi `generate-outline/route.ts` agar memanfaatkan multi-key rotation and failover otomatis via `geminiKeyPool.execute`.
+- [x] **15.5 Complete Static Type Check & Vitest Verification**
+  - [x] Memverifikasi kelulusan penuh `npx tsc --noEmit` dengan **0 error**, serta **218/218 pengujian Vitest lulus pada 27 berkas**.
+
+
 
 
 

@@ -327,7 +327,7 @@ export function EditorLayout({
     editorJsRef,
     onContentChange,
     showToast: (msg, type) => {
-      showAlertModal(type === 'error' ? 'Notice' : 'Success', msg, type === 'error' ? 'danger' : 'info');
+      showAlertModal(type === 'error' ? 'Notice' : 'Success', msg, type === 'error' ? 'error' : 'info');
     },
   });
 
@@ -681,7 +681,7 @@ export function EditorLayout({
         toggleDarkMode();
         break;
       case 'toggle_language':
-        setLanguage((prev: string) => (prev === 'en' ? 'id' : 'en'));
+        setLanguage(language === 'en' ? 'id' : 'en');
         break;
       default:
         break;
@@ -1255,7 +1255,8 @@ export function EditorLayout({
         documentTitle={currentDocument?.title || (language === 'en' ? 'Untitled Manuscript' : 'Naskah Tanpa Judul')}
         documentContent={activeDocumentText}
         language={language}
-        activePlanId={activePlanId}
+        userId={user?.id}
+        userPlan={activePlanId || 'free'}
       />
       <CommandPaletteModal
         isOpen={isCommandPaletteOpen}
@@ -1303,7 +1304,7 @@ export function EditorLayout({
       <ReferenceDropzone
         onParsedCandidates={handleParsedReferences}
         language={language}
-        onError={(msg) => showAlertModal(language === 'en' ? 'Import Notice' : 'Pemberitahuan Impor', msg, 'danger')}
+        onError={(msg) => showAlertModal(language === 'en' ? 'Import Notice' : 'Pemberitahuan Impor', msg, 'error')}
       />
       <ReferenceImportModal
         isOpen={isReferenceImportModalOpen}
@@ -1329,8 +1330,8 @@ export function EditorLayout({
         isOpen={isScaffoldModalOpen}
         onClose={() => setIsScaffoldModalOpen(false)}
         documentTitle={currentDocument?.title}
-        userId={currentUser?.id}
-        userPlan={activePlanId}
+        userId={user?.id}
+        userPlan={activePlanId || 'free'}
         onApplyBlocks={async (blocks) => {
           const newDocContent = {
             time: Date.now(),
@@ -1379,8 +1380,8 @@ export function EditorLayout({
                 replaced = true;
               }
             });
-            if (replaced && editorJsRef.current?.saveCleanContent && onContentChange) {
-              editorJsRef.current.saveCleanContent().then((content: any) => {
+            if (replaced && (editorJsRef.current as any)?.saveCleanContent && onContentChange) {
+              (editorJsRef.current as any).saveCleanContent().then((content: any) => {
                 if (content) onContentChange(content);
               }).catch(console.warn);
             }

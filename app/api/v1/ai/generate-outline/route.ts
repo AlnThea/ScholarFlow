@@ -147,25 +147,20 @@ export async function POST(request: Request) {
     }
 
     // 3. Multi-Tenant Campus Dedicated AI Key Resolver
-    const tenantKey = await resolveTenantKey(institutionId, 'text');
-    const selectedApiKey = tenantKey?.apiKey || geminiKeyPool.getAvailableKey();
-
-    if (!selectedApiKey) {
-      return NextResponse.json(
-        { error: language === 'en' ? 'No active AI key available.' : 'Kunci API AI tidak tersedia.' },
-        { status: 503 }
-      );
-    }
+    const tenantKey = await resolveTenantKey({
+      userId,
+      userPlan,
+      category: 'text'
+    });
 
     // 4. Server-Side AI Logger (Pending)
     const pendingGenId = await createPendingAiGeneration({
       userId: userId || 'anonymous',
-      modelUsed: 'gemini-1.5-flash',
-      prompt: `Outline: ${trimmedTopic}`,
-      draftBefore: trimmedTopic,
+      model: 'gemini-1.5-flash',
+      originalText: `Outline: ${trimmedTopic}`,
       documentId: body.documentId,
       tone: 'scaffold',
-      featureCategory: 'outline_generator',
+      featureType: 'outline_generator',
     });
 
     // 5. Construct Prompt
@@ -177,31 +172,48 @@ export async function POST(request: Request) {
       language: language === 'id' ? 'id' : 'en'
     });
 
-    const endpoint = `${GEMINI_API_BASE_URL}/models/gemini-1.5-flash:generateContent?key=${selectedApiKey}`;
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.3,
-          maxOutputTokens: 2048,
-          responseMimeType: 'application/json'
-        }
-      })
-    });
+    let rawText = '';
+    try {
+      const execution = await geminiKeyPool.execute(
+        async (apiKey: string) => {
+          const endpoint = `${GEMINI_API_BASE_URL}/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                temperature: 0.3,
+                maxOutputTokens: 2048,
+                responseMimeType: 'application/json'
+              }
+            })
+          });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      await failAiGeneration(pendingGenId, errText);
+          if (!response.ok) {
+            const errText = await response.text();
+            const errObj = new Error(`AI generation failed: ${errText}`);
+            (errObj as any).status = response.status;
+            throw errObj;
+          }
+
+          return await response.json();
+        },
+        tenantKey?.customKey,
+        tenantKey?.category
+      );
+
+      const data = execution.result;
+      rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    } catch (llmError: any) {
+      if (pendingGenId) {
+        await failAiGeneration(pendingGenId, llmError?.message || 'AI generation failed');
+      }
       return NextResponse.json(
-        { error: 'AI generation failed', details: errText },
-        { status: response.status }
+        { error: 'AI generation failed', details: llmError?.message || 'Error communicating with AI service' },
+        { status: llmError?.status || 500 }
       );
     }
-
-    const data = await response.json();
-    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     
     // Parse JSON
     let parsedOutline: any = null;
@@ -218,7 +230,7 @@ export async function POST(request: Request) {
 
     // Calculate token consumption
     const estimatedTokens = estimateTokens(prompt + rawText);
-    await recordPersonalTokenConsumption(userId, userPlan, estimatedTokens);
+    await recordPersonalTokenConsumption(userId, estimatedTokens, userPlan);
 
     const resultPayload = {
       success: true,
@@ -230,7 +242,12 @@ export async function POST(request: Request) {
     };
 
     // 6. Complete Server AI Generation & Store Idempotency Cache
-    await completeAiGeneration(pendingGenId, JSON.stringify(parsedOutline), estimatedTokens);
+    if (pendingGenId) {
+      await completeAiGeneration(pendingGenId, {
+        resultText: JSON.stringify(parsedOutline),
+        tokensConsumed: estimatedTokens
+      });
+    }
     setIdempotentAiResponse(idempotencyKey, resultPayload);
 
     return NextResponse.json(resultPayload);
