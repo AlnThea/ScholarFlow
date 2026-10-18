@@ -148,6 +148,19 @@ export function getAvailableCommands(language: 'en' | 'id'): CommandItem[] {
       actionId: 'open_literature_matrix',
       badge: 'Matrix Grid',
     },
+    {
+      id: 'cmd_concept_map',
+      title: isEn ? 'Cross-Paper Concept Map & Citation Network' : 'Peta Konsep & Jaringan Sitasi Antar-Paper',
+      description: isEn ? 'Visualize thematic clusters, shared nodes & literature centrality' : 'Visualisasi graf klaster tematik, simpul bersama & sentralitas paper',
+      tooltip: isEn
+        ? 'Generates an interactive SVG network graph visualizing thematic paper clusters, concept overlaps, and literature centrality with Mermaid diagram export.'
+        : 'Menghasilkan grafik jejaring SVG interaktif yang memetakan klaster topik riset, irisan konsep antar-paper, dan sentralitas literatur dengan ekspor Mermaid.',
+      category: 'citations',
+      shortcut: 'Ctrl + Shift + N',
+      keywords: ['concept', 'map', 'network', 'graph', 'vosviewer', 'connected papers', 'jejaring', 'sitasi'],
+      actionId: 'open_concept_map',
+      badge: 'Visual Network',
+    },
 
     // --- AI ASSISTANT ---
     {

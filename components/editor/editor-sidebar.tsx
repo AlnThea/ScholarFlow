@@ -123,6 +123,7 @@ type SidebarProps = {
   onOpenSlideDeck?: () => void;
   onOpenLiteratureMatrix?: () => void;
   onOpenJournalPresets?: () => void;
+  onOpenConceptMap?: () => void;
 };
 
 function PanelRow({

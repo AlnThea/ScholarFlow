@@ -4,7 +4,7 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.37.0 (Phase 37 Completed - Journal Formatting & Publishing Presets Configurator, 201/201 tests passing). Ready for Phase 38: Cross-Paper Concept Map & Citation Network Visualizer.
+v0.38.0 (Phase 38 Completed - Cross-Paper Concept Map & Citation Network Visualizer, 206/206 tests passing). Ready for Phase 39: Automated Journal Submission Package Builder & Cover Letter AI.
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
@@ -14,7 +14,8 @@ v0.37.0 (Phase 37 Completed - Journal Formatting & Publishing Presets Configurat
 - [x] Phase 35: Conference & Thesis Defense Slide Deck Generator.
 - [x] Phase 36: Interactive Literature Matrix & Synthesis Grid.
 - [x] Phase 37: Journal Formatting & Publishing Presets Configurator.
-- [ ] Phase 38: Cross-Paper Concept Map & Citation Network Visualizer.
+- [x] Phase 38: Cross-Paper Concept Map & Citation Network Visualizer.
+- [ ] Phase 39: Automated Journal Submission Package Builder & Cover Letter AI.
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.

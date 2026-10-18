@@ -33,6 +33,7 @@ import { AcademicLinterModal } from './modals/academic-linter-modal';
 import { SlideDeckModal } from './modals/slide-deck-modal';
 import { LiteratureMatrixModal } from './modals/literature-matrix-modal';
 import { JournalPresetsModal } from './modals/journal-presets-modal';
+import { ConceptMapModal } from './modals/concept-map-modal';
 import { CitationMentionDropdown } from './citation-mention-dropdown';
 import { useCitationMention } from '@/hooks/use-citation-mention';
 import { addSuggestion } from '@/lib/api/suggestions';
@@ -350,6 +351,7 @@ export function EditorLayout({
   const [isSlideDeckModalOpen, setIsSlideDeckModalOpen] = useState(false);
   const [isLiteratureMatrixModalOpen, setIsLiteratureMatrixModalOpen] = useState(false);
   const [isJournalPresetsModalOpen, setIsJournalPresetsModalOpen] = useState(false);
+  const [isConceptMapModalOpen, setIsConceptMapModalOpen] = useState(false);
   const referenceFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleParsedReferences = (candidates: CitationCandidate[], fileName: string) => {
@@ -528,6 +530,13 @@ export function EditorLayout({
         setIsJournalPresetsModalOpen(true);
         return;
       }
+
+      // Ctrl + Shift + N -> Cross-Paper Concept Map & Citation Network
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        setIsConceptMapModalOpen(true);
+        return;
+      }
     };
 
     window.addEventListener('keydown', handleGlobalShortcuts);
@@ -618,6 +627,9 @@ export function EditorLayout({
         break;
       case 'open_journal_presets':
         setIsJournalPresetsModalOpen(true);
+        break;
+      case 'open_concept_map':
+        setIsConceptMapModalOpen(true);
         break;
       case 'open_version_history':
         versionHistory.openVersionHistory?.();
@@ -1072,6 +1084,7 @@ export function EditorLayout({
                   onOpenSlideDeck={() => setIsSlideDeckModalOpen(true)}
                   onOpenLiteratureMatrix={() => setIsLiteratureMatrixModalOpen(true)}
                   onOpenJournalPresets={() => setIsJournalPresetsModalOpen(true)}
+                  onOpenConceptMap={() => setIsConceptMapModalOpen(true)}
                 />
               )}
             </div>
@@ -1394,6 +1407,12 @@ export function EditorLayout({
         onSwitchCitationStyle={(style) => {
           onChangeCitationStyle?.(style);
         }}
+      />
+      <ConceptMapModal
+        isOpen={isConceptMapModalOpen}
+        onClose={() => setIsConceptMapModalOpen(false)}
+        citationLibrary={citationLibrary}
+        language={language as 'en' | 'id'}
       />
       <CitationMentionDropdown
         isOpen={citationMention.isOpen}

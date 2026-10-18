@@ -525,3 +525,28 @@ Target: Audit kepatuhan pedoman penerbit naskah (batas kata, panjang abstrak, ku
   - Pendaftaran pintasan keyboard global `Ctrl + Shift + J` di `editor-layout.tsx` dan `shortcuts-modal.tsx`.
 - [x] **4. Automated Unit Testing**:
   - Unit test suite di `__tests__/utils/journal-presets.test.ts` (5/5 tests passing, total suite lulus 201/201 tests across 23 test files).
+
+### Phase 38: Cross-Paper Concept Map & Citation Network Visualizer
+Target: Memvisualisasikan hubungan keterkaitan konseptual dan jaringan sitasi antar-paper di perpustakaan naskah secara grafis 2D interaktif (SVG) dengan penentuan nodus sentral (*Degree Centrality*), kluster tematik, drawer laci inspeksi, dan ekspor diagram Mermaid.
+
+- [x] **1. Cross-Paper Concept & Network Graph Engine (`lib/editor/concept-map.ts`)**:
+  - Ekstraksi kata kunci konsep akademik otomatis (`extractAcademicKeywords`) dengan pembersihan stopword multi-bahasa (EN & ID).
+  - Klasifikasi kluster tematik 5 kategori (`classifyThematicCluster`): Metodologi, Teori Dasar, Bukti Empiris, Komputasi & Model, dan Domain Aplikasi.
+  - Perhitungan keterhubungan konseptual antar-paper (`buildConceptNetworkGraph`): metrik kesamaan Jaccard, penemuan kata kunci beririsan, pembobotan derajat keterhubungan (*Degree Centrality*), identifikasi nodus paling sentral (`mostCentralNodeId`), dan kerapatan graf (*graph density*).
+  - Tata letak koordinat radial 2D SVG (`computeRadialLayout`) dengan penempatan nodus sentral di posisi tengah.
+  - Generator diagram Mermaid (`generateMermaidConceptGraph`) untuk disematkan dalam laporan riset atau repositori Markdown.
+- [x] **2. Concept Map Modal UI (`components/editor/modals/concept-map-modal.tsx`)**:
+  - Kanvas SVG interaktif dengan garis tautan berlabel konsep bersama, ukuran lingkaran nodus proporsional dengan derajat keterhubungan, dan sorotan animasi cincin (*pulse ring*) pada paper sentral.
+  - Interaksi hover & click dengan penyorotan tetangga langsung (*neighbor highlighting*) dan penonaktifan nodus di luar koneksi.
+  - Bilah atas dengan ringkasan statistik (jumlah paper, tautan konsep, kluster terdeteksi, kerapatan graf, dan paper paling berpengaruh).
+  - Pil filter kluster tematik untuk memfokuskan visualisasi pada aspek metodologi, teori, atau empiris tertentu.
+  - Drawer laci inspeksi (*inspector side drawer*) menampilkan judul lengkap, penulis, tahun, abstrak ringkas, daftar konsep kunci, dan daftar rujukan terkait dengan tombol buka DOI / URL.
+  - Aksi 1-klik "Salin Diagram Mermaid".
+  - Kepatuhan penuh Tailwind Dark Mode dan dwibahasa EN ↔ ID.
+- [x] **3. Integrasi Sidebar Tab Dokumen & Command Palette**:
+  - Kartu *Cross-Paper Concept Map* di `components/editor/sidebar-document-tab.tsx` dengan tombol "Buka Peta Konsep".
+  - Pendaftaran perintah `cmd_concept_map` di `lib/editor/command-palette.ts`.
+  - Pendaftaran pintasan keyboard global `Ctrl + Shift + N` di `editor-layout.tsx` dan `shortcuts-modal.tsx`.
+- [x] **4. Automated Unit Testing**:
+  - Unit test suite di `__tests__/utils/concept-map.test.ts` (5/5 tests passing, total suite lulus 206/206 tests across 24 test files).
+

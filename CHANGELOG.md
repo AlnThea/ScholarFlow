@@ -2,6 +2,35 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.38.0] - 2026-10-18 (Phase 38: Cross-Paper Concept Map & Citation Network Visualizer)
+
+### 🚀 Cross-Paper Concept Map & Citation Network Visualizer
+- **Concept & Network Graph Engine (`lib/editor/concept-map.ts`)**:
+  - Academic keyword and concept extractor (`extractAcademicKeywords`) with comprehensive bilingual stopword filtering (EN & ID), frequency ranking, and minimum length thresholds.
+  - Thematic cluster classifier (`classifyThematicCluster`) categorizing citations into 5 distinct academic themes: Methodology, Fundamental Theory, Empirical Evidence, Computational & Model, and Application Domain.
+  - Concept network graph builder (`buildConceptNetworkGraph`):
+    - Computes shared concept keywords and Jaccard similarity between all library references.
+    - Calculates degree centrality weights (`degree`) and identifies the most influential paper (`mostCentralNodeId`).
+    - Evaluates total graph density and creates bidirectional edge relationships.
+  - Radial SVG coordinate calculator (`computeRadialLayout`): places the central paper at the origin and distributes surrounding nodes radially with cluster-based color encoding.
+  - Mermaid diagram synthesizer (`generateMermaidConceptGraph`): outputs clean, copyable Mermaid graph syntax for Markdown documentation.
+- **Concept Map Modal UI (`components/editor/modals/concept-map-modal.tsx`)**:
+  - Interactive SVG network stage with dynamic node sizing proportional to connection degree and an animated pulse ring on the central paper.
+  - Edge concept chips labeling the shared thematic keywords connecting paper pairs.
+  - Rich interactive state: hovering or clicking any paper activates neighbor highlighting, spotlights connected edges, and dims unrelated nodes.
+  - Header statistics bar summarizing paper count, concept links, active clusters, graph density, and top influential paper.
+  - Filter pills allowing researchers to isolate specific thematic clusters.
+  - Inspector side drawer showcasing title, authors, year, abstract snippet, key concept pills, and connected bibliography references with external DOI / paper links.
+  - 1-Click "Copy Mermaid Code" action for documentation embedding.
+  - Strict compliance with Tailwind Dark Mode (`dark:`) and bilingual EN ↔ ID localization.
+- **Sidebar & Editor Layout Integration**:
+  - Added dedicated *Cross-Paper Concept Map* card with "Explore Concept Map" button in `components/editor/sidebar-document-tab.tsx`.
+  - Registered `cmd_concept_map` in `lib/editor/command-palette.ts`.
+  - Added global keyboard shortcut `Ctrl + Shift + N` in `editor-layout.tsx` and cheat sheet in `shortcuts-modal.tsx`.
+
+### 🧪 Automated Testing
+- **Vitest Suite Expansion (`__tests__/utils/concept-map.test.ts`)**: Added 5 unit tests verifying stopword-filtered keyword extraction, thematic clustering, graph construction with centrality weighting, radial layout positioning, and Mermaid diagram output. Total Vitest suite passing at **206/206 tests across 24 test files**.
+
 ## ⚡ [v0.37.0] - 2026-10-18 (Phase 37: Journal Formatting & Publishing Presets Configurator)
 
 ### 🚀 Journal Formatting & Publishing Presets Configurator

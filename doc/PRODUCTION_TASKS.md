@@ -220,5 +220,9 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
   - [x] Basis data preset kepatuhan penerbit ilmiah otoritatif (IEEE Transactions, Elsevier ScienceDirect, Springer Nature, SINTA 1 & 2 Dikti, PLOS ONE).
   - [x] Mesin audit kesiapan naskah real-time mengevaluasi batas kata total, batas panjang abstrak, kuota gambar/tabel, persentase kemutakhiran rujukan (< 5 tahun), dan format gaya sitasi aktif.
   - [x] Modal scorecard kepatuhan publikasi dengan predikat status visual (*Submission Ready*, *Minor Adjustments*, *Substantial Revisions*), tombol penerapan gaya sitasi 1-klik, kartu peluncur di tab Dokumen sidebar, dan shortcut `Ctrl + Shift + J`.
-- [ ] **12.2 Cross-Paper Concept Map & Citation Network Visualizer (Phase 38)**
+- [x] **12.2 Cross-Paper Concept Map & Citation Network Visualizer (Phase 38)**
+  - [x] Ekstraksi kata kunci konsep akademik otomatis (pembersihan stopword multi-bahasa EN & ID, frekuensi kemunculan kata), klasifikasi kluster tematik (Metodologi, Teori, Empiris, Komputasi, Domain Aplikasi), dan penentuan nodus sentral (*Degree Centrality* & densitas graf).
+  - [x] Deteksi tautan konsep antar-paper referensi pustaka (*Jaccard Similarity* & irisan kata kunci riset) serta penempatan koordinat tata letak radial SVG 2D.
+  - [x] Modal visualisasi graf jaringan interaktif dengan bobot ukuran nodus dinamis, sorotan animasi cincin (*pulse ring*) pada paper sentral, penyorotan tetangga (*neighbor highlighting*) saat hover/klik, drawer laci inspeksi detail sitasi, filter pil kluster, ekspor diagram Mermaid, peluncur kartu tab Dokumen sidebar, command palette `cmd_concept_map`, dan shortcut `Ctrl + Shift + N`.
 - [ ] **12.3 Automated Journal Submission Package Builder & Cover Letter AI (Phase 39)**
+

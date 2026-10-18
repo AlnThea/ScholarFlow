@@ -166,6 +166,14 @@ export function ShortcutsModal({ isOpen, onClose, language }: ShortcutsModalProp
       category: 'citations',
     },
     {
+      keys: ['Ctrl', 'Shift', 'N'],
+      actionEn: 'Cross-Paper Concept Map & Citation Network',
+      actionId: 'Peta Konsep & Jaringan Sitasi Antar-Paper',
+      tooltipEn: 'Visualizes thematic clusters, shared conceptual nodes, and literature centrality.',
+      tooltipId: 'Visualisasi graf klaster tematik, simpul konsep bersama, dan sentralitas literatur naskah.',
+      category: 'citations',
+    },
+    {
       keys: ['@cite:', 'or', '@'],
       actionEn: 'Smart In-Text Reference Mention',
       actionId: 'Panggil Sitasi Cepat (@cite / @)',

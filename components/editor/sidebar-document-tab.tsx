@@ -4,7 +4,7 @@ import {
   IconFilter, IconFolderOpen, IconLoader2, IconCirclePlus, IconQuote,
   IconSearch, IconSum, IconSparkles, IconWand, IconChevronLeft,
   IconChevronRight, IconLanguage, IconX, IconClock, IconTrash, IconCopy, IconHistory,
-  IconMicroscope, IconLayersLinked, IconSpellCheck, IconPresentation, IconTable, IconFileCertificate
+  IconMicroscope, IconLayersLinked, IconSpellCheck, IconPresentation, IconTable, IconFileCertificate, IconShare
 } from '@tabler/icons-react';
 
 
@@ -37,6 +37,7 @@ export const SidebarDocumentTab = (props: any) => {
     onOpenSlideDeck,
     onOpenLiteratureMatrix,
     onOpenJournalPresets,
+    onOpenConceptMap,
     t, getSourceLabel, formatHistoryLabel, ActionButton, PanelRow
   } = props;
 
@@ -283,6 +284,36 @@ export const SidebarDocumentTab = (props: any) => {
                   >
                     <IconFileCertificate className="h-3.5 w-3.5" />
                     <span>{isEn ? 'Audit Journal Guidelines' : 'Audit Pedoman Jurnal'}</span>
+                  </button>
+                </section>
+
+                {/* Cross-Paper Concept Map & Citation Network Section */}
+                <section className="rounded-lg border border-violet-200/70 dark:border-violet-900/40 bg-gradient-to-b from-violet-50/30 via-white to-white dark:from-violet-950/20 dark:via-slate-800 dark:to-slate-800 p-3 shadow-xs flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 rounded-md bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300">
+                        <IconShare className="h-3.5 w-3.5" />
+                      </div>
+                      <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                        {isEn ? 'Cross-Paper Concept Map' : 'Peta Konsep & Jaringan Sitasi'}
+                      </h3>
+                    </div>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border border-violet-200 dark:border-violet-800">
+                      Graph Visualizer
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-350 leading-relaxed">
+                    {isEn
+                      ? 'Visualize thematic clusters, shared nodes & literature centrality across all library references.'
+                      : 'Visualisasi graf klaster tematik, simpul bersama & sentralitas paper pada pustaka naskah.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => onOpenConceptMap?.()}
+                    className="w-full py-1.5 px-3 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <IconShare className="h-3.5 w-3.5" />
+                    <span>{isEn ? 'Explore Concept Network' : 'Jelajahi Jaringan Konsep'}</span>
                   </button>
                 </section>
 

@@ -203,13 +203,14 @@ DONE:
 - Phase 34: Academic Grammar & Style Linter
 - Phase 35: Conference & Thesis Defense Slide Deck Generator (16:9 Deck / Marp / HTML)
 - Phase 36: Interactive Literature Matrix & Synthesis Grid
-- Phase 37: Journal Formatting & Publishing Presets Configurator
+- [x] Phase 37: Journal Formatting & Publishing Presets Configurator
+- [x] Phase 38: Cross-Paper Concept Map & Citation Network Visualizer
 
 IN PROGRESS:
-- Phase 38: Cross-Paper Concept Map & Citation Network Visualizer
+- Phase 39: Automated Journal Submission Package Builder & Cover Letter AI
 
 NEXT:
-1. Automated Journal Submission Package Builder & Cover Letter AI
+1. Automated Journal Submission Package Builder & Cover Letter AI completion
 
 ---
 

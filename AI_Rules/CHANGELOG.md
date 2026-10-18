@@ -1,5 +1,32 @@
 # ScholarFlow Changelog
 
+## v0.38.0 - Cross-Paper Concept Map & Citation Network Visualizer
+
+- **Concept & Network Graph Engine (`lib/editor/concept-map.ts`)**:
+  - Automatic academic keyword extractor with bilingual stopword filtering (EN & ID), frequency ranking, and minimum length checks.
+  - Thematic cluster classifier sorting citations into 5 academic themes: Methodology, Fundamental Theory, Empirical Evidence, Computational & Model, and Application Domain.
+  - Concept network graph builder (`buildConceptNetworkGraph`):
+    - Jaccard similarity and shared keyword detection between all library references.
+    - Centrality degree weighting (`degree`) and identifying the most influential paper (`mostCentralNodeId`).
+    - Overall graph density computation and bidirectional edge link generation.
+  - Radial SVG layout calculator (`computeRadialLayout`) placing central paper at origin with thematic color coding.
+  - Mermaid diagram generator (`generateMermaidConceptGraph`) for easy copy & paste into research reports.
+- **Concept Map Modal UI (`components/editor/modals/concept-map-modal.tsx`)**:
+  - Fullscreen interactive SVG network stage with proportional node radii, connection degree badges, and an animated pulse ring on the central paper.
+  - Edge concept chips displaying the shared thematic concepts connecting paper pairs.
+  - Neighbor highlighting on hover and click: isolates connected references and dims unrelated nodes.
+  - Header statistics bar (paper count, concept links, detected clusters, graph density, and top influential paper).
+  - Thematic cluster filter pills to focus the view on specific research dimensions.
+  - Inspector side drawer with title, authors, year, abstract, key concept tags, and connected references with DOI links.
+  - 1-Click "Copy Mermaid Diagram" button.
+  - Strict compliance with Tailwind Dark Mode (`dark:`) and bilingual EN ↔ ID localization.
+- **Sidebar & Editor Layout Integration**:
+  - Added dedicated *Cross-Paper Concept Map* card with "Explore Concept Map" button in `components/editor/sidebar-document-tab.tsx`.
+  - Registered `cmd_concept_map` in `lib/editor/command-palette.ts`.
+  - Added global keyboard shortcut `Ctrl + Shift + N` in `editor-layout.tsx` and cheat sheet in `shortcuts-modal.tsx`.
+- **Automated Unit Testing**:
+  - Added `__tests__/utils/concept-map.test.ts` (5 unit tests). Vitest suite passing at **206/206 tests across 24 test files**.
+
 ## v0.37.0 - Journal Formatting & Publishing Presets Configurator
 
 - **Author Guidelines & Presets Engine (`lib/editor/journal-presets.ts`)**:
