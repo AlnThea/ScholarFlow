@@ -231,3 +231,19 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
   - [x] Ekstraksi poin kebaruan utama (*Research Highlights*) ringkas (≤ 85 karakter) standar Elsevier / IEEE dan ringkasan inventarisasi naskah (kata total, abstrak, tabel, gambar, referensi).
   - [x] Modal interaktif paket pengajuan jurnal, ekspor Markdown lengkap, unduh berkas .txt/.md, kartu peluncur tab Dokumen sidebar, command palette `cmd_submission_package`, dan shortcut `Ctrl + Shift + Y`.
 
+---
+
+### 🛡️ EPIC 13: Canvas & Document Editor Interaction Hardening & Data Flow Reliability (Phase 40)
+- [x] **13.1 Smart In-Text Mention (`@cite` / `@ref`) Holder ID Synchronization**
+  - [x] Perbaikan `holderId` di `useCitationMention` dan `editor-layout.tsx` dari `scholarflow-editor` ke `editorjs-holder` dengan fallback selektor `.codex-editor` agar pengetikan `@cite:` atau `@` selalu berhasil memicu popup kandidat referensi pada kanvas aktif.
+- [x] **13.2 Literature Matrix Canvas Table Injection Bridge**
+  - [x] Memperbaiki `onInjectTableToEditor` pada `LiteratureMatrixModal` agar menggunakan `editorJsRef.current?.insertBlocks([tableBlock])` menggantikan `editorJsRef?.current?.blocks?.insert` yang tidak terdefinisi pada wrapper, sehingga tabel komparasi matriks Bab 2 langsung muncul di kanvas aktif.
+- [x] **13.3 Academic Scaffold Outline Persistence & Auto-Save Sync**
+  - [x] Memastikan `onApplyBlocks` pada `AcademicScaffoldModal` memanggil `onContentChange(newDocContent)` segera setelah memuat blok outline baru ke DOM, mencegah hilangnya draf kerangka naskah saat refresh browser atau autosave.
+- [x] **13.4 Academic Linter 1-Click Fix DOM Target & Autosave Synchronization**
+  - [x] Memperbarui selektor DOM pada `AcademicLinterModal.onApplyFix` ke `#editorjs-holder` dan menyinkronkan perubahan kata langsung ke `onContentChange` agar perbaikan gaya bahasa tersimpan secara persisten.
+- [x] **13.5 Resilient Citation Insertion Fallback on Library Action**
+  - [x] Menambahkan fallback cerdas pada `insertCitation` di `citation-methods.ts`: jika pengguna mengklik "Sisipkan Sitasi" dari sidebar tanpa seleksi kursor yang aktif, sitasi disisipkan pada akhir blok aktif atau blok paragraf terakhir tanpa kegagalan hening (*silent failure*).
+
+
+

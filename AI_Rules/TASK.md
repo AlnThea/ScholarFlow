@@ -4,7 +4,7 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.39.0 (Phase 39 Completed - Automated Journal Submission Package Builder & Cover Letter AI, 211/211 tests passing). All EPIC 12 Master Roadmap tasks completed! Ready for EPIC 13 / Next Milestone.
+v0.40.0 (Phase 40 Completed - Canvas & Document Editor Interaction Hardening & Data Flow Reliability, 214/214 tests passing).
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
@@ -16,6 +16,7 @@ v0.39.0 (Phase 39 Completed - Automated Journal Submission Package Builder & Cov
 - [x] Phase 37: Journal Formatting & Publishing Presets Configurator.
 - [x] Phase 38: Cross-Paper Concept Map & Citation Network Visualizer.
 - [x] Phase 39: Automated Journal Submission Package Builder & Cover Letter AI.
+- [x] Phase 40: Canvas & Document Editor Interaction Hardening & Data Flow Reliability.
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.

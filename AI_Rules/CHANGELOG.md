@@ -1,5 +1,17 @@
 # ScholarFlow Changelog
 
+## v0.40.0 - Canvas & Document Editor Interaction Hardening & Data Flow Reliability
+
+- **Canvas & Document Editor Interaction Hardening (`components/editor/editor-layout.tsx`, `hooks/use-citation-mention.ts`, `lib/editor/methods/citation-methods.ts`, `lib/editor/methods/block-methods.ts`)**:
+  - **In-Text Citation Mention Trigger Alignment**: Fixed container DOM ID mismatch by replacing `'scholarflow-editor'` with `'editorjs-holder'` and added multi-tier fallback lookups (`holderId || 'editorjs-holder' || '.codex-editor' || closest contenteditable`), ensuring typing `@cite:` or `@` reliably computes cursor coordinates and displays the reference search overlay.
+  - **Literature Matrix Table Injection**: Resolved silent failure where `onInjectTableToEditor` accessed nonexistent private property `blocks` on `editorJsRef.current`. Switched to `editorJsRef.current.insertBlocks([tableBlock])` with fallback rendering and auto-save triggering.
+  - **Academic Scaffolding Persistence**: Connected `onContentChange` callback inside `onApplyBlocks` in `AcademicScaffoldModal`, eliminating draft loss on browser refresh.
+  - **Academic Linter Targeted Replacement & Auto-Save**: Corrected container selector to `#editorjs-holder` and connected `saveCleanContent().then(onContentChange)` upon applying formal fixes.
+  - **Sidebar Citation Insertion Graceful Fallback**: Hardened `insertCitation` in `citation-methods.ts` so clicking "Insert Citation" from the library without pre-selected text appends the citation node to the active or last block rather than silently exiting.
+  - **Live Statistics Recalculation**: Added `calculateLiveStats()` invocation inside `renderContent()` to keep word, character, and reference counts accurate on dynamic block changes.
+- **Automated Testing Suite**:
+  - Added `__tests__/utils/editor-interaction-hardening.test.ts` (3 unit tests). Vitest suite passing at **214/214 tests across 26 test files**.
+
 ## v0.39.0 - Automated Journal Submission Package Builder & Cover Letter AI
 
 - **Submission Package & Cover Letter Engine (`lib/editor/submission-package.ts`)**:

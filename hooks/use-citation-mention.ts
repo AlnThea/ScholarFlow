@@ -24,7 +24,7 @@ export interface UseCitationMentionProps {
 }
 
 export function useCitationMention({
-  holderId = 'scholarflow-editor',
+  holderId = 'editorjs-holder',
   localReferences = [],
   citationStyle = 'apa',
   onCitationInserted,
@@ -108,7 +108,14 @@ export function useCitationMention({
       const container = range.startContainer;
 
       // Ensure cursor is inside the editor container
-      const editorElement = document.getElementById(holderId);
+      const editorElement =
+        document.getElementById(holderId) ||
+        document.getElementById('editorjs-holder') ||
+        document.querySelector('.codex-editor') ||
+        (container.nodeType === Node.ELEMENT_NODE
+          ? (container as HTMLElement).closest('[contenteditable="true"]')
+          : container.parentElement?.closest('[contenteditable="true"]'));
+
       if (!editorElement || !editorElement.contains(container)) {
         if (isOpen) closeMention();
         return;

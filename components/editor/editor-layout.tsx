@@ -377,7 +377,7 @@ export function EditorLayout({
 
   // Phase 32: Smart In-Text Reference Mention (@cite / @ref) Hook
   const citationMention = useCitationMention({
-    holderId: 'scholarflow-editor',
+    holderId: 'editorjs-holder',
     localReferences: (citationLibrary || []) as any[],
     citationStyle: citationStyle || currentDocument?.settings?.citationStyle || 'apa',
     language: language as 'en' | 'id',
@@ -1332,14 +1332,18 @@ export function EditorLayout({
         userId={currentUser?.id}
         userPlan={activePlanId}
         onApplyBlocks={async (blocks) => {
+          const newDocContent = {
+            time: Date.now(),
+            blocks: blocks,
+            version: '2.31.0'
+          };
           if (editorJsRef.current?.renderContent) {
-            editorJsRef.current.renderContent({
-              time: Date.now(),
-              blocks: blocks,
-              version: '2.31.0'
-            });
+            editorJsRef.current.renderContent(newDocContent);
           } else if (editorJsRef.current?.insertBlocks) {
             await editorJsRef.current.insertBlocks(blocks);
+          }
+          if (onContentChange) {
+            onContentChange(newDocContent);
           }
         }}
       />
@@ -1364,7 +1368,7 @@ export function EditorLayout({
         language={language}
         onApplyFix={(original, replacement) => {
           if (!original || !replacement) return;
-          const holder = document.getElementById('editorjs') || document.querySelector('.codex-editor');
+          const holder = document.getElementById('editorjs-holder') || document.querySelector('.codex-editor');
           if (holder) {
             const editables = holder.querySelectorAll('[contenteditable="true"]');
             let replaced = false;
@@ -1375,6 +1379,11 @@ export function EditorLayout({
                 replaced = true;
               }
             });
+            if (replaced && editorJsRef.current?.saveCleanContent && onContentChange) {
+              editorJsRef.current.saveCleanContent().then((content: any) => {
+                if (content) onContentChange(content);
+              }).catch(console.warn);
+            }
           }
         }}
       />
@@ -1392,21 +1401,25 @@ export function EditorLayout({
         onClose={() => setIsLiteratureMatrixModalOpen(false)}
         citationLibrary={citationLibrary}
         language={language as 'en' | 'id'}
-        onInjectTableToEditor={(tableBlock) => {
-          if (editorJsRef?.current?.blocks?.insert) {
+        onInjectTableToEditor={async (tableBlock) => {
+          if (editorJsRef?.current?.insertBlocks) {
             try {
-              editorJsRef.current.blocks.insert(tableBlock.type, tableBlock.data);
+              await editorJsRef.current.insertBlocks([tableBlock]);
               return;
             } catch (err) {
-              console.warn('[LiteratureMatrix] Direct block insert failed, using state fallback', err);
+              console.warn('[LiteratureMatrix] Direct insertBlocks failed, using state fallback', err);
             }
           }
           if (currentDocument && onContentChange) {
             const currentBlocks = currentDocument.content?.blocks || [];
-            onContentChange({
+            const updated = {
               ...currentDocument.content,
               blocks: [...currentBlocks, tableBlock],
-            });
+            };
+            onContentChange(updated);
+            if (editorJsRef.current?.renderContent) {
+              editorJsRef.current.renderContent(updated);
+            }
           }
         }}
       />

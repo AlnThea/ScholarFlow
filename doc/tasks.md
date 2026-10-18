@@ -575,4 +575,25 @@ Target: Menyusun paket pengajuan naskah publikasi saintifik siap kirim yang menc
 - [x] **4. Automated Unit Testing**:
   - Unit test suite di `__tests__/utils/submission-package.test.ts` (5/5 tests passing, total suite lulus 211/211 tests across 25 test files).
 
+### Phase 40: Canvas & Document Editor Interaction Hardening & Data Flow Reliability
+Target: Mengaudit dan menyempurnakan seluruh jembatan interaksi kanvas EditorJS (Smart Mentions, Injeksi Tabel Matriks, Persistensi Outline Scaffolding, 1-Click Linter Fix, dan Fallback Sitasi) agar tidak ada kegagalan hening (*silent failure*) dan seluruh perubahan teks/blok tersimpan secara reaktif dan persisten ke naskah pengguna.
+
+- [x] **1. Smart In-Text Mention (`@cite` / `@ref`) Holder ID Synchronization**:
+  - Sinkronisasi `holderId` di `useCitationMention` (`hooks/use-citation-mention.ts`) dan pemanggilannya di `components/editor/editor-layout.tsx` dari `scholarflow-editor` ke `editorjs-holder`.
+  - Penambahan pengecekan berlapis (`document.getElementById(holderId) || document.getElementById('editorjs-holder') || document.querySelector('.codex-editor')`) agar pengetikan `@cite:` atau `@` selalu berhasil mendeteksi kursor teks dan menampilkan menu popover referensi.
+- [x] **2. Literature Matrix Canvas Table Injection Bridge**:
+  - Memperbaiki `onInjectTableToEditor` pada `LiteratureMatrixModal` di `editor-layout.tsx` agar menggunakan API resmi wrapper `editorJsRef.current?.insertBlocks([tableBlock])`.
+  - Memastikan blok tabel berstruktur EditorJS (`type: 'table'`, `data: { content: [...] }`) langsung ter-render pada kanvas aktif dan memicu `onContentChange`.
+- [x] **3. Academic Scaffold Outline Persistence & Auto-Save Sync**:
+  - Menyinkronkan pemanggilan `onContentChange(newDocContent)` di dalam `onApplyBlocks` pada `AcademicScaffoldModal` di `editor-layout.tsx` segera setelah `renderContent`.
+  - Memastikan seluruh draf kerangka IMRaD / 5 Bab Skripsi tersimpan ke dalam state dokumen React dan database Supabase/localStorage.
+- [x] **4. Academic Linter 1-Click Fix DOM Target & Content Sync**:
+  - Menyelaraskan selektor penampung elemen di `AcademicLinterModal.onApplyFix` ke `#editorjs-holder` dan menyinkronkan penggantian teks ke `saveCleanContent` / `onContentChange`.
+- [x] **5. Resilient Citation Insertion Fallback on Library Action**:
+  - Memperbarui `insertCitation` pada `lib/editor/methods/citation-methods.ts` dengan fallback cerdas: bila `!range` (pengguna tidak memilih seleksi teks saat mengklik tombol di sidebar), sitasi otomatis disisipkan pada akhir blok aktif atau blok paragraf terakhir alih-alih keluar tanpa aksi (*silent failure*).
+- [x] **6. Automated Unit Testing**:
+  - Unit test suite di `__tests__/utils/editor-interaction-hardening.test.ts` (3/3 tests passing, total suite lulus 214/214 tests across 26 test files).
+
+
+
 

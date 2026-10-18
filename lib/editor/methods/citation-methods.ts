@@ -46,7 +46,37 @@ export function buildCitationMethods(props: EditorJsMethodsProps) {
             range = lastSelectionRangeRef.current;
           }
     
-          if (!range) return;
+          if (!range) {
+        const holderEl = document.getElementById(holderId);
+        if (holderEl) {
+          const targetEl =
+            holderEl.querySelector('.ce-block--selected [contenteditable="true"]') ||
+            holderEl.querySelector('[contenteditable="true"]:focus') ||
+            holderEl.querySelector('.ce-block:last-child [contenteditable="true"]') ||
+            holderEl.querySelector('[contenteditable="true"]');
+          if (targetEl) {
+            const cite = document.createElement('cite');
+            cite.setAttribute('data-citation', 'true');
+            if (referenceId) {
+              cite.setAttribute('data-ref-id', referenceId);
+            }
+            cite.className = 'text-indigo-600 font-semibold not-italic cursor-pointer hover:underline';
+            cite.textContent = ` [${citationLabel}]`;
+            targetEl.appendChild(document.createTextNode(' '));
+            targetEl.appendChild(cite);
+            targetEl.appendChild(document.createTextNode(' '));
+            targetEl.dispatchEvent(new Event('input', { bubbles: true }));
+            calculateLiveStats();
+            if (onContentChange && editorRef.current) {
+              saveCleanContent().then(content => {
+                if (content) onContentChange(content);
+              }).catch(console.error);
+            }
+            return;
+          }
+        }
+        return;
+      }
     
           // Collapse to END of selection first — citation appears AFTER the selected text
           range.collapse(false);

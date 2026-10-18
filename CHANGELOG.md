@@ -2,6 +2,26 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.40.0] - 2026-10-18 (Phase 40: Canvas & Document Editor Interaction Hardening & Data Flow Reliability)
+
+### 🛡️ Canvas & Document Editor Interaction Hardening
+- **Smart In-Text Reference Mention (`@cite` / `@ref` / `@`) Alignment**:
+  - Fixed DOM container ID mismatch in `useCitationMention` (`hooks/use-citation-mention.ts`) and `components/editor/editor-layout.tsx` by syncing `holderId` to `'editorjs-holder'`.
+  - Added multi-tier container fallback lookup (`document.getElementById(holderId) || document.getElementById('editorjs-holder') || document.querySelector('.codex-editor') || container.closest('[contenteditable="true"]')`) so typing `@cite:` or `@` reliably captures cursor coordinates and opens the reference candidate overlay.
+- **Literature Matrix Canvas Table Injection Bridge**:
+  - Upgraded `onInjectTableToEditor` in `components/editor/editor-layout.tsx` to call `editorJsRef.current?.insertBlocks([tableBlock])`, ensuring that generated literature review comparison tables immediately render on the active EditorJS canvas and trigger auto-save.
+- **Academic Scaffolding Outline Persistence & Auto-Save Sync**:
+  - Fixed `onApplyBlocks` in `AcademicScaffoldModal` (`components/editor/editor-layout.tsx`) to immediately trigger `onContentChange(newDocContent)` upon rendering new outline blocks, preventing draft loss on page refresh or tab change.
+- **Academic Linter One-Click Fix Target & Content Sync**:
+  - Updated DOM selector in `AcademicLinterModal.onApplyFix` to target `#editorjs-holder`, and connected automatic clean content persistence via `saveCleanContent().then(onContentChange)`.
+- **Resilient In-Text Citation Fallback**:
+  - Hardened `insertCitation` in `lib/editor/methods/citation-methods.ts` with a smart fallback: when a researcher clicks "Insert Citation" from the library sidebar without an active text selection, the citation anchor is gracefully appended to the active block or the last paragraph block instead of silently returning with no action.
+- **Live Stats Recalculation on Re-render**:
+  - Wired `calculateLiveStats()` into `renderContent()` in `lib/editor/methods/block-methods.ts` so live word, character, and citation statistics instantly update on block changes.
+
+### 🧪 Automated Testing
+- **Vitest Suite Expansion (`__tests__/utils/editor-interaction-hardening.test.ts`)**: Added 3 unit tests verifying mention trigger detection, multi-style in-text citation formatting, and safe DOM node replacement. Total Vitest suite passing at **214/214 tests across 26 test files**.
+
 ## ⚡ [v0.39.0] - 2026-10-18 (Phase 39: Automated Journal Submission Package Builder & Cover Letter AI)
 
 ### 🚀 Automated Journal Submission Package Builder & Cover Letter AI
