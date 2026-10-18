@@ -197,5 +197,5 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
   - [x] Mesin pengindeksan referensi multi-field in-memory dengan fallback query Crossref/OpenAlex.
   - [x] Floating dropdown overlay dengan navigasi keyboard (`↑`, `↓`, `Enter`, `Esc`), Dark Mode, dan bilingual (EN ↔ ID).
   - [x] Penggantian token mention non-destruktif dengan tag `<cite>` dan sinkronisasi reaktif daftar pustaka.
-- [ ] **10.3 Multi-Chapter Thesis & Dissertation Project Binder (Phase 33)**
-  - [ ] Manajemen proyek skripsi multi-dokumen (Bab 1 s.d. Bab 5) dengan penomoran gambar/tabel berkesinambungan dan konsolidasi daftar pustaka bersama.
+- [x] **10.3 Multi-Chapter Thesis & Dissertation Project Binder (Phase 33)**
+  - [x] Manajemen proyek skripsi multi-dokumen (Bab 1 s.d. Bab 5) dengan penomoran gambar/tabel berkesinambungan dan konsolidasi daftar pustaka bersama.

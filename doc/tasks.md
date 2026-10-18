@@ -423,3 +423,25 @@ Target: Memungkinkan peneliti memanggil dan menyisipkan sitasi ilmiah secara ins
   - Integrasi ke `components/editor/editor-layout.tsx` dan `shortcuts-modal.tsx`.
 - [x] **6. Automated Unit Testing**:
   - Unit test suite di `__tests__/utils/citation-mention.test.ts` untuk memverifikasi regex pemicu mention, indexing referensi lokal, dan sanitasi tag `<cite>` (13/13 tests passing, total 164/164 tests).
+
+### Phase 33: Multi-Chapter Thesis & Dissertation Project Binder
+Target: Manajemen proyek skripsi/tesis/disertasi multi-bab terpadu (Bab 1 s.d. Bab 5) dengan penomoran gambar & tabel berkesinambungan lintas bab, konsolidasi daftar pustaka master, dan kompilasi naskah utuh.
+
+- [x] **1. Multi-Chapter Project Binder Engine (`lib/editor/project-binder.ts`)**:
+  - Parsing nomor bab akademik otomatis dari judul bagian (*"Bab 1: Pendahuluan"*, *"Chapter 2"*, *"3. Metodologi"*).
+  - Ekstraksi bab dokumen proyek terurut (`extractProjectChapters`) dan kalkulasi metrik ringkasan naskah (`calculateProjectSummary`).
+  - Penomoran berkesinambungan gambar & tabel lintas bab standar Dikti (`Gambar {Bab}.{Nomor}`, `Tabel {Bab}.{Nomor}`) via `extractCrossChapterFiguresAndTables`.
+  - Konsolidasi dan deduplikasi sitasi ilmiah seluruh bab menjadi satu Master Bibliography terpadu (`consolidateMasterBibliography`) dengan pelacakan bab rujukan.
+  - Kompiler naskah utuh ke blok EditorJS (`compileBinderToUnifiedBlocks`) dan format Markdown (`compileBinderToMarkdown`).
+- [x] **2. Thesis Project Binder Modal UI (`components/editor/modals/project-binder-modal.tsx`)**:
+  - Modal komprehensif 4 tab: **Bab & Bagian**, **Daftar Pustaka Terpadu**, **Indeks Gambar & Tabel**, dan **Kompilasi Skripsi**.
+  - Ringkasan statistik naskah terpadu (Total Kata, Estimasi Waktu Baca, Jumlah Gambar/Tabel, Total Referensi Unik).
+  - Aksi 1-klik unduh BibTeX terpadu (.bib) dan salin naskah utuh siap sidang (Markdown).
+  - Kepatuhan Tailwind Dark Mode penuh dan dwibahasa EN ↔ ID.
+- [x] **3. Quick Binder Access Card & Sidebar Integration (`components/editor/sidebar-document-tab.tsx`)**:
+  - Kartu *Thesis Project Binder* di bagian atas tab Dokumen sidebar menampilkan nama proyek, label bab aktif, dan tombol akses cepat membuka binder modal.
+- [x] **4. Command Palette & Global Shortcut Hub**:
+  - Pendaftaran perintah `cmd_project_binder` di `lib/editor/command-palette.ts`.
+  - Pendaftaran pintasan keyboard `Ctrl + Shift + M` di `editor-layout.tsx` dan `components/editor/modals/shortcuts-modal.tsx`.
+- [x] **5. Automated Unit Testing**:
+  - Unit test komprehensif di `__tests__/utils/project-binder.test.ts` (11/11 tests passing, total test suite lulus 175/175 tests).

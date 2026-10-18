@@ -160,6 +160,14 @@ export function ShortcutsModal({ isOpen, onClose, language }: ShortcutsModalProp
       category: 'editor',
     },
     {
+      keys: ['Ctrl', 'Shift', 'M'],
+      actionEn: 'Thesis Project Binder & Multi-Chapter Hub',
+      actionId: 'Pengikat Naskah Skripsi & Bab Terpadu',
+      tooltipEn: 'Manage multi-chapter thesis, cross-chapter continuous figure/table numbering, and consolidated master bibliography.',
+      tooltipId: 'Kelola skripsi multi-bab (Bab 1 s.d. Bab 5), penomoran gambar berkesinambungan, dan daftar pustaka terpadu.',
+      category: 'editor',
+    },
+    {
       keys: ['Ctrl', 'Shift', 'B'],
       actionEn: 'Insert Figure / Table Cross-Reference',
       actionId: 'Sisipkan Rujukan Gambar / Tabel',

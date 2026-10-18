@@ -2,6 +2,29 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.33.0] - 2026-10-18 (Phase 33: Multi-Chapter Thesis & Dissertation Project Binder)
+
+### 🚀 Multi-Chapter Thesis & Dissertation Project Binder
+- **Multi-Chapter Project Binder Engine (`lib/editor/project-binder.ts`)**:
+  - Academic chapter number parsing supporting standard conventions (*"Bab 1: Pendahuluan"*, *"Chapter 2: Literature Review"*, *"Bagian 3"*).
+  - Project chapter aggregator and extractor (`extractProjectChapters`) with word & character counting and ordering.
+  - Cross-chapter continuous figure & table numbering engine (`extractCrossChapterFiguresAndTables`) conforming to Indonesian Higher Education (Dikti) and international standards (`Gambar {Bab}.{Nomor}`, `Tabel {Bab}.{Nomor}` / `Figure {Chapter}.{Number}`, `Table {Chapter}.{Number}`).
+  - Master Bibliography aggregator (`consolidateMasterBibliography`) extracting citations from all chapters, deduplicating records by DOI or title/author, tracking which chapters cited each reference, and sorting by active citation style (APA/Harvard alphabetical or IEEE/Vancouver numeric appearance).
+  - Full manuscript compiler producing combined EditorJS AST blocks with chapter headings and section dividers (`compileBinderToUnifiedBlocks`), as well as consolidated Markdown export (`compileBinderToMarkdown`).
+- **Thesis Project Binder Modal UI (`components/editor/modals/project-binder-modal.tsx`)**:
+  - Modal hub with 4 interactive tabs: **Chapters / Sections**, **Master Bibliography**, **Figures & Tables Index**, and **Compile & Export**.
+  - Thesis metrics bar: Total Words across all chapters, Estimated Total Reading Time, Figure & Table count, and Unique References count.
+  - 1-click actions: "Export .bib File" (consolidated BibTeX archive) and "Copy Full Markdown Manuscript" ready for thesis defense/submission.
+  - Strict compliance with Tailwind Dark Mode and bilingual EN ↔ ID localization.
+- **Sidebar Integration (`components/editor/sidebar-document-tab.tsx`)**:
+  - Added dedicated *Thesis Project Binder* card displaying active project name, chapter badge, and 1-click button to open the binder modal.
+- **Global Shortcuts & Command Palette**:
+  - Registered `cmd_project_binder` in `lib/editor/command-palette.ts`.
+  - Added global keyboard shortcut `Ctrl + Shift + M` in `editor-layout.tsx` and cheat sheet in `shortcuts-modal.tsx`.
+
+### 🧪 Automated Testing
+- **Vitest Suite Expansion (`__tests__/utils/project-binder.test.ts`)**: Added 11 unit tests covering chapter parsing, word counting, cross-chapter figure/table numbering, master bibliography deduplication, style-based sorting, summary metrics, and multi-chapter compilation. Total Vitest suite passing at **175/175 tests across 19 test files**.
+
 ## ⚡ [v0.32.0] - 2026-10-18 (Phase 32: Smart In-Text Reference Mention (`@cite` / `@ref`) & Quick Citation Injector)
 
 ### 🚀 Smart In-Text Reference Mention & Quick Citation Injector

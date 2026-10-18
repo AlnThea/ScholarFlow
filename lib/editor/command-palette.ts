@@ -317,6 +317,19 @@ export function getAvailableCommands(language: 'en' | 'id'): CommandItem[] {
       actionId: 'open_academic_scaffold',
       badge: 'IMRaD/Skripsi',
     },
+    {
+      id: 'cmd_project_binder',
+      title: isEn ? 'Thesis Project Binder & Multi-Chapter Hub' : 'Pengikat Naskah Skripsi & Bab Terpadu',
+      description: isEn ? 'Manage multi-chapter thesis, cross-chapter figures/tables & master bibliography' : 'Kelola skripsi multi-bab, penomoran gambar lintas-bab & daftar pustaka terpadu',
+      tooltip: isEn
+        ? 'Binds multiple document chapters (Chapters 1 to 5) into a unified thesis binder with continuous figure/table numbering, consolidated master references, and 1-click full manuscript compilation.'
+        : 'Mengikat dokumen multi-bab (Bab 1 s.d. Bab 5) menjadi satu naskah skripsi terpadu dengan penomoran gambar/tabel berkesinambungan, daftar pustaka master bersama, dan kompilasi naskah utuh.',
+      category: 'navigation',
+      shortcut: 'Ctrl + Shift + M',
+      keywords: ['binder', 'skripsi', 'thesis', 'bab', 'chapter', 'dissertation', 'proyek', 'multi-chapter'],
+      actionId: 'open_project_binder',
+      badge: 'Phase 33',
+    },
 
     // --- NAVIGATION & SYSTEM ---
     {

@@ -199,13 +199,14 @@ DONE:
 - Oracle VPS selected
 - Phase 31: Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti)
 - Phase 32: Smart In-Text Reference Mention (@cite / @ref) & Quick Citation Injector
-
-IN PROGRESS:
 - Phase 33: Multi-Chapter Thesis & Dissertation Project Binder
 
+IN PROGRESS:
+- Phase 34: Academic Grammar & Style Linter
+
 NEXT:
-1. Academic grammar & style linter
-2. Conference slide deck generator (.pptx / Marp)
+1. Conference slide deck generator (.pptx / Marp)
+2. Interactive Literature Matrix & Synthesis Grid
 
 ---
 

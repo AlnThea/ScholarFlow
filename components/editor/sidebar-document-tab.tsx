@@ -4,7 +4,7 @@ import {
   IconFilter, IconFolderOpen, IconLoader2, IconCirclePlus, IconQuote,
   IconSearch, IconSum, IconSparkles, IconWand, IconChevronLeft,
   IconChevronRight, IconLanguage, IconX, IconClock, IconTrash, IconCopy, IconHistory,
-  IconMicroscope
+  IconMicroscope, IconLayersLinked
 } from '@tabler/icons-react';
 
 
@@ -31,6 +31,8 @@ export const SidebarDocumentTab = (props: any) => {
     handleStartScan, plagiarismDetails, setPlagiarismDetails, selectedFolderFilter, setSelectedFolderFilter,
     newFolderName, setNewFolderName, isAddingFolder, setIsAddingFolder,
     onOpenPeerReview,
+    currentDocument,
+    onOpenProjectBinder,
     t, getSourceLabel, formatHistoryLabel, ActionButton, PanelRow
   } = props;
 
@@ -38,6 +40,42 @@ export const SidebarDocumentTab = (props: any) => {
   return (
     <>
       <div className="space-y-3">
+        {/* Thesis Project Binder Section */}
+        <section className="rounded-lg border border-indigo-200/70 dark:border-indigo-900/40 bg-gradient-to-b from-indigo-50/40 via-white to-white dark:from-indigo-950/20 dark:via-slate-800 dark:to-slate-800 p-3 shadow-xs">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-1 rounded-md bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">
+                <IconLayersLinked className="h-3.5 w-3.5" />
+              </div>
+              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                {isEn ? 'Thesis Project Binder' : 'Binder Naskah Skripsi'}
+              </h3>
+            </div>
+            {currentDocument?.settings?.projectPart && (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">
+                {currentDocument.settings.projectPart}
+              </span>
+            )}
+          </div>
+          <p className="text-[11px] text-slate-600 dark:text-slate-350 leading-relaxed mb-2.5">
+            {currentDocument?.settings?.projectName
+              ? (isEn
+                  ? `Folder: ${currentDocument.settings.projectName}. Manage multi-chapter sync, figures/tables, and master bibliography.`
+                  : `Folder: ${currentDocument.settings.projectName}. Kelola bab terpadu, rujukan gambar, dan daftar pustaka konsolidasi.`)
+              : (isEn
+                  ? 'Organize multi-chapter research, continuous numbering, and unified references.'
+                  : 'Kelola penelitian multi-bab, penomoran berkesinambungan, dan daftar pustaka terpadu.')}
+          </p>
+          <button
+            type="button"
+            onClick={() => onOpenProjectBinder?.()}
+            className="w-full py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <IconLayersLinked className="h-3.5 w-3.5" />
+            <span>{isEn ? 'Open Project Binder' : 'Buka Pengikat Skripsi'}</span>
+          </button>
+        </section>
+
                 <section className="rounded-lg border border-line dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm">
                   <div className="mb-3 flex items-center gap-2">
                     <IconBook className="h-4 w-4 text-accent dark:text-indigo-400" />

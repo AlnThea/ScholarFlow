@@ -4,12 +4,13 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.32.0 (Phase 32 Completed - Smart In-Text Reference Mention (@cite / @ref) & Quick Citation Injector, 164/164 tests passing). Ready for Phase 33: Multi-Chapter Thesis & Dissertation Project Binder.
+v0.33.0 (Phase 33 Completed - Multi-Chapter Thesis & Dissertation Project Binder, 175/175 tests passing). Ready for Phase 34: Academic Grammar & Style Linter.
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
 - [x] Phase 32: Smart In-Text Reference Mention (`@cite` / `@ref`) & Quick Citation Injector.
-- [ ] Phase 33: Multi-Chapter Thesis & Dissertation Project Binder.
+- [x] Phase 33: Multi-Chapter Thesis & Dissertation Project Binder.
+- [ ] Phase 34: Academic Grammar & Style Linter.
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.
@@ -196,6 +197,12 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] Floating mention overlay dropdown dengan navigasi keyboard (`↑`, `↓`, `Enter`, `Esc`), Dark Mode, dan bilingual EN/ID (`components/editor/citation-mention-dropdown.tsx`).
   - [x] In-text citation injector non-destruktif menggantikan token mention dengan tag `<cite>` dan sinkronisasi reaktif daftar pustaka (`lib/editor/methods/mention-injector.ts`, `hooks/use-citation-mention.ts`).
   - [x] Automated Unit Testing: 13/13 tests passing (`__tests__/utils/citation-mention.test.ts`), total 164/164 tests passing across 18 test files.
+- [x] **27. Phase 33: Multi-Chapter Thesis & Dissertation Project Binder**:
+  - [x] Multi-chapter project binder engine (`lib/editor/project-binder.ts`): parsing nomor bab akademik, penomoran berkesinambungan gambar/tabel lintas bab standar Dikti (`Gambar {Bab}.{Nomor}`, `Tabel {Bab}.{Nomor}`), dan konsolidasi Master Bibliography.
+  - [x] Thesis Project Binder Modal (`components/editor/modals/project-binder-modal.tsx`) dengan 4 tab interaktif, ringkasan statistik komprehensif, ekspor BibTeX terpadu (.bib), dan kompilasi naskah utuh (Markdown).
+  - [x] Kartu integrasi binder pada tab Dokumen sidebar (`components/editor/sidebar-document-tab.tsx`) dengan indikator folder dan bab aktif.
+  - [x] Pendaftaran aksi `cmd_project_binder` di `lib/editor/command-palette.ts` dan pintasan `Ctrl + Shift + M` di `shortcuts-modal.tsx`.
+  - [x] Automated Unit Testing: 11/11 tests passing (`__tests__/utils/project-binder.test.ts`), total test suite lulus 175/175 tests across 19 test files.
 ## Do Not Work On Yet
 - SPSS / PSPP (Strategy decided: "AI Output Interpreter" - user uploads output tables, AI interprets and drafts academic narrative to editor. Do not build a full SPSS clone).
 - SEM PLS
