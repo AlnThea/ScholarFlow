@@ -201,13 +201,13 @@ DONE:
 - Phase 32: Smart In-Text Reference Mention (@cite / @ref) & Quick Citation Injector
 - Phase 33: Multi-Chapter Thesis & Dissertation Project Binder
 - Phase 34: Academic Grammar & Style Linter
+- Phase 35: Conference & Thesis Defense Slide Deck Generator (16:9 Deck / Marp / HTML)
 
 IN PROGRESS:
-- Phase 35: Conference & Thesis Defense Slide Deck Generator (.pptx / Marp)
+- Phase 36: Interactive Literature Matrix & Synthesis Grid
 
 NEXT:
-1. Interactive Literature Matrix & Synthesis Grid
-2. Journal Formatting Preset Configurator
+1. Journal Formatting Preset Configurator
 
 ---
 

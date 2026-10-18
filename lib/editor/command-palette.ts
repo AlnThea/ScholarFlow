@@ -407,6 +407,19 @@ export function getAvailableCommands(language: 'en' | 'id'): CommandItem[] {
       badge: 'Overleaf / Zip',
     },
     {
+      id: 'cmd_slide_deck',
+      title: isEn ? 'Conference & Thesis Defense Slide Deck' : 'Generator Slide Sidang & Konferensi',
+      description: isEn ? 'Generate 16:9 interactive defense deck or Marp presentation' : 'Susun slide presentasi sidang 16:9 interaktif atau format Marp',
+      tooltip: isEn
+        ? 'Synthesizes manuscript sections into structured thesis defense slides with speaker notes, offline HTML presenter deck, and Marp markdown export.'
+        : 'Menyintesis bab-bab naskah menjadi slide sidang terstruktur lengkap dengan catatan pembicara, penampil HTML mandiri offline, dan ekspor Marp markdown.',
+      category: 'system',
+      shortcut: 'Ctrl + Shift + E',
+      keywords: ['slide', 'presentation', 'presentasi', 'sidang', 'defense', 'marp', 'powerpoint', 'deck'],
+      actionId: 'open_slide_deck',
+      badge: 'Slides 16:9',
+    },
+    {
       id: 'cmd_toggle_theme',
       title: isEn ? 'Toggle Dark / Light Mode' : 'Ganti Tema Gelap / Terang',
       description: isEn ? 'Switch visual theme for comfortable day/night writing' : 'Beralih antara tema gelap dan terang untuk kenyamanan mata',

@@ -463,3 +463,23 @@ Target: Mendeteksi kata non-formal, kontraksi percakapan, klaim asumtif tanpa da
   - Pendaftaran pintasan keyboard `Ctrl + Shift + L` di `editor-layout.tsx` dan `shortcuts-modal.tsx`.
 - [x] **5. Automated Unit Testing**:
   - Unit test suite di `__tests__/utils/academic-linter.test.ts` (9/9 tests passing, total suite lulus 184/184 tests across 20 test files).
+
+### Phase 35: Conference & Thesis Defense Slide Deck Generator
+Target: Sintesis otomatis naskah skripsi / paper ke dalam slide presentasi sidang akademik (rasio 16:9), drawer catatan pembicara (*speaker notes*), format Marp Markdown, dan unduh berkas presentasi HTML offline mandiri.
+
+- [x] **1. Slide Deck Generator Engine (`lib/editor/slide-deck-generator.ts`)**:
+  - Pemindaian blok AST naskah EditorJS dan pemetaan ke 9 slide sidang baku: Judul, Rumusan Masalah, Tujuan & Batasan, Landasan Teori, Metodologi, Temuan Kunci, Pembahasan, Kesimpulan, dan Rujukan Utama.
+  - Perhitungan estimasi durasi waktu presentasi (~1.75 menit per slide).
+  - Ekspor standar format Marp Markdown (`marp: true`, pagination, notes).
+  - Generator berkas HTML mandiri (*standalone single-file offline deck*) dengan kontrol keyboard (`ArrowLeft`/`ArrowRight`), tombol fullscreen, dan progress bar.
+- [x] **2. Slide Deck Modal UI (`components/editor/modals/slide-deck-modal.tsx`)**:
+  - Modal interaktif layar penuh dengan stage presentasi 16:9, sidebar thumbnail slide, tombol navigasi prev/next, dan drawer catatan narasi pembicara.
+  - 3 Tema visual presentasi: Modern Academic, Classic Navy, dan Minimal Emerald.
+  - Aksi 1-klik unduh HTML Deck dan salin Marp Markdown.
+  - Kepatuhan penuh Tailwind Dark Mode dan dwibahasa EN ↔ ID.
+- [x] **3. Integrasi Sidebar Tab Dokumen & Command Palette**:
+  - Kartu *Defense Slide Deck* di `components/editor/sidebar-document-tab.tsx` dengan tombol "Buka Generator Slide".
+  - Pendaftaran perintah `cmd_slide_deck` di `lib/editor/command-palette.ts`.
+  - Pendaftaran pintasan keyboard global `Ctrl + Shift + E` di `editor-layout.tsx` dan `shortcuts-modal.tsx`.
+- [x] **4. Automated Unit Testing**:
+  - Unit test suite di `__tests__/utils/slide-deck-generator.test.ts` (5/5 tests passing, total suite lulus 189/189 tests across 21 test files).

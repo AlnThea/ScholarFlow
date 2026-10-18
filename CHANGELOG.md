@@ -2,6 +2,38 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.35.0] - 2026-10-18 (Phase 35: Conference & Thesis Defense Slide Deck Generator)
+
+### 🚀 Conference & Thesis Defense Slide Deck Generator
+- **Slide Deck Generator Engine (`lib/editor/slide-deck-generator.ts`)**:
+  - Automatically synthesizes EditorJS manuscript blocks into standard 9-slide academic defense and conference decks:
+    - *Title Slide*: Title, author, academic institution, session track badge.
+    - *Problem Statement & Background*: Empirical gap, real-world context, core tension.
+    - *Research Objectives & Scope*: Questions, target hypotheses, parameters.
+    - *Theoretical Framework & Literature*: Baseline literature, underlying theoretical models.
+    - *Methodology & Research Design*: Population, sampling, instruments, and analysis pipeline.
+    - *Key Results & Empirical Findings*: Primary statistical/thematic evidence addressing hypotheses.
+    - *Discussion & Scientific Contribution*: Theoretical implications and comparative analysis.
+    - *Conclusion & Recommendations*: Concluding takeaway message and future study avenues.
+    - *References & Acknowledgments*: Closing citations, supervisor gratitude, and Q&A invitation.
+  - Generates standard **Marp Markdown** (`marp: true`, lead classes, speaker notes, custom styling).
+  - Generates **Standalone Offline HTML Presentation**: Self-contained single-file HTML deck with keyboard navigation (`ArrowLeft` / `ArrowRight`), fullscreen toggle, speaker notes drawer, and responsive slide cards.
+  - Automatically calculates estimated presentation duration (~1.75 minutes per slide).
+- **Slide Deck Modal UI (`components/editor/modals/slide-deck-modal.tsx`)**:
+  - Fullscreen 16:9 widescreen presentation stage with live carousel preview and slide counter.
+  - Thumbnails sidebar displaying all slides with active selection state and category badges.
+  - 3 Visual theme presets: Modern Academic (Indigo/Slate), Classic Navy (Blue/Amber), and Minimal Emerald.
+  - Toggleable Speaker Notes / Narration Guide drawer with presentation tips.
+  - 1-Click "Download Standalone HTML Deck" and "Copy Marp MD" action buttons.
+  - Strict compliance with Tailwind Dark Mode and bilingual EN ↔ ID localization.
+- **Sidebar & Editor Layout Integration**:
+  - Added dedicated *Defense Slide Deck* card with "Open Slide Generator" button in `components/editor/sidebar-document-tab.tsx`.
+  - Registered `cmd_slide_deck` in `lib/editor/command-palette.ts`.
+  - Added global keyboard shortcut `Ctrl + Shift + E` in `editor-layout.tsx` and cheat sheet entry in `shortcuts-modal.tsx`.
+
+### 🧪 Automated Testing
+- **Vitest Suite Expansion (`__tests__/utils/slide-deck-generator.test.ts`)**: Added 5 unit tests verifying HTML text stripping, English and Indonesian deck generation, Marp Markdown export formatting, and standalone HTML bundle generation. Total Vitest suite passing at **189/189 tests across 21 test files**.
+
 ## ⚡ [v0.34.0] - 2026-10-18 (Phase 34: Academic Grammar & Style Linter)
 
 ### 🚀 Academic Grammar, Formality & Style Linter

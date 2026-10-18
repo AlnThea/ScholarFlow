@@ -206,5 +206,7 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
 - [x] **11.1 Academic Grammar, Formality & Style Linter (Phase 34)**
   - [x] Mesin pendeteksi anti-pattern penulisan saintifik (slang/informal, kontraksi percakapan, klaim generalisasi tanpa rujukan, bias persona pertama) dengan kamus aturan linguistik dwibahasa (EN / ID).
   - [x] Modal audit gaya naskah interaktif dengan visualisasi skor formalitas akademik (Grade A s.d. D), filter kategori, dan tombol 1-klik penggantian teks resmi.
-- [ ] **11.2 Conference & Thesis Defense Slide Deck Generator (Phase 35)**
+- [x] **11.2 Conference & Thesis Defense Slide Deck Generator (Phase 35)**
+  - [x] Sintesis sekuensial blok naskah EditorJS menjadi 9 slide presentasi sidang akademik standar (Judul, Masalah, Tujuan, Teori, Metodologi, Temuan, Pembahasan, Kesimpulan, Rujukan).
+  - [x] Modal preview slide interaktif rasio 16:9 dengan carousel tombol / keyboard, drawer catatan pembicara (*Speaker Notes*), 3 pilihan tema desain visual, ekspor Marp Markdown, dan unduh berkas presentasi HTML offline mandiri.
 - [ ] **11.3 Interactive Literature Matrix & Synthesis Grid (Phase 36)**

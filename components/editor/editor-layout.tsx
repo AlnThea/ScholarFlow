@@ -30,6 +30,7 @@ import { CrossReferenceModal } from './modals/cross-reference-modal';
 import { AcademicScaffoldModal } from './modals/academic-scaffold-modal';
 import { ProjectBinderModal } from './modals/project-binder-modal';
 import { AcademicLinterModal } from './modals/academic-linter-modal';
+import { SlideDeckModal } from './modals/slide-deck-modal';
 import { CitationMentionDropdown } from './citation-mention-dropdown';
 import { useCitationMention } from '@/hooks/use-citation-mention';
 import { addSuggestion } from '@/lib/api/suggestions';
@@ -344,6 +345,7 @@ export function EditorLayout({
   const [isScaffoldModalOpen, setIsScaffoldModalOpen] = useState(false);
   const [isProjectBinderModalOpen, setIsProjectBinderModalOpen] = useState(false);
   const [isLinterModalOpen, setIsLinterModalOpen] = useState(false);
+  const [isSlideDeckModalOpen, setIsSlideDeckModalOpen] = useState(false);
   const referenceFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleParsedReferences = (candidates: CitationCandidate[], fileName: string) => {
@@ -501,6 +503,13 @@ export function EditorLayout({
         setIsLinterModalOpen(true);
         return;
       }
+
+      // Ctrl + Shift + E -> Conference & Thesis Defense Slide Deck
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        setIsSlideDeckModalOpen(true);
+        return;
+      }
     };
 
     window.addEventListener('keydown', handleGlobalShortcuts);
@@ -582,6 +591,9 @@ export function EditorLayout({
         break;
       case 'open_academic_linter':
         setIsLinterModalOpen(true);
+        break;
+      case 'open_slide_deck':
+        setIsSlideDeckModalOpen(true);
         break;
       case 'open_version_history':
         versionHistory.openVersionHistory?.();
@@ -1033,6 +1045,7 @@ export function EditorLayout({
                   onOpenPeerReview={() => setIsPeerReviewModalOpen(true)}
                   onOpenProjectBinder={() => setIsProjectBinderModalOpen(true)}
                   onOpenLinter={() => setIsLinterModalOpen(true)}
+                  onOpenSlideDeck={() => setIsSlideDeckModalOpen(true)}
                 />
               )}
             </div>
@@ -1312,6 +1325,15 @@ export function EditorLayout({
             });
           }
         }}
+      />
+      <SlideDeckModal
+        isOpen={isSlideDeckModalOpen}
+        onClose={() => setIsSlideDeckModalOpen(false)}
+        editorBlocks={currentDocument?.content?.blocks || []}
+        documentTitle={currentDocument?.title || 'Academic Research Presentation'}
+        authorName={profile?.full_name || user?.email || undefined}
+        institutionName={profile?.institution || undefined}
+        language={language as 'en' | 'id'}
       />
       <CitationMentionDropdown
         isOpen={citationMention.isOpen}

@@ -118,6 +118,9 @@ type SidebarProps = {
   citationLibrary?: Record<string, CitationCandidate>;
   onInsertCitationText?: (text: string, referenceId?: string, label?: string) => void;
   onOpenPeerReview?: () => void;
+  onOpenProjectBinder?: () => void;
+  onOpenLinter?: () => void;
+  onOpenSlideDeck?: () => void;
 };
 
 function PanelRow({

@@ -4,7 +4,7 @@ import {
   IconFilter, IconFolderOpen, IconLoader2, IconCirclePlus, IconQuote,
   IconSearch, IconSum, IconSparkles, IconWand, IconChevronLeft,
   IconChevronRight, IconLanguage, IconX, IconClock, IconTrash, IconCopy, IconHistory,
-  IconMicroscope, IconLayersLinked, IconSpellCheck
+  IconMicroscope, IconLayersLinked, IconSpellCheck, IconPresentation
 } from '@tabler/icons-react';
 
 
@@ -34,6 +34,7 @@ export const SidebarDocumentTab = (props: any) => {
     currentDocument,
     onOpenProjectBinder,
     onOpenLinter,
+    onOpenSlideDeck,
     t, getSourceLabel, formatHistoryLabel, ActionButton, PanelRow
   } = props;
 
@@ -190,6 +191,36 @@ export const SidebarDocumentTab = (props: any) => {
                   >
                     <IconSpellCheck className="h-3.5 w-3.5" />
                     <span>{isEn ? 'Launch Style Audit' : 'Audit Gaya Bahasa'}</span>
+                  </button>
+                </section>
+
+                {/* Conference & Defense Slide Deck Generator Section */}
+                <section className="rounded-lg border border-purple-200/70 dark:border-purple-900/40 bg-gradient-to-b from-purple-50/30 via-white to-white dark:from-purple-950/20 dark:via-slate-800 dark:to-slate-800 p-3 shadow-xs flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 rounded-md bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">
+                        <IconPresentation className="h-3.5 w-3.5" />
+                      </div>
+                      <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                        {isEn ? 'Defense Slide Deck' : 'Slide Sidang & Konferensi'}
+                      </h3>
+                    </div>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                      16:9 Deck
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-350 leading-relaxed">
+                    {isEn
+                      ? 'Auto-synthesize your manuscript into a conference or defense slide deck with speaker notes.'
+                      : 'Sintesis naskah skripsi secara otomatis menjadi slide presentasi sidang dengan catatan pembicara.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => onOpenSlideDeck?.()}
+                    className="w-full py-1.5 px-3 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <IconPresentation className="h-3.5 w-3.5" />
+                    <span>{isEn ? 'Open Slide Generator' : 'Buka Generator Slide'}</span>
                   </button>
                 </section>
 

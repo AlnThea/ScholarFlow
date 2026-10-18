@@ -73,6 +73,14 @@ export function ShortcutsModal({ isOpen, onClose, language }: ShortcutsModalProp
       tooltipId: 'Beralih instan antara mode gelap untuk kenyamanan mata dan mode terang yang jernih.',
       category: 'global',
     },
+    {
+      keys: ['Ctrl', 'Shift', 'E'],
+      actionEn: 'Conference & Thesis Defense Slide Deck',
+      actionId: 'Generator Slide Sidang & Konferensi',
+      tooltipEn: 'Synthesize manuscript sections into 16:9 defense slides, standalone HTML deck, and Marp markdown.',
+      tooltipId: 'Sintesis naskah menjadi slide sidang 16:9, berkas penampil HTML offline, dan format Marp.',
+      category: 'global',
+    },
 
     // AI & Reviewer
     {

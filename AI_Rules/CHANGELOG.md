@@ -1,5 +1,26 @@
 # ScholarFlow Changelog
 
+## v0.35.0 - Conference & Thesis Defense Slide Deck Generator
+
+- **Slide Deck Generator Engine (`lib/editor/slide-deck-generator.ts`)**:
+  - Automatically parses EditorJS manuscript AST blocks and maps them into 9 structured defense slides: Title, Problem Statement & Background, Research Objectives & Scope, Theoretical Framework & Literature, Methodology & Research Design, Key Results & Empirical Findings, Discussion & Scientific Contribution, Conclusion & Recommendations, and References & Acknowledgments.
+  - Automatically calculates estimated presentation duration (~1.75 minutes per slide).
+  - Formats into standard Marp Markdown (`marp: true`, lead classes, speaker notes, custom styling).
+  - Generates standalone, self-contained offline HTML presentation deck with keyboard controls (`ArrowLeft` / `ArrowRight`), fullscreen toggle, and speaker notes drawer.
+- **Slide Deck Modal UI (`components/editor/modals/slide-deck-modal.tsx`)**:
+  - Fullscreen interactive presentation stage with live 16:9 widescreen carousel preview.
+  - Sidebar thumbnail list of all slides with selection states and category badges.
+  - 3 Visual design theme presets: Modern Academic (Indigo/Slate), Classic Navy (Blue/Amber), and Minimal Emerald.
+  - Speaker Notes / Narration Guide drawer with presentation tips.
+  - 1-Click "Download Standalone HTML Deck" and "Copy Marp MD" action buttons.
+  - Strict compliance with Tailwind Dark Mode and bilingual EN ↔ ID localization.
+- **Sidebar & Editor Layout Integration**:
+  - Added dedicated *Defense Slide Deck* card with "Open Slide Generator" button in `components/editor/sidebar-document-tab.tsx`.
+  - Registered `cmd_slide_deck` in `lib/editor/command-palette.ts`.
+  - Added global keyboard shortcut `Ctrl + Shift + E` in `editor-layout.tsx` and cheat sheet in `shortcuts-modal.tsx`.
+- **Automated Unit Testing**:
+  - Added `__tests__/utils/slide-deck-generator.test.ts` (5 unit tests). Vitest suite passing at **189/189 tests across 21 test files**.
+
 ## v0.34.0 - Academic Grammar & Style Linter (Automated Tone & Style Auditor)
 
 - **Academic Style & Tone Linter Engine (`lib/editor/academic-linter.ts`)**:
