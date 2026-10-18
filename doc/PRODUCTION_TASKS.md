@@ -186,3 +186,16 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
 - [x] **9.6 Figure & Table Scientific Auto-Numbering Engine (Phase 30)**
   - [x] Pengindeksan sekuensial gambar & tabel, pembaruan reaktif rujukan silang di badan teks, shorthand `@fig`/`@tab`, modal dialog pemilih rujukan, interaksi jump *smooth scroll* dengan sorotan cincin animasi, dan shortcut `Ctrl+Shift+B`.
 
+---
+
+### 🏛️ EPIC 10: Academic Scaffolding, Fast Mentions & Multi-Chapter Project Binder (Phases 31 - 33)
+- [x] **10.1 Interactive Academic Thesis/Paper Outline & Structure Generator (Phase 31)**
+  - [x] Pembuat kerangka naskah terstruktur berbasis IMRaD dan standar 5 Bab Skripsi/Tesis Dikti dengan AI research guiding prompts.
+  - [x] Generator blok EditorJS cerdas dengan checklist kepatuhan penulisan di setiap sub-bab.
+- [x] **10.2 Smart In-Text Reference Mention (`@cite` / `@ref`) & Quick Citation Injector (Phase 32)**
+  - [x] Auto-complete popup saat mengetik `@cite:`, `@ref:`, atau `@` di kanvas EditorJS untuk mencari paper dari koleksi pustaka (*My Library*) dan menyisipkan sitasi `<cite>` secara instan.
+  - [x] Mesin pengindeksan referensi multi-field in-memory dengan fallback query Crossref/OpenAlex.
+  - [x] Floating dropdown overlay dengan navigasi keyboard (`↑`, `↓`, `Enter`, `Esc`), Dark Mode, dan bilingual (EN ↔ ID).
+  - [x] Penggantian token mention non-destruktif dengan tag `<cite>` dan sinkronisasi reaktif daftar pustaka.
+- [ ] **10.3 Multi-Chapter Thesis & Dissertation Project Binder (Phase 33)**
+  - [ ] Manajemen proyek skripsi multi-dokumen (Bab 1 s.d. Bab 5) dengan penomoran gambar/tabel berkesinambungan dan konsolidasi daftar pustaka bersama.

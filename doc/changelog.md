@@ -1,4 +1,4 @@
-﻿# Refactoring Changelog
+# Refactoring Changelog
 
 Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkaitan dengan upaya merapikan (refactoring) komponen-komponen berukuran raksasa di dalam ScholarFlow.
 
@@ -42,3 +42,8 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 **Selanjutnya:**
 - Mengimplementasikan pemindahan logika dan komponen React dari `editor-layout.tsx` ke file-file tersebut.
 - Menyambungkan (import) komponen yang diekstrak kembali ke `editor-layout.tsx` tanpa merusak *state* atau menghapus fungsionalitas aslinya.
+
+
+- **Phase 31 (v0.31.0)**: Mengembangkan **Academic Thesis/Paper Outline & Structure Generator** (`lib/editor/academic-templates.ts`, `app/api/v1/ai/generate-outline/route.ts`, `lib/editor/methods/outline-scaffold.ts`, `components/editor/modals/academic-scaffold-modal.tsx`) dengan 4 preset struktur ilmiah standar (IMRaD Scopus/WoS, 5 Bab Skripsi Dikti, PRISMA 2020 SLR, Studi Kasus), takarir panduan penulisan per sub-bab, checklist metodologi, endpoint AI personalisasi outline berbasis judul/metode riset, konversi blok EditorJS cerdas, modal interaktif dwibahasa & dark mode, serta pintasan keyboard `Ctrl + Shift + O`.
+
+- **Phase 32 (v0.32.0)**: Mengembangkan **Smart In-Text Reference Mention (`@cite` / `@ref`) & Quick Citation Injector** (`lib/editor/mention-parser.ts`, `lib/editor/reference-search-index.ts`, `components/editor/citation-mention-dropdown.tsx`, `lib/editor/methods/mention-injector.ts`, `hooks/use-citation-mention.ts`) dengan pendeteksi token mention aktif di kursor, kalkulator koordinat kursor `getBoundingClientRect()`, pengindeks pustaka lokal berkecepatan tinggi multi-field dengan fallback pencarian awan Crossref/OpenAlex, popover dropdown mengambang berorientasi keyboard (`↑`, `↓`, `Enter`, `Esc`), injeksi tag `<cite>` non-destruktif ke EditorJS, dark mode & bilingual EN/ID, serta dokumentasi pintasan di modal shortcut (13 unit test baru, total 164/164 lulus).

@@ -197,20 +197,15 @@ DONE:
 - Gemini selected
 - Supabase selected
 - Oracle VPS selected
+- Phase 31: Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti)
+- Phase 32: Smart In-Text Reference Mention (@cite / @ref) & Quick Citation Injector
 
 IN PROGRESS:
-- Next.js setup
-- TipTap integration
-- editor UI
+- Phase 33: Multi-Chapter Thesis & Dissertation Project Binder
 
 NEXT:
-1. editor toolbar
-2. AI sidebar
-3. FastAPI backend
-4. Gemini integration
-5. improve-writing endpoint
-6. citation search
-7. bibliography system
+1. Academic grammar & style linter
+2. Conference slide deck generator (.pptx / Marp)
 
 ---
 

@@ -27,6 +27,9 @@ import { ReferenceDropzone } from './reference-dropzone';
 import { parseReferenceFile } from '@/lib/editor/reference-importer';
 import { SuggestingChips } from './suggesting-chips';
 import { CrossReferenceModal } from './modals/cross-reference-modal';
+import { AcademicScaffoldModal } from './modals/academic-scaffold-modal';
+import { CitationMentionDropdown } from './citation-mention-dropdown';
+import { useCitationMention } from '@/hooks/use-citation-mention';
 import { addSuggestion } from '@/lib/api/suggestions';
 import { IconSparkles } from '@tabler/icons-react';
 import 'katex/dist/katex.min.css';
@@ -336,6 +339,7 @@ export function EditorLayout({
   const [importedCandidates, setImportedCandidates] = useState<CitationCandidate[]>([]);
   const [importedFileName, setImportedFileName] = useState('');
   const [isCrossReferenceModalOpen, setIsCrossReferenceModalOpen] = useState(false);
+  const [isScaffoldModalOpen, setIsScaffoldModalOpen] = useState(false);
   const referenceFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleParsedReferences = (candidates: CitationCandidate[], fileName: string) => {
@@ -356,6 +360,17 @@ export function EditorLayout({
       'info'
     );
   };
+
+  // Phase 32: Smart In-Text Reference Mention (@cite / @ref) Hook
+  const citationMention = useCitationMention({
+    holderId: 'scholarflow-editor',
+    localReferences: (citationLibrary || []) as any[],
+    citationStyle: citationStyle || currentDocument?.settings?.citationStyle || 'apa',
+    language: language as 'en' | 'id',
+    onCitationInserted: (candidate) => {
+      onInsertCitationCandidate?.(candidate, true);
+    },
+  });
 
   // Global Keyboard Shortcuts (Phase 26)
   useEffect(() => {
@@ -461,6 +476,13 @@ export function EditorLayout({
         setIsCrossReferenceModalOpen(true);
         return;
       }
+
+      // Ctrl + Shift + O -> Academic Scaffolding & Outline Generator
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'o') {
+        e.preventDefault();
+        setIsScaffoldModalOpen(true);
+        return;
+      }
     };
 
     window.addEventListener('keydown', handleGlobalShortcuts);
@@ -533,6 +555,9 @@ export function EditorLayout({
         break;
       case 'refresh_cross_references':
         editorJsRef.current?.refreshCrossReferences?.(language as 'en' | 'id');
+        break;
+      case 'open_academic_scaffold':
+        setIsScaffoldModalOpen(true);
         break;
       case 'open_version_history':
         versionHistory.openVersionHistory?.();
@@ -1208,6 +1233,35 @@ export function EditorLayout({
         onRefreshReferences={() => {
           editorJsRef.current?.refreshCrossReferences?.(language as 'en' | 'id');
         }}
+      />
+      <AcademicScaffoldModal
+        isOpen={isScaffoldModalOpen}
+        onClose={() => setIsScaffoldModalOpen(false)}
+        documentTitle={currentDocument?.title}
+        userId={currentUser?.id}
+        userPlan={activePlanId}
+        onApplyBlocks={async (blocks) => {
+          if (editorJsRef.current?.renderContent) {
+            editorJsRef.current.renderContent({
+              time: Date.now(),
+              blocks: blocks,
+              version: '2.31.0'
+            });
+          } else if (editorJsRef.current?.insertBlocks) {
+            await editorJsRef.current.insertBlocks(blocks);
+          }
+        }}
+      />
+      <CitationMentionDropdown
+        isOpen={citationMention.isOpen}
+        onClose={citationMention.closeMention}
+        coordinates={citationMention.coordinates}
+        query={citationMention.query}
+        candidates={citationMention.candidates}
+        selectedIndex={citationMention.selectedIndex}
+        onSelectCandidate={citationMention.selectCandidate}
+        isLoading={citationMention.isLoading}
+        language={language as 'en' | 'id'}
       />
       <OnboardingTour />
     </div>

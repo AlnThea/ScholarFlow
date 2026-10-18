@@ -2,6 +2,56 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.32.0] - 2026-10-18 (Phase 32: Smart In-Text Reference Mention (`@cite` / `@ref`) & Quick Citation Injector)
+
+### 🚀 Smart In-Text Reference Mention & Quick Citation Injector
+- **Active Caret & Token Mention Parser (`lib/editor/mention-parser.ts`)**:
+  - Implemented regex pattern matching detecting mention triggers: `@cite:`, `@ref:`, or standard `@` with trailing search query at current cursor position.
+  - Non-destructive caret coordinate extractor (`getCaretCoordinates`) returning client bounding rectangles (`top`, `left`, `bottom`, `right`) from contenteditable selections.
+  - Safe extraction helpers (`extractMentionQuery`, `isMentionTrigger`) for seamless typing interception.
+- **High-Performance In-Memory Reference Indexer (`lib/editor/reference-search-index.ts`)**:
+  - Multi-field scoring indexer across authors, title, year, journal/venue, abstract, and user citation labels with tokenized search queries.
+  - Integrated debounce helper and Crossref / OpenAlex cloud search fallback for references not yet in the active library.
+  - Dynamic citation label formatting based on active style (e.g., Author-Year `(Smith et al., 2023)` vs Numeric `[1]`).
+- **Floating Mention Dropdown Overlay (`components/editor/citation-mention-dropdown.tsx`)**:
+  - Compact (< 200 lines) floating popover positioned dynamically at caret coordinates with screen-edge boundary clamping.
+  - Full keyboard accessibility: Arrow Up (`↑`) / Arrow Down (`↓`) navigation, `Enter` / `Tab` to select, and `Escape` to dismiss.
+  - Real-time search highlighting, paper metadata chips (year, journal/venue), and external paper badge.
+  - Strict compliance with Tailwind Dark Mode and bilingual EN/ID localization.
+- **Non-Destructive In-Text Citation Injector (`lib/editor/methods/mention-injector.ts` & `hooks/use-citation-mention.ts`)**:
+  - DOM range mutation replacing mention token with structured `<cite data-citation="true" ...>` element.
+  - Dispatches synthetic `input` event to ensure EditorJS and reactive hooks track document content and bibliography changes.
+  - Custom hook `useCitationMention` bound to active editor layout with zero UI lag.
+- **Editor Layout & Shortcuts Integration**:
+  - Mounted `<CitationMentionDropdown ... />` in `components/editor/editor-layout.tsx`.
+  - Documented `@cite:` and `@` shortcuts in `components/editor/modals/shortcuts-modal.tsx`.
+
+### 🧪 Automated Testing
+- **Vitest Suite Expansion (`__tests__/utils/citation-mention.test.ts`)**: Added 13 unit tests covering token parsing, query extraction, multi-field local search, query scoring, external cloud fallback, and in-text citation HTML formatting. Total Vitest suite passing at **164/164 tests across 18 test files**.
+
+## ⚡ [v0.31.0] - 2026-10-18 (Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator)
+
+### 🚀 Academic Outline & Structure Scaffolding Engine
+- **Academic Structure Presets Engine (`lib/editor/academic-templates.ts`)**:
+  - Defined 4 standardized research presets: **IMRaD International Journal** (Scopus/WoS), **Indonesian Thesis (5 Chapters Standard)** (Dikti National Standard), **PRISMA 2020 Systematic Literature Review (SLR)**, and **Clinical & Organizational Case Study**.
+  - Interactive research guiding prompts and section-by-section checklists detailing exact methodological and reviewer criteria.
+  - AST block converters (`convertScaffoldToEditorJsBlocks`) producing valid EditorJS blocks with unique IDs and clean Markdown compiler (`convertScaffoldToMarkdown`).
+- **AI Personalized Outline Generator Endpoint (`app/api/v1/ai/generate-outline/route.ts`)**:
+  - AI route parsing research topic, field of study, and methodology to formulate tailored sub-sections with specific research questions.
+  - Full resilience stack integration: 5-minute Smart Idempotency caching, Personal Token Quota guard, Multi-tenant Campus Dedicated AI key resolver, Gemini Key Pool failover, and Server-Side AI Logger.
+- **EditorJS Scaffolding Builder & Canvas Injector (`lib/editor/methods/outline-scaffold.ts`)**:
+  - `convertTailoredAirOutlineToBlocks` converting tailored AI sub-sections into structured EditorJS blocks.
+  - `injectScaffoldIntoEditorJs` supporting both Append (insert at end) and Replace (fresh scaffold) modes.
+- **Interactive Scaffolding Setup Modal (`components/editor/modals/academic-scaffold-modal.tsx`)**:
+  - Modern modal with dual-tab interface: **Standard Presets** vs **AI Tailored Scaffolding**.
+  - Real-time tree preview, writing guidance toggles, checklist toggles, insertion mode selector, Dark Mode, and bilingual EN/ID support.
+- **Keyboard Shortcuts & Command Palette Integration**:
+  - Registered `cmd_academic_scaffold` in `lib/editor/command-palette.ts`.
+  - Added global shortcut `Ctrl + Shift + O` in `components/editor/editor-layout.tsx` and updated `shortcuts-modal.tsx` cheat sheet.
+
+### 🧪 Automated Testing
+- **Vitest Suite Expansion (`__tests__/utils/academic-templates.test.ts`)**: Added 11 unit tests covering preset retrieval, bilingual generation, markdown conversion, AI tailored block translation, and prompt builders. Total Vitest suite passing at **151/151 tests across 17 test files**.
+
 ## ⚡ [v1.5.0] - 2026-10-17 (Phase 30: Figure & Table Scientific Auto-Numbering Engine)
 
 ### 🚀 Scientific Cross-Referencing & Auto-Numbering Engine

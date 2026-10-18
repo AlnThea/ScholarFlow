@@ -385,9 +385,41 @@ Target: Penomoran otomatis dinamis Gambar X dan Tabel Y dengan cross-referencing
 - [x] **4. Modal Dialog & Toolbar Quick Access (`components/editor/modals/cross-reference-modal.tsx`)**: Dialog interaktif pemilih rujukan dengan tab filter, pencarian takarir, tombol sisipkan, dan tombol pintasan keyboard `Ctrl + Shift + B`.
 - [x] **5. Automated Testing**: 11/11 unit test komprehensif pada Vitest (`__tests__/utils/cross-reference.test.ts`), total suite lulus 140/140 tests.
 
+### Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti)
+Target: Membantu peneliti dan mahasiswa menyusun kerangka naskah ilmiah secara instan dengan panduan riset komprehensif berbasis AI sesuai format baku (IMRaD Jurnal Internasional atau 5 Bab Skripsi/Tesis Nasional).
 
+- [x] **1. Academic Template & Structure Definition (`lib/editor/academic-templates.ts`)**:
+  - Definisi preset struktur standar: IMRaD (Introduction, Methods, Results, Discussion), Skripsi/Tesis (Bab 1 Pendahuluan s.d. Bab 5 Penutup), Tinjauan Pustaka Sistematis (SLR/PRISMA), dan Essay Ilmiah.
+  - Setiap bagian dilengkapi takarir panduan (*guiding prompts & research questions*) yang mengarahkan peneliti mengenai apa yang wajib ditulis di sub-bab tersebut.
+- [x] **2. AI Outline Generator API (`app/api/v1/ai/generate-outline/route.ts`)**:
+  - Endpoint cerdas yang menerima judul riset, bidang studi, metodologi, dan tujuan penelitian, kemudian menghasilkan pohon sub-bab naskah terpersonalisasi.
+  - Terintegrasi dengan Smart Idempotency Cache, Multi-Tenant Campus Key Resolver, dan Gemini Key Pool failover.
+- [x] **3. Document Scaffolding Generator & Block Builder (`lib/editor/methods/outline-scaffold.ts`)**:
+  - Konversi struktur outline ke array blok EditorJS (Heading 1/2/3, paragraf panduan, checklist rujukan).
+- [x] **4. Interactive Outline Setup Modal (`components/editor/modals/academic-scaffold-modal.tsx`)**:
+  - Modal interaktif yang dapat diakses saat membuat dokumen baru atau dari menu Command Palette (`Ctrl+K`), dengan pemilih preset, kustomisasi judul bab, dukungan Dark Mode, dan bilingual EN/ID.
+- [x] **5. Automated Unit Testing**:
+  - Unit test suite di `__tests__/utils/academic-templates.test.ts` untuk memverifikasi validitas AST blok, sanitasi HTML panduan, dan format dwibahasa (11/11 tests passing, total 151/151 tests).
 
+### Phase 32: Smart In-Text Reference Mention (@cite / @ref) & Quick Citation Injector
+Target: Memungkinkan peneliti memanggil dan menyisipkan sitasi ilmiah secara instan langsung di saat mengetik naskah menggunakan shorthand mention (`@cite`, `@ref`, atau `@`) tanpa perlu meninggalkan kursor atau membuka panel terpisah.
 
-
-
-
+- [x] **1. Mention Trigger Detection & Caret Parser (`lib/editor/mention-parser.ts`)**:
+  - Deteksi pengetikan token pemicu `@cite:`, `@ref:`, atau `@` pada posisi kursor aktif di konten EditorJS.
+  - Ekstraksi keyword query pencarian secara dinamis dari teks setelah tanda mention (misal `@cite:vaswani` atau `@ref:deep learning`).
+  - Kalkulasi koordinat posisi caret kursor (`Range.getBoundingClientRect`) untuk penempatan floating popup secara presisi di samping kursor penulisan.
+- [x] **2. Fast Reference Search & Multi-Source Indexer (`lib/editor/reference-search-index.ts`)**:
+  - Mesin pengindeksan referensi lokal (paper yang tersimpan di naskah dan koleksi perpustakaan `citation_library`) untuk pencarian instan sub-milidetik (pencarian multi-field: author, title, year, journal).
+  - Jembatan pencarian cepat ke Crossref/OpenAlex jika keyword tidak ditemukan di perpustakaan lokal.
+- [x] **3. Floating Mention Overlay Dropdown (`components/editor/citation-mention-dropdown.tsx`)**:
+  - Komponen popover floating modern yang mengambang tepat di dekat kursor pengguna saat mention aktif.
+  - Daftar kandidat paper dilengkapi badge sumber (*Library* vs *Global*), tahun publikasi, dan nama penulis.
+  - Navigasi keyboard penuh (`ArrowDown`, `ArrowUp`, `Enter` untuk memilih, `Esc` untuk menutup), Dark Mode, dan bilingual (EN ↔ ID).
+- [x] **4. Non-Destructive In-Text Citation Injector (`lib/editor/methods/mention-injector.ts`)**:
+  - Penggantian teks pemicu mention dengan tag sitasi resmi `<cite data-citation="true" data-reference-id="..." data-label="...">[X]</cite>` atau `(Author, Year)` sesuai format sitasi aktif.
+  - Pembaruan reaktif daftar pustaka (*Bibliography*) secara otomatis.
+- [x] **5. Hook Engine & Editor Integration (`hooks/use-citation-mention.ts`)**:
+  - Hook pengelola state dan event listener keyboard pada kanvas EditorJS tanpa mengganggu alur pengetikan normal.
+  - Integrasi ke `components/editor/editor-layout.tsx` dan `shortcuts-modal.tsx`.
+- [x] **6. Automated Unit Testing**:
+  - Unit test suite di `__tests__/utils/citation-mention.test.ts` untuk memverifikasi regex pemicu mention, indexing referensi lokal, dan sanitasi tag `<cite>` (13/13 tests passing, total 164/164 tests).

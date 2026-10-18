@@ -141,8 +141,24 @@ export function ShortcutsModal({ isOpen, onClose, language }: ShortcutsModalProp
       tooltipId: 'Dialog interaktif untuk menggali temuan, metodologi, dan batasan paper referensi di perpustakaan.',
       category: 'citations',
     },
+    {
+      keys: ['@cite:', 'or', '@'],
+      actionEn: 'Smart In-Text Reference Mention',
+      actionId: 'Panggil Sitasi Cepat (@cite / @)',
+      tooltipEn: 'Type @cite: or @ while typing to search library references and insert formatted in-text citations instantly.',
+      tooltipId: 'Ketik @cite: atau @ saat menulis untuk mencari referensi pustaka dan menyisipkan sitasi ilmiah secara instan.',
+      category: 'citations',
+    },
 
     // Editor Formatting & Math
+    {
+      keys: ['Ctrl', 'Shift', 'O'],
+      actionEn: 'Academic Outline & Scaffolding Generator',
+      actionId: 'Generator Kerangka & Struktur Naskah Ilmiah',
+      tooltipEn: 'Generates standardized publication structures (IMRaD, 5-Chapter Thesis) with guiding research prompts.',
+      tooltipId: 'Menyusun kerangka naskah baku (IMRaD, Skripsi 5 Bab) lengkap dengan takarir panduan riset interaktif.',
+      category: 'editor',
+    },
     {
       keys: ['Ctrl', 'Shift', 'B'],
       actionEn: 'Insert Figure / Table Cross-Reference',

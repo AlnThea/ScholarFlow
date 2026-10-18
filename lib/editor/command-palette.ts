@@ -304,6 +304,19 @@ export function getAvailableCommands(language: 'en' | 'id'): CommandItem[] {
       keywords: ['reindex', 'refresh', 're-number', 'urutkan ulang', 'nomor gambar', 'nomor tabel'],
       actionId: 'refresh_cross_references',
     },
+    {
+      id: 'cmd_academic_scaffold',
+      title: isEn ? 'Academic Outline & Scaffolding Generator' : 'Generator Kerangka & Struktur Naskah Ilmiah',
+      description: isEn ? 'Generate IMRaD or 5-Chapter Thesis structure with research guidance' : 'Susun kerangka naskah IMRaD atau Skripsi 5 Bab dengan panduan riset',
+      tooltip: isEn
+        ? 'Generates standard academic outline structures (IMRaD, Dikti 5-Chapter Thesis, PRISMA SLR, Case Study) with guiding research prompts and AI customization tailored to your topic.'
+        : 'Menyusun kerangka naskah akademis baku (IMRaD, Skripsi 5 Bab Dikti, PRISMA SLR, Studi Kasus) lengkap dengan takarir panduan riset dan personalisasi AI sesuai topik Anda.',
+      category: 'insert',
+      shortcut: 'Ctrl + Shift + O',
+      keywords: ['outline', 'kerangka', 'struktur', 'scaffold', 'imrad', 'skripsi', 'bab', 'template'],
+      actionId: 'open_academic_scaffold',
+      badge: 'IMRaD/Skripsi',
+    },
 
     // --- NAVIGATION & SYSTEM ---
     {

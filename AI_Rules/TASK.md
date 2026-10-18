@@ -1,21 +1,17 @@
 # ScholarFlow Tasks
 
 ## Current Sprint Goal
-Production-Ready Refactoring: Hybrid Sync Engine, Repository Pattern Data Provider Abstraction, Multi-Backend Support (`supabase` vs `express`), Multi-Hosting Adapters, dan Gemini 2.0 Streaming.
+Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.5.0-architecture: Architecture Sprint EPICs 1, 2, 3, 4, 5 completed (Database Abstraction, Multi-Hosting Adapters, Hybrid Sync Engine, Gemini 2.0 Streaming, Edge Rate Limiter, Prisma Multi-DB Schema, Security Audit). Ready to continue with remaining application UI pages.
+v0.32.0 (Phase 32 Completed - Smart In-Text Reference Mention (@cite / @ref) & Quick Citation Injector, 164/164 tests passing). Ready for Phase 33: Multi-Chapter Thesis & Dissertation Project Binder.
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
-- Complete remaining UI pages & user-facing feature modules.
+- [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
+- [x] Phase 32: Smart In-Text Reference Mention (`@cite` / `@ref`) & Quick Citation Injector.
+- [ ] Phase 33: Multi-Chapter Thesis & Dissertation Project Binder.
 
-
-
-
-
-
-
-## Do Not Work On Yet
+## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.
 2. [Completed] Implement dynamic bilingual (i18n) context provider.
 3. [Completed] Localize editor layout, sidebars, and setup modals.
@@ -190,9 +186,16 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] Mode beralih Direct Edit vs Suggesting, visual diff markup `<del>` (merah) & `<ins>` (hijau), floating action chips, tombol batch Accept/Reject All, dan shortcut `Ctrl+Shift+S` (12/12 tests).
 - [x] **24. Figure & Table Scientific Auto-Numbering Engine**:
   - [x] Pengindeksan sekuensial gambar & tabel, pembaruan reaktif rujukan silang (`updateHtmlCrossReferences`, `reindexContentCrossReferences`), shorthand `@fig`/`@tab`, modal dialog pemilih rujukan, interaksi jump *smooth scroll* dengan sorotan cincin animasi, dan shortcut `Ctrl+Shift+B` (11/11 tests).
-- [ ] Complete remaining UI pages & user-facing feature modules.
-
-
+- [x] **25. Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti)**:
+  - [x] AI prompt generator untuk membedah topik penelitian menjadi outline bab hierarkis (IMRaD / Bab 1-5 Skripsi).
+  - [x] Generator blok EditorJS dengan panduan pertanyaan riset (*guiding research prompts*) di tiap sub-bab.
+  - [x] Template selector dialog di modal dokumen baru (`academic-scaffold-modal.tsx`) dengan Dark Mode dan bilingual EN/ID.
+- [x] **26. Phase 32: Smart In-Text Reference Mention (@cite / @ref) & Quick Citation Injector**:
+  - [x] Parser deteksi token mention `@cite:`, `@ref:`, atau `@` di posisi caret kursor aktif (`lib/editor/mention-parser.ts`).
+  - [x] In-memory reference search indexer (multi-field search: author, title, year, journal, label) dengan fallback Crossref/OpenAlex (`lib/editor/reference-search-index.ts`).
+  - [x] Floating mention overlay dropdown dengan navigasi keyboard (`↑`, `↓`, `Enter`, `Esc`), Dark Mode, dan bilingual EN/ID (`components/editor/citation-mention-dropdown.tsx`).
+  - [x] In-text citation injector non-destruktif menggantikan token mention dengan tag `<cite>` dan sinkronisasi reaktif daftar pustaka (`lib/editor/methods/mention-injector.ts`, `hooks/use-citation-mention.ts`).
+  - [x] Automated Unit Testing: 13/13 tests passing (`__tests__/utils/citation-mention.test.ts`), total 164/164 tests passing across 18 test files.
 ## Do Not Work On Yet
 - SPSS / PSPP (Strategy decided: "AI Output Interpreter" - user uploads output tables, AI interprets and drafts academic narrative to editor. Do not build a full SPSS clone).
 - SEM PLS
