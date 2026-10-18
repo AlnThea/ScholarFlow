@@ -483,3 +483,24 @@ Target: Sintesis otomatis naskah skripsi / paper ke dalam slide presentasi sidan
   - Pendaftaran pintasan keyboard global `Ctrl + Shift + E` di `editor-layout.tsx` dan `shortcuts-modal.tsx`.
 - [x] **4. Automated Unit Testing**:
   - Unit test suite di `__tests__/utils/slide-deck-generator.test.ts` (5/5 tests passing, total suite lulus 189/189 tests across 21 test files).
+
+### Phase 36: Interactive Literature Matrix & Synthesis Grid
+Target: Mengekstrak, memetakan, dan menyusun komparasi sistematis seluruh paper di perpustakaan naskah (Metodologi, Sampel, Temuan Kunci, Batasan, dan Catatan Sintesis) dengan filter tag, ekspor Markdown/CSV, dan injeksi tabel ke kanvas EditorJS.
+
+- [x] **1. Literature Matrix & Synthesis Grid Engine (`lib/editor/literature-matrix.ts`)**:
+  - Ekstraksi dan konsolidasi naskah/perpustakaan referensi menjadi struktur baris matriks komparasi saintifik baku (`extractLiteratureMatrix`).
+  - Heuristik inferensi cerdas (`inferMatrixFieldsFromAbstract`) mendeteksi metodologi (SLR, Kuantitatif, Kualitatif, Machine Learning, Meta-Analisis), ukuran sampel (`N = ...`), temuan utama, dan batasan riset.
+  - Ekspor ke format Markdown Table (`exportMatrixToMarkdownTable`), CSV RFC 4180 (`exportMatrixToCsv`), dan blok EditorJS Table siap kanvas (`exportMatrixToEditorJsTable`).
+  - Preservasi pengeditan sel kustom pengguna saat perpustakaan diperbarui.
+- [x] **2. Literature Matrix Modal UI (`components/editor/modals/literature-matrix-modal.tsx`)**:
+  - Modal komparasi layar penuh dengan scroll horizontal dan kolom sticky study/sitasi pertama.
+  - Pengeditan sel langsung (*inline editing*) untuk menyempurnakan catatan metodologi, sampel, dan sintesis Bab 2.
+  - Bilah pencarian multi-field real-time dan pil filter tag metodologi.
+  - Aksi 1-klik: "Salin Markdown", "Unduh CSV (Excel/SPSS)", dan "Sisipkan Tabel ke Naskah".
+  - Kepatuhan penuh Tailwind Dark Mode dan dwibahasa EN ↔ ID.
+- [x] **3. Integrasi Sidebar Tab Dokumen & Command Palette**:
+  - Kartu *Literature Synthesis Matrix* di `components/editor/sidebar-document-tab.tsx` dengan tombol "Buka Matriks Sintesis".
+  - Pendaftaran perintah `cmd_literature_matrix` di `lib/editor/command-palette.ts`.
+  - Pendaftaran pintasan keyboard global `Ctrl + Shift + T` di `editor-layout.tsx` dan `shortcuts-modal.tsx`.
+- [x] **4. Automated Unit Testing**:
+  - Unit test suite di `__tests__/utils/literature-matrix.test.ts` (7/7 tests passing, total suite lulus 196/196 tests across 22 test files).

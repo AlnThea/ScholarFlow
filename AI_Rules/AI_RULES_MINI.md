@@ -202,12 +202,13 @@ DONE:
 - Phase 33: Multi-Chapter Thesis & Dissertation Project Binder
 - Phase 34: Academic Grammar & Style Linter
 - Phase 35: Conference & Thesis Defense Slide Deck Generator (16:9 Deck / Marp / HTML)
-
-IN PROGRESS:
 - Phase 36: Interactive Literature Matrix & Synthesis Grid
 
+IN PROGRESS:
+- Phase 37: Journal Formatting & Publishing Presets Configurator
+
 NEXT:
-1. Journal Formatting Preset Configurator
+1. Cross-Paper Concept Map & Citation Network Visualizer
 
 ---
 

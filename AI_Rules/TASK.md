@@ -4,7 +4,7 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.35.0 (Phase 35 Completed - Conference & Thesis Defense Slide Deck Generator, 189/189 tests passing). Ready for Phase 36: Interactive Literature Matrix & Synthesis Grid.
+v0.36.0 (Phase 36 Completed - Interactive Literature Matrix & Synthesis Grid, 196/196 tests passing). Ready for Phase 37: Journal Formatting & Publishing Presets Configurator.
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
@@ -12,7 +12,8 @@ v0.35.0 (Phase 35 Completed - Conference & Thesis Defense Slide Deck Generator, 
 - [x] Phase 33: Multi-Chapter Thesis & Dissertation Project Binder.
 - [x] Phase 34: Academic Grammar & Style Linter.
 - [x] Phase 35: Conference & Thesis Defense Slide Deck Generator.
-- [ ] Phase 36: Interactive Literature Matrix & Synthesis Grid.
+- [x] Phase 36: Interactive Literature Matrix & Synthesis Grid.
+- [ ] Phase 37: Journal Formatting & Publishing Presets Configurator.
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.

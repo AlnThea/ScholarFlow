@@ -158,6 +158,14 @@ export function ShortcutsModal({ isOpen, onClose, language }: ShortcutsModalProp
       category: 'citations',
     },
     {
+      keys: ['Ctrl', 'Shift', 'T'],
+      actionEn: 'Literature Synthesis Matrix & Grid',
+      actionId: 'Matriks Sintesis Literatur & Riset Terdahulu',
+      tooltipEn: 'Tabulate and cross-examine methodology, sample sizes, and findings of all reference papers.',
+      tooltipId: 'Tabelkan dan komparasikan metodologi, sampel data, dan temuan kunci seluruh paper referensi.',
+      category: 'citations',
+    },
+    {
       keys: ['@cite:', 'or', '@'],
       actionEn: 'Smart In-Text Reference Mention',
       actionId: 'Panggil Sitasi Cepat (@cite / @)',

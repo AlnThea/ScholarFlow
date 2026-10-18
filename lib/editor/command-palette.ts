@@ -135,6 +135,19 @@ export function getAvailableCommands(language: 'en' | 'id'): CommandItem[] {
       actionId: 'open_paper_chat',
       badge: 'Library',
     },
+    {
+      id: 'cmd_literature_matrix',
+      title: isEn ? 'Literature Synthesis Matrix & Grid' : 'Matriks Sintesis Literatur & Riset Terdahulu',
+      description: isEn ? 'Compare methodology, sample size, findings & gaps across studies' : 'Bandingkan metodologi, sampel, temuan kunci & batasan lintas studi',
+      tooltip: isEn
+        ? 'Extracts and tabulates all reference papers into an editable literature synthesis matrix for Chapter 2 / SLR with 1-click Markdown table, CSV, and Canvas insertion.'
+        : 'Mengekstrak dan menyusun seluruh paper referensi ke dalam tabel matriks sintesis tinjauan pustaka Bab 2 dengan ekspor Markdown, CSV, dan sisip ke kanvas.',
+      category: 'citations',
+      shortcut: 'Ctrl + Shift + T',
+      keywords: ['matrix', 'sintesis', 'tinjauan pustaka', 'literature review', 'table', 'tabel', 'slr', 'prisma'],
+      actionId: 'open_literature_matrix',
+      badge: 'Matrix Grid',
+    },
 
     // --- AI ASSISTANT ---
     {

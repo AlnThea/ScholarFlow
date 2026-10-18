@@ -2,6 +2,32 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.36.0] - 2026-10-18 (Phase 36: Interactive Literature Matrix & Synthesis Grid)
+
+### 🚀 Interactive Literature Matrix & Synthesis Grid
+- **Literature Matrix & Synthesis Engine (`lib/editor/literature-matrix.ts`)**:
+  - Automatically structures paper references into standard academic literature review matrix columns: Study / Citation, Methodology, Sample Size, Key Empirical Findings, Research Limitations & Gaps, and Synthesis Notes.
+  - Heuristic metadata and abstract analyzer (`inferMatrixFieldsFromAbstract`) extracting research approaches (SLR, Meta-Analysis, Quantitative, Qualitative, Machine Learning), sample counts (`N = ...`), and core conclusions.
+  - Safe user-state synchronization: preserves manual in-cell user edits and synthesis notes across library updates.
+  - Multi-format exporters:
+    - **Markdown Table**: Clean GFM-compliant markdown table with pipe escaping.
+    - **CSV Archive**: RFC 4180 formatted CSV for statistical analysis in Excel or SPSS.
+    - **Native EditorJS Table Block**: Formats into structured table blocks ready for 1-click injection into Chapter 2 (Literature Review).
+- **Literature Matrix Modal UI (`components/editor/modals/literature-matrix-modal.tsx`)**:
+  - Fullscreen tabular comparison grid with horizontal scrolling and sticky study/citation column.
+  - Real-time inline cell editing for instant annotation and synthesis refinement.
+  - Quick search filter across studies, authors, methodology, and findings.
+  - Filter pills for methodology tags (Quantitative, Qualitative, Machine Learning, SLR).
+  - 1-Click "Copy Markdown Table", "Download CSV", and "Insert Table to Manuscript" actions.
+  - Strict compliance with Tailwind Dark Mode (`dark:`) and bilingual EN ↔ ID localization.
+- **Sidebar & Editor Layout Integration**:
+  - Added dedicated *Literature Synthesis Matrix* card with "Open Synthesis Matrix" button in `components/editor/sidebar-document-tab.tsx`.
+  - Registered `cmd_literature_matrix` in `lib/editor/command-palette.ts`.
+  - Added global keyboard shortcut `Ctrl + Shift + T` in `editor-layout.tsx` and cheat sheet in `shortcuts-modal.tsx`.
+
+### 🧪 Automated Testing
+- **Vitest Suite Expansion (`__tests__/utils/literature-matrix.test.ts`)**: Added 7 unit tests verifying methodology inference, sample size regex detection, user-edit preservation, Markdown table escaping, RFC 4180 CSV generation, and EditorJS table block structure. Total Vitest suite passing at **196/196 tests across 22 test files**.
+
 ## ⚡ [v0.35.0] - 2026-10-18 (Phase 35: Conference & Thesis Defense Slide Deck Generator)
 
 ### 🚀 Conference & Thesis Defense Slide Deck Generator

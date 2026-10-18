@@ -31,6 +31,7 @@ import { AcademicScaffoldModal } from './modals/academic-scaffold-modal';
 import { ProjectBinderModal } from './modals/project-binder-modal';
 import { AcademicLinterModal } from './modals/academic-linter-modal';
 import { SlideDeckModal } from './modals/slide-deck-modal';
+import { LiteratureMatrixModal } from './modals/literature-matrix-modal';
 import { CitationMentionDropdown } from './citation-mention-dropdown';
 import { useCitationMention } from '@/hooks/use-citation-mention';
 import { addSuggestion } from '@/lib/api/suggestions';
@@ -346,6 +347,7 @@ export function EditorLayout({
   const [isProjectBinderModalOpen, setIsProjectBinderModalOpen] = useState(false);
   const [isLinterModalOpen, setIsLinterModalOpen] = useState(false);
   const [isSlideDeckModalOpen, setIsSlideDeckModalOpen] = useState(false);
+  const [isLiteratureMatrixModalOpen, setIsLiteratureMatrixModalOpen] = useState(false);
   const referenceFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleParsedReferences = (candidates: CitationCandidate[], fileName: string) => {
@@ -510,6 +512,13 @@ export function EditorLayout({
         setIsSlideDeckModalOpen(true);
         return;
       }
+
+      // Ctrl + Shift + T -> Literature Synthesis Matrix & Grid
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 't') {
+        e.preventDefault();
+        setIsLiteratureMatrixModalOpen(true);
+        return;
+      }
     };
 
     window.addEventListener('keydown', handleGlobalShortcuts);
@@ -594,6 +603,9 @@ export function EditorLayout({
         break;
       case 'open_slide_deck':
         setIsSlideDeckModalOpen(true);
+        break;
+      case 'open_literature_matrix':
+        setIsLiteratureMatrixModalOpen(true);
         break;
       case 'open_version_history':
         versionHistory.openVersionHistory?.();
@@ -1046,6 +1058,7 @@ export function EditorLayout({
                   onOpenProjectBinder={() => setIsProjectBinderModalOpen(true)}
                   onOpenLinter={() => setIsLinterModalOpen(true)}
                   onOpenSlideDeck={() => setIsSlideDeckModalOpen(true)}
+                  onOpenLiteratureMatrix={() => setIsLiteratureMatrixModalOpen(true)}
                 />
               )}
             </div>
@@ -1334,6 +1347,29 @@ export function EditorLayout({
         authorName={profile?.full_name || user?.email || undefined}
         institutionName={profile?.institution || undefined}
         language={language as 'en' | 'id'}
+      />
+      <LiteratureMatrixModal
+        isOpen={isLiteratureMatrixModalOpen}
+        onClose={() => setIsLiteratureMatrixModalOpen(false)}
+        citationLibrary={citationLibrary}
+        language={language as 'en' | 'id'}
+        onInjectTableToEditor={(tableBlock) => {
+          if (editorJsRef?.current?.blocks?.insert) {
+            try {
+              editorJsRef.current.blocks.insert(tableBlock.type, tableBlock.data);
+              return;
+            } catch (err) {
+              console.warn('[LiteratureMatrix] Direct block insert failed, using state fallback', err);
+            }
+          }
+          if (currentDocument && onContentChange) {
+            const currentBlocks = currentDocument.content?.blocks || [];
+            onContentChange({
+              ...currentDocument.content,
+              blocks: [...currentBlocks, tableBlock],
+            });
+          }
+        }}
       />
       <CitationMentionDropdown
         isOpen={citationMention.isOpen}

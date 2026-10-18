@@ -121,6 +121,7 @@ type SidebarProps = {
   onOpenProjectBinder?: () => void;
   onOpenLinter?: () => void;
   onOpenSlideDeck?: () => void;
+  onOpenLiteratureMatrix?: () => void;
 };
 
 function PanelRow({
