@@ -1,5 +1,28 @@
 # ScholarFlow Changelog
 
+## v0.34.0 - Academic Grammar & Style Linter (Automated Tone & Style Auditor)
+
+- **Academic Style & Tone Linter Engine (`lib/editor/academic-linter.ts`)**:
+  - Implemented bilingual scientific rule dictionaries (EN & ID) covering 4 critical academic writing categories:
+    - `informal`: Replaces colloquial expressions (*"a lot of"*, *"banyak banget"*, *"kids"*, *"anak-anak"*, *"gonna"*) with formal scientific terminology (*"numerous"*, *"sejumlah besar"*, *"pediatric subjects"*, *"subjek anak"*).
+    - `contraction`: Detects and expands English contractions (*"don't"*, *"can't"*, *"won't"*, *"it's"*) into formal academic prose (*"do not"*, *"cannot"*, *"will not"*, *"it is"*).
+    - `sweeping`: Flags unhedged or hyperbolic statements (*"obviously"*, *"jelas sekali"*, *"undoubtedly"*, *"tidak diragukan lagi"*, *"pasti benar"*) and suggests cautious academic hedging (*"evidence suggests"*, *"bukti menunjukkan"*, *"it is plausible that"*).
+    - `first_person`: Flags inappropriate first-person bias (*"I believe"*, *"saya rasa"*, *"in my opinion"*, *"kami membuktikan"*) and suggests objective passive/agentless formulations (*"the data demonstrates"*, *"data menunjukkan"*, *"the analysis reveals"*).
+  - Academic Style Score calculator (`calculateAcademicStyleScore`) computing a 0-100 metric based on issue density per 1,000 words, mapped to Academic Letter Grades (Grade A, B, C, D) with descriptive tone assessments.
+  - Safe replacement applicator (`applyLintReplacement`) replacing specific issue spans within EditorJS blocks non-destructively.
+- **Academic Style Linter Modal UI (`components/editor/modals/academic-linter-modal.tsx`)**:
+  - Score badge & rating header with dynamic color grading and issue counts breakdown.
+  - Filter pills for All, Informal, Contractions, Sweeping, and First-person bias.
+  - Interactive issue cards displaying matched text, suggested formal alternatives, academic reasoning, and 1-click "Terapkan Perbaikan" / "Apply Fix" button.
+  - Empty state with celebratory academic excellence badge when no issues are detected.
+  - Strict compliance with Tailwind Dark Mode and bilingual EN ↔ ID localization.
+- **Sidebar & Editor Layout Integration**:
+  - Added dedicated *Academic Style Linter* card with "Launch Style Audit" button in `components/editor/sidebar-document-tab.tsx`.
+  - Registered `cmd_academic_linter` in `lib/editor/command-palette.ts` under the Review category.
+  - Added global keyboard shortcut `Ctrl + Shift + L` in `components/editor/editor-layout.tsx` and cheat sheet entry in `components/editor/modals/shortcuts-modal.tsx`.
+- **Automated Unit Testing**:
+  - Added `__tests__/utils/academic-linter.test.ts` (9 unit tests covering Indonesian & English rule matching, style score calculations, and block replacements). Vitest suite passing at **184/184 tests across 20 test files**.
+
 ## v0.33.0 - Multi-Chapter Thesis & Dissertation Project Binder
 
 - **Multi-Chapter Project Binder Engine (`lib/editor/project-binder.ts`)**:

@@ -92,6 +92,14 @@ export function ShortcutsModal({ isOpen, onClose, language }: ShortcutsModalProp
       category: 'ai',
     },
     {
+      keys: ['Ctrl', 'Shift', 'L'],
+      actionEn: 'Academic Grammar & Style Linter',
+      actionId: 'Linter Gaya Bahasa & Formalitas Akademik',
+      tooltipEn: 'Scan paper for informal words, contractions, vague claims, and first-person bias.',
+      tooltipId: 'Pindai naskah untuk mendeteksi kata non-formal, singkatan, klaim tanpa data, dan bias persona.',
+      category: 'ai',
+    },
+    {
       keys: ['Ctrl', 'Shift', 'G'],
       actionEn: 'Toggle Ghostwriter Copilot',
       actionId: 'Toggle Ghostwriter AI Prediktif',

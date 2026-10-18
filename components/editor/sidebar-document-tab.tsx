@@ -4,7 +4,7 @@ import {
   IconFilter, IconFolderOpen, IconLoader2, IconCirclePlus, IconQuote,
   IconSearch, IconSum, IconSparkles, IconWand, IconChevronLeft,
   IconChevronRight, IconLanguage, IconX, IconClock, IconTrash, IconCopy, IconHistory,
-  IconMicroscope, IconLayersLinked
+  IconMicroscope, IconLayersLinked, IconSpellCheck
 } from '@tabler/icons-react';
 
 
@@ -33,6 +33,7 @@ export const SidebarDocumentTab = (props: any) => {
     onOpenPeerReview,
     currentDocument,
     onOpenProjectBinder,
+    onOpenLinter,
     t, getSourceLabel, formatHistoryLabel, ActionButton, PanelRow
   } = props;
 
@@ -161,6 +162,37 @@ export const SidebarDocumentTab = (props: any) => {
                     </select>
                   </div>
                 </section>
+
+                {/* Academic Grammar & Style Linter Section */}
+                <section className="rounded-lg border border-indigo-200/70 dark:border-indigo-900/40 bg-gradient-to-b from-indigo-50/30 via-white to-white dark:from-indigo-950/20 dark:via-slate-800 dark:to-slate-800 p-3 shadow-xs flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 rounded-md bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">
+                        <IconSpellCheck className="h-3.5 w-3.5" />
+                      </div>
+                      <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                        {isEn ? 'Academic Style Linter' : 'Linter Gaya Akademis'}
+                      </h3>
+                    </div>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                      Grammar AI
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-350 leading-relaxed">
+                    {isEn
+                      ? 'Scan paper for informal words, contractions, vague claims, and first-person bias.'
+                      : 'Pindai naskah untuk mendeteksi kata non-formal, singkatan, klaim tanpa data, dan bias persona.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => onOpenLinter?.()}
+                    className="w-full py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <IconSpellCheck className="h-3.5 w-3.5" />
+                    <span>{isEn ? 'Launch Style Audit' : 'Audit Gaya Bahasa'}</span>
+                  </button>
+                </section>
+
                 {/* Plagiarism Checker Section */}
                 <section className="rounded-lg border border-line dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm">
                   <div className="mb-3 flex items-center justify-between">

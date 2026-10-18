@@ -29,6 +29,7 @@ import { SuggestingChips } from './suggesting-chips';
 import { CrossReferenceModal } from './modals/cross-reference-modal';
 import { AcademicScaffoldModal } from './modals/academic-scaffold-modal';
 import { ProjectBinderModal } from './modals/project-binder-modal';
+import { AcademicLinterModal } from './modals/academic-linter-modal';
 import { CitationMentionDropdown } from './citation-mention-dropdown';
 import { useCitationMention } from '@/hooks/use-citation-mention';
 import { addSuggestion } from '@/lib/api/suggestions';
@@ -342,6 +343,7 @@ export function EditorLayout({
   const [isCrossReferenceModalOpen, setIsCrossReferenceModalOpen] = useState(false);
   const [isScaffoldModalOpen, setIsScaffoldModalOpen] = useState(false);
   const [isProjectBinderModalOpen, setIsProjectBinderModalOpen] = useState(false);
+  const [isLinterModalOpen, setIsLinterModalOpen] = useState(false);
   const referenceFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleParsedReferences = (candidates: CitationCandidate[], fileName: string) => {
@@ -492,6 +494,13 @@ export function EditorLayout({
         setIsProjectBinderModalOpen(true);
         return;
       }
+
+      // Ctrl + Shift + L -> Academic Grammar & Style Linter
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'l') {
+        e.preventDefault();
+        setIsLinterModalOpen(true);
+        return;
+      }
     };
 
     window.addEventListener('keydown', handleGlobalShortcuts);
@@ -570,6 +579,9 @@ export function EditorLayout({
         break;
       case 'open_project_binder':
         setIsProjectBinderModalOpen(true);
+        break;
+      case 'open_academic_linter':
+        setIsLinterModalOpen(true);
         break;
       case 'open_version_history':
         versionHistory.openVersionHistory?.();
@@ -1020,6 +1032,7 @@ export function EditorLayout({
                   onInsertCitationText={onInsertCitationText}
                   onOpenPeerReview={() => setIsPeerReviewModalOpen(true)}
                   onOpenProjectBinder={() => setIsProjectBinderModalOpen(true)}
+                  onOpenLinter={() => setIsLinterModalOpen(true)}
                 />
               )}
             </div>
@@ -1277,6 +1290,27 @@ export function EditorLayout({
         onCreateChapter={() => {
           setIsProjectBinderModalOpen(false);
           onCreateDocument?.();
+        }}
+      />
+      <AcademicLinterModal
+        isOpen={isLinterModalOpen}
+        onClose={() => setIsLinterModalOpen(false)}
+        documentContent={currentDocument?.content}
+        language={language}
+        onApplyFix={(original, replacement) => {
+          if (!original || !replacement) return;
+          const holder = document.getElementById('editorjs') || document.querySelector('.codex-editor');
+          if (holder) {
+            const editables = holder.querySelectorAll('[contenteditable="true"]');
+            let replaced = false;
+            editables.forEach((el) => {
+              if (!replaced && el.innerHTML.includes(original)) {
+                el.innerHTML = el.innerHTML.replace(original, replacement);
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                replaced = true;
+              }
+            });
+          }
         }}
       />
       <CitationMentionDropdown

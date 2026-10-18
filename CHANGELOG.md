@@ -2,6 +2,27 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.34.0] - 2026-10-18 (Phase 34: Academic Grammar & Style Linter)
+
+### 🚀 Academic Grammar, Formality & Style Linter
+- **Academic Writing Linter Engine (`lib/editor/academic-linter.ts`)**:
+  - Comprehensive scientific rule dictionary supporting both English and Indonesian language conventions.
+  - Catches informal colloquial words (e.g. *a lot of*, *huge*, *kids*, *banget*, *bikin*), colloquial contractions (*don't*, *can't*, *tdk*, *dgn*, *yg*), vague/sweeping claims (*everyone knows that*, *sudah jelas bahwa*), and first-person bias (*in my opinion*, *saya menemukan bahwa*).
+  - Academic Formality Index calculator (`calculateAcademicStyleScore`): computes formality score (0 - 100) and letter grades (A, B, C, D) based on issue density per 100 words.
+  - Safe, non-destructive replacement applicator (`applyLintReplacement`).
+- **Academic Linter Modal UI (`components/editor/modals/academic-linter-modal.tsx`)**:
+  - Interactive audit modal with letter grade badges, real-time issue count, and category filter pills (All, Informal Words, Contractions, Vague Claims, First Person).
+  - Issue inspection cards explaining why each pattern violates scientific publishing standards with 1-click formal replacement buttons and dismiss actions.
+  - Full compatibility with Tailwind Dark Mode (`dark:`) and bilingual EN ↔ ID localization.
+- **Sidebar Integration (`components/editor/sidebar-document-tab.tsx`)**:
+  - Added dedicated *Academic Style Linter* card with "Launch Style Audit" button in the Document stats sidebar tab.
+- **Global Shortcuts & Command Palette**:
+  - Registered `cmd_academic_linter` in `lib/editor/command-palette.ts`.
+  - Added global keyboard shortcut `Ctrl + Shift + L` in `editor-layout.tsx` and cheat sheet in `shortcuts-modal.tsx`.
+
+### 🧪 Automated Testing
+- **Vitest Suite Expansion (`__tests__/utils/academic-linter.test.ts`)**: Added 9 unit tests covering English/Indonesian anti-patterns, contraction detection, objectivity checks, HTML tag stripping, and score calculations. Total Vitest suite passing at **184/184 tests across 20 test files**.
+
 ## ⚡ [v0.33.0] - 2026-10-18 (Phase 33: Multi-Chapter Thesis & Dissertation Project Binder)
 
 ### 🚀 Multi-Chapter Thesis & Dissertation Project Binder

@@ -445,3 +445,21 @@ Target: Manajemen proyek skripsi/tesis/disertasi multi-bab terpadu (Bab 1 s.d. B
   - Pendaftaran pintasan keyboard `Ctrl + Shift + M` di `editor-layout.tsx` dan `components/editor/modals/shortcuts-modal.tsx`.
 - [x] **5. Automated Unit Testing**:
   - Unit test komprehensif di `__tests__/utils/project-binder.test.ts` (11/11 tests passing, total test suite lulus 175/175 tests).
+
+### Phase 34: Academic Grammar & Style Linter
+Target: Mendeteksi kata non-formal, kontraksi percakapan, klaim asumtif tanpa data, dan bias persona pertama secara instan dengan rekomendasi penggantian akademis formal 1-klik.
+
+- [x] **1. Academic Grammar & Style Linter Engine (`lib/editor/academic-linter.ts`)**:
+  - Kamus aturan linguistik saintifik dwibahasa (EN / ID) mencakup deteksi kontraksi (*don't*, *can't*, *tdk*, *dgn*), kata kasual (*a lot of*, *huge*, *kids*, *banget*, *bikin*), klaim asumtif (*everyone knows that*, *sudah jelas bahwa*), dan persona pertama (*in my opinion*, *menurut saya*).
+  - Algoritma penghitungan skor kepatuhan formalitas naskah (`calculateAcademicStyleScore`) dengan predikat Grade A s.d. D berbasis densitas per 100 kata.
+  - Mesin substitusi teks non-destruktif (`applyLintReplacement`).
+- [x] **2. Academic Linter Modal (`components/editor/modals/academic-linter-modal.tsx`)**:
+  - Modal interaktif dengan badge skor formalitas, filter tab kategori, kartu isu dengan penjelasan alasan linguistik, dan tombol 1-klik penggantian teks resmi.
+  - Kepatuhan penuh Tailwind Dark Mode dan dwibahasa EN ↔ ID.
+- [x] **3. Integrasi Sidebar Tab Dokumen (`components/editor/sidebar-document-tab.tsx`)**:
+  - Kartu peluncur *Academic Style Linter* di samping metrik keterbacaan dengan tombol "Audit Gaya Bahasa".
+- [x] **4. Command Palette & Shortcuts Hub**:
+  - Pendaftaran perintah `cmd_academic_linter` di `lib/editor/command-palette.ts`.
+  - Pendaftaran pintasan keyboard `Ctrl + Shift + L` di `editor-layout.tsx` dan `shortcuts-modal.tsx`.
+- [x] **5. Automated Unit Testing**:
+  - Unit test suite di `__tests__/utils/academic-linter.test.ts` (9/9 tests passing, total suite lulus 184/184 tests across 20 test files).

@@ -4,13 +4,14 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.33.0 (Phase 33 Completed - Multi-Chapter Thesis & Dissertation Project Binder, 175/175 tests passing). Ready for Phase 34: Academic Grammar & Style Linter.
+v0.34.0 (Phase 34 Completed - Academic Grammar & Style Linter, 184/184 tests passing). Ready for Phase 35: Conference & Thesis Defense Slide Deck Generator.
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
 - [x] Phase 32: Smart In-Text Reference Mention (`@cite` / `@ref`) & Quick Citation Injector.
 - [x] Phase 33: Multi-Chapter Thesis & Dissertation Project Binder.
-- [ ] Phase 34: Academic Grammar & Style Linter.
+- [x] Phase 34: Academic Grammar & Style Linter.
+- [ ] Phase 35: Conference & Thesis Defense Slide Deck Generator.
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.
@@ -203,6 +204,12 @@ v0.7.0-enterprise-standards: Memulai pengerjaan Phase 8 (Enterprise Professional
   - [x] Kartu integrasi binder pada tab Dokumen sidebar (`components/editor/sidebar-document-tab.tsx`) dengan indikator folder dan bab aktif.
   - [x] Pendaftaran aksi `cmd_project_binder` di `lib/editor/command-palette.ts` dan pintasan `Ctrl + Shift + M` di `shortcuts-modal.tsx`.
   - [x] Automated Unit Testing: 11/11 tests passing (`__tests__/utils/project-binder.test.ts`), total test suite lulus 175/175 tests across 19 test files.
+- [x] **28. Phase 34: Academic Grammar & Style Linter**:
+  - [x] Academic style & formality linter engine (`lib/editor/academic-linter.ts`): kamus aturan saintifik dwibahasa (EN / ID), deteksi kata non-formal, kontraksi, klaim tanpa data, bias orang pertama, dan kalkulator skor formalitas akademik.
+  - [x] Academic Linter Modal (`components/editor/modals/academic-linter-modal.tsx`) dengan filter kategori, badge predikat Grade A-D, dan aksi 1-klik penggantian teks resmi.
+  - [x] Kartu integrasi linter pada tab Dokumen sidebar (`components/editor/sidebar-document-tab.tsx`).
+  - [x] Pendaftaran aksi `cmd_academic_linter` di `lib/editor/command-palette.ts` dan pintasan `Ctrl + Shift + L` di `shortcuts-modal.tsx`.
+  - [x] Automated Unit Testing: 9/9 tests passing (`__tests__/utils/academic-linter.test.ts`), total test suite lulus 184/184 tests across 20 test files.
 ## Do Not Work On Yet
 - SPSS / PSPP (Strategy decided: "AI Output Interpreter" - user uploads output tables, AI interprets and drafts academic narrative to editor. Do not build a full SPSS clone).
 - SEM PLS

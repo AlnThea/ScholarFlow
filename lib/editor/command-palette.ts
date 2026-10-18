@@ -75,6 +75,19 @@ export function getAvailableCommands(language: 'en' | 'id'): CommandItem[] {
       badge: 'Realtime',
     },
     {
+      id: 'cmd_academic_linter',
+      title: isEn ? 'Academic Grammar & Style Linter' : 'Linter Gaya Bahasa & Formalitas Akademik',
+      description: isEn ? 'Detect informal words, contractions, vague claims, and bias' : 'Deteksi kata non-formal, singkatan, klaim tanpa data, & bias persona',
+      tooltip: isEn
+        ? 'Scans paper for anti-academic patterns (slang, contractions, sweeping claims, first-person bias) and provides 1-click formal replacements.'
+        : 'Memindai naskah untuk menemukan pola non-akademis (singkatan, kata percakapan, klaim tanpa rujukan, bias orang pertama) dan menyediakan penggantian 1-klik.',
+      category: 'review',
+      shortcut: 'Ctrl + Shift + L',
+      keywords: ['linter', 'grammar', 'style', 'formal', 'baku', 'ejaan', 'tata bahasa'],
+      actionId: 'open_academic_linter',
+      badge: 'Phase 34',
+    },
+    {
       id: 'cmd_toggle_suggesting_mode',
       title: isEn ? 'Toggle Suggesting / Track Changes Mode' : 'Ganti Mode Sugesti / Track Changes',
       description: isEn ? 'Switch between direct editing and proposing tracked edits' : 'Beralih antara sunting langsung dan mode usulan perubahan',
