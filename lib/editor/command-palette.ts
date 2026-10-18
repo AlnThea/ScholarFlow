@@ -223,6 +223,19 @@ export function getAvailableCommands(language: 'en' | 'id'): CommandItem[] {
       actionId: 'search_citation',
     },
     {
+      id: 'cmd_journal_presets',
+      title: isEn ? 'Journal Formatting & Publishing Presets' : 'Preset Format Publikasi & Pedoman Jurnal',
+      description: isEn ? 'Audit word limits, abstract length & reference recency for IEEE, Elsevier, SINTA' : 'Audit batas kata, panjang abstrak & kemutakhiran rujukan untuk IEEE, Elsevier, SINTA',
+      tooltip: isEn
+        ? 'Checks manuscript compliance against IEEE, Elsevier, Springer, and SINTA guidelines with 1-click citation style application.'
+        : 'Memeriksa kepatuhan naskah terhadap panduan IEEE, Elsevier, Springer, dan SINTA lengkap dengan penerapan gaya sitasi 1-klik.',
+      category: 'formatting',
+      shortcut: 'Ctrl + Shift + J',
+      keywords: ['journal', 'preset', 'format', 'pedoman', 'ieee', 'elsevier', 'sinta', 'springer', 'publisher'],
+      actionId: 'open_journal_presets',
+      badge: 'Publisher Audit',
+    },
+    {
       id: 'cmd_style_apa',
       title: 'APA 7th Edition (Author, Year)',
       description: isEn ? 'Switch citation style to APA: (Smith & Doe, 2024)' : 'Ubah gaya sitasi ke format APA: (Smith & Doe, 2024)',

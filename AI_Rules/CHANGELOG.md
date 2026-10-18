@@ -1,5 +1,26 @@
 # ScholarFlow Changelog
 
+## v0.37.0 - Journal Formatting & Publishing Presets Configurator
+
+- **Author Guidelines & Presets Engine (`lib/editor/journal-presets.ts`)**:
+  - Authoritative publisher database: IEEE Transactions & Journals, Elsevier ScienceDirect, Springer Nature, SINTA 1 & 2 Dikti, and PLOS ONE.
+  - Multi-metric extraction engine (`extractDocumentMetrics`): calculates total words, dedicated abstract word count, figures, and tables.
+  - Reference recency auditor (`auditReferenceRecency`): calculates the exact proportion of citations published within the last 5 years.
+  - Real-time audit scoring (`auditJournalReadiness`): produces a 0-100% readiness score with status badges (*Submission Ready*, *Needs Minor Adjustments*, *Substantial Revisions Needed*).
+- **Journal Presets Modal UI (`components/editor/modals/journal-presets-modal.tsx`)**:
+  - Left column preset picker with publisher descriptions and required citation style badges.
+  - Interactive scorecard hero banner displaying readiness percentage and overall submission status.
+  - 1-Click "Switch to Required Style" button: automatically converts manuscript citation style to match publisher requirements.
+  - Comprehensive checklist cards with pass/warning/fail badges and target comparisons.
+  - Recommended section structure badges for the active journal.
+  - Full compliance with Tailwind Dark Mode (`dark:`) and bilingual EN ↔ ID localization.
+- **Sidebar & Editor Layout Integration**:
+  - Added dedicated *Journal Target Presets* card with "Audit Journal Guidelines" button in `components/editor/sidebar-document-tab.tsx`.
+  - Registered `cmd_journal_presets` in `lib/editor/command-palette.ts`.
+  - Added global keyboard shortcut `Ctrl + Shift + J` in `editor-layout.tsx` and cheat sheet in `shortcuts-modal.tsx`.
+- **Automated Unit Testing**:
+  - Added `__tests__/utils/journal-presets.test.ts` (5 unit tests). Vitest suite passing at **201/201 tests across 23 test files**.
+
 ## v0.36.0 - Interactive Literature Matrix & Synthesis Grid
 
 - **Literature Matrix & Synthesis Grid Engine (`lib/editor/literature-matrix.ts`)**:

@@ -176,6 +176,14 @@ export function ShortcutsModal({ isOpen, onClose, language }: ShortcutsModalProp
 
     // Editor Formatting & Math
     {
+      keys: ['Ctrl', 'Shift', 'J'],
+      actionEn: 'Journal Formatting & Publishing Presets',
+      actionId: 'Preset Format Publikasi & Pedoman Jurnal',
+      tooltipEn: 'Audit manuscript word limits, abstract length, and reference recency against IEEE, Elsevier, or SINTA.',
+      tooltipId: 'Audit batas kata naskah, panjang abstrak, dan kemutakhiran rujukan terhadap panduan IEEE, Elsevier, atau SINTA.',
+      category: 'editor',
+    },
+    {
       keys: ['Ctrl', 'Shift', 'O'],
       actionEn: 'Academic Outline & Scaffolding Generator',
       actionId: 'Generator Kerangka & Struktur Naskah Ilmiah',

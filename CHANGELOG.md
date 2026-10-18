@@ -2,6 +2,34 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.37.0] - 2026-10-18 (Phase 37: Journal Formatting & Publishing Presets Configurator)
+
+### 🚀 Journal Formatting & Publishing Presets Configurator
+- **Author Guidelines & Presets Engine (`lib/editor/journal-presets.ts`)**:
+  - Implemented authoritative publisher guidelines database:
+    - *IEEE Transactions & Journals*: Numeric IEEE format, max 8,000 words, ≤ 200 word abstract, ≤ 12 visuals, and ≥ 75% reference recency.
+    - *Elsevier ScienceDirect*: APA/Harvard author-year format, max 8,500 words, ≤ 250 word abstract, and ≤ 10 visuals.
+    - *Springer Nature / Scientific Reports*: Vancouver style, max 6,500 words, ≤ 200 word abstract, and ≥ 80% recency.
+    - *SINTA 1 & 2 Accredited Journal (Dikti)*: APA style, max 6,000 words, ≤ 200 word abstract, and ≥ 80% recency.
+    - *PLOS ONE Open Access*: Vancouver style, flexible length up to 12,000 words, and open methodology priority.
+  - Multi-metric extraction engine (`extractDocumentMetrics`): calculates total words, dedicated abstract word count, figures, and tables.
+  - Reference recency auditor (`auditReferenceRecency`): calculates the exact proportion of citations published within the last 5 years.
+  - Real-time audit scoring (`auditJournalReadiness`): produces a 0-100% readiness score with status badges (*Submission Ready*, *Needs Minor Adjustments*, *Substantial Revisions Needed*).
+- **Journal Presets Modal UI (`components/editor/modals/journal-presets-modal.tsx`)**:
+  - Left column preset picker with publisher descriptions and required citation style badges.
+  - Interactive scorecard hero banner displaying readiness percentage and overall submission status.
+  - 1-Click "Switch to Required Style" button: automatically converts manuscript citation style to match publisher requirements.
+  - Comprehensive checklist cards with pass/warning/fail badges and target comparisons.
+  - Recommended section structure badges for the active journal.
+  - Full compliance with Tailwind Dark Mode (`dark:`) and bilingual EN ↔ ID localization.
+- **Sidebar & Editor Layout Integration**:
+  - Added dedicated *Journal Target Presets* card with "Audit Journal Guidelines" button in `components/editor/sidebar-document-tab.tsx`.
+  - Registered `cmd_journal_presets` in `lib/editor/command-palette.ts`.
+  - Added global keyboard shortcut `Ctrl + Shift + J` in `editor-layout.tsx` and cheat sheet in `shortcuts-modal.tsx`.
+
+### 🧪 Automated Testing
+- **Vitest Suite Expansion (`__tests__/utils/journal-presets.test.ts`)**: Added 5 unit tests verifying document metric extraction, reference recency calculations within 5-year windows, IEEE and Elsevier criteria auditing, and standard preset catalog. Total Vitest suite passing at **201/201 tests across 23 test files**.
+
 ## ⚡ [v0.36.0] - 2026-10-18 (Phase 36: Interactive Literature Matrix & Synthesis Grid)
 
 ### 🚀 Interactive Literature Matrix & Synthesis Grid

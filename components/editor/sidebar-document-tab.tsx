@@ -4,7 +4,7 @@ import {
   IconFilter, IconFolderOpen, IconLoader2, IconCirclePlus, IconQuote,
   IconSearch, IconSum, IconSparkles, IconWand, IconChevronLeft,
   IconChevronRight, IconLanguage, IconX, IconClock, IconTrash, IconCopy, IconHistory,
-  IconMicroscope, IconLayersLinked, IconSpellCheck, IconPresentation, IconTable
+  IconMicroscope, IconLayersLinked, IconSpellCheck, IconPresentation, IconTable, IconFileCertificate
 } from '@tabler/icons-react';
 
 
@@ -36,6 +36,7 @@ export const SidebarDocumentTab = (props: any) => {
     onOpenLinter,
     onOpenSlideDeck,
     onOpenLiteratureMatrix,
+    onOpenJournalPresets,
     t, getSourceLabel, formatHistoryLabel, ActionButton, PanelRow
   } = props;
 
@@ -252,6 +253,36 @@ export const SidebarDocumentTab = (props: any) => {
                   >
                     <IconTable className="h-3.5 w-3.5" />
                     <span>{isEn ? 'Open Synthesis Matrix' : 'Buka Matriks Sintesis'}</span>
+                  </button>
+                </section>
+
+                {/* Journal Formatting & Publishing Presets Section */}
+                <section className="rounded-lg border border-blue-200/70 dark:border-blue-900/40 bg-gradient-to-b from-blue-50/30 via-white to-white dark:from-blue-950/20 dark:via-slate-800 dark:to-slate-800 p-3 shadow-xs flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                        <IconFileCertificate className="h-3.5 w-3.5" />
+                      </div>
+                      <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                        {isEn ? 'Journal Target Presets' : 'Format Target Jurnal'}
+                      </h3>
+                    </div>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                      Author Guidelines
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-350 leading-relaxed">
+                    {isEn
+                      ? 'Audit word limits, abstract length & reference recency against IEEE, Elsevier, or SINTA.'
+                      : 'Audit batas kata, panjang abstrak & kemutakhiran rujukan untuk IEEE, Elsevier, atau SINTA.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => onOpenJournalPresets?.()}
+                    className="w-full py-1.5 px-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <IconFileCertificate className="h-3.5 w-3.5" />
+                    <span>{isEn ? 'Audit Journal Guidelines' : 'Audit Pedoman Jurnal'}</span>
                   </button>
                 </section>
 

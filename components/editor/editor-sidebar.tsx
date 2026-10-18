@@ -122,6 +122,7 @@ type SidebarProps = {
   onOpenLinter?: () => void;
   onOpenSlideDeck?: () => void;
   onOpenLiteratureMatrix?: () => void;
+  onOpenJournalPresets?: () => void;
 };
 
 function PanelRow({

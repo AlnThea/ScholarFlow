@@ -504,3 +504,24 @@ Target: Mengekstrak, memetakan, dan menyusun komparasi sistematis seluruh paper 
   - Pendaftaran pintasan keyboard global `Ctrl + Shift + T` di `editor-layout.tsx` dan `shortcuts-modal.tsx`.
 - [x] **4. Automated Unit Testing**:
   - Unit test suite di `__tests__/utils/literature-matrix.test.ts` (7/7 tests passing, total suite lulus 196/196 tests across 22 test files).
+
+### Phase 37: Journal Formatting & Publishing Presets Configurator
+Target: Audit kepatuhan pedoman penerbit naskah (batas kata, panjang abstrak, kuota gambar/tabel, kemutakhiran rujukan 5 tahun, format sitasi) untuk IEEE, Elsevier, Springer Nature, SINTA Dikti, dan PLOS ONE dengan tombol penerapan gaya sitasi 1-klik.
+
+- [x] **1. Journal Presets & Guidelines Audit Engine (`lib/editor/journal-presets.ts`)**:
+  - Basis data preset publikasi baku: IEEE Transactions & Journals, Elsevier Research Paper, Springer Nature / Scientific Reports, Jurnal Terakreditasi Nasional SINTA 1 & 2 Dikti, dan PLOS ONE.
+  - Ekstraksi metrik naskah (`extractDocumentMetrics`): total kata, kata bagian abstrak, jumlah gambar (`image`), dan tabel (`table`).
+  - Evaluasi kemutakhiran rujukan (`auditReferenceRecency`): menghitung persentase sitasi dalam jendela 5 tahun terakhir.
+  - Mesin audit kepatuhan (`auditJournalReadiness`): skor kesiapan publikasi (0 - 100%), rincian item lolos/peringatan/gagal, dan evaluasi kesesuaian gaya sitasi aktif vs yang diwajibkan penerbit.
+- [x] **2. Journal Presets Modal UI (`components/editor/modals/journal-presets-modal.tsx`)**:
+  - Kartu pemilih target jurnal di kolom kiri dengan badge gaya sitasi yang diminta dan deskripsi kriteria.
+  - Hero banner skor kesiapan dengan status visual (*Submission Ready*, *Needs Minor Adjustments*, *Substantial Revisions*).
+  - Tombol aksi 1-klik "Terapkan Gaya Sitasi Jurnal" untuk menyelaraskan format sitasi naskah secara instan.
+  - Tabel rincian checklist evaluasi batas kata, batas abstrak, kuota visual, kemutakhiran rujukan, dan rekomendasi struktur bab.
+  - Kepatuhan penuh Tailwind Dark Mode dan dwibahasa EN ↔ ID.
+- [x] **3. Integrasi Sidebar Tab Dokumen & Command Palette**:
+  - Kartu *Journal Target Presets* di `components/editor/sidebar-document-tab.tsx` dengan tombol "Audit Pedoman Jurnal".
+  - Pendaftaran perintah `cmd_journal_presets` di `lib/editor/command-palette.ts`.
+  - Pendaftaran pintasan keyboard global `Ctrl + Shift + J` di `editor-layout.tsx` dan `shortcuts-modal.tsx`.
+- [x] **4. Automated Unit Testing**:
+  - Unit test suite di `__tests__/utils/journal-presets.test.ts` (5/5 tests passing, total suite lulus 201/201 tests across 23 test files).

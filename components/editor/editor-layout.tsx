@@ -32,6 +32,7 @@ import { ProjectBinderModal } from './modals/project-binder-modal';
 import { AcademicLinterModal } from './modals/academic-linter-modal';
 import { SlideDeckModal } from './modals/slide-deck-modal';
 import { LiteratureMatrixModal } from './modals/literature-matrix-modal';
+import { JournalPresetsModal } from './modals/journal-presets-modal';
 import { CitationMentionDropdown } from './citation-mention-dropdown';
 import { useCitationMention } from '@/hooks/use-citation-mention';
 import { addSuggestion } from '@/lib/api/suggestions';
@@ -348,6 +349,7 @@ export function EditorLayout({
   const [isLinterModalOpen, setIsLinterModalOpen] = useState(false);
   const [isSlideDeckModalOpen, setIsSlideDeckModalOpen] = useState(false);
   const [isLiteratureMatrixModalOpen, setIsLiteratureMatrixModalOpen] = useState(false);
+  const [isJournalPresetsModalOpen, setIsJournalPresetsModalOpen] = useState(false);
   const referenceFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleParsedReferences = (candidates: CitationCandidate[], fileName: string) => {
@@ -519,6 +521,13 @@ export function EditorLayout({
         setIsLiteratureMatrixModalOpen(true);
         return;
       }
+
+      // Ctrl + Shift + J -> Journal Formatting & Publishing Presets
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        setIsJournalPresetsModalOpen(true);
+        return;
+      }
     };
 
     window.addEventListener('keydown', handleGlobalShortcuts);
@@ -606,6 +615,9 @@ export function EditorLayout({
         break;
       case 'open_literature_matrix':
         setIsLiteratureMatrixModalOpen(true);
+        break;
+      case 'open_journal_presets':
+        setIsJournalPresetsModalOpen(true);
         break;
       case 'open_version_history':
         versionHistory.openVersionHistory?.();
@@ -1059,6 +1071,7 @@ export function EditorLayout({
                   onOpenLinter={() => setIsLinterModalOpen(true)}
                   onOpenSlideDeck={() => setIsSlideDeckModalOpen(true)}
                   onOpenLiteratureMatrix={() => setIsLiteratureMatrixModalOpen(true)}
+                  onOpenJournalPresets={() => setIsJournalPresetsModalOpen(true)}
                 />
               )}
             </div>
@@ -1369,6 +1382,17 @@ export function EditorLayout({
               blocks: [...currentBlocks, tableBlock],
             });
           }
+        }}
+      />
+      <JournalPresetsModal
+        isOpen={isJournalPresetsModalOpen}
+        onClose={() => setIsJournalPresetsModalOpen(false)}
+        editorBlocks={currentDocument?.content?.blocks || []}
+        bibliographyEntries={bibliographyEntries || []}
+        activeCitationStyle={citationStyle || 'apa'}
+        language={language as 'en' | 'id'}
+        onSwitchCitationStyle={(style) => {
+          onChangeCitationStyle?.(style);
         }}
       />
       <CitationMentionDropdown

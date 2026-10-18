@@ -212,3 +212,13 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
 - [x] **11.3 Interactive Literature Matrix & Synthesis Grid (Phase 36)**
   - [x] Ekstraksi dan tabelisasi otomatis paper referensi ke dalam format matriks komparasi saintifik standar (Studi/Sitasi, Judul, Metodologi, Ukuran Sampel, Temuan Empiris Utama, Batasan Riset, dan Catatan Sintesis).
   - [x] Modal grid interaktif dengan pengeditan sel langsung (*inline editing*), filter pencarian & kategori tag (SLR, Kuantitatif, Kualitatif, Machine Learning), ekspor Markdown Table, unduh berkas CSV (RFC 4180), dan injeksi blok tabel langsung ke kanvas naskah Bab 2 EditorJS.
+
+---
+
+### 📚 EPIC 12: Journal Publishing Prep & Visual Concept Mapping (Phases 37 - 39)
+- [x] **12.1 Journal Formatting & Publishing Presets Configurator (Phase 37)**
+  - [x] Basis data preset kepatuhan penerbit ilmiah otoritatif (IEEE Transactions, Elsevier ScienceDirect, Springer Nature, SINTA 1 & 2 Dikti, PLOS ONE).
+  - [x] Mesin audit kesiapan naskah real-time mengevaluasi batas kata total, batas panjang abstrak, kuota gambar/tabel, persentase kemutakhiran rujukan (< 5 tahun), dan format gaya sitasi aktif.
+  - [x] Modal scorecard kepatuhan publikasi dengan predikat status visual (*Submission Ready*, *Minor Adjustments*, *Substantial Revisions*), tombol penerapan gaya sitasi 1-klik, kartu peluncur di tab Dokumen sidebar, dan shortcut `Ctrl + Shift + J`.
+- [ ] **12.2 Cross-Paper Concept Map & Citation Network Visualizer (Phase 38)**
+- [ ] **12.3 Automated Journal Submission Package Builder & Cover Letter AI (Phase 39)**
