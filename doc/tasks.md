@@ -550,3 +550,29 @@ Target: Memvisualisasikan hubungan keterkaitan konseptual dan jaringan sitasi an
 - [x] **4. Automated Unit Testing**:
   - Unit test suite di `__tests__/utils/concept-map.test.ts` (5/5 tests passing, total suite lulus 206/206 tests across 24 test files).
 
+### Phase 39: Automated Journal Submission Package Builder & Cover Letter AI
+Target: Menyusun paket pengajuan naskah publikasi saintifik siap kirim yang mencakup surat pengantar resmi (*Cover Letter AI*) ke Dewan Redaksi/Editor-in-Chief, poin kebaruan utama (*Research Highlights* ≤ 85 karakter), deklarasi etika & konflik kepentingan (*Conflict of Interest*), sumber pendanaan, pernyataan ketersediaan data riset (*Data Availability*), rekomendasi mitra bestari (*Suggested Peer Reviewers*), serta ringkasan inventaris naskah dengan ekspor Markdown dan unduh berkas .txt/.md.
+
+- [x] **1. Submission Package & Cover Letter Engine (`lib/editor/submission-package.ts`)**:
+  - Generator surat pengantar resmi (`buildCoverLetter`) berstruktur baku (salam hormat editor, judul naskah, jenis artikel, takarir signifikansi/kebaruan riset, keselarasan ruang lingkup jurnal, 4 butir jaminan orisinalitas/integritas, dan blok tanda tangan penulis korespondensi) dwibahasa (EN & ID).
+  - Ekstraksi inventarisasi metrik naskah (`extractSubmissionMetrics`): total kata, kata abstrak, jumlah tabel, jumlah gambar, dan jumlah referensi kepustakaan.
+  - Formulator rekomendasi mitra bestari independen (`generateSuggestedReviewers`): menyaring nama-nama penulis senior dari daftar pustaka referensi naskah, mengecualikan penulis naskah aktif, dan merumuskan email akademis serta alasan kepakaran.
+  - Sintesis poin kebaruan utama (`synthesizeHighlights`): 3-5 butir poin kontribusi saintifik padat (panjang ≤ 85 karakter per butir) sesuai format wajib Elsevier / IEEE.
+  - Bundler paket pengajuan lengkap (`buildJournalSubmissionPackage`) dan pemformat teks Markdown utuh (`exportSubmissionPackageMarkdown`).
+- [x] **2. Submission Package Modal UI (`components/editor/modals/submission-package-modal.tsx`)**:
+  - Modal interaktif multi-seksi 2 kolom (Sidebar parameter naskah, target jurnal, penulis korespondensi & 5 tab navigasi konten).
+  - Pilihan cepat target jurnal bergengsi (IEEE Transactions, Elsevier, Springer, SINTA 1 Dikti, PLOS ONE).
+  - Tab 1: Editor teks cover letter interaktif, input penyesuaian kebaruan riset, tombol salin surat, dan unduh berkas .txt.
+  - Tab 2: Editor 3-5 poin highlights dengan penghitung karakter real-time dan penanda batas 85 karakter.
+  - Tab 3: Editor deklarasi etika saintifik (COI, pendanaan hibah riset, dan ketersediaan dataset/kode).
+  - Tab 4: Tabel interaktif mitra bestari (nama, afiliasi, email, kepakaran, alasan) dengan tombol regenerasi dari pustaka dan tambah reviewer mandiri.
+  - Tab 5: Kartu metrik inventaris naskah (kata, abstrak, tabel, gambar, sitasi) dan pratinjau Markdown paket lengkap dengan tombol 1-klik "Salin Markdown Paket" serta "Unduh Paket (.md)".
+  - Kepatuhan penuh Tailwind Dark Mode dan dwibahasa EN ↔ ID.
+- [x] **3. Integrasi Sidebar Tab Dokumen & Command Palette**:
+  - Kartu *Journal Submission Package* di `components/editor/sidebar-document-tab.tsx` dengan tombol "Buka Penyusun Paket".
+  - Pendaftaran perintah `cmd_submission_package` di `lib/editor/command-palette.ts`.
+  - Pendaftaran pintasan keyboard global `Ctrl + Shift + Y` di `editor-layout.tsx` dan `shortcuts-modal.tsx`.
+- [x] **4. Automated Unit Testing**:
+  - Unit test suite di `__tests__/utils/submission-package.test.ts` (5/5 tests passing, total suite lulus 211/211 tests across 25 test files).
+
+

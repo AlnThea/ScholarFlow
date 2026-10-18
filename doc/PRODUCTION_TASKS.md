@@ -224,5 +224,10 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
   - [x] Ekstraksi kata kunci konsep akademik otomatis (pembersihan stopword multi-bahasa EN & ID, frekuensi kemunculan kata), klasifikasi kluster tematik (Metodologi, Teori, Empiris, Komputasi, Domain Aplikasi), dan penentuan nodus sentral (*Degree Centrality* & densitas graf).
   - [x] Deteksi tautan konsep antar-paper referensi pustaka (*Jaccard Similarity* & irisan kata kunci riset) serta penempatan koordinat tata letak radial SVG 2D.
   - [x] Modal visualisasi graf jaringan interaktif dengan bobot ukuran nodus dinamis, sorotan animasi cincin (*pulse ring*) pada paper sentral, penyorotan tetangga (*neighbor highlighting*) saat hover/klik, drawer laci inspeksi detail sitasi, filter pil kluster, ekspor diagram Mermaid, peluncur kartu tab Dokumen sidebar, command palette `cmd_concept_map`, dan shortcut `Ctrl + Shift + N`.
-- [ ] **12.3 Automated Journal Submission Package Builder & Cover Letter AI (Phase 39)**
+- [x] **12.3 Automated Journal Submission Package Builder & Cover Letter AI (Phase 39)**
+  - [x] Sintesis surat pengantar resmi (*Cover Letter AI*) ke Editor-in-Chief dengan takarir kebaruan riset, keselarasan ruang lingkup jurnal, dan jaminan orisinalitas dalam dwibahasa (EN / ID).
+  - [x] Penyusun deklarasi etika publikasi: bebas konflik kepentingan (*Conflict of Interest*), sumber pendanaan hibah (*Funding Disclosure*), dan ketersediaan data riset (*Data Availability Statement*).
+  - [x] Generator rekomendasi mitra bestari (*Suggested Peer Reviewers*) independen yang disaring secara otomatis dari pustaka sitasi.
+  - [x] Ekstraksi poin kebaruan utama (*Research Highlights*) ringkas (≤ 85 karakter) standar Elsevier / IEEE dan ringkasan inventarisasi naskah (kata total, abstrak, tabel, gambar, referensi).
+  - [x] Modal interaktif paket pengajuan jurnal, ekspor Markdown lengkap, unduh berkas .txt/.md, kartu peluncur tab Dokumen sidebar, command palette `cmd_submission_package`, dan shortcut `Ctrl + Shift + Y`.
 

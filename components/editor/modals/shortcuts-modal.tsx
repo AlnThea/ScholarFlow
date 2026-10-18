@@ -192,6 +192,14 @@ export function ShortcutsModal({ isOpen, onClose, language }: ShortcutsModalProp
       category: 'editor',
     },
     {
+      keys: ['Ctrl', 'Shift', 'Y'],
+      actionEn: 'Journal Submission Package & Cover Letter',
+      actionId: 'Penyusun Paket Pengajuan Jurnal & Cover Letter',
+      tooltipEn: 'Synthesize formal submission package, cover letter to Editor-in-Chief, highlights, and ethical statements.',
+      tooltipId: 'Menyusun paket pengajuan naskah publikasi, cover letter ke Editor-in-Chief, poin kebaruan, dan deklarasi etika.',
+      category: 'editor',
+    },
+    {
       keys: ['Ctrl', 'Shift', 'O'],
       actionEn: 'Academic Outline & Scaffolding Generator',
       actionId: 'Generator Kerangka & Struktur Naskah Ilmiah',

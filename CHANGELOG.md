@@ -2,6 +2,32 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.39.0] - 2026-10-18 (Phase 39: Automated Journal Submission Package Builder & Cover Letter AI)
+
+### 🚀 Automated Journal Submission Package Builder & Cover Letter AI
+- **Submission Package & Cover Letter Engine (`lib/editor/submission-package.ts`)**:
+  - Formal academic cover letter generator (`buildCoverLetter`): synthesized standard salutation, target journal name, manuscript type, novelty/significance rationale, scope fit statement, and 4 core originality/non-duplication declarations in bilingual EN & ID formats.
+  - Manuscript submission metrics extractor (`extractSubmissionMetrics`): evaluates total word count, abstract length, table count, figure count, and bibliography reference tally.
+  - Independent peer reviewer suggestion engine (`generateSuggestedReviewers`): scans cited literature in the manuscript library to derive senior domain authorities while excluding active authors, and generates contact info and non-conflicted rationales.
+  - Research highlights synthesizer (`synthesizeHighlights`): formats 3 to 5 high-impact, concise bullet points (max 85 characters each) strictly compliant with Elsevier and IEEE submission standards.
+  - Complete submission package bundler (`buildJournalSubmissionPackage`) and consolidated Markdown exporter (`exportSubmissionPackageMarkdown`).
+- **Submission Package Modal UI (`components/editor/modals/submission-package-modal.tsx`)**:
+  - Fullscreen 2-column workspace with left sidebar metadata parameters and 5 focused section tabs.
+  - Target journal quick-fill presets for IEEE Transactions, Elsevier Information and Software Technology, Springer Empirical Software Engineering, SINTA 1 Dikti, and PLOS ONE.
+  - Tab 1: Live cover letter text editor with custom novelty & scope alignment inputs, 1-click copy, and `.txt` file download.
+  - Tab 2: Research highlights manager with real-time character counter and warning badge for items exceeding 85 characters.
+  - Tab 3: Mandatory ethical statements editor covering Conflict of Interest (COI), research grant funding disclosures, and data/code availability.
+  - Tab 4: Interactive suggested reviewers table with 1-click regeneration from citation library and custom reviewer addition.
+  - Tab 5: Manuscript inventory scorecard and consolidated Markdown package viewer with 1-click copy and `.md` file download.
+  - Strict compliance with Tailwind Dark Mode (`dark:`) and bilingual EN ↔ ID localization.
+- **Sidebar & Editor Layout Integration**:
+  - Added dedicated *Journal Submission Package* card with "Build Submission Package" button in `components/editor/sidebar-document-tab.tsx`.
+  - Registered `cmd_submission_package` in `lib/editor/command-palette.ts`.
+  - Added global keyboard shortcut `Ctrl + Shift + Y` in `editor-layout.tsx` and cheat sheet in `shortcuts-modal.tsx`.
+
+### 🧪 Automated Testing
+- **Vitest Suite Expansion (`__tests__/utils/submission-package.test.ts`)**: Added 5 unit tests verifying metric extraction, reviewer suggestions from cited references, highlights length constraints (≤ 85 chars), bilingual cover letter construction, and complete Markdown package bundling. Total Vitest suite passing at **211/211 tests across 25 test files**.
+
 ## ⚡ [v0.38.0] - 2026-10-18 (Phase 38: Cross-Paper Concept Map & Citation Network Visualizer)
 
 ### 🚀 Cross-Paper Concept Map & Citation Network Visualizer

@@ -249,6 +249,19 @@ export function getAvailableCommands(language: 'en' | 'id'): CommandItem[] {
       badge: 'Publisher Audit',
     },
     {
+      id: 'cmd_submission_package',
+      title: isEn ? 'Journal Submission Package & Cover Letter' : 'Penyusun Paket Pengajuan Jurnal & Cover Letter',
+      description: isEn ? 'Generate cover letter, highlights, ethical statements & suggested reviewers' : 'Buat cover letter, poin kebaruan, deklarasi etika & rekomendasi reviewer',
+      tooltip: isEn
+        ? 'Generates submission-ready academic cover letters addressed to the Editor-in-Chief, research highlights, conflict of interest declarations, and reviewer suggestions.'
+        : 'Menyusun surat pengantar resmi ke Dewan Redaksi, poin kebaruan riset (highlights), deklarasi bebas konflik kepentingan, dan rekomendasi mitra bestari.',
+      category: 'formatting',
+      shortcut: 'Ctrl + Shift + Y',
+      keywords: ['submission', 'cover letter', 'journal', 'editor', 'highlights', 'reviewers', 'pengajuan', 'surat pengantar'],
+      actionId: 'open_submission_package',
+      badge: 'Submission',
+    },
+    {
       id: 'cmd_style_apa',
       title: 'APA 7th Edition (Author, Year)',
       description: isEn ? 'Switch citation style to APA: (Smith & Doe, 2024)' : 'Ubah gaya sitasi ke format APA: (Smith & Doe, 2024)',

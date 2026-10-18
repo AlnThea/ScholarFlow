@@ -34,6 +34,7 @@ import { SlideDeckModal } from './modals/slide-deck-modal';
 import { LiteratureMatrixModal } from './modals/literature-matrix-modal';
 import { JournalPresetsModal } from './modals/journal-presets-modal';
 import { ConceptMapModal } from './modals/concept-map-modal';
+import { SubmissionPackageModal } from './modals/submission-package-modal';
 import { CitationMentionDropdown } from './citation-mention-dropdown';
 import { useCitationMention } from '@/hooks/use-citation-mention';
 import { addSuggestion } from '@/lib/api/suggestions';
@@ -352,6 +353,7 @@ export function EditorLayout({
   const [isLiteratureMatrixModalOpen, setIsLiteratureMatrixModalOpen] = useState(false);
   const [isJournalPresetsModalOpen, setIsJournalPresetsModalOpen] = useState(false);
   const [isConceptMapModalOpen, setIsConceptMapModalOpen] = useState(false);
+  const [isSubmissionPackageModalOpen, setIsSubmissionPackageModalOpen] = useState(false);
   const referenceFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleParsedReferences = (candidates: CitationCandidate[], fileName: string) => {
@@ -537,6 +539,13 @@ export function EditorLayout({
         setIsConceptMapModalOpen(true);
         return;
       }
+
+      // Ctrl + Shift + Y -> Journal Submission Package Builder & Cover Letter AI
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        setIsSubmissionPackageModalOpen(true);
+        return;
+      }
     };
 
     window.addEventListener('keydown', handleGlobalShortcuts);
@@ -630,6 +639,9 @@ export function EditorLayout({
         break;
       case 'open_concept_map':
         setIsConceptMapModalOpen(true);
+        break;
+      case 'open_submission_package':
+        setIsSubmissionPackageModalOpen(true);
         break;
       case 'open_version_history':
         versionHistory.openVersionHistory?.();
@@ -1085,6 +1097,7 @@ export function EditorLayout({
                   onOpenLiteratureMatrix={() => setIsLiteratureMatrixModalOpen(true)}
                   onOpenJournalPresets={() => setIsJournalPresetsModalOpen(true)}
                   onOpenConceptMap={() => setIsConceptMapModalOpen(true)}
+                  onOpenSubmissionPackage={() => setIsSubmissionPackageModalOpen(true)}
                 />
               )}
             </div>
@@ -1412,6 +1425,17 @@ export function EditorLayout({
         isOpen={isConceptMapModalOpen}
         onClose={() => setIsConceptMapModalOpen(false)}
         citationLibrary={citationLibrary}
+        language={language as 'en' | 'id'}
+      />
+      <SubmissionPackageModal
+        isOpen={isSubmissionPackageModalOpen}
+        onClose={() => setIsSubmissionPackageModalOpen(false)}
+        editorBlocks={currentDocument?.content?.blocks || []}
+        bibliographyEntries={bibliographyEntries || []}
+        documentTitle={currentDocument?.title || 'Academic Manuscript'}
+        authorName={profile?.full_name || user?.email || undefined}
+        authorEmail={user?.email || undefined}
+        institutionName={profile?.institution || undefined}
         language={language as 'en' | 'id'}
       />
       <CitationMentionDropdown

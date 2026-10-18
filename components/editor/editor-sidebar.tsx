@@ -124,6 +124,7 @@ type SidebarProps = {
   onOpenLiteratureMatrix?: () => void;
   onOpenJournalPresets?: () => void;
   onOpenConceptMap?: () => void;
+  onOpenSubmissionPackage?: () => void;
 };
 
 function PanelRow({

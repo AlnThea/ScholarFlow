@@ -1,5 +1,29 @@
 # ScholarFlow Changelog
 
+## v0.39.0 - Automated Journal Submission Package Builder & Cover Letter AI
+
+- **Submission Package & Cover Letter Engine (`lib/editor/submission-package.ts`)**:
+  - Formal academic cover letter generator (`buildCoverLetter`) addressed to the Editor-in-Chief with scope fit, research significance, and originality guarantees (bilingual EN & ID).
+  - Manuscript submission metrics extractor (`extractSubmissionMetrics`) computing total words, abstract words, tables, figures, and references.
+  - Independent peer reviewer suggestion engine (`generateSuggestedReviewers`) scanning cited literature in the manuscript library.
+  - Research highlights synthesizer (`synthesizeHighlights`) outputting 3-5 concise bullets with char length ≤ 85.
+  - Complete submission package bundler (`buildJournalSubmissionPackage`) and Markdown exporter (`exportSubmissionPackageMarkdown`).
+- **Submission Package Modal UI (`components/editor/modals/submission-package-modal.tsx`)**:
+  - Fullscreen 2-column workspace with left sidebar metadata parameters and 5 focused section tabs.
+  - Target journal quick-fill presets for IEEE Transactions, Elsevier, Springer, SINTA 1 Dikti, and PLOS ONE.
+  - Tab 1: Live cover letter text editor with custom novelty & scope alignment inputs, 1-click copy, and `.txt` file download.
+  - Tab 2: Research highlights manager with real-time character counter and warning badge for items exceeding 85 characters.
+  - Tab 3: Mandatory ethical statements editor covering Conflict of Interest (COI), research grant funding disclosures, and data/code availability.
+  - Tab 4: Interactive suggested reviewers table with 1-click regeneration from citation library and custom reviewer addition.
+  - Tab 5: Manuscript inventory scorecard and consolidated Markdown package viewer with 1-click copy and `.md` file download.
+  - Strict compliance with Tailwind Dark Mode (`dark:`) and bilingual EN ↔ ID localization.
+- **Sidebar & Editor Layout Integration**:
+  - Added dedicated *Journal Submission Package* card with "Build Submission Package" button in `components/editor/sidebar-document-tab.tsx`.
+  - Registered `cmd_submission_package` in `lib/editor/command-palette.ts`.
+  - Added global keyboard shortcut `Ctrl + Shift + Y` in `editor-layout.tsx` and cheat sheet in `shortcuts-modal.tsx`.
+- **Automated Unit Testing**:
+  - Added `__tests__/utils/submission-package.test.ts` (5 unit tests). Vitest suite passing at **211/211 tests across 25 test files**.
+
 ## v0.38.0 - Cross-Paper Concept Map & Citation Network Visualizer
 
 - **Concept & Network Graph Engine (`lib/editor/concept-map.ts`)**:

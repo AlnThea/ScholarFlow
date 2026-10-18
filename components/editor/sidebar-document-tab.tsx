@@ -4,7 +4,7 @@ import {
   IconFilter, IconFolderOpen, IconLoader2, IconCirclePlus, IconQuote,
   IconSearch, IconSum, IconSparkles, IconWand, IconChevronLeft,
   IconChevronRight, IconLanguage, IconX, IconClock, IconTrash, IconCopy, IconHistory,
-  IconMicroscope, IconLayersLinked, IconSpellCheck, IconPresentation, IconTable, IconFileCertificate, IconShare
+  IconMicroscope, IconLayersLinked, IconSpellCheck, IconPresentation, IconTable, IconFileCertificate, IconShare, IconPackage
 } from '@tabler/icons-react';
 
 
@@ -38,6 +38,7 @@ export const SidebarDocumentTab = (props: any) => {
     onOpenLiteratureMatrix,
     onOpenJournalPresets,
     onOpenConceptMap,
+    onOpenSubmissionPackage,
     t, getSourceLabel, formatHistoryLabel, ActionButton, PanelRow
   } = props;
 
@@ -314,6 +315,36 @@ export const SidebarDocumentTab = (props: any) => {
                   >
                     <IconShare className="h-3.5 w-3.5" />
                     <span>{isEn ? 'Explore Concept Network' : 'Jelajahi Jaringan Konsep'}</span>
+                  </button>
+                </section>
+
+                {/* Journal Submission Package Builder Section */}
+                <section className="rounded-lg border border-amber-200/70 dark:border-amber-900/40 bg-gradient-to-b from-amber-50/30 via-white to-white dark:from-amber-950/20 dark:via-slate-800 dark:to-slate-800 p-3 shadow-xs flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+                        <IconPackage className="h-3.5 w-3.5" />
+                      </div>
+                      <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                        {isEn ? 'Journal Submission Package' : 'Paket Pengajuan Publikasi'}
+                      </h3>
+                    </div>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                      AI Cover Letter
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-350 leading-relaxed">
+                    {isEn
+                      ? 'Generate submission-ready cover letter, highlights, ethical statements, and reviewer suggestions.'
+                      : 'Susun cover letter ke dewan redaksi, poin kebaruan, etika COI, dan rekomendasi reviewer.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => onOpenSubmissionPackage?.()}
+                    className="w-full py-1.5 px-3 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <IconPackage className="h-3.5 w-3.5" />
+                    <span>{isEn ? 'Build Submission Package' : 'Buka Penyusun Paket'}</span>
                   </button>
                 </section>
 
