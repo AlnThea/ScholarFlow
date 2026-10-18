@@ -439,9 +439,10 @@ export function ScholarEditor() {
     // Implement sample image insertion if needed
   };
 
-  const handleInsertSynthesizedText = () => {
-    if (synthesizedText && editorJsRef.current) {
-      (editorJsRef.current as any).insertHtmlAtCursor?.(synthesizedText);
+  const handleInsertSynthesizedText = (customText?: string) => {
+    const textToInsert = typeof customText === 'string' && customText.trim() ? customText : synthesizedText;
+    if (textToInsert && editorJsRef.current) {
+      (editorJsRef.current as any).insertHtmlAtCursor?.(textToInsert);
     }
   };
 

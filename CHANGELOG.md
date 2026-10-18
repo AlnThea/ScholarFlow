@@ -2,6 +2,29 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.41.0] - 2026-10-18 (Phase 41: Editor Canvas Lifecycle, Block Persistence & Rich Content Bridge)
+
+### 🚀 Canvas Lifecycle & Rich Content Persistence Hardening
+- **Unified `render` and `renderContent` Method Compatibility**:
+  - Implemented async `render` method alias on `buildBlockMethods` in `lib/editor/methods/block-methods.ts`, sanitizing data, initializing undo history, rendering inline math, and adjusting code textarea heights.
+  - Aligned `handleChangeCitationStyle` in `hooks/use-editor-document.ts` and `restoreRevision` in `hooks/use-version-history.ts` to support both `renderContent` and `render`, fixing silent re-render failures when switching citation styles (APA ↔ IEEE ↔ Vancouver) or restoring version snapshots.
+- **AI History Studio Canvas Text Insertion Bridge**:
+  - Updated `handleInsertSynthesizedText` in `components/editor/scholar-editor.tsx` to accept a `customText?: string` argument.
+  - Enables "Apply to Canvas" in `AIHistoryModal` to successfully insert selected polished sentences and abstracts directly into the user's active manuscript.
+- **Rich Contextual HTML Insertion Engine (`insertHtmlAtCursor`)**:
+  - Upgraded `insertHtmlAtCursor` in `lib/editor/methods/inline-methods.ts` with stored cursor range restoration (`targetRange = lastHighlightedRangeRef || lastSelectionRangeRef`), direct contextual HTML fragment insertion (`targetRange.createContextualFragment(html)`), and synthetic `input` event dispatching.
+  - Preserves rich `<cite data-citation="true">` elements from Paper Chat and synthesis tools without stripping tags into plain text.
+- **Toolbar & Menu Block Auto-Save Persistence**:
+  - Connected `saveCleanContent().then(onContentChange)` triggers across all block creation methods in `lib/editor/methods/block-methods.ts` (`insertImage`, `insertTable`, `insertCodeBlock`, `insertMathBlock`, `insertBibliographyText`, and `setBlockType`).
+  - Ensures inserted visual assets, LaTeX equations, and bibliography blocks immediately sync to React document state and persist across browser reloads.
+- **Safe Suggestion Target Replacement & Input Event Propagation**:
+  - Enhanced `addSuggestionMark` in `lib/editor/methods/suggestion-methods.ts` to locate and replace `oldText` with `<del>/<ins>` diff markup instead of appending duplicate text at the end of paragraphs.
+  - Added synthetic `input` event dispatching across `acceptSuggestion`, `rejectSuggestion`, `batchAcceptAllSuggestions`, and `batchRejectAllSuggestions` for instant EditorJS reactivity.
+  - Added multi-tier container fallback lookup in `lib/editor/methods/cross-reference-methods.ts`.
+
+### 🧪 Automated Testing
+- **Vitest Suite Expansion (`__tests__/utils/editor-lifecycle-hardening.test.ts`)**: Added 4 unit tests verifying rich `<cite>` tag preservation, non-duplicate suggestion replacement, customText prioritization in text insertion, and unified render/renderContent interfaces. Total Vitest suite passing at **218/218 tests across 27 test files**.
+
 ## ⚡ [v0.40.0] - 2026-10-18 (Phase 40: Canvas & Document Editor Interaction Hardening & Data Flow Reliability)
 
 ### 🛡️ Canvas & Document Editor Interaction Hardening

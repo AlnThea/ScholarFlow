@@ -1,5 +1,16 @@
 # ScholarFlow Changelog
 
+## v0.41.0 - Editor Canvas Lifecycle, Block Persistence & Rich Content Bridge
+
+- **Canvas Lifecycle & Rich Content Persistence Hardening (`lib/editor/methods/block-methods.ts`, `hooks/use-editor-document.ts`, `hooks/use-version-history.ts`, `components/editor/scholar-editor.tsx`, `lib/editor/methods/inline-methods.ts`, `lib/editor/methods/suggestion-methods.ts`)**:
+  - **Unified `render` and `renderContent` Method Compatibility**: Exposed `render` alias on `buildBlockMethods` and updated `use-editor-document.ts` and `use-version-history.ts` to call both `renderContent` and `render`, fixing citation style switcher (APA ↔ IEEE ↔ Vancouver) and version history rollback re-renders.
+  - **AI History Studio Text Insertion Bridge**: Fixed `handleInsertSynthesizedText` in `scholar-editor.tsx` to accept a `customText?: string` argument, making the "Apply to Canvas" button in AI History Studio work seamlessly.
+  - **Rich Contextual HTML Insertion Engine (`insertHtmlAtCursor`)**: Hardened `insertHtmlAtCursor` with selection range restoration, `targetRange.createContextualFragment(html)` insertion without stripping `<cite>` elements, and synthetic `input` event dispatching.
+  - **Toolbar & Menu Block Auto-Save Persistence**: Added `saveCleanContent().then(onContentChange)` triggers across `insertImage`, `insertTable`, `insertCodeBlock`, `insertMathBlock`, `insertBibliographyText`, and `setBlockType`.
+  - **Safe Suggestion Target Replacement & Input Event Propagation**: Replaced `oldText` with suggestion markup in `addSuggestionMark` to avoid duplicating text, and added synthetic `input` event dispatching across all suggestion actions.
+- **Automated Testing Suite**:
+  - Added `__tests__/utils/editor-lifecycle-hardening.test.ts` (4 unit tests). Vitest suite passing at **218/218 tests across 27 test files**.
+
 ## v0.40.0 - Canvas & Document Editor Interaction Hardening & Data Flow Reliability
 
 - **Canvas & Document Editor Interaction Hardening (`components/editor/editor-layout.tsx`, `hooks/use-citation-mention.ts`, `lib/editor/methods/citation-methods.ts`, `lib/editor/methods/block-methods.ts`)**:

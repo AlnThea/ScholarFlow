@@ -89,6 +89,11 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
               editorRef.current?.caret.setToBlock(index, 'end');
               restoreBlockAlignments();
               calculateLiveStats();
+              if (onContentChange && saveCleanContent) {
+                saveCleanContent().then((content) => {
+                  if (content) onContentChange(content);
+                }).catch(console.error);
+              }
             }, 50);
           } catch (err) {
             console.error('ScholarFlow setBlockType error:', err);
@@ -130,6 +135,11 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
             }
           }, undefined, activeBlockIndexRef.current + 1, true);
           calculateLiveStats();
+          if (onContentChange && saveCleanContent) {
+            saveCleanContent().then((content) => {
+              if (content) onContentChange(content);
+            }).catch(console.error);
+          }
         }
 ,
     insertTable: () => {
@@ -143,6 +153,11 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
             ]
           }, undefined, activeBlockIndexRef.current + 1, true);
           calculateLiveStats();
+          if (onContentChange && saveCleanContent) {
+            saveCleanContent().then((content) => {
+              if (content) onContentChange(content);
+            }).catch(console.error);
+          }
         }
 ,
     insertCodeBlock: () => {
@@ -151,6 +166,11 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
             code: '// Write code here\n'
           }, undefined, activeBlockIndexRef.current + 1, true);
           calculateLiveStats();
+          if (onContentChange && saveCleanContent) {
+            saveCleanContent().then((content) => {
+              if (content) onContentChange(content);
+            }).catch(console.error);
+          }
         }
 ,
     insertMathBlock: () => {
@@ -159,6 +179,11 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
             formula: ''
           }, undefined, activeBlockIndexRef.current + 1, true);
           calculateLiveStats();
+          if (onContentChange && saveCleanContent) {
+            saveCleanContent().then((content) => {
+              if (content) onContentChange(content);
+            }).catch(console.error);
+          }
         }
 ,
     insertBibliographyText: (text: string) => {
@@ -166,6 +191,11 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
           const count = editorRef.current.blocks.getBlocksCount();
           editorRef.current.blocks.insert('paragraph', { text }, undefined, count, true);
           calculateLiveStats();
+          if (onContentChange && saveCleanContent) {
+            saveCleanContent().then((content) => {
+              if (content) onContentChange(content);
+            }).catch(console.error);
+          }
         }
 ,
     upsertBibliography: async (entries: Array<{ label: string; formatted: string }>, isFreeTier: boolean = false) => {
@@ -358,6 +388,30 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
                 });
             } catch (e) {
               console.error('EditorJS renderContent error:', e);
+              isRenderingRef.current = false;
+            }
+          } else {
+            pendingContentRef.current = data;
+          }
+        }
+,
+    render: async (data: any) => {
+          if (editorRef.current && typeof editorRef.current.render === 'function') {
+            try {
+              isRenderingRef.current = true;
+              const sanitizedData = sanitizeEditorContent(data);
+              await editorRef.current.render(sanitizedData);
+              if (undoRef.current && typeof undoRef.current.initialize === 'function') {
+                undoRef.current.initialize(sanitizedData);
+              }
+              renderAllInlineMath();
+              setTimeout(() => {
+                isRenderingRef.current = false;
+                adjustAllCodeTextareaHeights();
+              }, 150);
+              calculateLiveStats();
+            } catch (e) {
+              console.error('EditorJS render promise error:', e);
               isRenderingRef.current = false;
             }
           } else {

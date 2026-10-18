@@ -513,6 +513,29 @@ export function buildInlineMethods(props: EditorJsMethodsProps) {
         }
 ,
     insertHtmlAtCursor: (html: string) => {
+      const selection = window.getSelection();
+      let targetRange = lastHighlightedRangeRef.current || lastSelectionRangeRef.current;
+
+      if (targetRange) {
+        try {
+          if (selection) {
+            selection.removeAllRanges();
+            selection.addRange(targetRange);
+          }
+          let container: HTMLElement | null = targetRange.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+            ? (targetRange.commonAncestorContainer as HTMLElement)
+            : targetRange.commonAncestorContainer.parentElement;
+          if (container) {
+            const contentEditable = container.closest('[contenteditable="true"]') as HTMLElement;
+            if (contentEditable) {
+              contentEditable.focus();
+            }
+          }
+        } catch (e) {
+          console.warn('Could not restore selection before insertHtmlAtCursor:', e);
+        }
+      }
+
       let success = false;
       try {
         success = document.execCommand('insertHTML', false, html);
@@ -520,17 +543,69 @@ export function buildInlineMethods(props: EditorJsMethodsProps) {
         success = false;
       }
 
-      if (!success) {
-        const temp = document.createElement('div');
-        temp.innerHTML = html;
-        const text = temp.innerText || temp.textContent || html;
-        if (editorRef.current && editorRef.current.blocks) {
-          const totalBlocks = editorRef.current.blocks.getBlocksCount();
-          editorRef.current.blocks.insert('paragraph', { text }, undefined, totalBlocks, true);
+      if (!success && targetRange) {
+        try {
+          targetRange.deleteContents();
+          const fragment = targetRange.createContextualFragment(html);
+          const lastChild = fragment.lastChild;
+          targetRange.insertNode(fragment);
+          if (lastChild) {
+            const newRange = document.createRange();
+            newRange.setStartAfter(lastChild);
+            newRange.setEndAfter(lastChild);
+            if (selection) {
+              selection.removeAllRanges();
+              selection.addRange(newRange);
+            }
+            lastSelectionRangeRef.current = newRange;
+            lastHighlightedRangeRef.current = null;
+          }
+          let container: HTMLElement | null = targetRange.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+            ? (targetRange.commonAncestorContainer as HTMLElement)
+            : targetRange.commonAncestorContainer.parentElement;
+          const contentEditable = container?.closest('[contenteditable="true"]') as HTMLElement | null;
+          if (contentEditable) {
+            contentEditable.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          success = true;
+        } catch (rangeErr) {
+          console.error('Failed direct contextual range insertion:', rangeErr);
         }
       }
 
-      if (editorRef.current && editorRef.current.save) {
+      if (!success && editorRef.current && editorRef.current.blocks) {
+        try {
+          const currentIdx = typeof activeBlockIndexRef.current === 'number' && activeBlockIndexRef.current >= 0
+            ? activeBlockIndexRef.current
+            : editorRef.current.blocks.getCurrentBlockIndex();
+
+          const holder = document.getElementById(holderId) || document.getElementById('editorjs-holder') || document.querySelector('.codex-editor');
+          if (currentIdx >= 0 && holder) {
+            const blockHolder = holder.querySelectorAll('.ce-block')[currentIdx];
+            const contentEditable = blockHolder?.querySelector('[contenteditable="true"]') as HTMLElement | null;
+            if (contentEditable) {
+              contentEditable.innerHTML += (contentEditable.innerHTML ? ' ' : '') + html;
+              contentEditable.dispatchEvent(new Event('input', { bubbles: true }));
+              success = true;
+            } else {
+              editorRef.current.blocks.insert('paragraph', { text: html }, undefined, currentIdx + 1, true);
+              success = true;
+            }
+          } else {
+            const totalBlocks = editorRef.current.blocks.getBlocksCount();
+            editorRef.current.blocks.insert('paragraph', { text: html }, undefined, totalBlocks, true);
+            success = true;
+          }
+        } catch (blockErr) {
+          console.warn('Fallback HTML block insertion error:', blockErr);
+        }
+      }
+
+      if (saveCleanContent && onContentChange) {
+        saveCleanContent().then((outputData: any) => {
+          if (outputData) onContentChange(outputData);
+        }).catch(console.error);
+      } else if (editorRef.current && editorRef.current.save) {
         editorRef.current.save().then((outputData: any) => {
           if (onContentChange) onContentChange(outputData);
         }).catch(console.error);

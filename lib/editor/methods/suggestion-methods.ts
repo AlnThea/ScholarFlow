@@ -43,14 +43,30 @@ export function buildSuggestionMethods(props: EditorJsMethodsProps) {
         range.insertNode(frag);
         selection.removeAllRanges();
       } else {
-        // Fallback: document execCommand or direct innerHTML insertion at active block
-        const holder = document.getElementById(holderId);
+        // Fallback: search for block containing oldText and replace safely, or append to active block
+        const holder = document.getElementById(holderId) || document.getElementById('editorjs-holder') || document.querySelector('.codex-editor');
         if (holder) {
-          const activeBlock = holder.querySelector('.ce-block--selected [contenteditable="true"]') ||
-                              holder.querySelector('[contenteditable="true"]:focus') ||
-                              holder.querySelector('[contenteditable="true"]');
-          if (activeBlock) {
-            activeBlock.innerHTML += markup;
+          const editables = Array.from(holder.querySelectorAll('[contenteditable="true"]'));
+          let replaced = false;
+          if (oldText && oldText.trim()) {
+            for (const el of editables) {
+              if (el.innerHTML.includes(oldText)) {
+                el.innerHTML = el.innerHTML.replace(oldText, markup);
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                replaced = true;
+                break;
+              }
+            }
+          }
+          if (!replaced) {
+            const activeBlock = holder.querySelector('.ce-block--selected [contenteditable="true"]') ||
+                                holder.querySelector('[contenteditable="true"]:focus') ||
+                                holder.querySelector('.ce-block:last-child [contenteditable="true"]') ||
+                                holder.querySelector('[contenteditable="true"]');
+            if (activeBlock) {
+              activeBlock.innerHTML += (activeBlock.innerHTML ? ' ' : '') + markup;
+              activeBlock.dispatchEvent(new Event('input', { bubbles: true }));
+            }
           }
         }
       }
@@ -68,7 +84,7 @@ export function buildSuggestionMethods(props: EditorJsMethodsProps) {
      * Accepts a suggestion by removing deleted tags and unwrapping inserted tags
      */
     acceptSuggestion: (suggestionId: string) => {
-      const holder = document.getElementById(holderId);
+      const holder = document.getElementById(holderId) || document.getElementById('editorjs-holder') || document.querySelector('.codex-editor');
       if (!holder) return;
 
       const wrappers = holder.querySelectorAll(
@@ -79,6 +95,7 @@ export function buildSuggestionMethods(props: EditorJsMethodsProps) {
         const parentBlock = el.closest('[contenteditable="true"]');
         if (parentBlock) {
           parentBlock.innerHTML = applyAcceptSuggestionToHtml(parentBlock.innerHTML, suggestionId);
+          parentBlock.dispatchEvent(new Event('input', { bubbles: true }));
         }
       });
 
@@ -95,7 +112,7 @@ export function buildSuggestionMethods(props: EditorJsMethodsProps) {
      * Rejects a suggestion by removing inserted tags and restoring deleted text
      */
     rejectSuggestion: (suggestionId: string) => {
-      const holder = document.getElementById(holderId);
+      const holder = document.getElementById(holderId) || document.getElementById('editorjs-holder') || document.querySelector('.codex-editor');
       if (!holder) return;
 
       const wrappers = holder.querySelectorAll(
@@ -106,6 +123,7 @@ export function buildSuggestionMethods(props: EditorJsMethodsProps) {
         const parentBlock = el.closest('[contenteditable="true"]');
         if (parentBlock) {
           parentBlock.innerHTML = applyRejectSuggestionToHtml(parentBlock.innerHTML, suggestionId);
+          parentBlock.dispatchEvent(new Event('input', { bubbles: true }));
         }
       });
 
@@ -122,13 +140,14 @@ export function buildSuggestionMethods(props: EditorJsMethodsProps) {
      * Accepts all active suggestions in the editor canvas
      */
     batchAcceptAllSuggestions: () => {
-      const holder = document.getElementById(holderId);
+      const holder = document.getElementById(holderId) || document.getElementById('editorjs-holder') || document.querySelector('.codex-editor');
       if (!holder) return;
 
       const blocks = holder.querySelectorAll('[contenteditable="true"]');
       blocks.forEach((block) => {
         if (block.innerHTML.includes('sf-suggestion-wrapper') || block.innerHTML.includes('<del') || block.innerHTML.includes('<ins')) {
           block.innerHTML = applyAcceptSuggestionToHtml(block.innerHTML);
+          block.dispatchEvent(new Event('input', { bubbles: true }));
         }
       });
 
@@ -145,13 +164,14 @@ export function buildSuggestionMethods(props: EditorJsMethodsProps) {
      * Rejects all active suggestions in the editor canvas
      */
     batchRejectAllSuggestions: () => {
-      const holder = document.getElementById(holderId);
+      const holder = document.getElementById(holderId) || document.getElementById('editorjs-holder') || document.querySelector('.codex-editor');
       if (!holder) return;
 
       const blocks = holder.querySelectorAll('[contenteditable="true"]');
       blocks.forEach((block) => {
         if (block.innerHTML.includes('sf-suggestion-wrapper') || block.innerHTML.includes('<del') || block.innerHTML.includes('<ins')) {
           block.innerHTML = applyRejectSuggestionToHtml(block.innerHTML);
+          block.dispatchEvent(new Event('input', { bubbles: true }));
         }
       });
 

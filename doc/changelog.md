@@ -71,4 +71,13 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
   - Menghitung ulang statistik kata/karakter/sitasi secara live (`calculateLiveStats`) saat kanvas di-render ulang.
   - Menambahkan pengujian otomatis Vitest (`__tests__/utils/editor-interaction-hardening.test.ts`) dengan kelulusan penuh **214/214 tests across 26 test files**.
 
+- **Phase 41 (v0.41.0)**: Mengembangkan **Editor Canvas Lifecycle, Block Persistence & Rich Content Bridge** (`lib/editor/methods/block-methods.ts`, `hooks/use-editor-document.ts`, `hooks/use-version-history.ts`, `components/editor/scholar-editor.tsx`, `lib/editor/methods/inline-methods.ts`, `lib/editor/methods/suggestion-methods.ts`, `lib/editor/methods/cross-reference-methods.ts`, `__tests__/utils/editor-lifecycle-hardening.test.ts`) dengan perbaikan 5 kelemahan logika interaksi & persistensi:
+  - **Kompabilitas Metode `render` & `renderContent`**: Menyediakan method alias `render` pada `buildBlockMethods` dan menyelaraskan pemanggilan di `use-editor-document.ts` serta `use-version-history.ts` agar penggantian format sitasi (APA ↔ IEEE ↔ Vancouver) dan pemulihan snapshot versi langsung me-render kanvas secara real-time.
+  - **Jembatan Teks AI History Studio**: Memperbarui `handleInsertSynthesizedText` di `scholar-editor.tsx` agar menerima parameter `customText`, sehingga tombol "Apply to Canvas" di modal riwayat AI Studio berhasil menyisipkan draf pilihan.
+  - **Injeksi HTML Kontekstual Utuh (`insertHtmlAtCursor`)**: Memperkuat `insertHtmlAtCursor` dengan pemulihan rentang kursor aktif (`targetRange`), penyisipan via `createContextualFragment(html)` tanpa memangkas tag `<cite>`, dispatch event `input`, dan auto-save ke `onContentChange`.
+  - **Auto-Save Persistensi Blok Toolbar & Menu**: Menyambungkan `saveCleanContent().then(onContentChange)` pada seluruh aksi penyisipan blok di `block-methods.ts` (`insertImage`, `insertTable`, `insertCodeBlock`, `insertMathBlock`, `insertBibliographyText`, dan `setBlockType`).
+  - **Penggantian Teks Sugesti Tanpa Duplikasi**: Memperbaiki `addSuggestionMark` di `suggestion-methods.ts` agar menggantikan `oldText` dengan markup usulan alih-alih menduplikasi teks, serta menambahkan dispatching event `input` pada seluruh aksi tinjauan usulan.
+  - Menambahkan pengujian otomatis Vitest (`__tests__/utils/editor-lifecycle-hardening.test.ts`) dengan kelulusan penuh **218/218 tests across 27 test files**.
+
+
 

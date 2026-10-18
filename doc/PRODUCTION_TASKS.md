@@ -245,5 +245,20 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
 - [x] **13.5 Resilient Citation Insertion Fallback on Library Action**
   - [x] Menambahkan fallback cerdas pada `insertCitation` di `citation-methods.ts`: jika pengguna mengklik "Sisipkan Sitasi" dari sidebar tanpa seleksi kursor yang aktif, sitasi disisipkan pada akhir blok aktif atau blok paragraf terakhir tanpa kegagalan hening (*silent failure*).
 
+---
+
+### ⚡ EPIC 14: Editor Canvas Lifecycle, Block Persistence & Rich Content Bridge (Phase 41)
+- [x] **14.1 Unified `render` and `renderContent` Method Interface**
+  - [x] Menambahkan method alias `render` pada wrapper `buildBlockMethods` dan menyelaraskan pemanggilan `renderContent` di `hooks/use-editor-document.ts` dan `hooks/use-version-history.ts`, sehingga perubahan gaya sitasi (APA ↔ IEEE ↔ Vancouver) dan pemulihan snapshot versi langsung me-render ulang kanvas naskah.
+- [x] **14.2 AI History Studio Text Insertion Bridge (`handleInsertSynthesizedText`)**
+  - [x] Memperbarui `handleInsertSynthesizedText` di `components/editor/scholar-editor.tsx` agar menerima parameter `customText?: string`, sehingga tombol "Apply to Canvas" di modal riwayat AI berhasil menyisipkan teks yang dipilih ke dokumen pengguna.
+- [x] **14.3 Rich HTML Contextual Insertion Bridge (`insertHtmlAtCursor`)**
+  - [x] Memperkuat `insertHtmlAtCursor` di `lib/editor/methods/inline-methods.ts` dengan pemulihan rentang kursor aktif (`targetRange`), penyisipan kontekstual via `createContextualFragment(html)` tanpa memangkas tag `<cite>`, dispatch event `input`, dan auto-save ke `onContentChange`.
+- [x] **14.4 Toolbar & Menu Block Auto-Save Persistence**
+  - [x] Menyambungkan pemicu `saveCleanContent().then(onContentChange)` pada seluruh aksi penyisipan blok di `lib/editor/methods/block-methods.ts` (`insertImage`, `insertTable`, `insertCodeBlock`, `insertMathBlock`, `insertBibliographyText`, dan `setBlockType`) agar perubahan tersimpan otomatis ke database.
+- [x] **14.5 Safe Suggestion Text Replacement & DOM Event Dispatching**
+  - [x] Memperbaiki `addSuggestionMark` di `lib/editor/methods/suggestion-methods.ts` agar menggantikan teks target (`oldText`) dengan markup usulan alih-alih menduplikasi teks, serta menambahkan dispatching event `input` pada seluruh aksi tinjauan usulan.
+
+
 
 

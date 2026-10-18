@@ -440,8 +440,12 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
       transformedCount = transformResult.transformedCount;
 
       // Render updated content into live EditorJS instance
-      if (editorJsRef?.current?.render && transformedCount > 0) {
-        editorJsRef.current.render(finalContent).catch(console.error);
+      if (editorJsRef?.current && transformedCount > 0) {
+        if (editorJsRef.current.renderContent) {
+          editorJsRef.current.renderContent(finalContent);
+        } else if (editorJsRef.current.render) {
+          editorJsRef.current.render(finalContent).catch(console.error);
+        }
       }
     }
 

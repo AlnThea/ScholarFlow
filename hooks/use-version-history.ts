@@ -199,8 +199,12 @@ export function useVersionHistory({
         }
 
         // 2. Render revision content into EditorJS instance
-        if (editorJsRef?.current?.render && revisionToRestore.content) {
-          await editorJsRef.current.render(revisionToRestore.content);
+        if (editorJsRef?.current && revisionToRestore.content) {
+          if (editorJsRef.current.renderContent) {
+            editorJsRef.current.renderContent(revisionToRestore.content);
+          } else if (editorJsRef.current.render) {
+            await editorJsRef.current.render(revisionToRestore.content);
+          }
         }
 
         // 3. Inform parent document hook of the restoration

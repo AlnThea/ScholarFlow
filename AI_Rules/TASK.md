@@ -4,7 +4,7 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.40.0 (Phase 40 Completed - Canvas & Document Editor Interaction Hardening & Data Flow Reliability, 214/214 tests passing).
+v0.41.0 (Phase 41 Completed - Editor Canvas Lifecycle, Block Persistence & Rich Content Bridge, 218/218 tests passing).
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
@@ -17,6 +17,7 @@ v0.40.0 (Phase 40 Completed - Canvas & Document Editor Interaction Hardening & D
 - [x] Phase 38: Cross-Paper Concept Map & Citation Network Visualizer.
 - [x] Phase 39: Automated Journal Submission Package Builder & Cover Letter AI.
 - [x] Phase 40: Canvas & Document Editor Interaction Hardening & Data Flow Reliability.
+- [x] Phase 41: Editor Canvas Lifecycle, Block Persistence & Rich Content Bridge.
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.

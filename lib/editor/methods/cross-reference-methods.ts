@@ -44,14 +44,16 @@ export function buildCrossReferenceMethods(props: EditorJsMethodsProps) {
         selection.removeAllRanges();
       } else {
         // Fallback: append to currently focused contenteditable
-        const holder = document.getElementById(holderId);
+        const holder = document.getElementById(holderId) || document.getElementById('editorjs-holder') || document.querySelector('.codex-editor');
         if (holder) {
           const activeBlock =
             holder.querySelector('.ce-block--selected [contenteditable="true"]') ||
             holder.querySelector('[contenteditable="true"]:focus') ||
+            holder.querySelector('.ce-block:last-child [contenteditable="true"]') ||
             holder.querySelector('[contenteditable="true"]');
           if (activeBlock) {
             activeBlock.innerHTML += ` ${markup} `;
+            activeBlock.dispatchEvent(new Event('input', { bubbles: true }));
           }
         }
       }

@@ -594,6 +594,25 @@ Target: Mengaudit dan menyempurnakan seluruh jembatan interaksi kanvas EditorJS 
 - [x] **6. Automated Unit Testing**:
   - Unit test suite di `__tests__/utils/editor-interaction-hardening.test.ts` (3/3 tests passing, total suite lulus 214/214 tests across 26 test files).
 
+### Phase 41: Editor Canvas Lifecycle, Block Persistence & Rich Content Bridge
+Target: Memperbaiki 5 bug logika interaksi kanvas EditorJS (Method Mismatch `render` vs `renderContent`, insersi teks AI History Studio, preservasi tag `<cite>` pada `insertHtmlAtCursor`, auto-save pada tombol blok toolbar, dan eliminasi duplikasi teks pada mode sugesti) agar seluruh aksi pengguna tersimpan persisten dan me-render ulang kanvas secara reaktif.
+
+- [x] **1. Unified `render` and `renderContent` Method Compatibility**:
+  - Menambahkan method alias `render` pada `buildBlockMethods` (`lib/editor/methods/block-methods.ts`).
+  - Menyelaraskan logika `handleChangeCitationStyle` di `hooks/use-editor-document.ts` dan `restoreRevision` di `hooks/use-version-history.ts` agar memeriksa `renderContent` dan `render`, sehingga penggantian format sitasi (APA ↔ IEEE ↔ Vancouver) serta pemulihan snapshot versi langsung me-render kanvas secara real-time.
+- [x] **2. AI History Studio Text Insertion Bridge (`handleInsertSynthesizedText`)**:
+  - Memperbarui fungsi `handleInsertSynthesizedText` di `components/editor/scholar-editor.tsx` agar menerima parameter `customText?: string`.
+  - Memastikan tombol "Apply to Canvas" di modal riwayat AI Studio berhasil menyisipkan draf teks pilihan ke posisi kursor naskah pengguna.
+- [x] **3. Rich HTML Contextual Insertion Bridge (`insertHtmlAtCursor`)**:
+  - Memperkuat `insertHtmlAtCursor` di `lib/editor/methods/inline-methods.ts` dengan pemulihan rentang kursor aktif (`targetRange`), penyisipan kontekstual via `createContextualFragment(html)` tanpa memangkas tag `<cite>`, dispatch event `input`, dan auto-save ke `onContentChange`.
+- [x] **4. Toolbar & Menu Block Auto-Save Persistence**:
+  - Menyambungkan pemicu `saveCleanContent().then(onContentChange)` pada seluruh aksi penyisipan blok di `lib/editor/methods/block-methods.ts` (`insertImage`, `insertTable`, `insertCodeBlock`, `insertMathBlock`, `insertBibliographyText`, dan `setBlockType`).
+- [x] **5. Safe Suggestion Text Replacement & DOM Event Dispatching**:
+  - Memperbaiki `addSuggestionMark` di `lib/editor/methods/suggestion-methods.ts` agar menggantikan teks target (`oldText`) dengan markup usulan alih-alih menduplikasi teks, serta menambahkan dispatching event `input` pada seluruh aksi tinjauan usulan.
+- [x] **6. Automated Unit Testing**:
+  - Unit test suite di `__tests__/utils/editor-lifecycle-hardening.test.ts` (4/4 tests passing, total suite lulus **218/218 tests across 27 test files**).
+
+
 
 
 
