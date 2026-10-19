@@ -279,7 +279,24 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
 - [x] **15.5 Complete Static Type Check & Vitest Verification**
   - [x] Memverifikasi kelulusan penuh `npx tsc --noEmit` dengan **0 error**, serta **218/218 pengujian Vitest lulus pada 27 berkas**.
 
+---
 
+### ⚡ EPIC 16: Autosave Debounce, DOM Mutation Shielding & Loop Resolution (Phase 43)
+- [x] **16.1 EditorJS Mount & Mutation Shielding**
+  - [x] Mengonsolidasikan aksi pasca-render DOM ke dalam `editor.render().then(...)` dan menahan flag `isRenderingRef` selama 400ms untuk mencegah mutasi KaTeX & textarea memicu `onChange`.
+- [x] **16.2 Symmetric Block Content Normalization**
+  - [x] Mengimplementasikan `normalizeBlockDataForComparison` di `getContentComparisonString` untuk menstandarkan data blok, membersihkan spasi `&nbsp;`, dan mengabaikan perbedaan ID blok ephemeral.
+- [x] **16.3 State Referential Equality & Fast Check Guard**
+  - [x] Menambahkan fast dirty check guard di `triggerDebouncedSave` untuk membatalkan simpan redundan dan mempertahankan referensi state `currentDocument` jika tidak ada perubahan nilai.
 
+---
 
-
+### 🎯 EPIC 17: Editor.js Toolbar Vertical Alignment & Heading Typography Normalization (Phase 44)
+- [x] **17.1 Heading Baseline & Padding Normalization**
+  - [x] Mengganti padding default `@editorjs/header` menjadi `padding-top: 2px !important; padding-bottom: 4px !important; margin: 0 !important;` agar kalkulasi `Toolbar.moveAndOpen()` menempatkan tombol aksi `+ ::` tepat di tengah baris judul tanpa melorot.
+- [x] **17.2 Academic Typography Scale & Section Separation**
+  - [x] Menstandarkan hierarki heading `h1` (1.875rem), `h2` (1.45rem), `h3` (1.2rem), dan `h4-h6` (1.05rem) serta spasi antar-blok via `.ce-block:not(:first-child):has(.ce-header)`.
+- [x] **17.3 Dark Mode Compatibility for Editor Controls**
+  - [x] Menyediakan dukungan tema gelap penuh untuk tombol aksi toolbar, toolbox popover, dan panel pencarian blok.
+- [x] **17.4 Next.js App Router Route Typing Modularization**
+  - [x] Memisahkan fungsi `buildGhostwritePrompt` ke `lib/ai/ghostwrite-helper.ts` demi memenuhi standar ekspor route module Next.js.

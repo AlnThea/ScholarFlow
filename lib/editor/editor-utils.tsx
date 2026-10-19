@@ -134,6 +134,25 @@ export function findMostUniqueWord(sentence: string): string {
   return bestWord || words[0] || "";
 }
 
+function normalizeBlockDataForComparison(data: any): any {
+  if (!data || typeof data !== 'object') return data;
+  if (Array.isArray(data)) {
+    return data.map(normalizeBlockDataForComparison);
+  }
+  const normalized: Record<string, any> = {};
+  for (const key of Object.keys(data).sort()) {
+    const val = data[key];
+    if (typeof val === 'string') {
+      normalized[key] = val.replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+    } else if (typeof val === 'object' && val !== null) {
+      normalized[key] = normalizeBlockDataForComparison(val);
+    } else {
+      normalized[key] = val;
+    }
+  }
+  return normalized;
+}
+
 export const getContentComparisonString = (content: any): string => {
   if (!content) return JSON.stringify([]);
   let parsed = content;
@@ -141,11 +160,16 @@ export const getContentComparisonString = (content: any): string => {
     try {
       parsed = JSON.parse(content);
     } catch (e) {
-      return content;
+      return content.trim();
     }
   }
   if (parsed && typeof parsed === 'object' && Array.isArray(parsed.blocks)) {
-    return JSON.stringify(parsed.blocks);
+    const comparableBlocks = parsed.blocks.map((b: any) => ({
+      type: b?.type || '',
+      data: normalizeBlockDataForComparison(b?.data)
+    }));
+    return JSON.stringify(comparableBlocks);
   }
   return JSON.stringify(parsed);
 };
+

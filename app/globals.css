@@ -346,6 +346,86 @@ body {
   padding-bottom: 40px !important;
 }
 
+/* Editor.js Typography & Toolbar Vertical Alignment Normalization */
+.ce-header {
+  padding-top: 2px !important;
+  padding-bottom: 4px !important;
+  margin: 0 !important;
+  line-height: 1.3 !important;
+  color: hsl(var(--text));
+}
+
+/* Clear visual academic hierarchy for Editor.js headings */
+h1.ce-header {
+  font-size: 1.875rem !important; /* 30px */
+  font-weight: 700 !important;
+}
+
+h2.ce-header {
+  font-size: 1.45rem !important; /* 23.2px */
+  font-weight: 700 !important;
+}
+
+h3.ce-header {
+  font-size: 1.2rem !important; /* 19.2px */
+  font-weight: 650 !important;
+}
+
+h4.ce-header,
+h5.ce-header,
+h6.ce-header {
+  font-size: 1.05rem !important;
+  font-weight: 600 !important;
+}
+
+/* Natural academic section spacing without throwing off toolbar calculations */
+.ce-block:not(:first-child):has(.ce-header) {
+  margin-top: 14px;
+}
+
+/* Dark mode support for Editor.js toolbar, toolbox, and tunes popover */
+.dark .ce-toolbar__plus,
+.dark .ce-toolbar__settings-btn {
+  color: hsl(var(--text)) !important;
+}
+
+.dark .ce-toolbar__plus:hover,
+.dark .ce-toolbar__settings-btn:hover {
+  background-color: hsl(var(--surface)) !important;
+}
+
+.dark .ce-toolbox,
+.dark .ce-settings {
+  background-color: hsl(var(--panel)) !important;
+  border-color: hsl(var(--line)) !important;
+  color: hsl(var(--text)) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
+}
+
+.dark .cdx-search-field {
+  background-color: hsl(var(--surface)) !important;
+  border-color: hsl(var(--line)) !important;
+  color: hsl(var(--text)) !important;
+}
+
+.dark .ce-popover {
+  background-color: hsl(var(--panel)) !important;
+  border-color: hsl(var(--line)) !important;
+  color: hsl(var(--text)) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
+}
+
+.dark .ce-popover-item:hover,
+.dark .ce-popover-item--focused {
+  background-color: hsl(var(--surface)) !important;
+}
+
+.dark .ce-popover-item__icon {
+  background-color: hsl(var(--surface)) !important;
+  color: hsl(var(--text)) !important;
+}
+
+
 .dark .tc-row,
 .dark .tc-cell {
   border-color: hsl(var(--line)) !important;

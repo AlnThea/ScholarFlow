@@ -1,5 +1,24 @@
 # ScholarFlow Changelog
 
+## v0.42.2 - Editor.js Toolbar Alignment & Heading Typography Normalization
+
+- **Heading Baseline & Toolbar Vertical Alignment Normalization (`app/globals.css`, `lib/ai/ghostwrite-helper.ts`, `app/api/v1/ai/ghostwrite/route.ts`)**:
+  - **EditorJS Header Baseline Normalization**: Overrode `@editorjs/header`'s inflated default `padding: .6em 0 3px` with compact `padding-top: 2px !important; padding-bottom: 4px !important`, eliminating the baseline calculation offset in `Toolbar.moveAndOpen()` that pushed the `+ ::` toolbar action button 25px–35px below the heading line.
+  - **Academic Heading Typography Hierarchy**: Defined a clean, standardized scale for `h1.ce-header` (1.875rem), `h2.ce-header` (1.45rem), `h3.ce-header` (1.2rem), and `h4-h6.ce-header` (1.05rem).
+  - **Section Spacing**: Applied subtle academic block margin on `.ce-block:not(:first-child):has(.ce-header)` without adding heading margin that would skew Editor.js offset math.
+  - **Dark Mode Support**: Added comprehensive dark mode classes for `.ce-toolbar__plus`, `.ce-toolbar__settings-btn`, `.ce-toolbox`, `.ce-popover`, and `.cdx-search-field`.
+  - **Ghostwrite Route Typing Refactor**: Extracted `buildGhostwritePrompt` to `lib/ai/ghostwrite-helper.ts` to fulfill Next.js App Router route typing constraints.
+  - **Automated Verification**: Clean `tsc --noEmit` (0 errors) and 100% test pass rate (218/218 Vitest tests).
+
+## v0.42.1 - Autosave Debounce & Editor Loop Resolution
+
+- **Elimination of Infinite Autosave Loop & Referential Stability Hardening (`components/editor/editorjs-editor.tsx`, `lib/editor/editor-utils.tsx`, `hooks/use-editor-document.ts`, `components/editor/scholar-editor.tsx`)**:
+  - **EditorJS Initial Mount & Render Shielding**: Consolidated DOM adjustments (`restoreBlockAlignments`, `renderAllInlineMath`, `calculateLiveStats`, `adjustAllCodeTextareaHeights`) directly into the `editor.render().then(...)` promise block and extended `isRenderingRef.current` hold to 400ms after render to block false-positive `onChange` mutations.
+  - **Symmetric Block Content Normalization**: Added `normalizeBlockDataForComparison` in `getContentComparisonString` to normalize block data and strip ephemeral whitespace (`&nbsp;`) differences and Editor.js temporary block ID discrepancies.
+  - **State Referential Equality & Fast Check Guard**: Added fast check in `triggerDebouncedSave` to immediately abort redundant saves, and preserved referential equality in `setCurrentDocument` and `setDocuments` when content and list items have not changed.
+  - **Alignment Key Order Resilience**: Hardened `onAlignmentChange` comparison against localStorage key order discrepancies.
+  - **Automated Verification**: Clean `tsc --noEmit` compilation (0 errors) and 100% test pass rate (218/218 Vitest tests across 27 files).
+
 ## v0.42.0 - Latent Compilation, Icon Import, API Key Pool & Scoping Resilience Audit
 
 - **Codebase-Wide Static Typing, Icon Imports & API Rotation Hardening (`components/editor/modals/academic-linter-modal.tsx`, `components/editor/sidebar-document-tab.tsx`, `components/editor/modals/concept-map-modal.tsx`, `components/editor/modals/literature-matrix-modal.tsx`, `components/editor/paraphrase-studio.tsx`, `components/editor/editor-layout.tsx`, `components/auth/auth-provider.tsx`, `lib/editor/literature-matrix.ts`, `app/api/v1/ai/interpret-stats/route.ts`, `app/api/v1/ai/paper-chat/route.ts`, `app/api/v1/ai/peer-review/route.ts`, `app/api/v1/ai/generate-outline/route.ts`)**:

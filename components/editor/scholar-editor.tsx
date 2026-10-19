@@ -511,7 +511,12 @@ export function ScholarEditor() {
           try {
             const alignments = JSON.parse(localStorage.getItem('scholarflow.editorjs.alignments.v1') || '{}');
             const prevAlignments = currentDocument.settings?.alignments || {};
-            if (JSON.stringify(alignments) === JSON.stringify(prevAlignments)) {
+            const alignKeys = Object.keys(alignments);
+            const prevKeys = Object.keys(prevAlignments);
+            if (alignKeys.length === 0 && prevKeys.length === 0) {
+              return;
+            }
+            if (alignKeys.length === prevKeys.length && alignKeys.every(k => alignments[k] === prevAlignments[k])) {
               return;
             }
             const updatedSettings = {

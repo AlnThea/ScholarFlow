@@ -4,7 +4,7 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.41.0 (Phase 41 Completed - Editor Canvas Lifecycle, Block Persistence & Rich Content Bridge, 218/218 tests passing).
+v0.42.2 (Phase 44 Completed - Editor.js Toolbar Vertical Alignment & Heading Typography Normalization, 218/218 tests passing).
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).

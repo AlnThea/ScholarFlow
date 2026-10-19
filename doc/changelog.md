@@ -88,6 +88,13 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
   - **Upgrade Rotasi Kunci `generate-outline`**: Memodernisasi `generate-outline` agar memanfaatkan rotasi multi-kunci otomatis via `geminiKeyPool.execute` dengan failover instan.
   - **Kompilasi TypeScript Bersih & Pengujian 100%**: Menuntaskan seluruh error kompilasi (`npx tsc --noEmit` -> 0 errors) dan mempertahankan kelulusan penuh **218/218 tests across 27 files**.
 
+- **Phase 43 (v0.42.1)**: Mengembangkan **Autosave Debounce & Editor Loop Resolution** (`components/editor/editorjs-editor.tsx`, `lib/editor/editor-utils.tsx`, `hooks/use-editor-document.ts`, `components/editor/scholar-editor.tsx`):
+  - **Eliminasi Looping Status Simpan**: Menyatukan aksi pasca-render DOM ke dalam `editor.render().then(...)` dan menahan flag `isRenderingRef` selama 400ms untuk mencegah mutasi KaTeX & textarea memicu `onChange`.
+  - **Normalisasi Data Blok Simetris**: Menambahkan `normalizeBlockDataForComparison` pada `getContentComparisonString` untuk menstandarkan struktur blok dan mengabaikan perbedaan spasi `&nbsp;` serta ID blok dinamis.
+  - **Penjagaan State Referential Equality**: Menambahkan guard check di `triggerDebouncedSave` untuk membatalkan simpan redundan dan mempertahankan referensi state `currentDocument` jika tidak ada perubahan nilai nyata.
 
-
-
+- **Phase 44 (v0.42.2)**: Mengembangkan **Editor.js Toolbar Alignment & Heading Typography Normalization** (`app/globals.css`, `lib/ai/ghostwrite-helper.ts`, `app/api/v1/ai/ghostwrite/route.ts`):
+  - **Normalisasi Baseline & Padding Heading**: Mengganti padding default `@editorjs/header` dengan `padding-top: 2px !important; padding-bottom: 4px !important; margin: 0 !important;` agar kalkulasi `Toolbar.moveAndOpen()` menempatkan tombol aksi `+ ::` tepat di tengah baris judul tanpa melorot.
+  - **Hierarki Tipografi Heading Akademik**: Menstandarkan skala font judul (`h1` s.d. `h6`) dan spasi antar-bagian via `.ce-block:not(:first-child):has(.ce-header)`.
+  - **Dukungan Penuh Dark Mode**: Menambahkan styling tema gelap untuk tombol aksi toolbar, toolbox popover, dan pencarian blok.
+  - **Refactoring Typing Rute Next.js**: Mengekstrak `buildGhostwritePrompt` ke `lib/ai/ghostwrite-helper.ts` demi memenuhi standar rute Next.js App Router (0 compile error pada `tsc --noEmit`, 218/218 Vitest tests lulus).

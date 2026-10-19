@@ -2,6 +2,36 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.42.2] - 2026-10-19 (Editor.js Toolbar Alignment & Heading Typography Normalization)
+
+### 🎯 Heading Baseline & Toolbar Vertical Alignment Normalization
+- **EditorJS Header Padding & Baseline Adjustment (`app/globals.css`)**:
+  - Overrode `@editorjs/header`'s inflated default `padding: .6em 0 3px` with compact `padding-top: 2px !important; padding-bottom: 4px !important`.
+  - Neutralized Editor.js internal `Toolbar.moveAndOpen()` baseline miscalculation where `fontSize * 0.8` combined with large `.6em` padding pushed the `+ ::` toolbar action button 25px–35px downward.
+  - Headings (H1 through H6) now vertically center and align neatly with the floating `+ ::` actions button.
+- **Academic Typography Hierarchy & Section Spacing (`app/globals.css`)**:
+  - Established clean academic heading scale for `h1.ce-header` (1.875rem), `h2.ce-header` (1.45rem), `h3.ce-header` (1.2rem), and `h4-h6.ce-header` (1.05rem).
+  - Added natural academic block separation via `.ce-block:not(:first-child):has(.ce-header)` without introducing margin onto the heading itself, preserving precise toolbar offset calculations.
+- **Dark Mode Support for Editor.js Toolbar & Popovers (`app/globals.css`)**:
+  - Added comprehensive dark mode styles for `.ce-toolbar__plus`, `.ce-toolbar__settings-btn`, `.ce-toolbox`, `.ce-popover`, and `.cdx-search-field`.
+- **Ghostwrite Route Helper Refactoring (`lib/ai/ghostwrite-helper.ts`)**:
+  - Extracted `buildGhostwritePrompt` out of `app/api/v1/ai/ghostwrite/route.ts` into a dedicated helper to satisfy Next.js App Router route module typing requirements.
+
+## ⚡ [v0.42.1] - 2026-10-19 (Autosave Debounce & Editor Loop Resolution)
+
+### 🛡️ Elimination of Infinite Autosave Loop & Referential Stability Hardening
+- **EditorJS Initial Mount & Render Shielding (`components/editor/editorjs-editor.tsx`)**:
+  - Consolidated initial DOM restoration actions (`restoreBlockAlignments`, `renderAllInlineMath`, `calculateLiveStats`, and `adjustAllCodeTextareaHeights`) directly into the `editor.render().then(...)` promise block.
+  - Extended `isRenderingRef.current` hold duration to 400ms after DOM setup finishes, shielding KaTeX rendering and textarea resizing mutations from erroneously triggering Editor.js's internal `onChange` MutationObserver.
+- **Symmetric Block Content Normalization (`lib/editor/editor-utils.tsx`)**:
+  - Implemented `normalizeBlockDataForComparison` in `getContentComparisonString` to normalize block data and strip ephemeral whitespace (`&nbsp;`) differences and Editor.js temporary block ID discrepancies.
+  - Prevents false-positive "dirty document" detections between Supabase raw JSON and Editor.js sanitized output.
+- **State Referential Equality & Fast Check Guard (`hooks/use-editor-document.ts`)**:
+  - Added fast dirty check guard inside `triggerDebouncedSave`: returns immediately without arming timer or setting `Saving...` status if title and normalized content are already equal to `lastSavedContentRef.current`.
+  - Preserved referential equality in `setCurrentDocument` and `setDocuments` by returning the previous state reference when content, title, and settings are identical, preventing unnecessary component re-render loops.
+- **Alignment Comparison Hardening (`components/editor/scholar-editor.tsx`)**:
+  - Replaced fragile `JSON.stringify` comparison in `onAlignmentChange` with key-by-key comparison, avoiding false saves caused by varying key order in localStorage.
+
 ## ⚡ [v0.42.0] - 2026-10-18 (Phase 42: Latent Compilation, Icon Import, API Key Pool & Scoping Resilience Audit)
 
 ### 🛡️ Codebase-Wide Static Typing, Icon Imports & API Rotation Hardening

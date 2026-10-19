@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { buildGhostwritePrompt } from '@/app/api/v1/ai/ghostwrite/route';
+import { buildGhostwritePrompt } from '@/lib/ai/ghostwrite-helper';
 import {
   generateIdempotencyKey,
   getIdempotentAiResponse,

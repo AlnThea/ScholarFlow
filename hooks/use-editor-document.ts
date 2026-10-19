@@ -40,6 +40,16 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
   const triggerDebouncedSave = useCallback((docId: string, titleToSave: string, contentToSave: any, settingsToSave?: any) => {
     if (!user?.id) return;
 
+    // Fast-check: if document is loaded and content/title are unchanged and no explicit new settings, skip save
+    const currentDoc = currentDocumentRef.current;
+    if (currentDoc && currentDoc.id === docId && !settingsToSave) {
+      const isTitleSame = currentDoc.title === titleToSave;
+      const isContentSame = getContentComparisonString(contentToSave) === lastSavedContentRef.current;
+      if (isTitleSame && isContentSame) {
+        return;
+      }
+    }
+
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
@@ -71,9 +81,15 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
           lastSavedContentRef.current = getContentComparisonString(contentToSave);
           localStorage.removeItem(`scholarflow.offline_backup.${docId}`);
           
-          // Keep currentDocument synchronized after successful save
+          // Keep currentDocument synchronized after successful save without creating redundant references
           setCurrentDocument(prev => {
             if (!prev || prev.id !== docId) return prev;
+            const isTitleIdentical = prev.title === titleToSave;
+            const isContentIdentical = getContentComparisonString(prev.content) === getContentComparisonString(contentToSave);
+            const isSettingsIdentical = JSON.stringify(prev.settings || {}) === JSON.stringify(finalSettings || {});
+            if (isTitleIdentical && isContentIdentical && isSettingsIdentical) {
+              return prev;
+            }
             return {
               ...prev,
               title: titleToSave,
@@ -82,9 +98,12 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
             };
           });
 
-          // Refresh list to update title/timestamps
+          // Refresh list to update title/timestamps with referential guard
           const list = await fetchDocuments(user.id);
-          setDocuments(list);
+          setDocuments(prevList => {
+            if (JSON.stringify(prevList) === JSON.stringify(list)) return prevList;
+            return list;
+          });
         } else {
           localStorage.setItem(
             `scholarflow.offline_backup.${docId}`,

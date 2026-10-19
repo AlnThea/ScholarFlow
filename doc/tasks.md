@@ -637,8 +637,31 @@ Target: Melakukan audit statis komprehensif (`tsc --noEmit`), memperbaiki typo i
   - Memperbaiki boolean assertion pada `__tests__/utils/concept-map.test.ts`.
   - Memverifikasi keberhasilan penuh `npx tsc --noEmit` dengan **0 compile error** dan **218/218 Vitest tests across 27 files**.
 
+### Phase 43: Autosave Debounce, DOM Mutation Shielding & Loop Resolution (v0.42.1)
+Target: Menghentikan siklus looping tak berujung (*infinite autosave oscillation*) antara status `Saving...` dan `Saved to Cloud` pada halaman editor kanvas saat posisi idle.
 
+- [x] **1. EditorJS Initial Mount & Render Shielding (`components/editor/editorjs-editor.tsx`)**:
+  - Menyatukan tindakan pasca-render DOM (`restoreBlockAlignments`, `renderAllInlineMath`, `calculateLiveStats`, `adjustAllCodeTextareaHeights`) ke dalam `editor.render().then(...)` promise block.
+  - Memperpanjang penahanan flag `isRenderingRef.current` (400ms) agar mutasi DOM KaTeX dan textarea resizing tidak memicu event `onChange`.
+- [x] **2. Symmetric Block Content Normalization (`lib/editor/editor-utils.tsx`)**:
+  - Menambahkan `normalizeBlockDataForComparison` di `getContentComparisonString` untuk menstandarkan data blok, membersihkan spasi tak kasat mata (`&nbsp;`), dan mengabaikan perbedaan ID blok ephemeral.
+- [x] **3. State Referential Equality & Fast Check Guard (`hooks/use-editor-document.ts`)**:
+  - Menambahkan guard check di `triggerDebouncedSave` untuk langsung membatalkan proses simpan jika konten telah identik dengan snapshot tersimpan.
+  - Mempertahankan referensi objek state pada `setCurrentDocument` dan `setDocuments` jika tidak ada perubahan nilai nyata.
+- [x] **4. Alignment Key Order Resilience (`components/editor/scholar-editor.tsx`)**:
+  - Memperbaiki perbandingan objek perataan teks berbasis key alih-alih `JSON.stringify`.
 
+### Phase 44: Editor.js Toolbar Vertical Alignment & Heading Typography Normalization (v0.42.2)
+Target: Memperbaiki inkonsistensi perataan vertikal tombol toolbar Editor.js (`+ ::`) yang melorot di bawah baris judul/heading serta menyelaraskan hierarki tipografi akademik dan dark mode.
 
-
-
+- [x] **1. Header Baseline & Padding Normalization (`app/globals.css`)**:
+  - Mengganti default `@editorjs/header` (`padding: .6em 0 3px`) menjadi `padding-top: 2px !important; padding-bottom: 4px !important; margin: 0 !important;` untuk menormalkan formula internal `Toolbar.moveAndOpen()` sehingga icon `+ ::` berada persis di tengah baris judul.
+- [x] **2. Academic Typography Hierarchy (`app/globals.css`)**:
+  - Menstandarkan skala heading untuk `h1.ce-header` (1.875rem), `h2.ce-header` (1.45rem), `h3.ce-header` (1.2rem), dan `h4-h6.ce-header` (1.05rem).
+  - Mengatur spasi antar-blok bagian via `.ce-block:not(:first-child):has(.ce-header)` tanpa menambah margin heading yang dapat merusak kalkulasi toolbar.
+- [x] **3. Dark Mode Support for Editor.js Toolbar & Popovers (`app/globals.css`)**:
+  - Melengkapi styling Dark Mode untuk tombol aksi toolbar, toolbox popover, dan panel pencarian blok.
+- [x] **4. Ghostwrite Route Next.js Typing Modularization (`lib/ai/ghostwrite-helper.ts`, `app/api/v1/ai/ghostwrite/route.ts`)**:
+  - Memisahkan `buildGhostwritePrompt` ke file helper tersendiri untuk memenuhi validasi rute Next.js App Router.
+- [x] **5. Automated Test & Typecheck Verification**:
+  - `npx tsc --noEmit` lolos dengan **0 compile error** dan `npx vitest run` lolos **218/218 unit tests**.

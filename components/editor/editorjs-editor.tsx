@@ -557,11 +557,13 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
                       if (undoRef.current && typeof undoRef.current.initialize === 'function') {
                         undoRef.current.initialize(contentToRender);
                       }
+                      restoreBlockAlignments();
                       renderAllInlineMath();
+                      calculateLiveStats();
+                      adjustAllCodeTextareaHeights();
                       setTimeout(() => {
                         isRenderingRef.current = false;
-                        adjustAllCodeTextareaHeights();
-                      }, 150);
+                      }, 400);
                     })
                     .catch((e) => {
                       console.error('Error rendering database content promise:', e);
@@ -572,15 +574,18 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
                   console.error('Error rendering database content:', e);
                   isRenderingRef.current = false;
                 }
+              } else {
+                isRenderingRef.current = true;
+                setTimeout(() => {
+                  restoreBlockAlignments();
+                  renderAllInlineMath();
+                  calculateLiveStats();
+                  adjustAllCodeTextareaHeights();
+                  setTimeout(() => {
+                    isRenderingRef.current = false;
+                  }, 400);
+                }, 150);
               }
-
-              // Apply saved block alignments on load and compute stats
-              setTimeout(() => {
-                restoreBlockAlignments();
-                renderAllInlineMath();
-                calculateLiveStats();
-                adjustAllCodeTextareaHeights();
-              }, 150);
             },
             onChange: async () => {
               syncActiveBlockType();
