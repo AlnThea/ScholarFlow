@@ -32,6 +32,7 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
   const [saveStatus, setSaveStatus] = useState<string>(language === 'en' ? 'Saved to Cloud' : 'Tersimpan ke Cloud');
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const statusTransitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const loadedDocumentIdRef = useRef<string | null>(null);
   const lastSavedContentRef = useRef<string>('');
   const currentDocumentRef = useRef<DocumentEntry | null>(currentDocument);
@@ -49,6 +50,15 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
         return;
       }
     }
+
+    // Clear any pending transition from previous save
+    if (statusTransitionTimeoutRef.current) {
+      clearTimeout(statusTransitionTimeoutRef.current);
+      statusTransitionTimeoutRef.current = null;
+    }
+
+    // Immediately indicate saving state in real-time on keystroke
+    setSaveStatus(language === 'en' ? 'Saving...' : 'Menyimpan...');
 
     // Instant local offline backup snapshot so draft is never lost during typing
     try {
@@ -71,9 +81,8 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
       clearTimeout(debounceTimeoutRef.current);
     }
 
-    // Zen / Focused Mode: 4500ms (4.5s) debounce to keep writing flow calm and uninterrupted
+    // Responsive autosave debounce timer: 1500ms (1.5s)
     debounceTimeoutRef.current = setTimeout(async () => {
-      setSaveStatus(language === 'en' ? 'Saving...' : 'Menyimpan...');
       let alignments = {};
       try {
         alignments = JSON.parse(localStorage.getItem('scholarflow.editorjs.alignments.v1') || '{}');
@@ -87,6 +96,7 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
         alignments
       };
 
+      const nowIso = new Date().toISOString();
       const updates: any = {
         title: titleToSave,
         content: contentToSave,
@@ -95,24 +105,27 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
       try {
         const res = await updateDocument(docId, user.id, updates);
         if (res.success) {
-          setSaveStatus(language === 'en' ? 'Saved to Cloud' : 'Tersimpan ke Cloud');
           lastSavedContentRef.current = getContentComparisonString(contentToSave);
           localStorage.removeItem(`scholarflow.offline_backup.${docId}`);
+
+          // 1. Immediately show "Saved" / "Tersimpan"
+          setSaveStatus(language === 'en' ? 'Saved' : 'Tersimpan');
+
+          // 2. Transition to "Saved to Cloud" / "Tersimpan ke Cloud" after 1.5s
+          statusTransitionTimeoutRef.current = setTimeout(() => {
+            setSaveStatus(language === 'en' ? 'Saved to Cloud' : 'Tersimpan ke Cloud');
+            statusTransitionTimeoutRef.current = null;
+          }, 1500);
           
-          // Keep currentDocument synchronized after successful save without creating redundant references
+          // Keep currentDocument synchronized WITH updated_at timestamp so UI updates in real-time
           setCurrentDocument(prev => {
             if (!prev || prev.id !== docId) return prev;
-            const isTitleIdentical = prev.title === titleToSave;
-            const isContentIdentical = getContentComparisonString(prev.content) === getContentComparisonString(contentToSave);
-            const isSettingsIdentical = JSON.stringify(prev.settings || {}) === JSON.stringify(finalSettings || {});
-            if (isTitleIdentical && isContentIdentical && isSettingsIdentical) {
-              return prev;
-            }
             return {
               ...prev,
               title: titleToSave,
               content: contentToSave,
-              settings: finalSettings
+              settings: finalSettings,
+              updated_at: nowIso
             };
           });
 
@@ -137,7 +150,7 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
         );
         setSaveStatus(language === 'en' ? 'Saved Locally (Offline)' : 'Disimpan Lokal (Offline)');
       }
-    }, 4500);
+    }, 1500);
   }, [user?.id, language]);
 
   useEffect(() => {
@@ -224,6 +237,9 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
+      }
+      if (statusTransitionTimeoutRef.current) {
+        clearTimeout(statusTransitionTimeoutRef.current);
       }
     };
   }, [currentDocument?.id]);

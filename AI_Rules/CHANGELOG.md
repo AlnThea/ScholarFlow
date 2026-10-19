@@ -2,11 +2,14 @@
 
 ## v0.43.2 - Dynamic Header Autosave Status & Word-Style Footer Indicators Migration
 
-- **Dynamic Autosave Status Synchronization (`components/editor/editor-header.tsx`, `components/editor/editor-layout.tsx`)**:
+- **Dynamic Autosave Status Synchronization (`hooks/use-editor-document.ts`, `components/editor/editor-header.tsx`, `components/editor/editor-layout.tsx`)**:
   - Connected `EditorHeader` to the real runtime autosave status (`statusLabel`) from `useEditorDocument`, replacing the previous static/unresponsive placeholder text under the document title.
+  - **Instant Keystroke Feedback**: Immediately triggers `Menyimpan...` / `Saving...` with amber spinner on typing, replacing the sluggish 4.5s delay with a snappy 1,500ms debounce.
+  - **Word-Style Status Transition**: Shows `Tersimpan` / `Saved` upon save completion, then automatically transitions to `Tersimpan ke Cloud` / `Saved to Cloud` after 1.5s.
+  - **Reactive Timestamp Synchronization**: Updates `currentDocument.updated_at` directly in React state to `new Date().toISOString()`, so the timestamp (`Disimpan HH:mm` / `Saved HH:mm`) updates in real time without requiring a page refresh.
   - Dynamically renders saving states:
-    - Amber spinning loader (`IconLoader`) with `Menyimpan...` / `Saving...` and `Menyelaraskan perubahan...` during active debounced cloud sync.
-    - Emerald cloud icon (`☁️`) with `Tersimpan ke Cloud` / `Saved to Cloud` and exact last saved timestamp (`Disimpan HH:mm` / `Saved HH:mm`) once synced.
+    - Amber spinning loader (`IconLoader`) with `Menyimpan...` / `Saving...` and `Menyelaraskan perubahan...` during active cloud sync.
+    - Emerald cloud icon (`☁️`) with `Tersimpan` -> `Tersimpan ke Cloud` and exact last saved timestamp once synced.
     - Error indicator (`⚠️ Gagal menyimpan`) if cloud sync fails.
 - **Word-Style Bottom Footer Status Bar Indicators (`components/editor/editor-layout.tsx`, `components/editor/editorjs-toolbar.tsx`, `components/editor/ghostwriter-toggle.tsx`)**:
   - Removed the pinned right cluster from `EditorJsToolbar`, eliminating visual clutter from the top ribbon tabs.
