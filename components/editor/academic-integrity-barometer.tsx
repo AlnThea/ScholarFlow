@@ -19,6 +19,7 @@ import {
   type AcademicIntegrityReport,
   type SentenceIntegrity,
 } from '@/lib/editor/academic-integrity';
+import { useLanguage } from '../i18n/language-context';
 
 export interface AcademicIntegrityBarometerProps {
   content: string;
@@ -31,13 +32,15 @@ export interface AcademicIntegrityBarometerProps {
 
 export function AcademicIntegrityBarometer({
   content,
-  language = 'id',
+  language,
   onSelectSentenceForParaphrase,
   isHeatmapActive = false,
   onToggleHeatmap,
   className = '',
 }: AcademicIntegrityBarometerProps) {
-  const isEn = language === 'en';
+  const { language: ctxLanguage } = useLanguage();
+  const activeLang = language || ctxLanguage || 'id';
+  const isEn = activeLang === 'en';
   const report: AcademicIntegrityReport = React.useMemo(() => {
     return calculateAcademicIntegrity(content);
   }, [content]);

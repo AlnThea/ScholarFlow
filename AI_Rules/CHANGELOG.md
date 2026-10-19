@@ -27,6 +27,9 @@
     - **Dedicated Sentence Rhythm Left Sidebar in Editor Mode (`components/editor/minimal-sidebar.tsx`)**:
       - Since documents are now managed comprehensively via the top ribbon's `File` menu (`[ 📁 File ]`), the editor's left sidebar now renders `SentenceRhythmExplorer` exclusively when `isDocumentEditor` is active.
       - Removed the redundant `[ 📁 Documents ]` tab and document tree inside the editor sidebar, providing a distraction-free, dedicated Cadence & Sentence Rhythm workspace.
+    - **Full Bilingual EN <-> ID Synchronization for AI Rhythm & Burstiness (`components/editor/sidebar-burstiness-tab.tsx`, `components/editor/burstiness-chart.tsx`, `components/editor/academic-integrity-barometer.tsx`)**:
+      - Connected `SidebarBurstinessTab` and `AcademicIntegrityBarometer` to reactive `useLanguage()` context so language toggles immediately update all labels, toggle titles (`Entire Doc` / `Semua Dokumen`), and descriptions in real time.
+      - Fixed hardcoded title `AI Burstiness Score` -> `{isEn ? 'AI Burstiness Score' : 'Skor Burstiness AI'}` across both the burstiness tab and burstiness chart headers.
     - **Contextual Sidebar Bottom Controls (`components/editor/minimal-sidebar.tsx`)**: Conditionally hid the Admin settings, Language, Dark Mode row, and User profile card on the document editor page (`!isDocumentEditor`) while keeping them fully accessible on the general dashboard view. This maximizes the vertical tree space for chapters and documents matching the clean sidebar layout in `mockup-editor-concepts.html`.
     - Upgraded sidebar width to `w-72 sm:w-80` with comprehensive Light/Dark Mode classes.
   - **Physical A4 Paper Canvas & Dynamic Content Growth (`components/editor/editor-layout.tsx`, `components/editor/editor-header.tsx`, `app/globals.css`)**:

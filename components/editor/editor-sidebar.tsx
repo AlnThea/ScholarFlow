@@ -384,7 +384,7 @@ export function EditorSidebar(props: SidebarProps) {
 
           {workspaceTab === 'burstiness' ? (
             <div className="flex-1 overflow-y-auto p-4 thin-scroll">
-              <SidebarBurstinessTab {...props} />
+              <SidebarBurstinessTab {...props} language={language} />
             </div>
           ) : workspaceTab === 'library' ? (
             <div className="flex-1 overflow-y-auto p-4 thin-scroll">

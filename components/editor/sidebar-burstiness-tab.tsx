@@ -8,12 +8,15 @@ import { ParaphraseStudio } from './paraphrase-studio';
 import { extractTextFromContent } from '@/lib/editor/editor-utils';
 import { calculateBurstiness, AI_BUZZWORDS } from '@/lib/editor/burstiness-engine';
 import { AcademicIntegrityBarometer } from './academic-integrity-barometer';
+import { useLanguage } from '../i18n/language-context';
 
 export const SidebarBurstinessTab = (props: any) => {
   const {
-    language, selectedText, t, currentDocument
+    selectedText, t, currentDocument
   } = props;
 
+  const { language: ctxLanguage } = useLanguage();
+  const language = props.language || ctxLanguage || 'id';
   const isEn = language === 'en';
   const isFreePlan = props.activePlanId === 'free';
   const [analyzeAll, setAnalyzeAll] = useState(false);
@@ -147,7 +150,9 @@ export const SidebarBurstinessTab = (props: any) => {
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <IconChartBar className="h-4 w-4 text-accent dark:text-indigo-400" />
-              <h3 className="text-sm font-semibold text-text dark:text-slate-200">AI Burstiness Score</h3>
+              <h3 className="text-sm font-semibold text-text dark:text-slate-200">
+                {isEn ? 'AI Burstiness Score' : 'Skor Burstiness AI'}
+              </h3>
             </div>
             <label className="flex items-center gap-1.5 cursor-pointer">
               <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">

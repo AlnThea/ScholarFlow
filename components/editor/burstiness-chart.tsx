@@ -55,28 +55,30 @@ export function BurstinessChart({ content }: { content: string }) {
   return (
     <div className="rounded-xl border border-line bg-panel p-3 flex flex-col gap-3 animate-fade-in shadow-sm mt-3">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">📈 AI Burstiness Score</span>
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+          {isEn ? '📈 AI Burstiness Score' : '📈 Skor Burstiness AI'}
+        </span>
         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getStatusColor(metrics.status)}`}>
           {metrics.burstinessScore} - {getStatusLabel(metrics.status)}
         </span>
       </div>
       
       <div className="grid grid-cols-4 gap-2">
-        <div className="bg-white border border-slate-100 rounded-lg p-2 text-center flex flex-col justify-center">
-          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">{isEn ? 'Words' : 'Kata'}</p>
-          <p className="text-sm font-bold text-slate-700">{metrics.totalWords}</p>
+        <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg p-2 text-center flex flex-col justify-center">
+          <p className="text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-400 font-bold">{isEn ? 'Words' : 'Kata'}</p>
+          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{metrics.totalWords}</p>
         </div>
-        <div className="bg-white border border-slate-100 rounded-lg p-2 text-center flex flex-col justify-center">
-          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">{isEn ? 'Sentences' : 'Kalimat'}</p>
-          <p className="text-sm font-bold text-slate-700">{metrics.totalSentences}</p>
+        <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg p-2 text-center flex flex-col justify-center">
+          <p className="text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-400 font-bold">{isEn ? 'Sentences' : 'Kalimat'}</p>
+          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{metrics.totalSentences}</p>
         </div>
-        <div className="bg-white border border-slate-100 rounded-lg p-2 text-center flex flex-col justify-center">
-          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">{isEn ? 'Avg Len' : 'Rata-rata'}</p>
-          <p className="text-sm font-bold text-slate-700">{metrics.averageSentenceLength}</p>
+        <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg p-2 text-center flex flex-col justify-center">
+          <p className="text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-400 font-bold">{isEn ? 'Avg Len' : 'Rata-rata'}</p>
+          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{metrics.averageSentenceLength}</p>
         </div>
-        <div className="bg-white border border-slate-100 rounded-lg p-2 text-center flex flex-col justify-center">
-          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">{isEn ? 'Std Dev' : 'Deviasi'}</p>
-          <p className="text-sm font-bold text-slate-700">{metrics.standardDeviation}</p>
+        <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg p-2 text-center flex flex-col justify-center">
+          <p className="text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-400 font-bold">{isEn ? 'Std Dev' : 'Deviasi'}</p>
+          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{metrics.standardDeviation}</p>
         </div>
       </div>
 
@@ -101,7 +103,7 @@ export function BurstinessChart({ content }: { content: string }) {
       </div>
 
       {metrics.status === 'ai' && (
-        <div className="text-[9px] bg-rose-50 text-rose-700 p-2 rounded border border-rose-100 mt-1">
+        <div className="text-[9px] bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 p-2 rounded border border-rose-100 dark:border-rose-900/50 mt-1">
           <strong>Tips:</strong> {isEn 
             ? "Your writing exhibits highly uniform sentence lengths (AI Pattern). Combine short sentences or break up long ones to increase your Burstiness score." 
             : "Tulisan Anda terdeteksi memiliki panjang kalimat yang sangat seragam (Pola AI). Gabungkan beberapa kalimat pendek menjadi panjang, atau pecah kalimat panjang untuk menaikkan skor Burstiness."}
