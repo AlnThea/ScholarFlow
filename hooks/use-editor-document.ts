@@ -81,7 +81,7 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
       clearTimeout(debounceTimeoutRef.current);
     }
 
-    // Responsive autosave debounce timer: 1500ms (1.5s)
+    // Responsive autosave debounce timer: 3000ms (3.0s) - Optimal balance for Supabase Free Tier write I/O
     debounceTimeoutRef.current = setTimeout(async () => {
       let alignments = {};
       try {
@@ -150,7 +150,7 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
         );
         setSaveStatus(language === 'en' ? 'Saved Locally (Offline)' : 'Disimpan Lokal (Offline)');
       }
-    }, 1500);
+    }, 3000);
   }, [user?.id, language]);
 
   useEffect(() => {
