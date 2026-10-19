@@ -44,6 +44,7 @@ export type EditorHeaderProps = {
   onOpenLatexExport?: () => void;
   activeUsers?: any[];
   statusLabel?: string;
+  hideActions?: boolean;
 };
 
 export const EditorHeader = ({
@@ -82,6 +83,7 @@ export const EditorHeader = ({
   onOpenLatexExport,
   activeUsers,
   statusLabel,
+  hideActions = false,
 }: EditorHeaderProps) => {
   const [showExportDropdown, setShowExportDropdown] = useState(false);
   const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
@@ -215,7 +217,8 @@ export const EditorHeader = ({
           </div>
         )}
 
-        <div className="flex items-center gap-0.5 bg-slate-100/80 dark:bg-slate-800/80 p-0.5 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
+        {!hideActions && (
+          <div className="flex items-center gap-0.5 bg-slate-100/80 dark:bg-slate-800/80 p-0.5 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
           {/* Export Dropdown */}
           <div className="relative" data-tour="header-export">
             <button
@@ -630,7 +633,8 @@ export const EditorHeader = ({
               </div>
             </>
           )}
-        </div>
+          </div>
+        )}
       </div>
     </header>
   );

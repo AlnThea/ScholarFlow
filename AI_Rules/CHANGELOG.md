@@ -1,5 +1,25 @@
 # ScholarFlow Changelog
 
+## v0.43.3 - Action Buttons Relocation to Ribbon Tools Row Right Corner
+
+- **Action Controls Capsule Relocation (`components/editor/editor-header-actions.tsx`, `components/editor/editorjs-toolbar.tsx`, `components/editor/editor-header.tsx`, `components/editor/editor-layout.tsx`)**:
+  - Extracted header action controls into a modular, reusable `EditorHeaderActions` component containing:
+    - Export dropdown (Word `.docx`, PDF `.pdf`, LaTeX `.tex` + `.bib` Overleaf ZIP bundle, BibTeX, RIS, JSON, Markdown text).
+    - Notification bell dropdown with unread badge counter.
+    - Share manuscript modal launcher.
+    - AI Token Quota badge (`49.2k`).
+    - Pricing / subscription upgrade button.
+    - Research Assistant panel toggle.
+    - Version History & Time Machine launcher.
+    - Peer Reviewer #2 simulator button.
+    - Document & research settings button (gear icon ⚙️).
+    - Global keyboard shortcuts cheat sheet button (keyboard icon ⌨️).
+    - Live co-editor presence avatars.
+  - Relocated this action capsule from the top header to the right corner of the Ribbon toolbar tools row, placed directly below `• Ribbon Bar Active` and horizontally aligned with paragraph alignment buttons (Left, Center, Right, Justify).
+  - Streamlined the top `EditorHeader`: now solely houses the clean Word-style document title, sync engine chip, real-time autosave status, and spotlight Command Palette (`Ctrl + K`).
+  - Full Dark Mode (`dark:`) and Bilingual (EN <-> ID) support.
+  - Automated verification: `npx tsc --noEmit` compiled with 0 errors.
+
 ## v0.43.2 - Dynamic Header Autosave Status & Word-Style Footer Indicators Migration
 
 - **Dynamic Autosave Status Synchronization (`hooks/use-editor-document.ts`, `components/editor/editor-header.tsx`, `components/editor/editor-layout.tsx`)**:

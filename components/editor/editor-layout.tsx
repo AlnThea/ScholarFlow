@@ -10,6 +10,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { EditorJsEditor } from './editorjs-editor';
 import { EditorSidebar } from './editor-sidebar';
 import { EditorHeader } from './editor-header';
+import { EditorHeaderActions } from './editor-header-actions';
 import { DashboardView } from './dashboard-view';
 import { MathHelperPanel } from './math-helper-panel';
 import { EditorBubbleMenu } from './editor-bubble-menu';
@@ -810,6 +811,7 @@ export function EditorLayout({
             onOpenLatexExport={() => setIsLatexExportModalOpen(true)}
             activeUsers={activeUsers}
             statusLabel={statusLabel}
+            hideActions={true}
           />
 
           {/* Navbar 2 – Academic Formatting Toolbar */}
@@ -850,6 +852,39 @@ export function EditorLayout({
               setActiveSidebarTab?.('burstiness');
             }}
             onOpenFileHub={() => setIsDocumentHubOpen(true)}
+            rightActions={
+              <EditorHeaderActions
+                currentDocument={currentDocument}
+                language={language}
+                activePlanId={activePlanId}
+                tokensUsed={tokensUsed}
+                monthlyQuota={monthlyQuota}
+                onOpenTokenQuotaModal={onOpenTokenQuotaModal}
+                bibliographyEntries={bibliographyEntries}
+                exportToWordFile={exportToWordFile}
+                exportToPdfFile={exportToPdfFile}
+                onExportBibliographyText={onExportBibliographyText}
+                onExportBibliographyJson={onExportBibliographyJson}
+                onExportBibliographyBibtex={onExportBibliographyBibtex}
+                onExportBibliographyRis={onExportBibliographyRis}
+                setIsExportUpgradeModalOpen={setIsExportUpgradeModalOpen}
+                notifications={notifications}
+                onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+                onMarkNotificationRead={onMarkNotificationRead}
+                onNotificationClick={onNotificationClick}
+                role={role}
+                setIsShareOpen={setIsShareOpen}
+                setIsPricingOpen={setIsPricingOpen}
+                showRightSidebar={showRightSidebar}
+                setShowRightSidebar={setShowRightSidebar}
+                onOpenSettings={onOpenSettings}
+                onOpenVersionHistory={versionHistory.openVersionHistory}
+                onOpenPeerReview={() => setIsPeerReviewModalOpen(true)}
+                onOpenShortcuts={() => setIsShortcutsOpen(true)}
+                onOpenLatexExport={() => setIsLatexExportModalOpen(true)}
+                activeUsers={activeUsers}
+              />
+            }
           />
           {/* LaTeX Math Helper Panel */}
           <MathHelperPanel

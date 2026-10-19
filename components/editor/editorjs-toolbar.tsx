@@ -62,6 +62,7 @@ export type EditorToolbarProps = {
   citationStyle?: string;
   onChangeCitationStyle?: (style: any) => void;
   onOpenFileHub?: () => void;
+  rightActions?: React.ReactNode;
 };
 
 type RibbonTabKey = 'beranda' | 'sisipkan' | 'referensi' | 'tinjauan';
@@ -99,6 +100,7 @@ export const EditorJsToolbar = ({
   onOpenIntegrityTab,
   onOpenCrossReferenceModal,
   onOpenFileHub,
+  rightActions,
 }: EditorToolbarProps) => {
   const [activeRibbonTab, setActiveRibbonTab] = useState<RibbonTabKey>('beranda');
 
@@ -567,6 +569,13 @@ export const EditorJsToolbar = ({
               language={language as 'en' | 'id'}
               className="shrink-0"
             />
+          </div>
+        )}
+
+        {/* Pojok Kanan Bilah Ribbon (Sejajar dengan icon left, right, center, justify - Tepat di bawah 'Ribbon Bar Active') */}
+        {rightActions && (
+          <div className="ml-auto flex items-center gap-1 shrink-0 pl-3">
+            {rightActions}
           </div>
         )}
       </div>
