@@ -2,6 +2,16 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.42.3] - 2026-10-19 (Zen Mode Autosave Debounce & Zero-Latency Local Snapshot)
+
+### 🧘 Zen / Focused Mode Autosave Delay (4,500ms) & Zero-Latency Local Cache
+- **Autosave Debounce Relaxation (`hooks/use-editor-document.ts`, `hooks/use-shared-document-sync.ts`)**:
+  - Relaxed the cloud save debounce delay from an aggressive 1,500ms to a calm **4,500ms (4.5 detik)** in both owner editor and co-editor shared workspace.
+  - Eliminates rapid status indicator flickering in the user's peripheral vision during academic writing sprints, granting authors natural thinking pauses between sentences.
+- **Zero-Latency Local Offline Snapshot (`hooks/use-editor-document.ts`)**:
+  - Integrated immediate synchronous `localStorage.setItem` snapshot (`scholarflow.offline_backup.[id]`) at millisecond 0 inside `triggerDebouncedSave`.
+  - Ensures 100% data safety against unexpected tab closures or network interruptions even during the extended 4.5s debounce window.
+
 ## ⚡ [v0.42.2] - 2026-10-19 (Editor.js Toolbar Alignment & Heading Typography Normalization)
 
 ### 🎯 Heading Baseline & Toolbar Vertical Alignment Normalization

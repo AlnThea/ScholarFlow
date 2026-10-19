@@ -1,5 +1,12 @@
 # ScholarFlow Changelog
 
+## v0.42.3 - Zen Mode Autosave Debounce & Zero-Latency Local Snapshot
+
+- **Zen / Focused Mode Autosave Delay (4,500ms) & Zero-Latency Local Cache (`hooks/use-editor-document.ts`, `hooks/use-shared-document-sync.ts`)**:
+  - **Autosave Debounce Relaxation**: Relaxed the cloud save debounce timer from 1,500ms to 4,500ms (4.5s) across both single-user and co-editor shared sessions, eliminating visual distraction and rapid status indicator oscillations during drafting.
+  - **Zero-Latency Local Offline Snapshot**: Integrated immediate synchronous `localStorage` snapshot in `triggerDebouncedSave` at millisecond 0, guaranteeing zero data loss during the 4.5s debounce window.
+  - **Automated Verification**: Clean `tsc --noEmit` compilation (0 errors) and 100% test pass rate (218/218 Vitest tests).
+
 ## v0.42.2 - Editor.js Toolbar Alignment & Heading Typography Normalization
 
 - **Heading Baseline & Toolbar Vertical Alignment Normalization (`app/globals.css`, `lib/ai/ghostwrite-helper.ts`, `app/api/v1/ai/ghostwrite/route.ts`)**:

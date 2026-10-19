@@ -50,10 +50,28 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
       }
     }
 
+    // Instant local offline backup snapshot so draft is never lost during typing
+    try {
+      localStorage.setItem(
+        `scholarflow.offline_backup.${docId}`,
+        JSON.stringify({
+          id: docId,
+          user_id: user.id,
+          title: titleToSave,
+          content: contentToSave,
+          settings: settingsToSave || currentDocumentRef.current?.settings || {},
+          updated_at: new Date().toISOString()
+        })
+      );
+    } catch (e) {
+      // quota or private mode guard
+    }
+
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
 
+    // Zen / Focused Mode: 4500ms (4.5s) debounce to keep writing flow calm and uninterrupted
     debounceTimeoutRef.current = setTimeout(async () => {
       setSaveStatus(language === 'en' ? 'Saving...' : 'Menyimpan...');
       let alignments = {};
@@ -119,7 +137,7 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
         );
         setSaveStatus(language === 'en' ? 'Saved Locally (Offline)' : 'Disimpan Lokal (Offline)');
       }
-    }, 1500);
+    }, 4500);
   }, [user?.id, language]);
 
   useEffect(() => {

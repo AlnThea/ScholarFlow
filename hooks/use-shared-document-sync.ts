@@ -278,7 +278,7 @@ export function useSharedDocumentSync({
         console.error('Failed to save document:', err);
         setSaveStatus('offline');
       }
-    }, 1500);
+    }, 4500);
   }, [docId, document]);
 
   const handleContentChange = useCallback((newContent: any) => {
