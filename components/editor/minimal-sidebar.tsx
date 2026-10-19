@@ -33,6 +33,7 @@ import type { CitationCandidate } from '@/lib/api/citations';
 import type { DocumentListItem } from '@/lib/api/documents';
 import { ConfirmModal } from './confirm-modal';
 import { SidebarDocumentsView } from './sidebar/sidebar-documents-view';
+import { SentenceRhythmExplorer } from './sentence-rhythm-explorer';
 import { SidebarLibraryView } from './sidebar/sidebar-library-view';
 import { SidebarSettingsView } from './sidebar/sidebar-settings-view';
 import { SidebarLogo } from './sidebar/sidebar-logo';
@@ -348,28 +349,37 @@ export function MinimalSidebar({
           : (isDocumentEditor ? 'w-0 opacity-0 overflow-hidden pointer-events-none border-0' : 'w-16')
       } ${className || ''}`}
     >
-      {/* 1. DOCUMENTS VIEW HEADER & CONTENT */}
+      {/* 1. DOCUMENTS VIEW / SENTENCE RHYTHM IN EDITOR */}
       {activeView === 'documents' && (
-        <SidebarDocumentsView
-          language={language}
-          isDocumentEditor={isDocumentEditor}
-          onToggle={onToggle}
-          setActiveView={setActiveView}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          onCreateDocument={onCreateDocument as any}
-          filteredDocs={filteredDocs}
-          groupedDocs={groupedDocs}
-          expandedProjects={expandedProjects}
-          setExpandedProjects={setExpandedProjects}
-          currentDocumentId={currentDocumentId || undefined}
-          onSelectDocument={onSelectDocument}
-          onDeleteDocument={onDeleteDocument}
-          setDocumentToDelete={setDocumentToDelete}
-          selectedText={selectedText}
-          activeSidebarTab={activeSidebarTab}
-          onOpenFileHub={onOpenFileHub}
-        />
+        isDocumentEditor ? (
+          <div className="flex-1 overflow-y-auto">
+            <SentenceRhythmExplorer
+              content={selectedText || ''}
+              onClose={onToggle}
+            />
+          </div>
+        ) : (
+          <SidebarDocumentsView
+            language={language}
+            isDocumentEditor={isDocumentEditor}
+            onToggle={onToggle}
+            setActiveView={setActiveView}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            onCreateDocument={onCreateDocument as any}
+            filteredDocs={filteredDocs}
+            groupedDocs={groupedDocs}
+            expandedProjects={expandedProjects}
+            setExpandedProjects={setExpandedProjects}
+            currentDocumentId={currentDocumentId || undefined}
+            onSelectDocument={onSelectDocument}
+            onDeleteDocument={onDeleteDocument}
+            setDocumentToDelete={setDocumentToDelete}
+            selectedText={selectedText}
+            activeSidebarTab={activeSidebarTab}
+            onOpenFileHub={onOpenFileHub}
+          />
+        )
       )}
 
       {/* 2. LIBRARY VIEW HEADER & CONTENT */}

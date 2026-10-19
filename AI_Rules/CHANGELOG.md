@@ -24,7 +24,9 @@
       - Added Microsoft Word-style distinctive blue `[ 📁 File ]` tab to the top ribbon toolbar bar.
       - Implemented scalable `DocumentHubModal` (Word Backstage View / Document Hub) equipped with real-time search, filter pills (`All`, `🎓 Thesis`, `📄 Independent`), date/alphabetical sorting, quick creation `+ New Document`, and safe deletion with modal confirmation.
       - Integrated `Ctrl + O` global keyboard shortcut to instantly open the Document Hub.
-      - Added quick `[ 📁 Buka Pengelola Berkas ↗ ]` trigger at the top of the sidebar documents view for maximum workflow flexibility.
+    - **Dedicated Sentence Rhythm Left Sidebar in Editor Mode (`components/editor/minimal-sidebar.tsx`)**:
+      - Since documents are now managed comprehensively via the top ribbon's `File` menu (`[ 📁 File ]`), the editor's left sidebar now renders `SentenceRhythmExplorer` exclusively when `isDocumentEditor` is active.
+      - Removed the redundant `[ 📁 Documents ]` tab and document tree inside the editor sidebar, providing a distraction-free, dedicated Cadence & Sentence Rhythm workspace.
     - **Contextual Sidebar Bottom Controls (`components/editor/minimal-sidebar.tsx`)**: Conditionally hid the Admin settings, Language, Dark Mode row, and User profile card on the document editor page (`!isDocumentEditor`) while keeping them fully accessible on the general dashboard view. This maximizes the vertical tree space for chapters and documents matching the clean sidebar layout in `mockup-editor-concepts.html`.
     - Upgraded sidebar width to `w-72 sm:w-80` with comprehensive Light/Dark Mode classes.
   - **Physical A4 Paper Canvas & Dynamic Content Growth (`components/editor/editor-layout.tsx`, `components/editor/editor-header.tsx`, `app/globals.css`)**:
