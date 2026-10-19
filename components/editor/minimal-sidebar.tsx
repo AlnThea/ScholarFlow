@@ -38,7 +38,6 @@ import { SidebarSettingsView } from './sidebar/sidebar-settings-view';
 import { SidebarLogo } from './sidebar/sidebar-logo';
 import { SidebarMainView } from './sidebar/sidebar-main-view';
 import { parseRISContent } from '@/lib/editor/ris-parser';
-import { SentenceRhythmExplorer } from './sentence-rhythm-explorer';
 
 /**
  * Minimal sidebar that shows the application logo and a collapse/expand control.
@@ -341,19 +340,12 @@ export function MinimalSidebar({
 
   return (
     <aside
-      className={`bg-slate-50 border-r border-slate-200/80 shadow-[2px_0_12px_rgba(0,0,0,0.015)] transition-all duration-300 ease-in-out flex flex-col h-screen sticky top-0 z-30 font-sans ${
+      className={`bg-slate-50 dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800 shadow-[2px_0_12px_rgba(0,0,0,0.015)] transition-all duration-300 ease-in-out flex flex-col ${isDocumentEditor ? 'h-full shrink-0' : 'h-screen sticky top-0'} z-20 font-sans ${
         isEffectiveExpanded 
-          ? (activeSidebarTab === 'burstiness' ? 'w-[350px]' : 'w-60') 
+          ? 'w-72 sm:w-80' 
           : (isDocumentEditor ? 'w-0 opacity-0 overflow-hidden pointer-events-none border-0' : 'w-16')
       } ${className || ''}`}
     >
-      {activeSidebarTab === 'burstiness' ? (
-        <SentenceRhythmExplorer 
-          content={selectedText || ''} 
-          onClose={onToggle} 
-        />
-      ) : (
-        <>
       {/* 1. DOCUMENTS VIEW HEADER & CONTENT */}
       {activeView === 'documents' && (
         <SidebarDocumentsView
@@ -372,6 +364,8 @@ export function MinimalSidebar({
           onSelectDocument={onSelectDocument}
           onDeleteDocument={onDeleteDocument}
           setDocumentToDelete={setDocumentToDelete}
+          selectedText={selectedText}
+          activeSidebarTab={activeSidebarTab}
         />
       )}
 
@@ -418,169 +412,174 @@ export function MinimalSidebar({
         />
       )}
 
-      {/* Row of Settings (Admin only) + Language + Dark Mode toggles */}
-      <div className="px-3 py-2 border-t border-slate-200/40">
-        {isEffectiveExpanded ? (
-          <div className="flex items-center gap-2 w-full">
-            {role === 'admin' && (
-              <button
-                type="button"
-                onClick={() => setActiveView('settings')}
-                className={`flex items-center justify-center flex-1 py-2 px-1 rounded-lg border border-slate-200/85 text-xs font-bold transition-all duration-200 group cursor-pointer ${
-                  activeView === 'settings' || ['admin-pricing', 'admin-models', 'admin-gateways'].includes(activeDashboardTab || '')
-                    ? 'text-indigo-700 bg-indigo-50/70 border-indigo-200/80'
-                    : 'text-slate-600 bg-white hover:bg-slate-50 hover:text-slate-900'
-                }`}
-                title={language === 'en' ? 'Admin Settings' : 'Pengaturan Admin'}
-              >
-                <IconSettings className="h-[15px] w-[15px] text-slate-500 shrink-0" />
-                <span className="ml-1 text-[10px] truncate leading-none">
-                  {language === 'en' ? 'Admin' : 'Admin'}
-                </span>
-              </button>
-            )}
+      {/* Bottom controls: Settings, Language, Theme & User Profile (Hidden in editor mode to match mockup layout) */}
+      {!isDocumentEditor && (
+        <>
+          {/* Row of Settings (Admin only) + Language + Dark Mode toggles */}
+          <div className="px-3 py-2 border-t border-slate-200/40 dark:border-slate-800">
+            {isEffectiveExpanded ? (
+              <div className="flex items-center gap-2 w-full">
+                {role === 'admin' && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveView('settings')}
+                    className={`flex items-center justify-center flex-1 py-2 px-1 rounded-lg border border-slate-200/85 dark:border-slate-700 text-xs font-bold transition-all duration-200 group cursor-pointer ${
+                      activeView === 'settings' || ['admin-pricing', 'admin-models', 'admin-gateways'].includes(activeDashboardTab || '')
+                        ? 'text-indigo-700 bg-indigo-50/70 border-indigo-200/80 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800'
+                        : 'text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                    title={language === 'en' ? 'Admin Settings' : 'Pengaturan Admin'}
+                  >
+                    <IconSettings className="h-[15px] w-[15px] text-slate-500 dark:text-slate-400 shrink-0" />
+                    <span className="ml-1 text-[10px] truncate leading-none">
+                      {language === 'en' ? 'Admin' : 'Admin'}
+                    </span>
+                  </button>
+                )}
 
-            {/* Language toggle */}
-            <button
-              type="button"
-              onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
-              className="flex items-center justify-center flex-1 py-2 px-1 rounded-lg border border-slate-200/85 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all duration-200 group cursor-pointer text-xs font-bold"
-              title={language === 'en' ? 'Switch to Indonesian' : 'Ubah ke Bahasa Indonesia'}
-            >
-              <IconLanguage className="h-[15px] w-[15px] text-slate-500 shrink-0" />
-              <span className="ml-1 text-[10px] leading-none">
-                {language === 'en' ? 'EN' : 'ID'}
-              </span>
-            </button>
-
-            {/* Dark Mode toggle */}
-            <button
-              type="button"
-              onClick={handleToggleDarkMode}
-              className="flex items-center justify-center flex-1 py-2 px-1 rounded-lg border border-slate-200/85 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all duration-200 group cursor-pointer text-xs font-bold"
-              title={language === 'en' ? 'Toggle Theme' : 'Ubah Tema'}
-            >
-              {effectiveIsDarkMode ? (
-                <>
-                  <IconSun className="h-[15px] w-[15px] text-amber-500 shrink-0" />
-                  <span className="ml-1 text-[10px] leading-none">{language === 'en' ? 'Light' : 'Terang'}</span>
-                </>
-              ) : (
-                <>
-                  <IconMoon className="h-[15px] w-[15px] text-indigo-500 shrink-0" />
-                  <span className="ml-1 text-[10px] leading-none">{language === 'en' ? 'Dark' : 'Gelap'}</span>
-                </>
-              )}
-            </button>
-          </div>
-        ) : (
-          /* Collapsed state row stack */
-          <div className="flex flex-col items-center gap-2.5">
-            {role === 'admin' && (
-              <button
-                onClick={() => {
-                  setActiveView('settings');
-                  onToggle(); // expand sidebar if collapsed to see settings list
-                }}
-                className={`flex items-center justify-center w-full aspect-square rounded-lg transition-all duration-200 relative group cursor-pointer ${
-                  activeView === 'settings' || ['admin-pricing', 'admin-models', 'admin-gateways'].includes(activeDashboardTab || '')
-                    ? 'text-indigo-700 bg-indigo-50/70'
-                    : 'text-slate-400 hover:bg-slate-100/80 hover:text-slate-900'
-                }`}
-                title={language === 'en' ? 'Settings' : 'Pengaturan'}
-              >
-                <IconSettings className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
-              </button>
-            )}
-
-            {/* Language toggle (collapsed) */}
-            <button
-              onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
-              className="flex items-center justify-center w-full aspect-square rounded-lg bg-transparent text-slate-400 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 relative group"
-              title={language === 'en' ? 'Switch to Indonesian' : 'Ubah ke Bahasa Indonesia'}
-            >
-              <IconLanguage className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
-            </button>
-
-            {/* Dark Mode toggle (collapsed) */}
-            <button
-              onClick={handleToggleDarkMode}
-              className="flex items-center justify-center w-full aspect-square rounded-lg bg-transparent text-slate-400 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 relative group"
-              title={language === 'en' ? 'Toggle Theme' : 'Ubah Tema'}
-            >
-              {effectiveIsDarkMode ? (
-                <IconSun className="h-5 w-5 text-amber-500 transition-transform duration-200 group-hover:scale-105" />
-              ) : (
-                <IconMoon className="h-5 w-5 text-indigo-500 transition-transform duration-200 group-hover:scale-105" />
-              )}
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* User profile + logout at the bottom */}
-      <div className="border-t border-slate-200/60 p-3">
-        {isEffectiveExpanded ? (
-          <div className="flex items-center gap-2.5">
-            {/* Avatar & Info (Clickable to Settings) */}
-            <button 
-              onClick={() => router.push('/settings')}
-              className="flex-1 flex items-center gap-2.5 min-w-0 text-left hover:bg-slate-100/50 p-1.5 rounded-lg transition-colors cursor-pointer"
-              title={language === 'en' ? 'Account Settings' : 'Pengaturan Akun'}
-            >
-              {/* Avatar */}
-              <div className="h-8 w-8 flex-shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                {initials}
-              </div>
-              {/* Name + email + role badge */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <p className="text-xs font-semibold text-slate-700 truncate">{displayName}</p>
-                  <span className={`flex-shrink-0 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
-                    role === 'admin'
-                      ? 'bg-indigo-100 text-indigo-600'
-                      : 'bg-slate-100 text-slate-500'
-                  }`}>
-                    {role}
+                {/* Language toggle */}
+                <button
+                  type="button"
+                  onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
+                  className="flex items-center justify-center flex-1 py-2 px-1 rounded-lg border border-slate-200/85 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition-all duration-200 group cursor-pointer text-xs font-bold"
+                  title={language === 'en' ? 'Switch to Indonesian' : 'Ubah ke Bahasa Indonesia'}
+                >
+                  <IconLanguage className="h-[15px] w-[15px] text-slate-500 dark:text-slate-400 shrink-0" />
+                  <span className="ml-1 text-[10px] leading-none">
+                    {language === 'en' ? 'EN' : 'ID'}
                   </span>
-                </div>
-                <p className="text-[10px] text-slate-400 truncate">{user?.email}</p>
+                </button>
+
+                {/* Dark Mode toggle */}
+                <button
+                  type="button"
+                  onClick={handleToggleDarkMode}
+                  className="flex items-center justify-center flex-1 py-2 px-1 rounded-lg border border-slate-200/85 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition-all duration-200 group cursor-pointer text-xs font-bold"
+                  title={language === 'en' ? 'Toggle Theme' : 'Ubah Tema'}
+                >
+                  {effectiveIsDarkMode ? (
+                    <>
+                      <IconSun className="h-[15px] w-[15px] text-amber-500 shrink-0" />
+                      <span className="ml-1 text-[10px] leading-none">{language === 'en' ? 'Light' : 'Terang'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <IconMoon className="h-[15px] w-[15px] text-indigo-500 dark:text-indigo-400 shrink-0" />
+                      <span className="ml-1 text-[10px] leading-none">{language === 'en' ? 'Dark' : 'Gelap'}</span>
+                    </>
+                  )}
+                </button>
               </div>
-            </button>
-            {/* Logout button */}
-            <button
-              type="button"
-              title="Sign out"
-              aria-label="Sign out"
-              onClick={handleLogout}
-              className="p-1.5 rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors duration-200 flex-shrink-0 cursor-pointer"
-            >
-              <IconLogout className="h-4 w-4" />
-            </button>
+            ) : (
+              /* Collapsed state row stack */
+              <div className="flex flex-col items-center gap-2.5">
+                {role === 'admin' && (
+                  <button
+                    onClick={() => {
+                      setActiveView('settings');
+                      onToggle(); // expand sidebar if collapsed to see settings list
+                    }}
+                    className={`flex items-center justify-center w-full aspect-square rounded-lg transition-all duration-200 relative group cursor-pointer ${
+                      activeView === 'settings' || ['admin-pricing', 'admin-models', 'admin-gateways'].includes(activeDashboardTab || '')
+                        ? 'text-indigo-700 bg-indigo-50/70'
+                        : 'text-slate-400 hover:bg-slate-100/80 hover:text-slate-900'
+                    }`}
+                    title={language === 'en' ? 'Settings' : 'Pengaturan'}
+                  >
+                    <IconSettings className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
+                  </button>
+                )}
+
+                {/* Language toggle (collapsed) */}
+                <button
+                  onClick={() => setLanguage(language === 'en' ? 'id' : 'en')}
+                  className="flex items-center justify-center w-full aspect-square rounded-lg bg-transparent text-slate-400 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 relative group"
+                  title={language === 'en' ? 'Switch to Indonesian' : 'Ubah ke Bahasa Indonesia'}
+                >
+                  <IconLanguage className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
+                </button>
+
+                {/* Dark Mode toggle (collapsed) */}
+                <button
+                  onClick={handleToggleDarkMode}
+                  className="flex items-center justify-center w-full aspect-square rounded-lg bg-transparent text-slate-400 hover:bg-slate-100/80 hover:text-slate-900 cursor-pointer transition-all duration-200 relative group"
+                  title={language === 'en' ? 'Toggle Theme' : 'Ubah Tema'}
+                >
+                  {effectiveIsDarkMode ? (
+                    <IconSun className="h-5 w-5 text-amber-500 transition-transform duration-200 group-hover:scale-105" />
+                  ) : (
+                    <IconMoon className="h-5 w-5 text-indigo-500 transition-transform duration-200 group-hover:scale-105" />
+                  )}
+                </button>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="flex flex-col items-center gap-2">
-            {/* Avatar (Clickable to Settings) */}
-            <button
-              onClick={() => router.push('/settings')}
-              title={language === 'en' ? 'Account Settings' : 'Pengaturan Akun'}
-              className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold shadow-sm cursor-pointer hover:ring-2 hover:ring-indigo-300 transition-all"
-            >
-              {initials}
-            </button>
-            {/* Logout button (collapsed) */}
-            <button
-              type="button"
-              title="Sign out"
-              aria-label="Sign out"
-              onClick={handleLogout}
-              className="p-1.5 rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors duration-200 cursor-pointer"
-            >
-              <IconLogout className="h-4 w-4" />
-            </button>
+
+          {/* User profile + logout at the bottom */}
+          <div className="border-t border-slate-200/60 dark:border-slate-800 p-3">
+            {isEffectiveExpanded ? (
+              <div className="flex items-center gap-2.5">
+                {/* Avatar & Info (Clickable to Settings) */}
+                <button 
+                  onClick={() => router.push('/settings')}
+                  className="flex-1 flex items-center gap-2.5 min-w-0 text-left hover:bg-slate-100/50 dark:hover:bg-slate-800/50 p-1.5 rounded-lg transition-colors cursor-pointer"
+                  title={language === 'en' ? 'Account Settings' : 'Pengaturan Akun'}
+                >
+                  {/* Avatar */}
+                  <div className="h-8 w-8 flex-shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                    {initials}
+                  </div>
+                  {/* Name + email + role badge */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">{displayName}</p>
+                      <span className={`flex-shrink-0 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
+                        role === 'admin'
+                          ? 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                      }`}>
+                        {role}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{user?.email}</p>
+                  </div>
+                </button>
+                {/* Logout button */}
+                <button
+                  type="button"
+                  title="Sign out"
+                  aria-label="Sign out"
+                  onClick={handleLogout}
+                  className="p-1.5 rounded-md text-slate-400 hover:bg-red-50 dark:hover:bg-red-950/50 hover:text-red-500 transition-colors duration-200 flex-shrink-0 cursor-pointer"
+                >
+                  <IconLogout className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                {/* Avatar (Clickable to Settings) */}
+                <button
+                  onClick={() => router.push('/settings')}
+                  title={language === 'en' ? 'Account Settings' : 'Pengaturan Akun'}
+                  className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold shadow-sm cursor-pointer hover:ring-2 hover:ring-indigo-300 transition-all"
+                >
+                  {initials}
+                </button>
+                {/* Logout button (collapsed) */}
+                <button
+                  type="button"
+                  title="Sign out"
+                  aria-label="Sign out"
+                  onClick={handleLogout}
+                  className="p-1.5 rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors duration-200 cursor-pointer"
+                >
+                  <IconLogout className="h-4 w-4" />
+                </button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
       {/* Document Delete Confirmation Modal */}
       <ConfirmModal
         isOpen={!!documentToDelete}
@@ -600,8 +599,6 @@ export function MinimalSidebar({
         cancelText={language === 'en' ? 'Cancel' : 'Batal'}
         type="danger"
       />
-      </>
-      )}
     </aside>
   );
 }

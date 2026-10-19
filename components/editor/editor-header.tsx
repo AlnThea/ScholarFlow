@@ -87,53 +87,78 @@ export const EditorHeader = ({
   const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   return (
-    <header className="flex items-center justify-between border-b border-slate-100 bg-white/95 px-6 py-3 lg:sticky lg:top-0 z-30 backdrop-blur whitespace-nowrap">
-      <div className="w-full flex items-center gap-3">
-        {!isSidebarExpanded && (
-          <button
-            type="button"
-            aria-label="Menu"
-            className="p-1.5 rounded-md hover:bg-slate-100/80 transition text-slate-500 hover:text-slate-800"
-            style={{ background: 'transparent' }}
-            onClick={toggleSidebar}
-          >
-            <IconMenu className="h-5 w-5" />
-          </button>
-        )}
-        <input
-          type="text"
-          placeholder="Untitled Document"
-          value={currentDocument?.title || ''}
-          onChange={(e) => onRenameDocument(e.target.value)}
-          className="w-full border-b border-transparent focus:border-indigo-400 text-base font-semibold text-slate-800 outline-none bg-transparent px-1 py-0.5 transition"
-        />
-      </div>
-      <div className="flex items-center gap-2">
-        {/* Live Hybrid Sync Engine Status Chip */}
-        <div
-          data-tour="header-sync-status"
-          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50/80 border border-emerald-200/80 text-emerald-700 text-[10px] font-bold cursor-help"
-          title={
-            backendType === 'express'
-              ? (language === 'en' ? 'Sync Engine: Express Smart HTTP Polling (3s/15s adaptive) • Page Visibility active' : 'Sync Engine: Express Smart HTTP Polling (3s/15s adaptif) • Page Visibility aktif')
-              : (language === 'en' ? 'Sync Engine: Supabase Realtime WebSocket • Auto-failover 3x ready • Page Visibility active' : 'Sync Engine: Supabase Realtime WebSocket • Auto-failover 3x aktif • Page Visibility aktif')
-          }
+    <header className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 px-6 py-2.5 lg:sticky lg:top-0 z-30 backdrop-blur whitespace-nowrap transition-colors">
+      <div className="flex items-center gap-2.5 flex-1 min-w-0 pr-4">
+        <button
+          type="button"
+          aria-label="Menu"
+          className="p-1.5 rounded-md hover:bg-slate-100/80 dark:hover:bg-slate-800 transition text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white shrink-0 cursor-pointer"
+          style={{ background: 'transparent' }}
+          onClick={toggleSidebar}
+          title={language === 'en' ? 'Toggle Sidebar' : 'Buka/Tutup Sidebar'}
         >
-          {backendType === 'express' ? (
-            <>
-              <IconRefresh className="h-3 w-3 text-emerald-600 animate-spin-slow" />
-              <span>{language === 'en' ? 'Smart Polling' : 'Smart Polling'}</span>
-            </>
-          ) : (
-            <>
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span>{language === 'en' ? 'Realtime WS' : 'Realtime WS'}</span>
-            </>
-          )}
+          <IconMenu className="h-5 w-5" />
+        </button>
+
+        {/* Icon Dokumen Microsoft Word [W] */}
+        <div className="w-7 h-7 rounded bg-[#185abd] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-xs select-none" title="Word Document">
+          W
         </div>
+
+        {/* Container 2 Tingkat: Judul Naskah (Atas) & Status Cloud (Bawah) */}
+        <div className="flex flex-col min-w-0 flex-1">
+          {/* Baris 1: Judul Naskah Utama & Chip Status Realtime WS */}
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder={language === 'en' ? 'Untitled Document' : 'Dokumen Tanpa Judul'}
+              value={currentDocument?.title || ''}
+              onChange={(e) => onRenameDocument(e.target.value)}
+              className="w-full min-w-[180px] sm:min-w-[220px] max-w-xl border-b border-transparent hover:border-slate-300 dark:hover:border-slate-700 focus:border-indigo-400 text-sm font-bold text-slate-900 dark:text-white outline-none bg-transparent px-1 py-0.5 transition truncate"
+              title={language === 'en' ? 'Click to rename document' : 'Klik untuk mengubah judul dokumen'}
+            />
+
+            {/* Live Hybrid Sync Engine Status Chip */}
+            <div
+              data-tour="header-sync-status"
+              className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold cursor-help shrink-0"
+              title={
+                backendType === 'express'
+                  ? (language === 'en' ? 'Sync Engine: Express Smart HTTP Polling (3s/15s adaptive) • Page Visibility active' : 'Sync Engine: Express Smart HTTP Polling (3s/15s adaptif) • Page Visibility aktif')
+                  : (language === 'en' ? 'Sync Engine: Supabase Realtime WebSocket • Auto-failover 3x ready • Page Visibility active' : 'Sync Engine: Supabase Realtime WebSocket • Auto-failover 3x aktif • Page Visibility aktif')
+              }
+            >
+              {backendType === 'express' ? (
+                <>
+                  <IconRefresh className="h-3 w-3 text-emerald-600 animate-spin-slow" />
+                  <span>{language === 'en' ? 'Smart Polling' : 'Smart Polling'}</span>
+                </>
+              ) : (
+                <>
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  <span>{language === 'en' ? 'Realtime WS' : 'Realtime WS'}</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Baris 2: Tulisan Kecil di Bawah Judul (Status Simpan Cloud & Terakhir Diedit) */}
+          <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 px-1 pt-0.5 select-none">
+            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+              <span>☁️</span>
+              <span>{language === 'en' ? 'Saved to Cloud' : 'Tersimpan otomatis ke Cloud'}</span>
+            </span>
+            <span>•</span>
+            <span className="text-slate-400 dark:text-slate-500">
+              {language === 'en' ? 'Last edited just now' : 'Terakhir diedit baru saja'}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
 
         {/* Academic Command Palette (Ctrl+K) Quick Search Button with Rich Tooltip */}
         {onOpenCommandPalette && (
@@ -147,7 +172,7 @@ export const EditorHeader = ({
                 : 'Palet Perintah Spotlight (Ctrl+K): Klik untuk mencari dan membuka fitur apapun, sitasi, Reviewer #2, atau pengaturan.'}
             >
               <IconSearch className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
-              <span className="text-[11px] font-medium text-slate-600 dark:text-slate-350">
+              <span className="hidden xl:inline text-[11px] font-medium text-slate-600 dark:text-slate-350">
                 {language === 'en' ? 'Search features, AI, citations...' : 'Cari fitur, AI, sitasi...'}
               </span>
               <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.2 text-[9px] font-mono font-bold rounded bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-200 border border-slate-300/60 dark:border-slate-600 shadow-2xs">
@@ -170,18 +195,18 @@ export const EditorHeader = ({
           </div>
         )}
 
-        <div className="flex items-center gap-0.5 bg-slate-100/80 p-0.5 rounded-lg border border-slate-200/50">
+        <div className="flex items-center gap-0.5 bg-slate-100/80 dark:bg-slate-800/80 p-0.5 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
           {/* Export Dropdown */}
           <div className="relative" data-tour="header-export">
             <button
               disabled={isExporting || isExportingPdf}
               onClick={() => setShowExportDropdown(prev => !prev)}
-              className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-slate-650 hover:bg-white hover:text-slate-800 disabled:opacity-70 disabled:cursor-not-allowed transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-slate-650 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-white disabled:opacity-70 disabled:cursor-not-allowed transition cursor-pointer"
             >
               {isExporting || isExportingPdf ? (
                 <IconLoader className="h-3.5 w-3.5 text-indigo-500 animate-spin" />
               ) : (
-                <IconDownload className="h-3.5 w-3.5 text-slate-500" />
+                <IconDownload className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
               )}
               {isExporting || isExportingPdf ? (
                 language === 'en' ? 'Exporting...' : 'Mengekspor...'
@@ -194,7 +219,7 @@ export const EditorHeader = ({
             {showExportDropdown && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowExportDropdown(false)} />
-                <div className="absolute right-0 mt-2 w-56 rounded-lg border border-slate-200/80 bg-white py-1 shadow-[0_10px_35px_rgba(0,0,0,0.08)] z-50 animate-scale-in">
+                <div className="absolute right-0 mt-2 w-56 rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 py-1 shadow-[0_10px_35px_rgba(0,0,0,0.15)] z-50 animate-scale-in">
                   {/* Document Exporters */}
                   <div className="px-3 py-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
                     {language === 'en' ? 'Document' : 'Dokumen'}
@@ -224,7 +249,7 @@ export const EditorHeader = ({
                         setIsExporting(false);
                       }
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-650 hover:bg-slate-50 transition cursor-pointer"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-650 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 transition cursor-pointer"
                   >
                     <IconFileWord className="h-4 w-4 text-blue-500 shrink-0" />
                     <span>Microsoft Word (.docx)</span>
@@ -254,7 +279,7 @@ export const EditorHeader = ({
                         setIsExportingPdf(false);
                       }
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-650 hover:bg-slate-50 transition cursor-pointer"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-650 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 transition cursor-pointer"
                   >
                     <IconFilePdf className="h-4 w-4 text-red-500 shrink-0" />
                     <span>PDF Document (.pdf)</span>
@@ -267,7 +292,7 @@ export const EditorHeader = ({
                         setShowExportDropdown(false);
                         onOpenLatexExport();
                       }}
-                      className="w-full flex items-center justify-between px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer group"
+                      className="w-full flex items-center justify-between px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 transition cursor-pointer group"
                       title={language === 'en' 
                         ? 'LaTeX & Journal Package: Export manuscript to .tex + .bib zip package with IEEE, Elsevier, or ACM templates for Overleaf.' 
                         : 'Paket LaTeX & Jurnal: Ekspor naskah menjadi paket .tex + .bib zip siap kompilasi Overleaf standar IEEE, Elsevier, atau ACM.'}
@@ -283,14 +308,14 @@ export const EditorHeader = ({
                   )}
 
                   {/* Divider */}
-                  <div className="h-px bg-slate-100 my-1" />
+                  <div className="h-px bg-slate-100 dark:bg-slate-700 my-1" />
 
                   {/* Bibliography Exporters */}
                   <div className="px-3 py-1.5 flex items-center justify-between">
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
                       {language === 'en' ? 'Bibliography' : 'Daftar Pustaka'}
                     </span>
-                    <span className="text-[9px] bg-slate-100 text-slate-500 font-semibold px-1.5 py-0.2 rounded-full shrink-0">
+                    <span className="text-[9px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 font-semibold px-1.5 py-0.2 rounded-full shrink-0">
                       {bibliographyEntries.length}
                     </span>
                   </div>
@@ -304,7 +329,7 @@ export const EditorHeader = ({
                       }
                     }}
                     disabled={bibliographyEntries.length === 0}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-650 hover:bg-slate-50 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-650 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <IconFileText className="h-4 w-4 text-slate-500 shrink-0" />
                     <span>Plain Text (.txt)</span>
@@ -319,7 +344,7 @@ export const EditorHeader = ({
                       }
                     }}
                     disabled={bibliographyEntries.length === 0}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-650 hover:bg-slate-50 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-650 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <IconBraces className="h-4 w-4 text-amber-500 shrink-0" />
                     <span>JSON Format (.json)</span>
@@ -334,7 +359,7 @@ export const EditorHeader = ({
                       }
                     }}
                     disabled={bibliographyEntries.length === 0}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-650 hover:bg-slate-50 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-650 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <IconBook className="h-4 w-4 text-indigo-500 shrink-0" />
                     <span>BibTeX Format (.bib)</span>
@@ -349,7 +374,7 @@ export const EditorHeader = ({
                       }
                     }}
                     disabled={bibliographyEntries.length === 0}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-650 hover:bg-slate-50 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-650 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <IconDatabase className="h-4 w-4 text-emerald-500 shrink-0" />
                     <span>RIS Format (.ris)</span>
@@ -360,17 +385,17 @@ export const EditorHeader = ({
           </div>
 
           {/* Divider */}
-          <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
+          <div className="h-4 w-px bg-slate-200/80 dark:bg-slate-700 mx-0.5" />
 
           {/* Notification Bell */}
           <div className="relative">
             <button
               data-tour="header-notifications"
               onClick={() => setShowNotificationsDropdown(prev => !prev)}
-              className="inline-flex items-center justify-center rounded-md p-1.5 text-slate-550 hover:bg-white hover:text-slate-800 transition cursor-pointer relative"
+              className="inline-flex items-center justify-center rounded-md p-1.5 text-slate-550 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-white transition cursor-pointer relative"
               title={language === 'en' ? 'Notifications' : 'Notifikasi'}
             >
-              <IconBell className="h-4.5 w-4.5 text-slate-550" />
+              <IconBell className="h-4.5 w-4.5 text-slate-550 dark:text-slate-400" />
               {notifications.filter(n => !n.read).length > 0 && (
                 <span className="absolute top-1 right-1 flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -382,9 +407,9 @@ export const EditorHeader = ({
             {showNotificationsDropdown && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowNotificationsDropdown(false)} />
-                <div className="absolute right-0 mt-2 w-80 rounded-xl border border-slate-200 bg-white py-2 shadow-2xl z-50 animate-scale-in max-h-96 overflow-y-auto">
-                  <div className="flex items-center justify-between px-4 py-2 border-b border-slate-100">
-                    <h4 className="text-xs font-bold text-slate-800">
+                <div className="absolute right-0 mt-2 w-80 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-2 shadow-2xl z-50 animate-scale-in max-h-96 overflow-y-auto">
+                  <div className="flex items-center justify-between px-4 py-2 border-b border-slate-100 dark:border-slate-700">
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-white">
                       {language === 'en' ? 'Notifications' : 'Notifikasi'}
                     </h4>
                     {notifications.filter(n => !n.read).length > 0 && (
@@ -392,13 +417,13 @@ export const EditorHeader = ({
                         onClick={() => {
                           onMarkAllNotificationsRead?.();
                         }}
-                        className="text-[10px] font-semibold text-indigo-650 hover:underline cursor-pointer"
+                        className="text-[10px] font-semibold text-indigo-650 dark:text-indigo-400 hover:underline cursor-pointer"
                       >
                         {language === 'en' ? 'Mark all as read' : 'Tandai semua dibaca'}
                       </button>
                     )}
                   </div>
-                  <div className="divide-y divide-slate-50">
+                  <div className="divide-y divide-slate-50 dark:divide-slate-700">
                     {notifications.length === 0 ? (
                       <div className="px-4 py-8 text-center text-xs text-slate-400">
                         {language === 'en' ? 'No new notifications' : 'Tidak ada notifikasi baru'}
@@ -412,12 +437,12 @@ export const EditorHeader = ({
                             onNotificationClick?.(notif);
                             setShowNotificationsDropdown(false);
                           }}
-                          className={`px-4 py-3 text-left hover:bg-slate-50 transition cursor-pointer flex gap-3 items-start ${!notif.read ? 'bg-indigo-50/10' : ''}`}
+                          className={`px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700/60 transition cursor-pointer flex gap-3 items-start ${!notif.read ? 'bg-indigo-50/10 dark:bg-indigo-950/20' : ''}`}
                         >
                           <span className={`h-1.5 w-1.5 rounded-full mt-1.5 shrink-0 ${!notif.read ? 'bg-indigo-500' : 'bg-transparent'}`} />
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs text-slate-700 leading-normal whitespace-normal break-words">
-                              <span className="font-semibold text-slate-850">{notif.sender_name}</span> {notif.message}
+                            <p className="text-xs text-slate-700 dark:text-slate-200 leading-normal whitespace-normal break-words">
+                              <span className="font-semibold text-slate-850 dark:text-white">{notif.sender_name}</span> {notif.message}
                             </p>
                             <span className="text-[9px] text-slate-400 mt-1 block">
                               {new Date(notif.created_at).toLocaleDateString(language === 'en' ? 'en-US' : 'id-ID', {
@@ -436,7 +461,7 @@ export const EditorHeader = ({
           </div>
 
           {/* Divider */}
-          <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
+          <div className="h-4 w-px bg-slate-200/80 dark:bg-slate-700 mx-0.5" />
 
           {/* Share Button (Hidden for Free tier) */}
           {(activePlanId !== 'free' || role === 'admin') && (
@@ -444,14 +469,14 @@ export const EditorHeader = ({
               <button
                 data-tour="header-share"
                 onClick={() => setIsShareOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-slate-650 hover:bg-white hover:text-slate-800 transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-slate-650 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-white transition cursor-pointer"
               >
-                <IconShare className="h-3.5 w-3.5 text-slate-500" />
+                <IconShare className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
                 {language === 'en' ? 'Share' : 'Bagikan'}
               </button>
 
               {/* Divider */}
-              <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
+              <div className="h-4 w-px bg-slate-200/80 dark:bg-slate-700 mx-0.5" />
             </>
           )}
 
@@ -466,31 +491,31 @@ export const EditorHeader = ({
           />
 
           {/* Divider */}
-          <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
+          <div className="h-4 w-px bg-slate-200/80 dark:bg-slate-700 mx-0.5" />
 
           {/* Pricing Button */}
           <button
             onClick={() => setIsPricingOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-slate-650 hover:bg-white hover:text-slate-800 transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-slate-650 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-white transition cursor-pointer"
           >
-            <IconCreditCard className="h-3.5 w-3.5 text-slate-500" />
+            <IconCreditCard className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
             {language === 'en' ? 'Pricing' : 'Langganan'}
           </button>
 
           {/* Divider */}
-          <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
+          <div className="h-4 w-px bg-slate-200/80 dark:bg-slate-700 mx-0.5" />
 
           {/* Research Assistant Button */}
           <button
             data-tour="header-research-assistant"
             onClick={() => setShowRightSidebar(prev => !prev)}
             className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition cursor-pointer ${showRightSidebar
-              ? 'bg-white text-indigo-750 shadow-sm font-bold'
-              : 'text-slate-650 hover:bg-white hover:text-slate-800'
+              ? 'bg-white dark:bg-slate-700 text-indigo-750 dark:text-indigo-400 shadow-sm font-bold'
+              : 'text-slate-650 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-white'
               }`}
             title={language === 'en' ? 'Toggle Research Assistant Panel' : 'Toggle Bilah Asisten Riset'}
           >
-            <IconLayoutSidebarRightCollapse className={`h-3.5 w-3.5 ${showRightSidebar ? 'text-indigo-650' : 'text-slate-500'}`} />
+            <IconLayoutSidebarRightCollapse className={`h-3.5 w-3.5 ${showRightSidebar ? 'text-indigo-650 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400'}`} />
             {language === 'en' ? 'Research Assistant' : 'Asisten Riset'}
           </button>
 
@@ -532,11 +557,11 @@ export const EditorHeader = ({
           {currentDocument && onOpenSettings && (
             <>
               {/* Divider */}
-              <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
+              <div className="h-4 w-px bg-slate-200/80 dark:bg-slate-700 mx-0.5" />
               <button
                 type="button"
                 onClick={onOpenSettings}
-                className="p-1.5 rounded-md hover:bg-white text-slate-500 hover:text-slate-800 transition cursor-pointer flex items-center justify-center shrink-0"
+                className="p-1.5 rounded-md hover:bg-white dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition cursor-pointer flex items-center justify-center shrink-0"
                 title={language === 'en' ? 'Document & Research Settings' : 'Pengaturan Dokumen & Riset'}
               >
                 <IconSettings className="h-4 w-4" />
@@ -548,11 +573,11 @@ export const EditorHeader = ({
           {onOpenShortcuts && (
             <>
               {/* Divider */}
-              <div className="h-4 w-px bg-slate-200/80 mx-0.5" />
+              <div className="h-4 w-px bg-slate-200/80 dark:bg-slate-700 mx-0.5" />
               <button
                 type="button"
                 onClick={onOpenShortcuts}
-                className="p-1.5 rounded-md hover:bg-white text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white transition cursor-pointer flex items-center justify-center shrink-0"
+                className="p-1.5 rounded-md hover:bg-white dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition cursor-pointer flex items-center justify-center shrink-0"
                 title={language === 'en' ? 'Keyboard Shortcuts Cheat Sheet (?)' : 'Panduan Pintasan Keyboard (?)'}
               >
                 <IconKeyboard className="h-4 w-4" />

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   IconFilter, IconRefresh, IconArrowRight, IconQuote, IconWand, IconChevronLeft
 } from '@tabler/icons-react';
@@ -57,13 +57,33 @@ export function SentenceRhythmExplorer({
   onClose
 }: { 
   content: string;
-  onClose: () => void;
+  onClose?: () => void;
 }) {
   const { language } = useLanguage();
   const isEn = language === 'en';
   const [filter, setFilter] = useState<'all' | 'short' | 'standard' | 'long'>('all');
+  const [internalText, setInternalText] = useState(content || '');
 
-  const sentences = useMemo(() => extractSentences(content), [content]);
+  useEffect(() => {
+    if (content) {
+      setInternalText(content);
+    }
+  }, [content]);
+
+  const handleAnalyzeEntireDoc = () => {
+    const blocks = document.querySelectorAll('.ce-paragraph, .ce-header, .cdx-block');
+    const texts: string[] = [];
+    blocks.forEach((el) => {
+      const t = el.textContent?.trim();
+      if (t) texts.push(t);
+    });
+    const full = texts.join(' ');
+    if (full.trim()) {
+      setInternalText(full);
+    }
+  };
+
+  const sentences = useMemo(() => extractSentences(internalText), [internalText]);
 
   const filteredSentences = useMemo(() => {
     if (filter === 'all') return sentences;
@@ -83,7 +103,7 @@ export function SentenceRhythmExplorer({
 
   const getCategoryBgOnly = (cat: string) => {
     switch(cat) {
-      case 'short': return 'bg-cyan-400';
+      case 'short': return 'bg-cyan-500';
       case 'standard': return 'bg-blue-500';
       case 'long': return 'bg-indigo-600';
       case 'complex': return 'bg-purple-600';
@@ -95,105 +115,181 @@ export function SentenceRhythmExplorer({
   const stdCount = sentences.filter(s => s.category === 'standard').length;
   const longCount = sentences.filter(s => s.category === 'long' || s.category === 'complex').length;
 
+  const handleSentenceClick = (s: SentenceToken) => {
+    const blocks = document.querySelectorAll('.ce-paragraph, .ce-header');
+    for (const block of Array.from(blocks)) {
+      if (block.textContent?.includes(s.text)) {
+        block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        block.classList.add('bg-amber-100', 'dark:bg-amber-900/30', 'transition-colors', 'duration-500');
+        setTimeout(() => {
+          block.classList.remove('bg-amber-100', 'dark:bg-amber-900/30');
+        }, 2000);
+        break;
+      }
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-900 overflow-hidden w-[350px]">
-      <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
+    <div className="flex flex-col h-full w-full bg-white dark:bg-slate-900 overflow-hidden">
+      {/* Header bar matching mockup */}
+      <div className="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-850/40">
         <div className="flex flex-col">
-          <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200">Sentence Rhythm Explorer</h2>
+          <h2 className="text-xs font-bold text-slate-900 dark:text-white">Sentence Rhythm Explorer</h2>
           <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold mt-0.5 tracking-wider">
             {isEn ? `Showing ${filteredSentences.length} of ${sentences.length}` : `Menampilkan ${filteredSentences.length} dari ${sentences.length}`}
           </span>
         </div>
-        <button onClick={onClose} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors text-slate-500">
-          <IconChevronLeft className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={handleAnalyzeEntireDoc}
+            className="text-[10px] font-bold px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer shadow-2xs"
+            title={isEn ? "Analyze all sentences in current document" : "Analisis semua kalimat dalam naskah"}
+          >
+            {isEn ? 'All Doc' : 'Semua Naskah'}
+          </button>
+          {onClose && (
+            <button 
+              type="button"
+              onClick={onClose} 
+              className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+              title={isEn ? "Close / Back to Documents" : "Tutup / Kembali ke Dokumen"}
+            >
+              <IconChevronLeft className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50/50 dark:bg-slate-800/20">
-        <div className="flex flex-col gap-2">
-          <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Cadence Ribbon (Click to jump)</span>
-          <div className="flex items-center gap-1 overflow-x-auto pb-1 thin-scroll">
-            {sentences.map(s => (
-              <button 
-                key={s.id}
-                title={`${s.wordCount} words`}
-                className={`w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-sm text-[9px] font-bold text-white transition-opacity hover:opacity-80 ${getCategoryBgOnly(s.category)}`}
-              >
-                {s.index}
-              </button>
-            ))}
+      {/* Cadence Ribbon and Filter Pills */}
+      <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50/50 dark:bg-slate-850/20">
+        {/* Cadence Ribbon (Click to Jump) */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">
+            {isEn ? 'Cadence Ribbon (Click to jump):' : 'Pita Ritme (Klik untuk lompat):'}
+          </span>
+          <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+            {sentences.length === 0 ? (
+              <span className="text-[11px] text-slate-400 italic py-0.5">
+                {isEn ? 'Select text or click "All Doc" to inspect rhythm...' : 'Blok teks atau klik "Semua Naskah" untuk melihat pita ritme...'}
+              </span>
+            ) : (
+              sentences.map(s => (
+                <button 
+                  key={s.id}
+                  type="button"
+                  onClick={() => handleSentenceClick(s)}
+                  title={isEn ? `Sentence ${s.index} (${s.wordCount} words - ${s.category})` : `Kalimat ${s.index} (${s.wordCount} kata - ${s.category})`}
+                  className={`w-6 h-6 flex-shrink-0 flex items-center justify-center rounded-md text-[10px] font-bold text-white transition-all hover:scale-110 cursor-pointer shadow-xs ${getCategoryBgOnly(s.category)}`}
+                >
+                  {s.index}
+                </button>
+              ))
+            )}
           </div>
         </div>
 
-        <div className="mt-3 flex items-center gap-1 text-[10px] font-medium overflow-x-auto pb-1 thin-scroll">
+        {/* Filter Pills with Flex-Wrap (Row Wrap) */}
+        <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[10px] font-medium">
           <button 
+            type="button"
             onClick={() => setFilter('all')}
-            className={`px-2 py-1 rounded-full border whitespace-nowrap transition-colors ${filter === 'all' ? 'bg-slate-800 text-white border-slate-800 dark:bg-slate-200 dark:text-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'}`}
+            className={`px-2.5 py-1 rounded-full border whitespace-nowrap transition-all cursor-pointer font-semibold shadow-2xs ${
+              filter === 'all' 
+                ? 'bg-slate-900 text-white border-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:border-slate-100' 
+                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
+            }`}
           >
-            All ({sentences.length})
+            {isEn ? `All (${sentences.length})` : `Semua (${sentences.length})`}
           </button>
           <button 
+            type="button"
             onClick={() => setFilter('short')}
-            className={`px-2 py-1 rounded-full border whitespace-nowrap transition-colors ${filter === 'short' ? 'bg-cyan-100 text-cyan-800 border-cyan-300 dark:bg-cyan-900/50' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'}`}
+            className={`px-2.5 py-1 rounded-full border whitespace-nowrap transition-all cursor-pointer font-semibold shadow-2xs ${
+              filter === 'short' 
+                ? 'bg-cyan-500 text-white border-cyan-500 shadow-cyan-500/20' 
+                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
+            }`}
           >
-            Short ≤10w ({shortCount})
+            {isEn ? `Short ≤10w (${shortCount})` : `Pendek ≤10k (${shortCount})`}
           </button>
           <button 
+            type="button"
             onClick={() => setFilter('standard')}
-            className={`px-2 py-1 rounded-full border whitespace-nowrap transition-colors ${filter === 'standard' ? 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/50' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'}`}
+            className={`px-2.5 py-1 rounded-full border whitespace-nowrap transition-all cursor-pointer font-semibold shadow-2xs ${
+              filter === 'standard' 
+                ? 'bg-blue-600 text-white border-blue-600 shadow-blue-500/20' 
+                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
+            }`}
           >
-            Standard 11-24w ({stdCount})
+            {isEn ? `Standard 11-24w (${stdCount})` : `Standar 11-24k (${stdCount})`}
           </button>
           <button 
+            type="button"
             onClick={() => setFilter('long')}
-            className={`px-2 py-1 rounded-full border whitespace-nowrap transition-colors ${filter === 'long' ? 'bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-900/50' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'}`}
+            className={`px-2.5 py-1 rounded-full border whitespace-nowrap transition-all cursor-pointer font-semibold shadow-2xs ${
+              filter === 'long' 
+                ? 'bg-indigo-600 text-white border-indigo-600 shadow-indigo-500/20' 
+                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
+            }`}
           >
-            Long 25w+ ({longCount})
+            {isEn ? `Long 25w+ (${longCount})` : `Panjang 25k+ (${longCount})`}
           </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/30 dark:bg-slate-900/50 thin-scroll">
+      {/* Sentence Cards List */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-2.5 bg-slate-50/30 dark:bg-slate-900/50 thin-scroll">
         {filteredSentences.length === 0 ? (
-          <div className="text-center p-6 text-slate-400 text-xs italic">
-            {isEn ? "No sentences found. Try selecting text in the editor." : "Tidak ada kalimat ditemukan. Blok/pilih teks di editor terlebih dahulu."}
+          <div className="p-6 text-center text-slate-400 dark:text-slate-500 text-xs border border-dashed border-slate-200 dark:border-slate-800 rounded-xl space-y-3">
+            <p className="leading-relaxed">
+              {isEn 
+                ? "Highlight or select sentences in the editor to view sentence cadence analysis." 
+                : "Blok atau pilih kalimat di editor naskah untuk melihat analisis ritme kalimat."}
+            </p>
+            <button
+              type="button"
+              onClick={handleAnalyzeEntireDoc}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/70 dark:hover:bg-indigo-900 border border-indigo-200/80 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-bold text-xs transition cursor-pointer shadow-2xs"
+            >
+              <span>📄</span> {isEn ? 'Analyze Entire Document' : 'Analisis Seluruh Naskah'}
+            </button>
           </div>
         ) : (
-          filteredSentences.map(s => {
-            const handleSentenceClick = () => {
-              const blocks = document.querySelectorAll('.ce-paragraph, .ce-header');
-              for (const block of Array.from(blocks)) {
-                if (block.textContent?.includes(s.text)) {
-                  block.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  block.classList.add('bg-amber-100', 'dark:bg-amber-900/30', 'transition-colors', 'duration-500');
-                  setTimeout(() => {
-                    block.classList.remove('bg-amber-100', 'dark:bg-amber-900/30');
-                  }, 2000);
-                  break;
-                }
-              }
-            };
-            return (
-            <div key={s.id} onClick={handleSentenceClick} className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg p-3 shadow-sm flex flex-col gap-2 hover:border-amber-200 dark:hover:border-amber-700 transition-colors group cursor-pointer">
+          filteredSentences.map(s => (
+            <div 
+              key={s.id} 
+              onClick={() => handleSentenceClick(s)} 
+              className="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl p-3 shadow-2xs flex flex-col gap-2 hover:border-cyan-400 dark:hover:border-cyan-500 transition-all group cursor-pointer"
+            >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 flex items-center justify-center rounded bg-slate-800 dark:bg-slate-700 text-white text-[9px] font-bold">{s.index}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className={`w-5 h-5 flex items-center justify-center rounded text-white text-[9px] font-bold ${getCategoryBgOnly(s.category)}`}>
+                    {s.index}
+                  </span>
                   <span className={`px-1.5 py-0.5 rounded border text-[9px] font-bold uppercase tracking-wider ${getCategoryColor(s.category)}`}>
-                    {s.wordCount} words
+                    {s.wordCount} {isEn ? 'words' : 'kata'} ({s.category})
                   </span>
                   <span className={`text-[9px] font-semibold ${s.varianceFromAvg > 0 ? 'text-indigo-500' : 'text-emerald-500'}`}>
-                    {s.varianceFromAvg > 0 ? '+' : ''}{s.varianceFromAvg.toFixed(1)}w from avg
+                    {s.varianceFromAvg > 0 ? '+' : ''}{s.varianceFromAvg.toFixed(1)}w
                   </span>
                 </div>
-                <button className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-[9px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 px-2 py-1 rounded border border-indigo-100 dark:border-indigo-800">
-                  <IconWand className="w-3 h-3" /> Paraphrase
+                <button 
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSentenceClick(s);
+                  }}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-[9px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 px-2 py-0.5 rounded border border-indigo-100 dark:border-indigo-800 cursor-pointer"
+                >
+                  <IconWand className="w-3 h-3" /> {isEn ? 'Jump' : 'Lompat'}
                 </button>
               </div>
-              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-serif">
-                {s.text}
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed font-serif line-clamp-3">
+                "{s.text}"
               </p>
             </div>
-          )})
+          ))
         )}
       </div>
     </div>

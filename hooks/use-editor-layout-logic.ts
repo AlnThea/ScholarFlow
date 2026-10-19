@@ -349,8 +349,8 @@ export function useEditorLayoutLogic({
   // Class helper to apply clean active/inactive formatting toolbar button states
   const getBtnClass = (isActive: boolean) => {
     return `p-1.5 rounded transition ${isActive
-      ? 'bg-indigo-100/80 text-indigo-700 font-bold'
-      : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900'
+      ? 'bg-indigo-100/80 text-indigo-700 font-bold dark:bg-indigo-950/80 dark:text-indigo-300'
+      : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
       }`;
   };
 

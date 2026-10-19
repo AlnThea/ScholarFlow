@@ -698,29 +698,27 @@ export function EditorLayout({
         }
       `}</style>
 
-      {/* Left sidebar with app name */}
-      <MinimalSidebar
-        isExpanded={isSidebarExpanded}
-        onToggle={toggleSidebar}
-        documents={documents}
-        currentDocumentId={currentDocument?.id}
-        onSelectDocument={onSelectDocument}
-        onCreateDocument={onCreateDocument}
-        onDeleteDocument={onDeleteDocument}
-        onSelectAdminTab={handleSetDashboardTab as any}
-        activeDashboardTab={activeDashboardTab as any}
-        className={isAnyModalOpen ? 'select-none pointer-events-none' : ''}
-        isDarkMode={isDarkMode}
-        onToggleDarkMode={toggleDarkMode}
-        onOpenBackendSettings={() => setIsBackendModalOpen(true)}
-        onOpenHelp={() => setIsHelpOpen(true)}
-        activeSidebarTab={activeSidebarTab}
-      />
-
-
-      {/* If no document is selected, render the Dashboard View */}
+      {/* If no document is selected, render the Dashboard View with MinimalSidebar */}
       {!currentDocument ? (
-        <DashboardView
+        <>
+          <MinimalSidebar
+            isExpanded={isSidebarExpanded}
+            onToggle={toggleSidebar}
+            documents={documents}
+            currentDocumentId={null}
+            onSelectDocument={onSelectDocument}
+            onCreateDocument={onCreateDocument}
+            onDeleteDocument={onDeleteDocument}
+            onSelectAdminTab={handleSetDashboardTab as any}
+            activeDashboardTab={activeDashboardTab as any}
+            className={isAnyModalOpen ? 'select-none pointer-events-none' : ''}
+            isDarkMode={isDarkMode}
+            onToggleDarkMode={toggleDarkMode}
+            onOpenBackendSettings={() => setIsBackendModalOpen(true)}
+            onOpenHelp={() => setIsHelpOpen(true)}
+            activeSidebarTab={activeSidebarTab}
+          />
+          <DashboardView
           isAnyModalOpen={isAnyModalOpen}
           setIsPricingOpen={setIsPricingOpen}
           toggleDarkMode={toggleDarkMode}
@@ -760,6 +758,7 @@ export function EditorLayout({
           handleTestModelConnection={handleTestModelConnection}
           testingModelId={testingModelId}
         />
+        </>
       ) : (
         /* Main content area */
         <div className="flex-1 flex flex-col h-screen overflow-hidden">
@@ -890,10 +889,30 @@ export function EditorLayout({
           />
 
           {/* Editor canvas area + Right sidebar */}
-          <div className="flex flex-1 overflow-hidden items-left bg-slate-50/50 pt-6 md:pt-2">
-            <div className="flex w-full h-full relative bg-white shadow-sm border  border-slate-400/60 overflow-hidden">
+          <div className="flex flex-1 overflow-hidden items-left bg-slate-100/60 dark:bg-slate-950/60">
+            <div className="flex w-full h-full relative overflow-hidden">
+              {/* Left Sidebar (Under Ribbon Toolbar, matching mockup-editor-concepts.html) */}
+              <MinimalSidebar
+                isExpanded={isSidebarExpanded}
+                onToggle={toggleSidebar}
+                documents={documents}
+                currentDocumentId={currentDocument?.id}
+                onSelectDocument={onSelectDocument}
+                onCreateDocument={onCreateDocument}
+                onDeleteDocument={onDeleteDocument}
+                onSelectAdminTab={handleSetDashboardTab as any}
+                activeDashboardTab={activeDashboardTab as any}
+                className={isAnyModalOpen ? 'select-none pointer-events-none' : ''}
+                isDarkMode={isDarkMode}
+                onToggleDarkMode={toggleDarkMode}
+                onOpenBackendSettings={() => setIsBackendModalOpen(true)}
+                onOpenHelp={() => setIsHelpOpen(true)}
+                activeSidebarTab={activeSidebarTab}
+              />
+
+              {/* Central A4 Canvas Scroll Viewport */}
               <main
-                className="flex-1 p-6 md:p-10 overflow-y-auto thin-scroll"
+                className="flex-1 overflow-y-auto py-8 px-4 sm:px-8 flex justify-center items-start bg-slate-200/70 dark:bg-slate-950/90 relative thin-scroll"
                 onContextMenu={(e) => {
                   const selection = window.getSelection();
                   if (selection && !selection.isCollapsed && selection.toString().trim()) {
@@ -911,60 +930,66 @@ export function EditorLayout({
                   }
                 }}
               >
-                <EditorJsEditor
-                  ref={editorJsRef}
-                  initialContent={currentDocument?.content}
-                  onBlockTypeChange={setCurrentBlockType}
-                  onAlignmentChange={(align) => {
-                    setCurrentAlignment(align);
-                    onAlignmentChange?.(align);
-                  }}
-                  onStatsChange={onStatsChange}
-                  onCiteClick={onCiteClick}
-                  onCommentMarkClick={(commentId) => {
-                    setShowRightSidebar(true);
-                    setIsRightSidebarExpanded(true);
-                  }}
-                  onSuggestionMarkClick={(sugId) => {
-                    setShowRightSidebar(true);
-                    setIsRightSidebarExpanded(true);
-                    setActiveSidebarTab?.('comments');
-                    editorJsRef.current?.scrollToSuggestionMark?.(sugId);
-                  }}
-                  onContentChange={onContentChange}
-                  onCitationSearchChange={(query, rect) => {
-                    setBubbleMenuRect(rect);
-                    setBubbleMode('citation');
-                    setShowBubbleMenu(true);
-                    setBubbleSearchQuery(query);
-                    onRepeatCitationSearch(query);
-                  }}
-                  onCitationSearchCancel={() => {
-                    editorJsRef.current?.cancelCitationSearch();
-                    setShowBubbleMenu(false);
-                  }}
-                  onEditInlineEquation={(formula, onSave) => {
-                    setMathFormulaInput(formula);
-                    setEditingMathCallback({ save: onSave });
-                    setIsMathModalOpen(true);
-                  }}
-                  onInsertLinkRequest={(defaultUrl, onSave, onUnlink) => {
-                    setLinkUrlInput(defaultUrl);
-                    setInsertLinkCallback({ save: onSave, unlink: onUnlink });
-                    setIsLinkModalOpen(true);
-                  }}
-                  onEditorKeyDown={ghostwriter.handleEditorKeyDown}
-                  onEditorKeyUp={ghostwriter.onEditorInputOrSelectionChange}
-                />
+                {/* Physical A4 Paper Sheet Container */}
+                <div
+                  id="editor-page-container"
+                  className="w-full max-w-4xl bg-white dark:bg-slate-900 a4-paper-shadow rounded-sm min-h-[1050px] h-auto self-start p-8 sm:p-14 md:p-16 border border-slate-300/80 dark:border-slate-800 relative transition-all flex flex-col mb-16"
+                >
+                  <EditorJsEditor
+                    ref={editorJsRef}
+                    initialContent={currentDocument?.content}
+                    onBlockTypeChange={setCurrentBlockType}
+                    onAlignmentChange={(align) => {
+                      setCurrentAlignment(align);
+                      onAlignmentChange?.(align);
+                    }}
+                    onStatsChange={onStatsChange}
+                    onCiteClick={onCiteClick}
+                    onCommentMarkClick={(commentId) => {
+                      setShowRightSidebar(true);
+                      setIsRightSidebarExpanded(true);
+                    }}
+                    onSuggestionMarkClick={(sugId) => {
+                      setShowRightSidebar(true);
+                      setIsRightSidebarExpanded(true);
+                      setActiveSidebarTab?.('comments');
+                      editorJsRef.current?.scrollToSuggestionMark?.(sugId);
+                    }}
+                    onContentChange={onContentChange}
+                    onCitationSearchChange={(query, rect) => {
+                      setBubbleMenuRect(rect);
+                      setBubbleMode('citation');
+                      setShowBubbleMenu(true);
+                      setBubbleSearchQuery(query);
+                      onRepeatCitationSearch(query);
+                    }}
+                    onCitationSearchCancel={() => {
+                      editorJsRef.current?.cancelCitationSearch();
+                      setShowBubbleMenu(false);
+                    }}
+                    onEditInlineEquation={(formula, onSave) => {
+                      setMathFormulaInput(formula);
+                      setEditingMathCallback({ save: onSave });
+                      setIsMathModalOpen(true);
+                    }}
+                    onInsertLinkRequest={(defaultUrl, onSave, onUnlink) => {
+                      setLinkUrlInput(defaultUrl);
+                      setInsertLinkCallback({ save: onSave, unlink: onUnlink });
+                      setIsLinkModalOpen(true);
+                    }}
+                    onEditorKeyDown={ghostwriter.handleEditorKeyDown}
+                    onEditorKeyUp={ghostwriter.onEditorInputOrSelectionChange}
+                  />
 
-                <GhostwriterSuggestion
-                  suggestion={ghostwriter.suggestion}
-                  isLoading={ghostwriter.isLoading}
-                  coords={ghostwriter.coords}
-                  onAccept={ghostwriter.acceptSuggestion}
-                  onDismiss={ghostwriter.dismissSuggestion}
-                  language={language}
-                />
+                  <GhostwriterSuggestion
+                    suggestion={ghostwriter.suggestion}
+                    isLoading={ghostwriter.isLoading}
+                    coords={ghostwriter.coords}
+                    onAccept={ghostwriter.acceptSuggestion}
+                    onDismiss={ghostwriter.dismissSuggestion}
+                    language={language}
+                  />
+                </div>
 
                 {/* Floating Suggestion Review Chips for Live Track Changes */}
                 {editorMode === 'suggest' && suggestions && suggestions.length > 0 && onAcceptSuggestion && onRejectSuggestion && (
@@ -980,7 +1005,7 @@ export function EditorLayout({
                 )}
 
                 {/* Floating Quick Action Button with Rich Interactive Tooltip Balloon */}
-                <div className="fixed bottom-6 right-6 md:right-10 z-30">
+                <div className="fixed bottom-10 right-6 md:right-10 z-30">
                   <div className="relative group/fab">
                     <button
                       type="button"
@@ -1135,6 +1160,27 @@ export function EditorLayout({
               </aside>
             )}
           </div>
+
+          {/* Microsoft Word / Google Docs Bottom Status Bar (Permanent Window Footer) */}
+          <footer className="h-7 border-t border-slate-200 dark:border-slate-800 bg-slate-100/95 dark:bg-slate-900/95 px-6 py-1 text-[11px] text-slate-600 dark:text-slate-400 flex items-center justify-between select-none shrink-0 z-20 transition-colors">
+            <div className="flex items-center gap-3 sm:gap-4 font-medium">
+              <span>{isEn ? 'Page 1 of 1' : 'Halaman 1 dari 1'}</span>
+              <span>•</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">
+                {wordCount.toLocaleString(isEn ? 'en-US' : 'id-ID')} {isEn ? 'words' : 'kata'}
+              </span>
+              <span>•</span>
+              <span>{characterCount.toLocaleString(isEn ? 'en-US' : 'id-ID')} {isEn ? 'characters' : 'karakter'}</span>
+              <span className="hidden sm:inline">•</span>
+              <span className="hidden sm:inline">{language === 'id' ? 'Bahasa Indonesia' : 'English (US)'}</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>{isEn ? '100% Zoom' : 'Skala 100%'}</span>
+              </span>
+            </div>
+          </footer>
         </div>
       )}
       <EditorModalsWrapper

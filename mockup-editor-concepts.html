@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScholarFlow - Mockup Interaktif Lengkap (Sidebars & Interaksi Realtime)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            word: {
+              blue: '#185abd',
+              dark: '#103f84',
+              accent: '#2b579a',
+              light: '#eef3fc'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    .font-serif-paper { font-family: 'Lora', Georgia, serif; }
+    .font-mono-code { font-family: 'JetBrains Mono', monospace; }
+    
+    .a4-paper-shadow {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 20px 25px -5px rgba(0, 0, 0, 0.09), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    }
+    .dark .a4-paper-shadow {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    .dark ::-webkit-scrollbar-thumb { background: #334155; }
+
+    @keyframes pulse-yellow {
+      0%, 100% { background-color: transparent; }
+      50% { background-color: rgba(254, 240, 138, 0.7); }
+    }
+    .flash-highlight {
+      animation: pulse-yellow 1.5s ease-in-out 2;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200 overflow-x-hidden">
+
+
+
+  <!-- ======================================================== -->
+  <!-- MAIN APP CONTAINER (HEADER + TOOLBAR + SIDEBARS + CANVAS) -->
+  <!-- ======================================================== -->
+  <div class="flex-1 flex flex-col min-h-0 relative">
+
+    <!-- ======================================================== -->
+    <!-- BARIS 1: HEADER TERPADU & RAPI (TIDAK PADAT/RAMAI)       -->
+    <!-- ======================================================== -->
+    <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-2 flex items-center justify-between gap-3 shadow-2xs z-30">
+      <!-- Sisi Kiri: Hamburger Menu, Icon Dokumen Word [W], Judul Dokumen (Atas) & Tulisan Kecil Status Cloud (Bawah) -->
+      <div class="flex items-center gap-2.5 flex-1 min-w-0">
+        <!-- Toggle Left Sidebar -->
+        <button onclick="toggleLeftSidebar()" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition shrink-0" title="Buka/Tutup Sidebar Kiri">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
+
+        <!-- Icon Dokumen Microsoft Word [W] -->
+        <div class="w-7 h-7 rounded bg-[#185abd] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-xs select-none" title="Dokumen Naskah Word">
+          W
+        </div>
+
+        <!-- Container 2 Tingkat: Judul di Atas, Tulisan Kecil di Bawahnya -->
+        <div class="flex flex-col min-w-0 flex-1">
+          <!-- Baris 1: Judul Naskah Utama & Badge Status Realtime WS -->
+          <div class="flex items-center gap-2">
+            <input 
+              id="doc-title-input"
+              type="text" 
+              value="Rancang Bangun Sistem Informasi Manajemen dan Pemesanan Kamar Hotel Berbasis Web"
+              class="font-bold text-sm text-slate-900 dark:text-white bg-transparent border-b border-transparent hover:border-slate-300 dark:hover:border-slate-700 focus:border-indigo-500 outline-none px-1 py-0.5 w-full max-w-xl truncate transition-colors"
+              title="Klik untuk mengubah judul naskah"
+            >
+
+            <!-- Status Realtime Chip -->
+            <div class="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold shrink-0">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Realtime WS</span>
+            </div>
+          </div>
+
+          <!-- Baris 2: Tulisan Kecil di Bawah Judul (Status Tersimpan ke Cloud & Terakhir Diedit) -->
+          <div class="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 px-1 pt-0.5 select-none">
+            <span class="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+              <span>☁️</span>
+              <span>Tersimpan otomatis ke Cloud</span>
+            </span>
+            <span>•</span>
+            <span class="text-slate-400 dark:text-slate-500">Terakhir diedit baru saja</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sisi Kanan: Search, Export Dropdown, Notifications, Share, Quota, Asisten Riset Toggle -->
+      <div class="flex items-center gap-2 shrink-0 text-xs">
+        
+        <!-- Search Ctrl+K Button -->
+        <button onclick="alert('Spotlight Command Palette (Ctrl+K) Terbuka!')" class="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-medium transition cursor-pointer">
+          <span>🔍</span>
+          <span class="text-[11px]">Cari fitur...</span>
+          <kbd class="px-1 text-[9px] bg-white dark:bg-slate-700 rounded border border-slate-300 dark:border-slate-600 font-mono">Ctrl K</kbd>
+        </button>
+
+        <!-- Export Dropdown Button -->
+        <div class="relative">
+          <button onclick="toggleExportDropdown()" class="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold flex items-center gap-1 transition cursor-pointer">
+            <span>📥</span> Ekspor ▾
+          </button>
+          <!-- Export Dropdown Menu -->
+          <div id="export-dropdown" class="hidden absolute right-0 mt-2 w-60 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-1.5 shadow-xl z-50 text-xs text-left">
+            <button onclick="openModal('export'); toggleExportDropdown();" class="w-full flex items-center gap-2 px-3 py-2 bg-indigo-50/70 hover:bg-indigo-100 dark:bg-indigo-950/80 dark:hover:bg-indigo-900 font-bold text-indigo-700 dark:text-indigo-300 border-b border-slate-100 dark:border-slate-800">⚙️ Buka Dialog Ekspor Lengkap...</button>
+            <div class="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Ekspor Cepat</div>
+            <button onclick="openModal('export'); toggleExportDropdown();" class="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium">📄 Microsoft Word (.docx)</button>
+            <button onclick="openModal('export'); toggleExportDropdown();" class="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium">📕 PDF Document (.pdf)</button>
+            <button onclick="openModal('export'); toggleExportDropdown();" class="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium text-emerald-600 dark:text-emerald-400 font-semibold">📦 Paket LaTeX Overleaf (.zip)</button>
+            <div class="h-px bg-slate-100 dark:bg-slate-800 my-1"></div>
+            <div class="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Daftar Pustaka</div>
+            <button onclick="alert('Mengekspor BibTeX (.bib)...'); toggleExportDropdown();" class="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium">📚 BibTeX Format (.bib)</button>
+            <button onclick="alert('Mengekspor RIS Reference (.ris)...'); toggleExportDropdown();" class="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium">📑 RIS Format (.ris)</button>
+          </div>
+        </div>
+
+        <!-- Notifikasi Bell -->
+        <button onclick="alert('Tidak ada notifikasi baru.')" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 relative cursor-pointer" title="Notifikasi">
+          <span>🔔</span>
+          <span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+        </button>
+
+        <!-- Share Button -->
+        <button onclick="alert('Modal Berbagi & Kolaborasi Dokumen Terbuka!')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold flex items-center gap-1 cursor-pointer">
+          <span>🔗</span> Bagikan
+        </button>
+
+        <!-- Quota Badge -->
+        <div class="px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1 cursor-pointer" onclick="alert('Modal Kuota Token AI Terbuka')" title="Kuota Token AI">
+          <span>⚡</span> 49.2k
+        </div>
+
+        <!-- Pricing Button -->
+        <button onclick="alert('Modal Paket Langganan & Upgrade Pro Terbuka!')" class="hidden lg:flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs transition cursor-pointer">
+          <span>💳</span> Pricing
+        </button>
+
+        <!-- TOGGLE RIGHT SIDEBAR (ASISTEN RISET) -->
+        <button onclick="toggleRightSidebar()" id="btn-toggle-assistant" class="px-3 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs hover:bg-indigo-100">
+          <span>📖</span>
+          <span>Research Assistant</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping"></span>
+        </button>
+
+        <!-- Version History Button -->
+        <button onclick="alert('Modal Riwayat Versi & Snapshot Dokumen Terbuka!')" class="hidden lg:flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs transition cursor-pointer" title="Riwayat Versi Dokumen">
+          <span>🕒</span> History
+        </button>
+
+        <!-- Reviewer #2 Header Button (Rose Badge) -->
+        <button onclick="selectRightRailTab('comments')" class="px-3 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs hover:bg-rose-100" title="Reviewer #2 (Audit Kesiapan Jurnal)">
+          <span>🔬</span>
+          <span>Reviewer #2</span>
+        </button>
+
+        <!-- Dark Mode Toggle Button -->
+        <button onclick="toggleDarkMode()" id="btn-theme-toggle" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition cursor-pointer" title="Ganti Mode Gelap / Terang (Light / Dark)">
+          <span id="theme-icon">🌙</span>
+        </button>
+
+        <!-- Settings & Help Shortcuts -->
+        <button onclick="alert('Pengaturan Dokumen Terbuka')" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer" title="Pengaturan Dokumen">⚙️</button>
+        <button onclick="alert('Bantuan Pintasan Keyboard Terbuka')" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 cursor-pointer" title="Pintasan Keyboard">⌨️</button>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- BARIS 2: TAB RIBBON TERSATUKAN (BERANDA, SISIPKAN, DLL)  -->
+    <!-- ======================================================== -->
+    <div id="ribbon-tabs-bar" class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-5 flex items-center gap-1 text-xs font-semibold select-none">
+      <button onclick="switchTab('beranda')" id="tab-beranda" class="px-3.5 py-1.5 border-b-2 border-[#185abd] text-[#185abd] dark:text-blue-400 font-bold transition">
+        Beranda (Teks & Format)
+      </button>
+      <button onclick="switchTab('sisipkan')" id="tab-sisipkan" class="px-3.5 py-1.5 border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
+        Sisipkan (Tabel, Gambar & Rumus)
+      </button>
+      <button onclick="switchTab('referensi')" id="tab-referensi" class="px-3.5 py-1.5 border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
+        Referensi & Sitasi Ilmiah
+      </button>
+      <button onclick="switchTab('tinjauan')" id="tab-tinjauan" class="px-3.5 py-1.5 border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex items-center gap-1">
+        <span>Tinjauan & AI Co-Pilot</span>
+        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+      </button>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- BARIS 3: KONTEN RIBBON TOOLBAR SESUAI TAB AKTIF          -->
+    <!-- ======================================================== -->
+    <div id="ribbon-content-bar" class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-5 py-2 flex items-center gap-3 overflow-x-auto min-h-[48px] shadow-2xs">
+
+      <!-- KONTEN TAB: BERANDA -->
+      <div id="content-beranda" class="flex items-center gap-3 flex-nowrap shrink-0">
+        <!-- Editing vs Suggesting Mode Pill -->
+        <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs">
+          <button onclick="setEditMode('edit')" id="btn-mode-edit" class="px-2.5 py-1 rounded-md bg-white dark:bg-slate-700 font-bold text-indigo-600 dark:text-indigo-400 shadow-2xs flex items-center gap-1 cursor-pointer">
+            <span>✍️</span> Editing
+          </button>
+          <button onclick="setEditMode('suggest')" id="btn-mode-suggest" class="px-2.5 py-1 rounded-md text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-1 cursor-pointer">
+            <span>✨</span> Suggesting
+          </button>
+        </div>
+
+        <div class="h-5 w-px bg-slate-200 dark:bg-slate-700"></div>
+
+        <!-- Undo & Redo -->
+        <div class="flex items-center gap-0.5">
+          <button onclick="triggerAction('Undo')" class="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer" title="Undo (Ctrl+Z)">↩</button>
+          <button onclick="triggerAction('Redo')" class="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer" title="Redo (Ctrl+Y)">↪</button>
+        </div>
+
+        <div class="h-5 w-px bg-slate-200 dark:bg-slate-700"></div>
+
+        <!-- Block Type & Font Size Dropdowns -->
+        <div class="flex items-center gap-1.5">
+          <select id="select-block-type" onchange="changeHeadingStyle(this.value)" class="h-7 px-2 text-xs font-semibold rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none cursor-pointer">
+            <option value="p">Paragraph / Text</option>
+            <option value="h1" selected>Heading 1 (Bab)</option>
+            <option value="h2">Heading 2 (Sub-bab)</option>
+            <option value="h3">Heading 3 (Anak Sub-bab)</option>
+          </select>
+          <select class="h-7 px-2 text-xs rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none font-mono cursor-pointer">
+            <option>Default (16px)</option>
+            <option>12px</option>
+            <option>14px</option>
+            <option>18px</option>
+            <option>24px</option>
+          </select>
+        </div>
+
+        <div class="h-5 w-px bg-slate-200 dark:bg-slate-700"></div>
+
+        <!-- Inline Formats: B, I, U, S, Code, Sub, Super, Link, Highlight -->
+        <div class="flex items-center gap-0.5 text-xs font-semibold">
+          <button onclick="toggleFormat('bold')" id="btn-fmt-bold" class="px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 font-bold cursor-pointer" title="Tebal (Ctrl+B)">B</button>
+          <button onclick="toggleFormat('italic')" id="btn-fmt-italic" class="px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 italic cursor-pointer" title="Miring (Ctrl+I)">I</button>
+          <button onclick="toggleFormat('underline')" id="btn-fmt-underline" class="px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 underline cursor-pointer" title="Garis Bawah (Ctrl+U)">U</button>
+          <button onclick="toggleFormat('strike')" id="btn-fmt-strike" class="px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 line-through cursor-pointer" title="Coret">S</button>
+          <button onclick="toggleFormat('code')" class="px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 font-mono text-[11px] cursor-pointer" title="Kode Inline">&lt;/&gt;</button>
+          <button onclick="toggleFormat('super')" class="px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer" title="Superscript">X²</button>
+          <button onclick="toggleFormat('sub')" class="px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer" title="Subscript">X₂</button>
+          <button onclick="alert('Modal Sisipkan Link Terbuka!')" class="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer" title="Tautan Link">🔗</button>
+          <button onclick="toggleHighlight()" id="btn-fmt-highlight" class="p-1.5 rounded hover:bg-amber-100 text-amber-600 cursor-pointer" title="Sorotan Stabilo (Highlight)">🖍️</button>
+        </div>
+
+        <div class="h-5 w-px bg-slate-200 dark:bg-slate-700"></div>
+
+        <!-- Alignments: Left, Center, Right, Justify -->
+        <div class="flex items-center gap-0.5 text-xs">
+          <button onclick="setAlignment('left')" id="btn-align-left" class="p-1.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 font-bold cursor-pointer" title="Rata Kiri">≡</button>
+          <button onclick="setAlignment('center')" id="btn-align-center" class="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 cursor-pointer" title="Rata Tengah">≢</button>
+          <button onclick="setAlignment('right')" id="btn-align-right" class="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 cursor-pointer" title="Rata Kanan">≣</button>
+          <button onclick="setAlignment('justify')" id="btn-align-justify" class="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 cursor-pointer" title="Rata Kiri-Kanan (Justify)">≡</button>
+        </div>
+      </div>
+
+      <!-- KONTEN TAB: SISIPKAN (INSERT) -->
+      <div id="content-sisipkan" class="hidden flex items-center gap-3 flex-nowrap shrink-0">
+        <button onclick="insertSample('image')" class="flex items-center gap-1.5 px-3 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold cursor-pointer">
+          <span>🖼️</span> Sisipkan Gambar
+        </button>
+        <button onclick="insertSample('table')" class="flex items-center gap-1.5 px-3 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold cursor-pointer">
+          <span>▦</span> Tabel Akademik
+        </button>
+        <button onclick="insertSample('code')" class="flex items-center gap-1.5 px-3 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold cursor-pointer">
+          <span>&lt;/&gt;</span> Blok Kode Program
+        </button>
+
+        <div class="h-5 w-px bg-slate-200 dark:bg-slate-700"></div>
+
+        <button onclick="insertSample('math-inline')" class="flex items-center gap-1.5 px-3 py-1.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold text-xs cursor-pointer">
+          <span>∑</span> Rumus Inline (KaTeX)
+        </button>
+        <button onclick="insertSample('math-block')" class="flex items-center gap-1.5 px-3 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold cursor-pointer">
+          <span>√</span> Blok Formula LaTeX
+        </button>
+        <button onclick="alert('Panel Bantuan Rumus LaTeX Math Helper Terbuka!')" class="flex items-center gap-1.5 px-3 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold cursor-pointer">
+          <span>🧮</span> LaTeX Math Helper (Kalkulator)
+        </button>
+
+        <div class="h-5 w-px bg-slate-200 dark:bg-slate-700"></div>
+
+        <button onclick="alert('Modal Rujukan Bookmark (@fig, @tab) Terbuka!')" class="flex items-center gap-1.5 px-3 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold cursor-pointer">
+          <span>🔖</span> Cross-Reference (@fig, @tab)
+        </button>
+      </div>
+
+      <!-- KONTEN TAB: REFERENSI & SITASI -->
+      <div id="content-referensi" class="hidden flex items-center gap-3 flex-nowrap shrink-0">
+        <button onclick="insertSample('citation')" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs cursor-pointer">
+          <span>@</span> Sisipkan Sitasi In-Text (@cite)
+        </button>
+
+        <div class="flex items-center gap-2 pr-3 border-r border-slate-200 dark:border-slate-800">
+          <span class="text-[10px] font-bold text-slate-400 uppercase">Gaya Sitasi:</span>
+          <select id="select-citation-style" onchange="alert('Format sitasi berhasil diubah ke: ' + this.value)" class="h-7 px-2 rounded bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-indigo-700 dark:text-indigo-300 outline-none cursor-pointer">
+            <option value="APA 7th">APA 7th (Vaswani et al., 2017)</option>
+            <option value="IEEE">IEEE [1]</option>
+            <option value="Harvard">Harvard (Smith, 2024)</option>
+            <option value="Vancouver">Vancouver (1)</option>
+            <option value="Chicago">Chicago 17th</option>
+          </select>
+        </div>
+
+        <button onclick="openRightSidebarTab('library')" class="px-3 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+          📚 Buka Pustaka Sitasi
+        </button>
+        <button onclick="alert('Daftar Pustaka berhasil disusun ulang secara otomatis.')" class="px-3 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+          📑 Susun Ulang Daftar Pustaka
+        </button>
+      </div>
+
+      <!-- KONTEN TAB: TINJAUAN & AI CO-PILOT -->
+      <div id="content-tinjauan" class="hidden flex items-center gap-3 flex-nowrap shrink-0">
+        <!-- Reviewer #2 AI -->
+        <button onclick="openRightSidebarTab('reviewer')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-bold text-xs cursor-pointer shadow-2xs hover:bg-rose-100">
+          <span>🔬</span> Reviewer #2 (Audit Kesiapan Jurnal)
+        </button>
+
+        <!-- Ghostwriter AI Toggle -->
+        <button onclick="toggleGhostwriter()" id="btn-ghostwriter-pill" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-bold text-xs cursor-pointer">
+          <span>🪄</span> Ghostwriter: <span id="ghostwriter-status-text" class="bg-indigo-200 dark:bg-indigo-900 text-indigo-900 dark:text-indigo-200 px-1 rounded text-[10px]">ON</span>
+        </button>
+
+        <!-- Academic Integrity Barometer -->
+        <button onclick="openLeftSidebarTab('burstiness')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-bold text-xs cursor-pointer hover:bg-amber-100">
+          <span>⚠️</span> 72% Orisinalitas (Buka Sentence Rhythm)
+        </button>
+
+        <!-- Academic Grammar Linter -->
+        <button onclick="alert('Academic Grammar & Style Linter Aktif: 0 kesalahan grammar')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 text-xs font-semibold cursor-pointer">
+          <span>✔️</span> Academic Grammar Linter
+        </button>
+      </div>
+
+    </div>
+
+
+    <!-- ======================================================== -->
+    <!-- WORKSPACE BODY: SIDEBAR KIRI + KANVAS TENGAH + KANAN     -->
+    <!-- ======================================================== -->
+    <div class="flex-1 flex min-h-0 relative">
+
+      <!-- ======================================================== -->
+      <!-- SIDEBAR KIRI: DOKUMEN & SENTENCE RHYTHM EXPLORER         -->
+      <!-- ======================================================== -->
+      <aside id="left-sidebar" class="w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 transition-all duration-300 z-20">
+        
+        <!-- Sidebar Navigation Tabs -->
+        <div class="flex items-center border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-1 text-xs font-semibold">
+          <button onclick="switchLeftTab('docs')" id="ltab-docs" class="flex-1 py-1.5 text-center rounded-lg bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold shadow-2xs">
+            📂 Dokumen
+          </button>
+          <button onclick="switchLeftTab('burstiness')" id="ltab-burstiness" class="flex-1 py-1.5 text-center rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">
+            📊 Sentence Rhythm
+          </button>
+        </div>
+
+        <!-- Content 1: Dokumen Saya (File Tree Explorer) -->
+        <div id="lcontent-docs" class="flex-1 overflow-y-auto p-4 space-y-3 text-xs">
+          <div class="flex items-center justify-between text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+            <span>Proyek Skripsi / Thesis</span>
+            <button class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">+ Baru</button>
+          </div>
+          <div class="space-y-1">
+            <div class="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 font-semibold text-indigo-700 dark:text-indigo-300 flex items-center gap-2 cursor-pointer">
+              <span>📄</span> Bab 1: Pendahuluan (Aktif)
+            </div>
+            <div class="p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center gap-2 cursor-pointer">
+              <span>📄</span> Bab 2: Tinjauan Pustaka
+            </div>
+            <div class="p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center gap-2 cursor-pointer">
+              <span>📄</span> Bab 3: Metode Penelitian
+            </div>
+            <div class="p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center gap-2 cursor-pointer">
+              <span>📄</span> Bab 4: Hasil & Pembahasan
+            </div>
+          </div>
+        </div>
+
+        <!-- Content 2: SENTENCE RHYTHM EXPLORER (BURSTINESS ANALYSIS) -->
+        <div id="lcontent-burstiness" class="hidden flex-1 overflow-y-auto flex flex-col">
+          <div class="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/40">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-bold text-slate-900 dark:text-white">Sentence Rhythm Explorer</h3>
+                <span id="rhythm-showing-label" class="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold tracking-wider">
+                  Showing 5 of 5
+                </span>
+              </div>
+              <button onclick="toggleEmptyStateRhythm()" id="btn-toggle-rhythm-sim" class="text-[10px] font-bold px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100" title="Simulasi jika teks belum diblok vs sudah diblok">
+                Simulasi: Naskah Terpilih
+              </button>
+            </div>
+
+            <!-- Cadence Ribbon (Click to Jump) -->
+            <div class="mt-3">
+              <span class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Cadence Ribbon (Click to jump):</span>
+              <div id="cadence-ribbon-container" class="flex items-center gap-1 mt-1 overflow-x-auto pb-1">
+                <button onclick="jumpToSentence(1)" class="w-6 h-6 rounded bg-cyan-500 text-white font-bold text-[10px] flex items-center justify-center hover:opacity-80 shrink-0" title="Kalimat 1 (14 kata - Pendek)">1</button>
+                <button onclick="jumpToSentence(2)" class="w-6 h-6 rounded bg-blue-500 text-white font-bold text-[10px] flex items-center justify-center hover:opacity-80 shrink-0" title="Kalimat 2 (22 kata - Standar)">2</button>
+                <button onclick="jumpToSentence(3)" class="w-6 h-6 rounded bg-indigo-600 text-white font-bold text-[10px] flex items-center justify-center hover:opacity-80 shrink-0" title="Kalimat 3 (34 kata - Panjang)">3</button>
+                <button onclick="jumpToSentence(4)" class="w-6 h-6 rounded bg-purple-600 text-white font-bold text-[10px] flex items-center justify-center hover:opacity-80 shrink-0" title="Kalimat 4 (41 kata - Kompleks)">4</button>
+                <button onclick="jumpToSentence(5)" class="w-6 h-6 rounded bg-blue-500 text-white font-bold text-[10px] flex items-center justify-center hover:opacity-80 shrink-0" title="Kalimat 5 (19 kata - Standar)">5</button>
+              </div>
+            </div>
+
+            <!-- Filter Pills (All, Short, Standard, Long) Persis Seperti di Kode Asli -->
+            <div id="rhythm-filter-pills" class="mt-3 flex items-center gap-1 text-[10px] font-medium overflow-x-auto pb-1">
+              <button onclick="filterRhythm('all')" id="rf-all" class="px-2 py-1 rounded-full border whitespace-nowrap bg-slate-800 text-white border-slate-800 dark:bg-slate-200 dark:text-slate-900 cursor-pointer font-semibold">
+                All (5)
+              </button>
+              <button onclick="filterRhythm('short')" id="rf-short" class="px-2 py-1 rounded-full border whitespace-nowrap bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 cursor-pointer">
+                Short ≤10w (1)
+              </button>
+              <button onclick="filterRhythm('standard')" id="rf-standard" class="px-2 py-1 rounded-full border whitespace-nowrap bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 cursor-pointer">
+                Standard 11-24w (2)
+              </button>
+              <button onclick="filterRhythm('long')" id="rf-long" class="px-2 py-1 rounded-full border whitespace-nowrap bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 cursor-pointer">
+                Long 25w+ (2)
+              </button>
+            </div>
+          </div>
+
+          <!-- Sentence Cards List -->
+          <div id="rhythm-sentences-list" class="p-3 space-y-2 text-xs flex-1 overflow-y-auto">
+            <!-- Kalimat 1 -->
+            <div id="rcard-1" onclick="jumpToSentence(1)" data-cat="short" class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/80 hover:border-cyan-400 dark:hover:border-cyan-600 transition cursor-pointer">
+              <div class="flex items-center justify-between mb-1">
+                <span class="w-4 h-4 rounded bg-cyan-500 text-white text-[9px] font-bold flex items-center justify-center">1</span>
+                <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300">10 Kata (Pendek)</span>
+              </div>
+              <p class="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2">"Akselerasi adopsi teknologi informasi pada era digital mendorong transformasi fundamental..."</p>
+            </div>
+
+            <!-- Kalimat 2 -->
+            <div id="rcard-2" onclick="jumpToSentence(2)" data-cat="standard" class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/80 hover:border-blue-400 dark:hover:border-blue-600 transition cursor-pointer">
+              <div class="flex items-center justify-between mb-1">
+                <span class="w-4 h-4 rounded bg-blue-500 text-white text-[9px] font-bold flex items-center justify-center">2</span>
+                <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">22 Kata (Standar)</span>
+              </div>
+              <p class="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2">"Sistem manajemen konvensional seringkali mengalami kendala koordinasi ketersediaan kamar secara real-time..."</p>
+            </div>
+
+            <!-- Kalimat 3 -->
+            <div id="rcard-3" onclick="jumpToSentence(3)" data-cat="long" class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/80 hover:border-indigo-400 dark:hover:border-indigo-600 transition cursor-pointer">
+              <div class="flex items-center justify-between mb-1">
+                <span class="w-4 h-4 rounded bg-indigo-600 text-white text-[9px] font-bold flex items-center justify-center">3</span>
+                <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">34 Kata (Panjang)</span>
+              </div>
+              <p class="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2">"Oleh karena itu, penelitian ini bertujuan merancang arsitektur sistem informasi manajemen dan reservasi hotel..."</p>
+            </div>
+
+            <!-- Kalimat 4 -->
+            <div id="rcard-4" onclick="jumpToSentence(4)" data-cat="long" class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/80 hover:border-purple-400 dark:hover:border-purple-600 transition cursor-pointer">
+              <div class="flex items-center justify-between mb-1">
+                <span class="w-4 h-4 rounded bg-purple-600 text-white text-[9px] font-bold flex items-center justify-center">4</span>
+                <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">41 Kata (Kompleks)</span>
+              </div>
+              <p class="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2">"Metodologi pengujian black-box dan evaluasi latensi sinkronisasi membuktikan keandalan sistem berskala besar..."</p>
+            </div>
+
+            <!-- Kalimat 5 -->
+            <div id="rcard-5" onclick="jumpToSentence(5)" data-cat="standard" class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/80 hover:border-blue-400 dark:hover:border-blue-600 transition cursor-pointer">
+              <div class="flex items-center justify-between mb-1">
+                <span class="w-4 h-4 rounded bg-blue-500 text-white text-[9px] font-bold flex items-center justify-center">5</span>
+                <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">19 Kata (Standar)</span>
+              </div>
+              <p class="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2">"Hasil implementasi memperlihatkan penurunan tingkat kekeliruan reservasi hingga mencapai angka nol persen."</p>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- ======================================================== -->
+      <!-- KANVAS DOKUMEN TENGAH (A4 PAPER SHEET VIEW)              -->
+      <!-- ======================================================== -->
+      <main class="flex-1 overflow-y-auto py-8 px-6 flex justify-center bg-slate-200/70 dark:bg-slate-950/90 relative">
+        <div id="editor-page-container" class="w-full max-w-3xl bg-white dark:bg-slate-900 a4-paper-shadow rounded-xs min-h-[800px] p-12 sm:p-16 border border-slate-300/80 dark:border-slate-800 relative transition-all">
+          
+          <!-- Heading 1 -->
+          <h1 id="doc-h1" class="text-2xl font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-tight">
+            BAB 1: PENDAHULUAN
+          </h1>
+
+          <!-- Heading 2 -->
+          <h2 id="doc-h2" class="text-lg font-bold text-slate-800 dark:text-slate-200 mb-3">
+            1.1 Latar Belakang Masalah
+          </h2>
+
+          <!-- Paragraph 1 with Sentence Highlight Simulation -->
+          <p id="doc-p1" class="text-slate-700 dark:text-slate-300 leading-relaxed text-justify text-sm mb-4">
+            <span id="sentence-1" class="transition-colors">Akselerasi adopsi teknologi informasi dan komunikasi pada era digital telah mendorong transformasi fundamental dalam operasionalisasi pelbagai sektor bisnis, termasuk industri perhotelan.</span>
+            <span id="sentence-2" class="transition-colors">Sistem manajemen konvensional seringkali mengalami kendala koordinasi ketersediaan kamar secara <em id="fmt-italic-target">real-time</em>, yang berdampak langsung pada inefisiensi layanan tamu dan potensi <em>overbooking</em> <span id="citation-sample" class="bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 font-semibold px-1 rounded cursor-pointer" title="Klik untuk edit sitasi">[Putri & Kurniawati, 2026]</span>.</span>
+          </p>
+
+          <!-- Paragraph 2 -->
+          <p id="doc-p2" class="text-slate-700 dark:text-slate-300 leading-relaxed text-justify text-sm mb-4">
+            <span id="sentence-3" class="transition-colors">Oleh karena itu, penelitian ini bertujuan untuk merancang dan membangun arsitektur sistem informasi manajemen dan reservasi kamar hotel berbasis web dengan menerapkan protokol sinkronisasi data reaktif berkinerja tinggi guna menjamin transparansi serta kepuasan pelanggan secara berkesinambungan.</span>
+          </p>
+
+          <!-- Sample Table Insertion Target -->
+          <div id="dynamic-insert-container" class="my-4"></div>
+
+        </div>
+      </main>
+
+      <!-- ======================================================== -->
+      <!-- SIDEBAR KANAN: AI RHYTHM, BURSTINESS & VERTICAL ICON RAIL -->
+      <!-- (PERSIS SEPERTI DI APLIKASI SCHOLARFLOW ASLI / SCREENSHOT) -->
+      <!-- ======================================================== -->
+      <aside id="right-sidebar" class="relative flex flex-row border-l border-slate-200 dark:border-slate-800 bg-transparent shrink-0 z-30 transition-all duration-300">
+        
+        <!-- Panel Konten Utama (Bisa Show / Hide) -->
+        <div id="right-panel-content" class="w-[420px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col transition-all duration-300 overflow-hidden">
+          
+          <!-- Header Panel Kanan -->
+          <div class="border-b border-slate-100 dark:border-slate-800 px-4 py-3 flex items-center justify-between min-h-[56px] bg-slate-50/50 dark:bg-slate-900/80">
+            <div class="flex items-center gap-2">
+              <span id="right-panel-header-title" class="font-bold text-slate-800 dark:text-slate-100 text-sm tracking-tight">
+                AI Rhythm & Burstiness
+              </span>
+            </div>
+            <span id="right-panel-header-badge" class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 border border-indigo-100/80 dark:border-indigo-800/60">
+              Engine
+            </span>
+          </div>
+
+          <!-- ==================================================== -->
+          <!-- TAB 1: AI RHYTHM & BURSTINESS (PERSIS GAMBAR USER)    -->
+          <!-- ==================================================== -->
+          <div id="rcontent-burstiness" class="flex-1 overflow-y-auto p-4 space-y-4 thin-scroll">
+            
+            <!-- KARTU 1: BAROMETER INTEGRITAS AKADEMIK -->
+            <div class="p-4 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-4">
+              
+              <!-- Header Barometer -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="font-extrabold text-slate-900 dark:text-white text-xs tracking-tight uppercase">Barometer Integritas Akademik</h3>
+                    <p class="text-[11px] text-slate-400 dark:text-slate-500">Indeks orisinalitas & deteksi pola AI</p>
+                  </div>
+                </div>
+
+                <!-- Tombol Heatmap Kanvas -->
+                <button onclick="toggleHeatmapCanvas()" id="btn-heatmap-toggle" class="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shadow-2xs">
+                  <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                  <span id="btn-heatmap-label">Heatmap Kanvas</span>
+                </button>
+              </div>
+
+              <!-- Visual Arc Gauge SVG (100% Orisinalitas) -->
+              <div class="flex flex-col items-center justify-center py-2">
+                <div class="relative w-44 h-24 flex items-end justify-center">
+                  <!-- Setengah Lingkaran SVG (Arc Gauge) -->
+                  <svg class="w-44 h-24 overflow-visible" viewBox="0 0 160 85">
+                    <defs>
+                      <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#10b981" />
+                        <stop offset="60%" stop-color="#059669" />
+                        <stop offset="100%" stop-color="#f59e0b" />
+                      </linearGradient>
+                    </defs>
+                    <!-- Background Arc -->
+                    <path d="M 15 80 A 65 65 0 0 1 145 80" fill="none" stroke="#e2e8f0" stroke-width="12" stroke-linecap="round" class="dark:stroke-slate-800" />
+                    <!-- Colored Active Arc -->
+                    <path d="M 15 80 A 65 65 0 0 1 145 80" fill="none" stroke="url(#gaugeGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="204" stroke-dashoffset="0" />
+                    <!-- Baseline Bar & Pivot Dot -->
+                    <line x1="15" y1="84" x2="145" y2="84" stroke="#0f172a" stroke-width="2" stroke-linecap="round" class="dark:stroke-slate-600" />
+                    <circle cx="20" cy="80" r="5" fill="#0f172a" stroke="#ffffff" stroke-width="1.5" class="dark:fill-slate-100 dark:stroke-slate-900" />
+                  </svg>
+                </div>
+
+                <!-- Nilai Persentase & Status -->
+                <div class="text-center mt-1">
+                  <div class="flex items-baseline justify-center gap-1.5">
+                    <span class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">100%</span>
+                    <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Orisinalitas</span>
+                  </div>
+                  <div class="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200/80 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
+                    <span>Menunggu Naskah</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 4 Kartu Metrik Barometer (Grid 2x2) -->
+              <div class="grid grid-cols-2 gap-2.5 pt-1">
+                <!-- Variasi Kalimat -->
+                <div class="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-850/60 border border-slate-100 dark:border-slate-800 space-y-1">
+                  <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Variasi Kalimat</div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm font-bold text-slate-800 dark:text-slate-100">0 CV</span>
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">100%</span>
+                  </div>
+                </div>
+
+                <!-- Variasi Kata (TTR) -->
+                <div class="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-850/60 border border-slate-100 dark:border-slate-800 space-y-1">
+                  <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Variasi Kata (TTR)</div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm font-bold text-slate-800 dark:text-slate-100">100%</span>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">100% unik</span>
+                  </div>
+                </div>
+
+                <!-- Kata Klise AI -->
+                <div class="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-850/60 border border-slate-100 dark:border-slate-800 space-y-1">
+                  <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Kata Klise AI</div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm font-bold text-slate-800 dark:text-slate-100">0 kata</span>
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">0%</span>
+                  </div>
+                </div>
+
+                <!-- Rata-rata Kalimat -->
+                <div class="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-850/60 border border-slate-100 dark:border-slate-800 space-y-1">
+                  <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Rata-rata Kalimat</div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm font-bold text-slate-800 dark:text-slate-100">0 kata</span>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">±0 SD</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- KARTU 2: AI BURSTINESS SCORE -->
+            <div class="p-4 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-3">
+              <!-- Header & Switch Semua Dokumen -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                  <span class="font-extrabold text-slate-800 dark:text-slate-100 text-xs tracking-tight">AI Burstiness Score</span>
+                </div>
+
+                <!-- Toggle Switch Interaktif -->
+                <div class="flex items-center gap-2 cursor-pointer" onclick="toggleAnalyzeAllDoc()">
+                  <span class="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 tracking-wider">Semua Dokumen</span>
+                  <div id="switch-all-doc-bg" class="w-8 h-4 rounded-full bg-slate-200 dark:bg-slate-700 transition-colors relative flex items-center px-0.5">
+                    <div id="switch-all-doc-thumb" class="w-3 h-3 rounded-full bg-white shadow-xs transition-transform transform translate-x-0"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Info Box Penjelasan -->
+              <div class="p-3 rounded-xl bg-slate-50/90 dark:bg-slate-850/70 border border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed flex items-start gap-2">
+                <span class="text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5">ⓘ</span>
+                <span>Blok/pilih teks di editor atau nyalakan 'Semua Dokumen' untuk menganalisis skor burstiness. Skor yang tinggi menandakan tulisan yang lebih natural/mirip manusia.</span>
+              </div>
+
+              <!-- Placeholder Box: Highlight / Select Sentences -->
+              <div class="p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-center py-6">
+                <p class="text-xs text-slate-400 dark:text-slate-500 leading-normal">
+                  Highlight/select sentences in the editor to view Burstiness analysis (AI Pattern Detection).
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ==================================================== -->
+          <!-- TAB 2: AI WRITER & PARAPHRASE STUDIO                 -->
+          <!-- ==================================================== -->
+          <div id="rcontent-writing" class="hidden flex-1 overflow-y-auto p-4 space-y-3.5 text-xs">
+            <div class="p-3 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/50 border border-indigo-200/80 dark:border-indigo-800 space-y-2">
+              <span class="font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
+                <span>🪄</span> Studio Parafrase Akademik
+              </span>
+              <p class="text-[11px] text-indigo-700 dark:text-indigo-300">Ubah kalimat kaku atau potensi terdeteksi AI menjadi kalimat akademik elegan.</p>
+            </div>
+            
+            <div class="space-y-1.5">
+              <label class="font-bold text-slate-700 dark:text-slate-300">Teks Masukan / Terseleksi:</label>
+              <textarea id="paraphrase-input" rows="4" class="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs outline-none focus:border-indigo-500" placeholder="Ketik kalimat atau pilih teks di naskah...">Akselerasi adopsi teknologi informasi dan komunikasi pada era digital telah mendorong transformasi fundamental dalam industri perhotelan.</textarea>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <select id="paraphrase-mode" class="flex-1 py-1.5 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold">
+                <option>Gaya Formal Akademik</option>
+                <option>Lebih Ringkas & Padat</option>
+                <option>Humanize AI (Tinggikan Variasi)</option>
+              </select>
+              <button onclick="runParaphraseSimulation()" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition cursor-pointer shadow-xs">
+                Parafrase
+              </button>
+            </div>
+
+            <div id="paraphrase-result-box" class="hidden p-3 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/40 space-y-2">
+              <div class="flex items-center justify-between text-emerald-800 dark:text-emerald-300 font-bold text-[11px]">
+                <span>✓ Hasil Usulan Akademik:</span>
+                <span class="text-[9px] bg-emerald-200 dark:bg-emerald-900 px-1.5 py-0.2 rounded font-mono">98% Human Match</span>
+              </div>
+              <p id="paraphrase-result-text" class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-serif-paper">
+                "Perkembangan pesat teknologi informasi secara substantif mengubah lanskap tata kelola dan efisiensi operasional sektor perhotelan modern."
+              </p>
+              <button onclick="applyParaphraseToCanvas()" class="w-full py-1.5 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition cursor-pointer text-xs shadow-xs">
+                Terapkan ke Kanvas Dokumen
+              </button>
+            </div>
+          </div>
+
+          <!-- ==================================================== -->
+          <!-- TAB 3: CITATIONS & LIBRARY (PUSTAKA SITASI)          -->
+          <!-- ==================================================== -->
+          <div id="rcontent-library" class="hidden flex-1 overflow-y-auto p-4 space-y-3 text-xs">
+            <div class="flex items-center gap-2">
+              <input id="lib-search-input" type="text" placeholder="Cari Google Scholar, CrossRef, DOI..." class="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs outline-none">
+              <button onclick="openModal('citation')" class="px-3 py-2 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition cursor-pointer shadow-xs whitespace-nowrap">
+                + Tambah
+              </button>
+            </div>
+
+            <div class="space-y-2">
+              <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 space-y-1.5 hover:border-indigo-300 transition">
+                <div class="font-bold text-slate-800 dark:text-white">Putri & Kurniawati (2026)</div>
+                <p class="text-[11px] text-slate-500 leading-normal">Optimasi Sistem Reservasi Perhotelan Berbasis Cloud dan Dampaknya pada Kepuasan Tamu.</p>
+                <div class="flex items-center justify-between pt-1">
+                  <span class="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">IEEE Xplore • Q1</span>
+                  <button onclick="insertSample('citation')" class="px-2 py-0.5 rounded bg-indigo-600 text-white text-[10px] font-bold cursor-pointer">+ Sisipkan</button>
+                </div>
+              </div>
+
+              <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 space-y-1.5 hover:border-indigo-300 transition">
+                <div class="font-bold text-slate-800 dark:text-white">Chen, L., & Vaswani, A. (2025)</div>
+                <p class="text-[11px] text-slate-500 leading-normal">Deep Learning Architectures for Real-Time Concurrency Management.</p>
+                <div class="flex items-center justify-between pt-1">
+                  <span class="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">ACM Computing Surveys</span>
+                  <button onclick="alert('Sitasi [Chen & Vaswani, 2025] disisipkan!')" class="px-2 py-0.5 rounded bg-indigo-600 text-white text-[10px] font-bold cursor-pointer">+ Sisipkan</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ==================================================== -->
+          <!-- TAB 4: SPSS & STATS INTERPRETER                      -->
+          <!-- ==================================================== -->
+          <div id="rcontent-stats" class="hidden flex-1 overflow-y-auto p-4 space-y-3 text-xs">
+            <div class="p-4 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-950/40 space-y-2">
+              <span class="font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
+                <span>🧮</span> SPSS / PSPP Stats Interpreter (Phase 11)
+              </span>
+              <p class="text-[11px] text-indigo-700 dark:text-indigo-300">Unggah output SPSS (.spv, tabel regression, ANOVA) untuk otomatis dibuatkan narasi Bab 4.</p>
+            </div>
+
+            <div class="p-6 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl text-center space-y-2">
+              <div class="text-2xl">📊</div>
+              <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">Tarik & Letakkan file output SPSS di sini</p>
+              <button onclick="alert('Memilih berkas SPSS...');" class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-bold text-slate-700 dark:text-slate-200">
+                Pilih Berkas (.spv / .csv)
+              </button>
+            </div>
+          </div>
+
+          <!-- ==================================================== -->
+          <!-- TAB 5: DOCUMENT STATS & PLAGIARISM                   -->
+          <!-- ==================================================== -->
+          <div id="rcontent-document" class="hidden flex-1 overflow-y-auto p-4 space-y-3 text-xs">
+            <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-2">
+              <div class="font-bold text-slate-800 dark:text-slate-100 flex items-center justify-between">
+                <span>Ringkasan Metrik Dokumen</span>
+                <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">Bab 1 Aktif</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-[11px]">
+                <div class="p-2 rounded bg-white dark:bg-slate-850 border border-slate-100 dark:border-slate-800">
+                  <div class="text-slate-400">Total Kata:</div>
+                  <div class="text-sm font-bold text-slate-800 dark:text-white">3.450</div>
+                </div>
+                <div class="p-2 rounded bg-white dark:bg-slate-850 border border-slate-100 dark:border-slate-800">
+                  <div class="text-slate-400">Total Sitasi:</div>
+                  <div class="text-sm font-bold text-slate-800 dark:text-white">18 Jurnal</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-3 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-950/40 space-y-2">
+              <div class="flex items-center justify-between font-bold text-amber-800 dark:text-amber-200">
+                <span>Pemindaian Plagiasi Turnitin</span>
+                <span class="text-[10px] bg-amber-200 dark:bg-amber-900 px-1.5 py-0.2 rounded font-mono">8% Indeks</span>
+              </div>
+              <p class="text-[11px] text-amber-900 dark:text-amber-300">Tingkat kemiripan teks sangat aman dan memenuhi standar skripsi & jurnal internasional (&lt; 20%).</p>
+            </div>
+          </div>
+
+          <!-- ==================================================== -->
+          <!-- TAB 6: REVIEW NOTES & REVIEWER #2                    -->
+          <!-- ==================================================== -->
+          <div id="rcontent-comments" class="hidden flex-1 overflow-y-auto p-4 space-y-3 text-xs">
+            <div class="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 space-y-2">
+              <div class="flex items-center justify-between font-bold text-rose-700 dark:text-rose-300">
+                <span class="flex items-center gap-1.5"><span>🔬</span> Reviewer #2 Catatan</span>
+                <span class="text-[10px] bg-rose-200 dark:bg-rose-900 px-1.5 py-0.2 rounded font-mono">Major Revision</span>
+              </div>
+              <p class="text-[11px] text-rose-900 dark:text-rose-200 leading-relaxed">
+                "Latar belakang pada Bab 1 sudah baik, namun perjelas celah penelitian (research gap) dibanding sistem reservasi komersial yang sudah ada di pasar."
+              </p>
+              <button onclick="alert('Membuat usulan perbaikan kalimat AI...')" class="w-full py-1.5 rounded-lg bg-rose-600 text-white font-bold text-xs cursor-pointer shadow-xs hover:bg-rose-700 transition">
+                Perbaiki Otomatis dengan AI
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ==================================================== -->
+        <!-- STRIP IKON VERTIKAL DI SISI PALING KANAN (W-12)     -->
+        <!-- (PERSIS SEPERTI DI APLIKASI SCHOLARFLOW ASLI)        -->
+        <!-- ==================================================== -->
+        <div id="right-rail-strip" class="w-12 shrink-0 flex flex-col items-center py-3 border-l border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/90 gap-2.5 select-none">
+          
+          <!-- Tombol Collapse / Expand (Show/Hide Panel) -->
+          <button
+            type="button"
+            onclick="toggleRightSidebar()"
+            id="btn-collapse-sidebar"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition shadow-2xs cursor-pointer"
+            title="Tutup / Buka Panel (Show / Hide)"
+          >
+            <span id="collapse-icon" class="font-bold text-sm">&gt;</span>
+          </button>
+
+          <div class="w-6 h-px bg-slate-200 dark:bg-slate-800 my-0.5"></div>
+
+          <!-- Vertical Icon Tabs List -->
+          <div class="flex flex-col gap-1.5 w-full px-1.5 flex-1 items-center">
+            
+            <!-- 1. AI Rhythm & Burstiness (Active) -->
+            <button
+              id="rtab-burstiness"
+              onclick="selectRightRailTab('burstiness')"
+              class="w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer bg-indigo-600 text-white shadow-xs"
+              title="AI Rhythm & Burstiness (Barometer Orisinalitas & Pola AI)"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            </button>
+
+            <!-- 2. AI Writer & Paraphrase -->
+            <button
+              id="rtab-writing"
+              onclick="selectRightRailTab('writing')"
+              class="w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400"
+              title="AI Writing Assistant & Studio Parafrase"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+            </button>
+
+            <!-- 3. Citations & Library -->
+            <button
+              id="rtab-library"
+              onclick="selectRightRailTab('library')"
+              class="w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400"
+              title="Pencarian Sitasi & Pustaka Jurnal"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+            </button>
+
+            <!-- 4. SPSS & Stats Interpreter -->
+            <button
+              id="rtab-stats"
+              onclick="selectRightRailTab('stats')"
+              class="w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400"
+              title="Interpretasi Data SPSS / PSPP (Phase 11)"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+            </button>
+
+            <!-- 5. Document Stats & Scan -->
+            <button
+              id="rtab-document"
+              onclick="selectRightRailTab('document')"
+              class="w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400"
+              title="Statistik Dokumen & Scan Plagiasi"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            </button>
+
+            <!-- 6. Review Notes & Comments -->
+            <button
+              id="rtab-comments"
+              onclick="selectRightRailTab('comments')"
+              class="w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400"
+              title="Catatan Review & Komentar Reviewer #2"
+            >
+              <span class="font-serif font-black text-xs leading-none">99</span>
+            </button>
+
+          </div>
+
+        </div>
+
+      </aside>
+
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- BILAH STATUS BAWAH ALA MICROSOFT WORD (BOTTOM BAR)       -->
+    <!-- ======================================================== -->
+    <footer class="bg-[#185abd] text-white px-5 py-1 flex items-center justify-between text-xs select-none shadow-inner shrink-0 z-30">
+      <div class="flex items-center gap-3">
+        <span>Halaman 1 dari 14</span>
+        <span>•</span>
+        <span>3.450 Kata</span>
+        <span>•</span>
+        <span>Bahasa Indonesia</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Ghostwriter: <span id="footer-ghostwriter-status">ON (Jeda 4.5s)</span>
+        </span>
+        <span>•</span>
+        <span class="text-amber-200 font-semibold cursor-pointer" onclick="selectRightRailTab('burstiness')">⚠️ 100% Orisinalitas</span>
+        <span>•</span>
+        <span class="text-emerald-200">☁️ Tersimpan ke Cloud</span>
+        <span>•</span>
+        <span>100% Zoom 🔍</span>
+      </div>
+    </footer>
+
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- MODAL POP-UP 1: SISIPKAN SITASI ILMIAH (FORM LENGKAP)    -->
+  <!-- ======================================================== -->
+  <div id="modal-citation" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-850">
+        <div class="flex items-center gap-2">
+          <span class="text-indigo-600 dark:text-indigo-400 text-lg">📖</span>
+          <h3 class="font-bold text-slate-900 dark:text-white text-sm">Sisipkan Sitasi Ilmiah ke Naskah</h3>
+        </div>
+        <button onclick="closeModal('citation')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold p-1">✕</button>
+      </div>
+
+      <!-- Modal Body (Form Input yang bisa diisi pengguna) -->
+      <form id="form-citation" onsubmit="submitCitationModal(event)" class="p-5 space-y-3.5 text-xs overflow-y-auto">
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Judul Paper / Buku Ilmiah *</label>
+          <input id="input-cit-title" type="text" required placeholder="Contoh: Optimasi Arsitektur Database Terdistribusi..." class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs outline-none focus:border-indigo-500 text-slate-800 dark:text-slate-100" value="Analisis Kinerja Protokol Web Reaktif pada Cloud Computing">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Penulis *</label>
+            <input id="input-cit-author" type="text" required placeholder="Contoh: Pratama, A., &amp; Siregar, H." class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs outline-none focus:border-indigo-500 text-slate-800 dark:text-slate-100" value="Pratama &amp; Siregar">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Tahun Publikasi *</label>
+            <input id="input-cit-year" type="number" required placeholder="2026" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs outline-none focus:border-indigo-500 text-slate-800 dark:text-slate-100" value="2026">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Jurnal / Penerbit</label>
+            <input id="input-cit-journal" type="text" placeholder="IEEE Transactions on Software Eng" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs outline-none focus:border-indigo-500 text-slate-800 dark:text-slate-100" value="Jurnal Sistem Informasi Indonesia (JSII)">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Format Gaya Sitasi</label>
+            <select id="input-cit-style" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs outline-none focus:border-indigo-500 font-semibold text-slate-800 dark:text-slate-100">
+              <option value="apa">APA 7th Edition [Pratama &amp; Siregar, 2026]</option>
+              <option value="ieee">IEEE Style [1]</option>
+              <option value="harvard">Harvard Referencing</option>
+              <option value="vancouver">Vancouver (Medis)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">DOI / URL Tautan (Opsional)</label>
+          <input id="input-cit-doi" type="text" placeholder="https://doi.org/10.1109/..." class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs outline-none focus:border-indigo-500 text-slate-800 dark:text-slate-100" value="https://doi.org/10.1145/345678.9012">
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeModal('citation')" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-slate-600 dark:text-slate-300">
+            Batal
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 font-bold text-white shadow-xs transition cursor-pointer">
+            + Sisipkan Sitasi ke Naskah
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- MODAL POP-UP 2: RUMUS MATEMATIKA / KATEX LATEX FORM      -->
+  <!-- ======================================================== -->
+  <div id="modal-math" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-850">
+        <div class="flex items-center gap-2">
+          <span class="text-indigo-600 dark:text-indigo-400 text-lg">∑</span>
+          <h3 class="font-bold text-slate-900 dark:text-white text-sm">Editor Formula Rumus LaTeX (KaTeX)</h3>
+        </div>
+        <button onclick="closeModal('math')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold p-1">✕</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 space-y-3.5 text-xs overflow-y-auto">
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Ketik Sintaks Rumus LaTeX:</label>
+          <textarea id="input-latex-code" rows="3" oninput="updateMathPreview()" class="w-full font-mono p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs outline-none focus:border-indigo-500 text-indigo-700 dark:text-indigo-300 font-semibold">\sigma = \sqrt{\frac{1}{N}\sum_{i=1}^N (x_i - \mu)^2}</textarea>
+        </div>
+
+        <!-- Tombol Cepat Simbol Matematika -->
+        <div>
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Pintasan Simbol Ilmiah:</span>
+          <div class="flex flex-wrap gap-1">
+            <button onclick="appendLatex('\\int_{a}^{b} f(x) dx')" class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 font-mono text-[11px]">∫ Integral</button>
+            <button onclick="appendLatex('\\sum_{i=1}^{n} x_i')" class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 font-mono text-[11px]">∑ Sum</button>
+            <button onclick="appendLatex('\\frac{a}{b}')" class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 font-mono text-[11px]">a/b Pecahan</button>
+            <button onclick="appendLatex('\\sqrt{x}')" class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 font-mono text-[11px]">√ Akar</button>
+            <button onclick="appendLatex('\\alpha, \\beta, \\gamma')" class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 font-mono text-[11px]">α, β, γ Yunani</button>
+          </div>
+        </div>
+
+        <!-- Live Preview Box -->
+        <div>
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Pratinjau Rumus (KaTeX Render):</span>
+          <div id="math-preview-box" class="p-4 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/40 text-center font-serif-paper text-sm text-indigo-900 dark:text-indigo-200 font-bold">
+            $$\sigma = \sqrt{\frac{1}{N}\sum_{i=1}^N (x_i - \mu)^2}$$
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeModal('math')" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-slate-600 dark:text-slate-300">
+            Batal
+          </button>
+          <button type="button" onclick="submitMathModal()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 font-bold text-white shadow-xs transition cursor-pointer">
+            + Sisipkan Rumus ke Naskah
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- MODAL POP-UP 3: EKSPOR DOKUMEN ILMIAH (FORM LENGKAP)     -->
+  <!-- ======================================================== -->
+  <div id="modal-export" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-850">
+        <div class="flex items-center gap-2">
+          <span class="text-indigo-600 dark:text-indigo-400 text-lg">📥</span>
+          <h3 class="font-bold text-slate-900 dark:text-white text-sm">Ekspor Dokumen & Format Publikasi</h3>
+        </div>
+        <button onclick="closeModal('export')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold p-1">✕</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 space-y-4 text-xs overflow-y-auto">
+        <!-- Pilihan Format Radio -->
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-2">Pilih Format Target:</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="p-2.5 rounded-xl border-2 border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="export-format" value="pdf" checked class="text-indigo-600">
+              <div>
+                <div class="font-bold text-slate-900 dark:text-white">PDF Siap Terbit</div>
+                <div class="text-[10px] text-slate-500">Standar IEEE / APA 2-Kolom</div>
+              </div>
+            </label>
+
+            <label class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-400 flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="export-format" value="docx" class="text-indigo-600">
+              <div>
+                <div class="font-bold text-slate-900 dark:text-white">Microsoft Word (.docx)</div>
+                <div class="text-[10px] text-slate-500">Mudah diedit dosen pembimbing</div>
+              </div>
+            </label>
+
+            <label class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-400 flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="export-format" value="latex" class="text-indigo-600">
+              <div>
+                <div class="font-bold text-slate-900 dark:text-white">LaTeX Overleaf (.zip)</div>
+                <div class="text-[10px] text-slate-500">Termasuk file .tex &amp; .bib sitasi</div>
+              </div>
+            </label>
+
+            <label class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-400 flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="export-format" value="md" class="text-indigo-600">
+              <div>
+                <div class="font-bold text-slate-900 dark:text-white">Markdown (.md)</div>
+                <div class="text-[10px] text-slate-500">Arsip bersih GitHub/Notion</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Checklist Opsi Penerbitan -->
+        <div>
+          <label class="block font-bold text-slate-700 dark:text-slate-300 mb-2">Opsi Format Akademik Tambahan:</label>
+          <div class="space-y-2 bg-slate-50 dark:bg-slate-850 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked class="rounded text-indigo-600">
+              <span class="text-slate-700 dark:text-slate-300">Sertakan Halaman Judul &amp; Abstrak Bilingual (ID/EN)</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked class="rounded text-indigo-600">
+              <span class="text-slate-700 dark:text-slate-300">Format Margin Standar Skripsi/Thesis (4-3-3-3 cm)</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked class="rounded text-indigo-600">
+              <span class="text-slate-700 dark:text-slate-300">Otomatis susun Daftar Pustaka di halaman akhir</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" class="rounded text-indigo-600">
+              <span class="text-slate-700 dark:text-slate-300">Anonymize Nama Penulis (Double-Blind Peer Review)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Progress Simulation Box (Hidden by default) -->
+        <div id="export-progress-container" class="hidden p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 space-y-1.5">
+          <div class="flex items-center justify-between text-indigo-800 dark:text-indigo-300 font-bold text-[11px]">
+            <span id="export-progress-text">Mengompilasi naskah ke PDF...</span>
+            <span id="export-progress-pct">0%</span>
+          </div>
+          <div class="w-full bg-indigo-200 dark:bg-indigo-900 rounded-full h-1.5 overflow-hidden">
+            <div id="export-progress-bar" class="bg-indigo-600 h-1.5 rounded-full transition-all duration-200 w-0"></div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeModal('export')" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold text-slate-600 dark:text-slate-300">
+            Tutup
+          </button>
+          <button type="button" onclick="submitExportModal()" id="btn-run-export" class="px-5 py-2 rounded-xl bg-[#185abd] hover:bg-[#103f84] font-bold text-white shadow-xs transition cursor-pointer flex items-center gap-1.5">
+            <span>📥 Unduh Berkas Sekarang</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- JAVASCRIPT: LOGIKA LENGKAP & INTERAKSI NYATA             -->
+  <!-- ======================================================== -->
+  <script>
+    // Tab Switching in Word Ribbon (Beranda, Sisipkan, Referensi, Tinjauan)
+    function switchTab(tabName) {
+      ['beranda', 'sisipkan', 'referensi', 'tinjauan'].forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        const content = document.getElementById(`content-${t}`);
+        if (btn) {
+          btn.className = "px-3.5 py-1.5 border-b-2 border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer";
+        }
+        if (content) {
+          content.classList.add('hidden');
+        }
+      });
+
+      const activeBtn = document.getElementById(`tab-${tabName}`);
+      const activeContent = document.getElementById(`content-${tabName}`);
+      if (activeBtn) {
+        activeBtn.className = "px-3.5 py-1.5 border-b-2 border-[#185abd] text-[#185abd] dark:text-blue-400 font-bold transition cursor-pointer";
+      }
+      if (activeContent) {
+        activeContent.classList.remove('hidden');
+      }
+    }
+
+    // Toggle Left Sidebar (Dokumen & Burstiness)
+    let isLeftOpen = true;
+    function toggleLeftSidebar() {
+      const leftSidebar = document.getElementById('left-sidebar');
+      isLeftOpen = !isLeftOpen;
+      if (isLeftOpen) {
+        leftSidebar.classList.remove('w-0', 'opacity-0', 'overflow-hidden', 'p-0', 'border-0');
+        leftSidebar.classList.add('w-80');
+      } else {
+        leftSidebar.classList.remove('w-80');
+        leftSidebar.classList.add('w-0', 'opacity-0', 'overflow-hidden', 'p-0', 'border-0');
+      }
+    }
+
+    // Switch Left Sidebar Tabs
+    function switchLeftTab(tab) {
+      document.getElementById('lcontent-docs').classList.toggle('hidden', tab !== 'docs');
+      document.getElementById('lcontent-burstiness').classList.toggle('hidden', tab !== 'burstiness');
+
+      document.getElementById('ltab-docs').className = tab === 'docs' 
+        ? "flex-1 py-1.5 text-center rounded-lg bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold shadow-2xs"
+        : "flex-1 py-1.5 text-center rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200";
+
+      document.getElementById('ltab-burstiness').className = tab === 'burstiness'
+        ? "flex-1 py-1.5 text-center rounded-lg bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold shadow-2xs"
+        : "flex-1 py-1.5 text-center rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200";
+    }
+
+    function openLeftSidebarTab(tab) {
+      if (!isLeftOpen) toggleLeftSidebar();
+      switchLeftTab(tab);
+    }
+
+    // Filter Rhythm Explorer (All, Short, Standard, Long)
+    let currentRhythmFilter = 'all';
+    function filterRhythm(cat) {
+      currentRhythmFilter = cat;
+      ['all', 'short', 'standard', 'long'].forEach(c => {
+        const btn = document.getElementById(`rf-${c}`);
+        if (btn) {
+          if (c === cat) {
+            btn.className = "px-2 py-1 rounded-full border whitespace-nowrap bg-slate-800 text-white border-slate-800 dark:bg-slate-200 dark:text-slate-900 cursor-pointer font-semibold shadow-xs";
+          } else {
+            btn.className = "px-2 py-1 rounded-full border whitespace-nowrap bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 cursor-pointer font-medium";
+          }
+        }
+      });
+
+      // Show/hide sentence cards
+      let visibleCount = 0;
+      for (let i = 1; i <= 5; i++) {
+        const card = document.getElementById(`rcard-${i}`);
+        if (!card) continue;
+        const cardCat = card.getAttribute('data-cat');
+        if (cat === 'all' || cardCat === cat) {
+          card.classList.remove('hidden');
+          visibleCount++;
+        } else {
+          card.classList.add('hidden');
+        }
+      }
+      document.getElementById('rhythm-showing-label').textContent = `Showing ${visibleCount} of 5`;
+    }
+
+    // Toggle Empty State Simulation for Sentence Rhythm
+    let isRhythmEmpty = false;
+    function toggleEmptyStateRhythm() {
+      isRhythmEmpty = !isRhythmEmpty;
+      const label = document.getElementById('rhythm-showing-label');
+      const btn = document.getElementById('btn-toggle-rhythm-sim');
+      const ribbon = document.getElementById('cadence-ribbon-container');
+      const list = document.getElementById('rhythm-sentences-list');
+      const rfAll = document.getElementById('rf-all');
+      const rfShort = document.getElementById('rf-short');
+      const rfStd = document.getElementById('rf-standard');
+      const rfLong = document.getElementById('rf-long');
+
+      if (isRhythmEmpty) {
+        label.textContent = "Showing 0 of 0";
+        btn.textContent = "Mode: Belum Blok (0)";
+        ribbon.innerHTML = '<span class="text-[11px] text-slate-400 italic py-1">Blok teks di editor untuk melihat ritme...</span>';
+        list.innerHTML = '<div class="p-6 text-center text-slate-400 dark:text-slate-500 text-xs border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">Highlight/select sentences in the editor to view sentence cadence analysis.</div>';
+        rfAll.textContent = "All (0)";
+        rfShort.textContent = "Short ≤10w (0)";
+        rfStd.textContent = "Standard 11-24w (0)";
+        rfLong.textContent = "Long 25w+ (0)";
+      } else {
+        window.location.reload();
+      }
+    }
+
+    // ========================================================
+    // TOGGLE & TABS SIDEBAR KANAN (PERSIS SEPERTI DI GAMBAR)
+    // ========================================================
+    let isRightOpen = true;
+    let activeRightTab = 'burstiness';
+
+    function toggleRightSidebar() {
+      isRightOpen = !isRightOpen;
+      const panel = document.getElementById('right-panel-content');
+      const icon = document.getElementById('collapse-icon');
+      const btn = document.getElementById('btn-collapse-sidebar');
+
+      if (isRightOpen) {
+        panel.classList.remove('w-0', 'opacity-0', 'pointer-events-none');
+        panel.classList.add('w-[420px]', 'opacity-100');
+        icon.textContent = '>';
+        btn.title = "Tutup Panel Konten (Hide)";
+      } else {
+        panel.classList.remove('w-[420px]', 'opacity-100');
+        panel.classList.add('w-0', 'opacity-0', 'pointer-events-none');
+        icon.textContent = '<';
+        btn.title = "Buka Panel Konten (Show)";
+      }
+    }
+
+    function selectRightRailTab(tabId) {
+      // Jika panel sedang ditutup (hide), otomatis buka (show) saat ikon diklik
+      if (!isRightOpen) {
+        toggleRightSidebar();
+      }
+
+      activeRightTab = tabId;
+
+      // Update styling tombol strip ikon
+      const allTabs = ['burstiness', 'writing', 'library', 'stats', 'document', 'comments'];
+      allTabs.forEach(t => {
+        const btn = document.getElementById(`rtab-${t}`);
+        const content = document.getElementById(`rcontent-${t}`);
+        
+        if (btn) {
+          if (t === tabId) {
+            btn.className = "w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer bg-indigo-600 text-white shadow-xs";
+          } else {
+            btn.className = "w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400";
+          }
+        }
+
+        if (content) {
+          content.classList.toggle('hidden', t !== tabId);
+        }
+      });
+
+      // Update Judul Header & Badge sesuai tab yang aktif
+      const titleEl = document.getElementById('right-panel-header-title');
+      const badgeEl = document.getElementById('right-panel-header-badge');
+      if (tabId === 'burstiness') {
+        titleEl.textContent = "AI Rhythm & Burstiness";
+        badgeEl.textContent = "Engine";
+      } else if (tabId === 'writing') {
+        titleEl.textContent = "AI Writing & Paraphrase Studio";
+        badgeEl.textContent = "Workspace";
+      } else if (tabId === 'library') {
+        titleEl.textContent = "Citations & Library";
+        badgeEl.textContent = "Workspace";
+      } else if (tabId === 'stats') {
+        titleEl.textContent = "SPSS & Stats Interpreter";
+        badgeEl.textContent = "Phase 11";
+      } else if (tabId === 'document') {
+        titleEl.textContent = "Document Stats & Scan";
+        badgeEl.textContent = "Workspace";
+      } else if (tabId === 'comments') {
+        titleEl.textContent = "Review Notes & Suggestions";
+        badgeEl.textContent = "Reviewer #2";
+      }
+    }
+
+    // Toggle Semua Dokumen Switch
+    let isAnalyzeAll = false;
+    function toggleAnalyzeAllDoc() {
+      isAnalyzeAll = !isAnalyzeAll;
+      const bg = document.getElementById('switch-all-doc-bg');
+      const thumb = document.getElementById('switch-all-doc-thumb');
+      if (isAnalyzeAll) {
+        bg.classList.remove('bg-slate-200', 'dark:bg-slate-700');
+        bg.classList.add('bg-indigo-600');
+        thumb.classList.remove('translate-x-0');
+        thumb.classList.add('translate-x-4');
+      } else {
+        bg.classList.remove('bg-indigo-600');
+        bg.classList.add('bg-slate-200', 'dark:bg-slate-700');
+        thumb.classList.remove('translate-x-4');
+        thumb.classList.add('translate-x-0');
+      }
+    }
+
+    // Toggle Heatmap Kanvas
+    let isHeatmapActive = false;
+    function toggleHeatmapCanvas() {
+      isHeatmapActive = !isHeatmapActive;
+      const btn = document.getElementById('btn-heatmap-toggle');
+      const label = document.getElementById('btn-heatmap-label');
+      const target = document.getElementById('fmt-italic-target');
+
+      if (isHeatmapActive) {
+        btn.classList.add('bg-rose-100', 'text-rose-700', 'border-rose-300');
+        label.textContent = "Heatmap: AKTIF";
+        target.classList.add('bg-rose-200', 'text-rose-900', 'px-1', 'rounded', 'border-b-2', 'border-rose-400');
+      } else {
+        btn.classList.remove('bg-rose-100', 'text-rose-700', 'border-rose-300');
+        label.textContent = "Heatmap Kanvas";
+        target.classList.remove('bg-rose-200', 'text-rose-900', 'px-1', 'rounded', 'border-b-2', 'border-rose-400');
+      }
+    }
+
+    // Studio Parafrase Simulation
+    function runParaphraseSimulation() {
+      const resultBox = document.getElementById('paraphrase-result-box');
+      resultBox.classList.remove('hidden');
+    }
+
+    function applyParaphraseToCanvas() {
+      const sentence1 = document.getElementById('sentence-1');
+      if (sentence1) {
+        sentence1.innerHTML = document.getElementById('paraphrase-result-text').textContent;
+        sentence1.classList.add('flash-highlight');
+        setTimeout(() => sentence1.classList.remove('flash-highlight'), 2500);
+      }
+    }
+
+    // ========================================================
+    // MODAL POP-UPS HANDLERS (BISA DIBUKA & DIISI SECARA NYATA)
+    // ========================================================
+    function openModal(modalId) {
+      const modal = document.getElementById(`modal-${modalId}`);
+      if (modal) {
+        modal.classList.remove('hidden');
+      }
+    }
+
+    function closeModal(modalId) {
+      const modal = document.getElementById(`modal-${modalId}`);
+      if (modal) {
+        modal.classList.add('hidden');
+      }
+    }
+
+    // Submit Modal Sitasi: Memasukkan sitasi yang diketik pengguna ke kanvas teks
+    function submitCitationModal(e) {
+      e.preventDefault();
+      const author = document.getElementById('input-cit-author').value;
+      const year = document.getElementById('input-cit-year').value;
+      const title = document.getElementById('input-cit-title').value;
+      const style = document.getElementById('input-cit-style').value;
+
+      let citationText = `[${author}, ${year}]`;
+      if (style === 'ieee') citationText = `[1]`;
+
+      // Sisipkan ke kanvas paragraf 1
+      const p1 = document.getElementById('doc-p1');
+      const span = document.createElement('span');
+      span.className = "bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 font-semibold px-1.5 py-0.5 rounded cursor-pointer mx-1 border border-indigo-200 dark:border-indigo-800";
+      span.textContent = citationText;
+      span.title = `${title} (${year})`;
+      p1.appendChild(span);
+
+      // Tutup modal
+      closeModal('citation');
+      alert(`Sitasi "${citationText}" berhasil disisipkan ke dalam dokumen!`);
+    }
+
+    // Append helper LaTeX shortcut
+    function appendLatex(snippet) {
+      const textarea = document.getElementById('input-latex-code');
+      textarea.value += ' ' + snippet;
+      updateMathPreview();
+    }
+
+    function updateMathPreview() {
+      const code = document.getElementById('input-latex-code').value;
+      const preview = document.getElementById('math-preview-box');
+      preview.textContent = `$$${code}$$`;
+    }
+
+    // Submit Modal Rumus: Menambahkan blok KaTeX ke naskah
+    function submitMathModal() {
+      const code = document.getElementById('input-latex-code').value;
+      const container = document.getElementById('dynamic-insert-container');
+      const mathDiv = document.createElement('div');
+      mathDiv.className = "p-3 bg-slate-50 dark:bg-slate-800/60 border border-indigo-200 dark:border-indigo-800 rounded-xl text-center font-mono text-sm text-indigo-700 dark:text-indigo-300 my-3 shadow-2xs";
+      mathDiv.textContent = `$$${code}$$`;
+      container.appendChild(mathDiv);
+
+      closeModal('math');
+      alert(`Rumus LaTeX KaTeX berhasil disisipkan ke naskah!`);
+    }
+
+    // Submit Modal Ekspor: Menjalankan simulasi progress bar
+    function submitExportModal() {
+      const progressContainer = document.getElementById('export-progress-container');
+      const progressBar = document.getElementById('export-progress-bar');
+      const progressPct = document.getElementById('export-progress-pct');
+      const btn = document.getElementById('btn-run-export');
+
+      progressContainer.classList.remove('hidden');
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+
+      let currentPct = 0;
+      const interval = setInterval(() => {
+        currentPct += 20;
+        progressBar.style.width = `${currentPct}%`;
+        progressPct.textContent = `${currentPct}%`;
+
+        if (currentPct >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            progressContainer.classList.add('hidden');
+            btn.disabled = false;
+            btn.classList.remove('opacity-50');
+            closeModal('export');
+            alert('🎉 Dokumen naskah akademik berhasil diekspor dan diunduh!');
+          }, 400);
+        }
+      }, 150);
+    }
+
+    // Jump to Sentence & Flash Highlight on Canvas
+    function jumpToSentence(idx) {
+      const el = document.getElementById(`sentence-${idx}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('flash-highlight');
+        setTimeout(() => el.classList.remove('flash-highlight'), 3000);
+      }
+    }
+
+    // Text Formatting Interactive Actions on Canvas
+    function toggleFormat(type) {
+      const target = document.getElementById('fmt-italic-target');
+      if (type === 'bold') {
+        target.classList.toggle('font-bold');
+      } else if (type === 'italic') {
+        target.classList.toggle('italic');
+      } else if (type === 'underline') {
+        target.classList.toggle('underline');
+      } else if (type === 'strike') {
+        target.classList.toggle('line-through');
+      }
+    }
+
+    let isHighlighted = false;
+    function toggleHighlight() {
+      isHighlighted = !isHighlighted;
+      const target = document.getElementById('sentence-1');
+      if (isHighlighted) {
+        target.classList.add('bg-amber-200', 'dark:bg-amber-900/50', 'rounded', 'px-1');
+      } else {
+        target.classList.remove('bg-amber-200', 'dark:bg-amber-900/50', 'rounded', 'px-1');
+      }
+    }
+
+    // Alignments on Canvas
+    function setAlignment(align) {
+      const p1 = document.getElementById('doc-p1');
+      const p2 = document.getElementById('doc-p2');
+      [p1, p2].forEach(p => {
+        p.className = `text-slate-700 dark:text-slate-300 leading-relaxed text-sm mb-4 text-${align}`;
+      });
+
+      ['left', 'center', 'right', 'justify'].forEach(a => {
+        const btn = document.getElementById(`btn-align-${a}`);
+        if (btn) {
+          btn.className = a === align
+            ? "p-1.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 font-bold cursor-pointer"
+            : "p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 cursor-pointer";
+        }
+      });
+    }
+
+    // Change Heading Style
+    function changeHeadingStyle(val) {
+      const h1 = document.getElementById('doc-h1');
+      if (val === 'h1') {
+        h1.className = "text-2xl font-bold text-slate-900 dark:text-white mb-6 uppercase tracking-tight";
+      } else if (val === 'h2') {
+        h1.className = "text-lg font-bold text-slate-900 dark:text-white mb-4 tracking-tight";
+      } else if (val === 'h3') {
+        h1.className = "text-base font-semibold text-slate-900 dark:text-white mb-3";
+      } else {
+        h1.className = "text-sm font-normal text-slate-700 dark:text-slate-300 mb-2";
+      }
+    }
+
+    // Toggle Ghostwriter ON/OFF
+    let isGhostwriter = true;
+    function toggleGhostwriter() {
+      isGhostwriter = !isGhostwriter;
+      const statusText = document.getElementById('ghostwriter-status-text');
+      const footerStatus = document.getElementById('footer-ghostwriter-status');
+      if (isGhostwriter) {
+        statusText.textContent = "ON";
+        statusText.className = "bg-indigo-200 dark:bg-indigo-900 text-indigo-900 dark:text-indigo-200 px-1 rounded text-[10px]";
+        footerStatus.textContent = "ON (Jeda 4.5s)";
+      } else {
+        statusText.textContent = "OFF";
+        statusText.className = "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-1 rounded text-[10px]";
+        footerStatus.textContent = "OFF";
+      }
+    }
+
+    // Toggle Export Dropdown
+    function toggleExportDropdown() {
+      document.getElementById('export-dropdown').classList.toggle('hidden');
+    }
+
+    // Insert Sample Blocks on Canvas
+    function insertSample(type) {
+      const container = document.getElementById('dynamic-insert-container');
+      if (type === 'table') {
+        container.innerHTML = `
+          <div class="border border-slate-300 dark:border-slate-700 rounded-lg overflow-hidden my-3">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-100 dark:bg-slate-800 font-bold border-b border-slate-300 dark:border-slate-700">
+                <tr><th class="p-2">No</th><th class="p-2">Parameter Pengujian</th><th class="p-2">Hasil Uji Black-Box</th></tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                <tr><td class="p-2">1</td><td class="p-2">Sinkronisasi Reservasi Real-Time</td><td class="p-2 text-emerald-600 font-bold">100% Berhasil</td></tr>
+                <tr><td class="p-2">2</td><td class="p-2">Penjadwalan Kamar Otomatis</td><td class="p-2 text-emerald-600 font-bold">100% Valid</td></tr>
+              </tbody>
+            </table>
+          </div>
+        `;
+      } else if (type === 'math-inline' || type === 'math-block') {
+        openModal('math');
+      } else if (type === 'citation') {
+        openModal('citation');
+      }
+    }
+
+    // Toggle Dark Mode
+    let isDark = false;
+    function toggleDarkMode() {
+      isDark = !isDark;
+      const themeIcon = document.getElementById('theme-icon');
+      if (themeIcon) themeIcon.textContent = isDark ? '☀️' : '🌙';
+      const themeText = document.getElementById('theme-text');
+      if (themeText) themeText.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+    }
+
+    // Concept Switcher Dummy
+    function switchConcept(id) {
+      if (id === 1) {
+        document.getElementById('ribbon-tabs-bar').classList.remove('hidden');
+        document.getElementById('ribbon-content-bar').classList.remove('hidden');
+      } else if (id === 2) {
+        alert('Konsep 2 (Segmented Compact Bar): Toolbar dibuat 1 baris ramping dalam kotak-kotak teratur.');
+      } else if (id === 3) {
+        alert('Konsep 3 (Physical A4 Canvas): Ditambah Mistar Ruler Margin Skripsi 4-3-3-3.');
+      }
+    }
+  </script>
+</body>
+</html>

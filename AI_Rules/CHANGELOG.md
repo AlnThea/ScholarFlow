@@ -1,5 +1,35 @@
 # ScholarFlow Changelog
 
+## v0.43.0 - Modern Microsoft Word Ribbon Editor Layout & Two-Tier Header Migration
+
+- **Modern Microsoft Word Ribbon Toolbar (`components/editor/editorjs-toolbar.tsx`, `components/editor/editor-header.tsx`, `components/editor/editor-layout.tsx`, `hooks/use-editor-layout-logic.ts`)**:
+  - **4-Tab Modern Word Ribbon**: Restructured the previous flat horizontal toolbar into 4 categorized Microsoft Word Ribbon tabs:
+    1. **Beranda (Home)**: Text styling, SuggestingModeControl, Undo/Redo, Heading select (`currentBlockType`), Font size select (`currentFontSize`), Inline formats (`B`, `I`, `U`, `S`, `Code`, `Super`, `Sub`, `Link`, `Highlight`), Paragraph alignment (`Left`, `Center`, `Right`, `Justify`).
+    2. **Sisipkan (Insert)**: Grouped media, tables & mathematical insertions (`Picture`, `Table`, `Code Block`, `Cross-Reference (@fig, @tab)`, `Inline KaTeX`, `LaTeX Math Block`, `Math Helper Panel`).
+    3. **Referensi (References)**: Grouped academic citation tools (`@ Citation`, `CitationStyleSelector` dropdown, `Cross-Reference`).
+    4. **Tinjauan & AI (Review & AI)**: Grouped manuscript integrity & review tools (`AcademicIntegrityPill`, `GhostwriterToggle`, `SuggestingModeControl`).
+  - **Right Pinned Ribbon Cluster**: Kept the Academic Integrity Barometer, Ghostwriter AI toggle, and Document Status label permanently visible on the right of the ribbon across tabs.
+  - **2-Tier Document Header & Full-Width Ribbon (`components/editor/editor-header.tsx`, `components/editor/editor-layout.tsx`)**: Upgraded header to professional 2-tier layout:
+    - Tier 1: Blue Word icon `[W]` + Editable title + Sync engine chip (`• Realtime WS` / `Smart Polling`).
+    - Tier 2: Cloud sync status (`☁️ Tersimpan otomatis ke Cloud • Terakhir diedit baru saja`).
+    - **Full-Width Top Navbars & Fixed Header Position**: Restructured editor layout hierarchy so that `EditorHeader` and `EditorJsToolbar` span the full 100% width of the screen. Placed `MinimalSidebar` below the Ribbon toolbar inside the workspace, ensuring the top navbar never shifts or moves when opening or closing the left sidebar.
+  - **Word Canvas Bottom Status Bar (`components/editor/editor-layout.tsx`)**: Added unobtrusive bottom status footer with live Word Count, Character Count, Language indicator, and 100% Zoom badge.
+  - **Modern Left Sidebar Segmented Tabs & Document Tree (`components/editor/sidebar/sidebar-documents-view.tsx`, `components/editor/minimal-sidebar.tsx`)**:
+    - Replaced the previous search-heavy "My Documents" header with 2 sleek top Segmented Tabs: `[ 📁 Dokumen ]` and `[ 📊 Sentence Rhythm ]`.
+    - Integrated `PROYEK SKRIPSI / THESIS` category header with quick `+ Baru` document creation button.
+    - Upgraded document list cards to modern rounded-xl cards with active document indicator (`📄 Bab 1: Pendahuluan (Aktif)`), subtle hover delete icon, and independent documents support.
+    - Embedded `SentenceRhythmExplorer` directly inside the Sentence Rhythm tab for quick cadence & burstiness checking.
+    - Eliminated conflicting dual rendering where `MinimalSidebar` was rendering an unstyled standalone `SentenceRhythmExplorer` without tabs (`activeSidebarTab === 'burstiness'`). Now `SidebarDocumentsView` cleanly unifies both views under the approved tab navigation (`[ 📁 Dokumen ]` and `[ 📊 Sentence Rhythm ]`) matching `mockup-editor-concepts.html`.
+    - **Sentence Rhythm Explorer Flex-Wrap & Interactive Cadence Ribbon (`components/editor/sentence-rhythm-explorer.tsx`)**: Upgraded filter badges (`All`, `Short ≤10w`, `Standard 11-24w`, `Long 25w+`) to automatic row wrapping (`flex flex-wrap gap-1.5`) eliminating horizontal scrollbars, made Cadence Ribbon numbers clickable to smoothly jump and highlight sentences in the canvas, and added a quick "Semua Naskah" (Analyze Entire Document) button to analyze the entire manuscript if no text is currently selected.
+    - **Contextual Sidebar Bottom Controls (`components/editor/minimal-sidebar.tsx`)**: Conditionally hid the Admin settings, Language, Dark Mode row, and User profile card on the document editor page (`!isDocumentEditor`) while keeping them fully accessible on the general dashboard view. This maximizes the vertical tree space for chapters and documents matching the clean sidebar layout in `mockup-editor-concepts.html`.
+    - Upgraded sidebar width to `w-72 sm:w-80` with comprehensive Light/Dark Mode classes.
+  - **Physical A4 Paper Canvas & Dynamic Content Growth (`components/editor/editor-layout.tsx`, `components/editor/editor-header.tsx`, `app/globals.css`)**:
+    - Resolved canvas overflow clipping where `align-items: stretch` in the scrollable flex viewport clamped `#editor-page-container` to the viewport height, causing long documents, images, and subsequent paragraphs to spill outside the white paper sheet onto the desk background.
+    - Set `<main>` to `items-start` (`align-items: flex-start`) and `#editor-page-container` to `h-auto self-start min-h-[1050px]`, ensuring the white A4 paper expands seamlessly with arbitrarily long content, tables, and images.
+    - Enhanced document title input in `components/editor/editor-header.tsx` with `min-w-[180px] sm:min-w-[220px]` and responsive search text truncation (`hidden xl:inline`), preventing title shrinkage when both sidebars are opened simultaneously.
+  - **Zero Logic Regression**: 100% preserved all React hooks, Editor.js methods, keyboard shortcuts, onboarding tours (`data-tour`), and event handlers.
+  - **Automated Verification**: Clean `tsc --noEmit -p tsconfig.json` compilation (0 errors).
+
 ## v0.42.3 - Zen Mode Autosave Debounce & Zero-Latency Local Snapshot
 
 - **Zen / Focused Mode Autosave Delay (4,500ms) & Zero-Latency Local Cache (`hooks/use-editor-document.ts`, `hooks/use-shared-document-sync.ts`)**:
