@@ -59,7 +59,8 @@ export function MinimalSidebar({
   onOpenBackendSettings,
   onOpenHelp,
   activeSidebarTab,
-  selectedText
+  selectedText,
+  onOpenFileHub
 }: { 
   isExpanded?: boolean; 
   onToggle?: () => void;
@@ -77,6 +78,7 @@ export function MinimalSidebar({
   onOpenHelp?: () => void;
   activeSidebarTab?: 'library' | 'writing' | 'document' | 'comments' | 'burstiness' | 'stats';
   selectedText?: string;
+  onOpenFileHub?: () => void;
 }) {
   const { language, setLanguage, t } = useLanguage();
   const { user, profile } = useAuth();
@@ -366,6 +368,7 @@ export function MinimalSidebar({
           setDocumentToDelete={setDocumentToDelete}
           selectedText={selectedText}
           activeSidebarTab={activeSidebarTab}
+          onOpenFileHub={onOpenFileHub}
         />
       )}
 

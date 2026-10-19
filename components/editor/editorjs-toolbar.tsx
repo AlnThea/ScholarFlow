@@ -61,6 +61,7 @@ export type EditorToolbarProps = {
   isGhostwriterLoading?: boolean;
   citationStyle?: string;
   onChangeCitationStyle?: (style: any) => void;
+  onOpenFileHub?: () => void;
 };
 
 type RibbonTabKey = 'beranda' | 'sisipkan' | 'referensi' | 'tinjauan';
@@ -97,6 +98,7 @@ export const EditorJsToolbar = ({
   documentContent,
   onOpenIntegrityTab,
   onOpenCrossReferenceModal,
+  onOpenFileHub,
 }: EditorToolbarProps) => {
   const [activeRibbonTab, setActiveRibbonTab] = useState<RibbonTabKey>('beranda');
 
@@ -136,6 +138,17 @@ export const EditorJsToolbar = ({
       {/* 1. Baris Tab Ribbon ala Modern Microsoft Word */}
       <div className="flex items-center justify-between px-6 border-b border-slate-150 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 select-none overflow-x-auto scrollbar-none">
         <nav className="flex items-center gap-1 -mb-px">
+          {/* Tab/Tombol Berkas (File) ala Microsoft Word */}
+          <button
+            type="button"
+            onClick={onOpenFileHub}
+            className="flex items-center gap-1 px-3 py-1.5 my-1 text-xs font-bold rounded-md bg-[#185abd] hover:bg-[#124999] text-white transition shadow-2xs cursor-pointer mr-1.5"
+            title={language === 'en' ? 'File Menu (Open, New, Manage Documents)' : 'Menu Berkas (Buka, Dokumen Baru, Kelola Dokumen)'}
+          >
+            <span>📁</span>
+            <span>{language === 'en' ? 'File' : 'File'}</span>
+          </button>
+
           {ribbonTabs.map((tab) => {
             const isActive = activeRibbonTab === tab.key;
             return (

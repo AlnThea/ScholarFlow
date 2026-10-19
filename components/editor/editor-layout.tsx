@@ -29,6 +29,7 @@ import { SuggestingChips } from './suggesting-chips';
 import { CrossReferenceModal } from './modals/cross-reference-modal';
 import { AcademicScaffoldModal } from './modals/academic-scaffold-modal';
 import { ProjectBinderModal } from './modals/project-binder-modal';
+import { DocumentHubModal } from './modals/document-hub-modal';
 import { AcademicLinterModal } from './modals/academic-linter-modal';
 import { SlideDeckModal } from './modals/slide-deck-modal';
 import { LiteratureMatrixModal } from './modals/literature-matrix-modal';
@@ -348,6 +349,7 @@ export function EditorLayout({
   const [isCrossReferenceModalOpen, setIsCrossReferenceModalOpen] = useState(false);
   const [isScaffoldModalOpen, setIsScaffoldModalOpen] = useState(false);
   const [isProjectBinderModalOpen, setIsProjectBinderModalOpen] = useState(false);
+  const [isDocumentHubOpen, setIsDocumentHubOpen] = useState(false);
   const [isLinterModalOpen, setIsLinterModalOpen] = useState(false);
   const [isSlideDeckModalOpen, setIsSlideDeckModalOpen] = useState(false);
   const [isLiteratureMatrixModalOpen, setIsLiteratureMatrixModalOpen] = useState(false);
@@ -495,6 +497,13 @@ export function EditorLayout({
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'o') {
         e.preventDefault();
         setIsScaffoldModalOpen(true);
+        return;
+      }
+
+      // Ctrl + O -> File & Document Manager Hub (Open Document)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') {
+        e.preventDefault();
+        setIsDocumentHubOpen(true);
         return;
       }
 
@@ -837,6 +846,7 @@ export function EditorLayout({
               setIsRightSidebarExpanded(true);
               setActiveSidebarTab?.('burstiness');
             }}
+            onOpenFileHub={() => setIsDocumentHubOpen(true)}
           />
           {/* LaTeX Math Helper Panel */}
           <MathHelperPanel
@@ -908,6 +918,7 @@ export function EditorLayout({
                 onOpenBackendSettings={() => setIsBackendModalOpen(true)}
                 onOpenHelp={() => setIsHelpOpen(true)}
                 activeSidebarTab={activeSidebarTab}
+                onOpenFileHub={() => setIsDocumentHubOpen(true)}
               />
 
               {/* Central A4 Canvas Scroll Viewport */}
@@ -1407,6 +1418,22 @@ export function EditorLayout({
           setIsProjectBinderModalOpen(false);
           onCreateDocument?.();
         }}
+      />
+      <DocumentHubModal
+        isOpen={isDocumentHubOpen}
+        onClose={() => setIsDocumentHubOpen(false)}
+        language={language}
+        documents={documents}
+        currentDocumentId={currentDocument?.id}
+        onSelectDocument={(id) => {
+          onSelectDocument?.(id);
+          setIsDocumentHubOpen(false);
+        }}
+        onCreateDocument={() => {
+          onCreateDocument?.();
+          setIsDocumentHubOpen(false);
+        }}
+        onDeleteDocument={onDeleteDocument}
       />
       <AcademicLinterModal
         isOpen={isLinterModalOpen}

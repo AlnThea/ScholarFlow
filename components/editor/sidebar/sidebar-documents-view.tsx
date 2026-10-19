@@ -24,6 +24,7 @@ export interface SidebarDocumentsViewProps {
   setDocumentToDelete: (doc: { id: string; title: string } | null) => void;
   selectedText?: string;
   activeSidebarTab?: string;
+  onOpenFileHub?: () => void;
 }
 
 export function SidebarDocumentsView({
@@ -44,6 +45,7 @@ export function SidebarDocumentsView({
   setDocumentToDelete,
   selectedText = '',
   activeSidebarTab,
+  onOpenFileHub,
 }: SidebarDocumentsViewProps) {
   const [activeTab, setActiveTab] = useState<'docs' | 'rhythm'>(
     activeSidebarTab === 'burstiness' ? 'rhythm' : 'docs'
@@ -115,6 +117,21 @@ export function SidebarDocumentsView({
       {/* 2. TAB KONTEN 1: DOKUMEN (Tampilan Rapi & Modern ala Image 2) */}
       {activeTab === 'docs' && (
         <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4 thin-scroll">
+          {/* Quick Hub Trigger Banner */}
+          {onOpenFileHub && (
+            <button
+              type="button"
+              onClick={onOpenFileHub}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-blue-50/70 hover:bg-blue-100 dark:bg-blue-950/50 dark:hover:bg-blue-900/60 border border-blue-200/80 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-bold text-xs transition-all shadow-2xs cursor-pointer group"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-sm">📁</span>
+                <span className="truncate">{isEn ? 'Open File Manager Hub' : 'Buka Pengelola Berkas'}</span>
+              </div>
+              <span className="text-blue-500 group-hover:translate-x-0.5 transition-transform text-xs">↗</span>
+            </button>
+          )}
+
           {/* Baris Judul Kategori & Tombol + Baru */}
           <div className="flex items-center justify-between text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider text-[10px] px-1">
             <div className="flex items-center gap-1.5">
