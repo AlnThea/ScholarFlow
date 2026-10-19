@@ -1,5 +1,26 @@
 # ScholarFlow Changelog
 
+## v0.43.4 - Targeted Action Buttons Relocation (Export, Share, 49.2k, Settings) to Ribbon Tools Row
+
+- **Targeted Action Buttons Relocation (`components/editor/editor-header-actions.tsx`, `components/editor/editor-header.tsx`, `components/editor/editor-layout.tsx`, `components/editor/editorjs-toolbar.tsx`)**:
+  - Relocated **ONLY** the 4 user-specified action buttons from the top header to the right corner of the Ribbon toolbar tools row (aligned with paragraph alignment buttons: Left, Center, Right, Justify, directly below the ribbon tab row):
+    1. **TOMBOL EXPORT**: Complete export dropdown (Word `.docx`, PDF `.pdf`, LaTeX `.tex` + `.bib` Overleaf ZIP bundle, BibTeX `.bib`, RIS `.ris`, JSON, Markdown/Text).
+    2. **SHARE**: Manuscript collaboration & permissions modal launcher.
+    3. **49.2K**: AI Token Quota badge (`TokenQuotaBadge`) with plan limits and upgrade prompt.
+    4. **ICON GERIGI (⚙️)**: Document & research settings modal trigger.
+  - **Restored Header Action Capsule (`components/editor/editor-header.tsx`)**:
+    - Retained all other navigation, collaboration, and tool launcher buttons directly in the top `EditorHeader`:
+      - **Spotlight Command Palette** (`Ctrl + K`) quick search with rich tooltip.
+      - **Notification Bell Dropdown** (`IconBell`) with unread ping indicator and real-time notification list.
+      - **Pricing Button** (`IconCreditCard` / `Pricing` / `Langganan`).
+      - **Research Assistant Panel Toggle** (`IconLayoutSidebarRightCollapse` / `Research Assistant` / `Asisten Riset`).
+      - **Version History & Time Machine** (`IconHistory` / `History` / `Riwayat`).
+      - **Reviewer #2 Simulator & Readiness Audit** (`IconMicroscope` / `Reviewer #2`).
+      - **Keyboard Shortcuts Cheat Sheet** (`IconKeyboard` / `?`).
+      - **Live Co-Editors Presence Avatars** (`activeUsers`).
+  - Full Dark Mode (`dark:`) and Bilingual (EN <-> ID) support maintained across both containers.
+  - Automated verification: `npx tsc --noEmit` compiled with 0 errors.
+
 ## v0.43.3 - Action Buttons Relocation to Ribbon Tools Row Right Corner
 
 - **Action Controls Capsule Relocation (`components/editor/editor-header-actions.tsx`, `components/editor/editorjs-toolbar.tsx`, `components/editor/editor-header.tsx`, `components/editor/editor-layout.tsx`)**:

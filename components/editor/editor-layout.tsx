@@ -811,7 +811,7 @@ export function EditorLayout({
             onOpenLatexExport={() => setIsLatexExportModalOpen(true)}
             activeUsers={activeUsers}
             statusLabel={statusLabel}
-            hideActions={true}
+            hideActions={false}
           />
 
           {/* Navbar 2 – Academic Formatting Toolbar */}
