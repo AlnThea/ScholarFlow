@@ -1,5 +1,21 @@
 # ScholarFlow Changelog
 
+## v0.43.2 - Dynamic Header Autosave Status & Word-Style Footer Indicators Migration
+
+- **Dynamic Autosave Status Synchronization (`components/editor/editor-header.tsx`, `components/editor/editor-layout.tsx`)**:
+  - Connected `EditorHeader` to the real runtime autosave status (`statusLabel`) from `useEditorDocument`, replacing the previous static/unresponsive placeholder text under the document title.
+  - Dynamically renders saving states:
+    - Amber spinning loader (`IconLoader`) with `Menyimpan...` / `Saving...` and `Menyelaraskan perubahan...` during active debounced cloud sync.
+    - Emerald cloud icon (`☁️`) with `Tersimpan ke Cloud` / `Saved to Cloud` and exact last saved timestamp (`Disimpan HH:mm` / `Saved HH:mm`) once synced.
+    - Error indicator (`⚠️ Gagal menyimpan`) if cloud sync fails.
+- **Word-Style Bottom Footer Status Bar Indicators (`components/editor/editor-layout.tsx`, `components/editor/editorjs-toolbar.tsx`, `components/editor/ghostwriter-toggle.tsx`)**:
+  - Removed the pinned right cluster from `EditorJsToolbar`, eliminating visual clutter from the top ribbon tabs.
+  - Relocated **Ghostwriter AI Assistant Toggle** and **70% Originality Barometer Pill (`AcademicIntegrityPill`)** to the permanent bottom status bar footer right next to the `100% Zoom` badge.
+  - Enhanced `GhostwriterToggle` with optional `className` prop for seamless vertical alignment inside the footer status bar.
+  - Preserved 100% functionality: clicking Originality Pill still directly opens the Right Sidebar's Cadence & Burstiness Explorer, and toggling Ghostwriter still triggers autocomplete suggestion cycles (`Ctrl+J`).
+  - Full Dark Mode (`dark:`) and Bilingual (EN <-> ID) support.
+  - Automated verification: `npx tsc --noEmit` compiled with 0 errors.
+
 ## v0.43.0 - Modern Microsoft Word Ribbon Editor Layout & Two-Tier Header Migration
 
 - **Modern Microsoft Word Ribbon Toolbar (`components/editor/editorjs-toolbar.tsx`, `components/editor/editor-header.tsx`, `components/editor/editor-layout.tsx`, `hooks/use-editor-layout-logic.ts`)**:

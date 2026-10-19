@@ -55,7 +55,7 @@ export type EditorToolbarProps = {
   setIsMathModalOpen: (val: boolean) => void;
   isMathHelperOpen: boolean;
   setIsMathHelperOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  statusLabel: string;
+  statusLabel?: string;
   isGhostwriterEnabled?: boolean;
   onToggleGhostwriter?: () => void;
   isGhostwriterLoading?: boolean;
@@ -569,37 +569,6 @@ export const EditorJsToolbar = ({
             />
           </div>
         )}
-
-        {/* ============================================================== */}
-        {/* SISI KANAN RIBBON (PINNED) - Integritas, Ghostwriter & Status  */}
-        {/* ============================================================== */}
-        <div className="ml-auto flex items-center gap-2 shrink-0">
-          {/* Tampilkan Quick Integrity & Ghostwriter saat berada di tab selain Tinjauan */}
-          {activeRibbonTab !== 'tinjauan' && (
-            <>
-              {documentContent && (
-                <AcademicIntegrityPill
-                  content={documentContent}
-                  language={language as any}
-                  onClick={onOpenIntegrityTab}
-                />
-              )}
-              {onToggleGhostwriter && (
-                <GhostwriterToggle
-                  isEnabled={!!isGhostwriterEnabled}
-                  onToggle={onToggleGhostwriter}
-                  isLoading={isGhostwriterLoading}
-                  language={language}
-                />
-              )}
-            </>
-          )}
-
-          {/* Label Status Dokumen */}
-          <div className="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100/70 dark:bg-slate-800/70 px-2.5 py-1 rounded border border-slate-200/50 dark:border-slate-700/50">
-            {statusLabel}
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ export interface GhostwriterToggleProps {
   onToggle: () => void;
   isLoading?: boolean;
   language?: string;
+  className?: string;
 }
 
 export function GhostwriterToggle({
@@ -16,6 +17,7 @@ export function GhostwriterToggle({
   onToggle,
   isLoading = false,
   language = 'id',
+  className = '',
 }: GhostwriterToggleProps) {
   const isEn = language === 'en';
 
@@ -32,7 +34,7 @@ export function GhostwriterToggle({
         isEnabled
           ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200/80 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 shadow-xs'
           : 'bg-slate-100/70 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 border-slate-200/60 dark:border-slate-700 hover:bg-slate-200/70 dark:hover:bg-slate-700'
-      }`}
+      } ${className}`}
     >
       {isLoading ? (
         <IconSparkles className="h-3.5 w-3.5 animate-spin text-indigo-500" />

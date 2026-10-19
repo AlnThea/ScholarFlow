@@ -43,6 +43,7 @@ export type EditorHeaderProps = {
   onOpenShortcuts?: () => void;
   onOpenLatexExport?: () => void;
   activeUsers?: any[];
+  statusLabel?: string;
 };
 
 export const EditorHeader = ({
@@ -80,6 +81,7 @@ export const EditorHeader = ({
   onOpenShortcuts,
   onOpenLatexExport,
   activeUsers,
+  statusLabel,
 }: EditorHeaderProps) => {
   const [showExportDropdown, setShowExportDropdown] = useState(false);
   const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
@@ -147,13 +149,31 @@ export const EditorHeader = ({
 
           {/* Baris 2: Tulisan Kecil di Bawah Judul (Status Simpan Cloud & Terakhir Diedit) */}
           <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 px-1 pt-0.5 select-none">
-            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
-              <span>☁️</span>
-              <span>{language === 'en' ? 'Saved to Cloud' : 'Tersimpan otomatis ke Cloud'}</span>
+            <span
+              className={`flex items-center gap-1 font-medium transition-colors ${
+                statusLabel?.toLowerCase().includes('menyimpan') || statusLabel?.toLowerCase().includes('saving')
+                  ? 'text-amber-600 dark:text-amber-400'
+                  : statusLabel?.toLowerCase().includes('gagal') || statusLabel?.toLowerCase().includes('fail')
+                  ? 'text-rose-600 dark:text-rose-400'
+                  : 'text-emerald-600 dark:text-emerald-400'
+              }`}
+            >
+              {statusLabel?.toLowerCase().includes('menyimpan') || statusLabel?.toLowerCase().includes('saving') ? (
+                <IconLoader className="h-3 w-3 animate-spin text-amber-500" />
+              ) : statusLabel?.toLowerCase().includes('gagal') || statusLabel?.toLowerCase().includes('fail') ? (
+                <span>⚠️</span>
+              ) : (
+                <span>☁️</span>
+              )}
+              <span>{statusLabel || (language === 'en' ? 'Saved to Cloud' : 'Tersimpan otomatis ke Cloud')}</span>
             </span>
             <span>•</span>
             <span className="text-slate-400 dark:text-slate-500">
-              {language === 'en' ? 'Last edited just now' : 'Terakhir diedit baru saja'}
+              {statusLabel?.toLowerCase().includes('menyimpan') || statusLabel?.toLowerCase().includes('saving')
+                ? (language === 'en' ? 'Syncing...' : 'Menyelaraskan...')
+                : currentDocument?.updated_at
+                ? `${language === 'en' ? 'Saved' : 'Disimpan'} ${new Date(currentDocument.updated_at).toLocaleTimeString(language === 'en' ? 'en-US' : 'id-ID', { hour: '2-digit', minute: '2-digit' })}`
+                : (language === 'en' ? 'Last edited just now' : 'Terakhir diedit baru saja')}
             </span>
           </div>
         </div>

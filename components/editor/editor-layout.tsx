@@ -16,6 +16,8 @@ import { EditorBubbleMenu } from './editor-bubble-menu';
 import { EditorJsToolbar } from './editorjs-toolbar';
 import { useGhostwriter } from '@/hooks/use-ghostwriter';
 import { GhostwriterSuggestion } from './ghostwriter-suggestion';
+import { GhostwriterToggle } from './ghostwriter-toggle';
+import { AcademicIntegrityPill } from './academic-integrity-pill';
 import { useVersionHistory } from '@/hooks/use-version-history';
 import { VersionHistoryModal } from './modals/version-history-modal';
 import { PeerReviewModal } from './modals/peer-review-modal';
@@ -807,6 +809,7 @@ export function EditorLayout({
             onOpenShortcuts={() => setIsShortcutsOpen(true)}
             onOpenLatexExport={() => setIsLatexExportModalOpen(true)}
             activeUsers={activeUsers}
+            statusLabel={statusLabel}
           />
 
           {/* Navbar 2 – Academic Formatting Toolbar */}
@@ -1173,7 +1176,7 @@ export function EditorLayout({
           </div>
 
           {/* Microsoft Word / Google Docs Bottom Status Bar (Permanent Window Footer) */}
-          <footer className="h-7 border-t border-slate-200 dark:border-slate-800 bg-slate-100/95 dark:bg-slate-900/95 px-6 py-1 text-[11px] text-slate-600 dark:text-slate-400 flex items-center justify-between select-none shrink-0 z-20 transition-colors">
+          <footer className="h-8 border-t border-slate-200 dark:border-slate-800 bg-slate-100/95 dark:bg-slate-900/95 px-6 py-1 text-[11px] text-slate-600 dark:text-slate-400 flex items-center justify-between select-none shrink-0 z-20 transition-colors">
             <div className="flex items-center gap-3 sm:gap-4 font-medium">
               <span>{isEn ? 'Page 1 of 1' : 'Halaman 1 dari 1'}</span>
               <span>•</span>
@@ -1185,7 +1188,34 @@ export function EditorLayout({
               <span className="hidden sm:inline">•</span>
               <span className="hidden sm:inline">{language === 'id' ? 'Bahasa Indonesia' : 'English (US)'}</span>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* Ghostwriter AI Assistant Toggle */}
+              {ghostwriter && (
+                <GhostwriterToggle
+                  isEnabled={!!ghostwriter.isEnabled}
+                  onToggle={ghostwriter.toggleEnabled}
+                  isLoading={ghostwriter.isLoading}
+                  language={language}
+                  className="py-0.5 text-[10.5px]"
+                />
+              )}
+
+              {/* Academic Integrity Barometer Pill (70% Originality) */}
+              {activeDocumentText && (
+                <AcademicIntegrityPill
+                  content={activeDocumentText}
+                  language={language as any}
+                  onClick={() => {
+                    setShowRightSidebar(true);
+                    setIsRightSidebarExpanded(true);
+                    setActiveSidebarTab?.('burstiness');
+                  }}
+                  className="py-0.5 text-[10.5px]"
+                />
+              )}
+
+              <div className="h-4 w-px bg-slate-300 dark:bg-slate-700 hidden sm:block" />
+
               <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span>{isEn ? '100% Zoom' : 'Skala 100%'}</span>
