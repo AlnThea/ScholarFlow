@@ -581,6 +581,10 @@ export function buildInlineMethods(props: EditorJsMethodsProps) {
           const range = selection.getRangeAt(0);
           if (range.collapsed) return;
     
+          const blockEl = (range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+            ? (range.commonAncestorContainer as HTMLElement)
+            : range.commonAncestorContainer.parentElement)?.closest('[contenteditable="true"]') as HTMLElement | null;
+
           // Find if the common ancestor is already a span with font size
           let container: HTMLElement | null = range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
             ? (range.commonAncestorContainer as HTMLElement)
@@ -603,7 +607,18 @@ export function buildInlineMethods(props: EditorJsMethodsProps) {
             } else {
               container.style.fontSize = size;
             }
+            if (blockEl) {
+              blockEl.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            if (typeof document !== 'undefined') {
+              document.dispatchEvent(new Event('selectionchange'));
+            }
             calculateLiveStats();
+            if (onContentChange && editorRef.current && saveCleanContent) {
+              saveCleanContent().then(content => {
+                if (content) onContentChange(content);
+              }).catch(console.error);
+            }
             return;
           }
     
@@ -632,7 +647,18 @@ export function buildInlineMethods(props: EditorJsMethodsProps) {
             range.insertNode(wrapperSpan);
           }
     
+          if (blockEl) {
+            blockEl.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          if (typeof document !== 'undefined') {
+            document.dispatchEvent(new Event('selectionchange'));
+          }
           calculateLiveStats();
+          if (onContentChange && editorRef.current && saveCleanContent) {
+            saveCleanContent().then(content => {
+              if (content) onContentChange(content);
+            }).catch(console.error);
+          }
         }
 ,
     insertHtmlAtCursor: (html: string) => {

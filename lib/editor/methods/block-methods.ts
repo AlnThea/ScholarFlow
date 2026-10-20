@@ -121,6 +121,15 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
     
                 // Callback to update parent layout toolbar state
                 onAlignmentChange?.(align);
+
+                // Notify EditorJS & trigger save
+                contentEditable.dispatchEvent(new Event('input', { bubbles: true }));
+                calculateLiveStats();
+                if (onContentChange && saveCleanContent) {
+                  saveCleanContent().then((content) => {
+                    if (content) onContentChange(content);
+                  }).catch(console.error);
+                }
               }
             }
           } catch (err) {

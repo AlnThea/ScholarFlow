@@ -201,6 +201,26 @@ export function useEditorLayoutLogic({
       let hasLink = false;
       let hasHighlight = false;
       let hasCode = false;
+      let hasBold = false;
+      let hasItalic = false;
+      let hasUnderline = false;
+      let hasStrikethrough = false;
+      let hasSuperscript = false;
+      let hasSubscript = false;
+
+      const checkNodeFormats = (el: HTMLElement) => {
+        if (!el) return;
+        if (el.tagName === 'A') hasLink = true;
+        if (el.tagName === 'MARK') hasHighlight = true;
+        if (el.tagName === 'CODE') hasCode = true;
+        if (el.tagName === 'B' || el.tagName === 'STRONG' || el.style?.fontWeight === 'bold' || parseInt(el.style?.fontWeight, 10) >= 600) hasBold = true;
+        if (el.tagName === 'I' || el.tagName === 'EM' || el.style?.fontStyle === 'italic') hasItalic = true;
+        if (el.tagName === 'U' || el.style?.textDecoration?.includes('underline')) hasUnderline = true;
+        if (el.tagName === 'S' || el.tagName === 'DEL' || el.tagName === 'STRIKE' || el.style?.textDecoration?.includes('line-through')) hasStrikethrough = true;
+        if (el.tagName === 'SUP') hasSuperscript = true;
+        if (el.tagName === 'SUB') hasSubscript = true;
+      };
+
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
         const editorContainer = document.getElementById('editorjs-holder');
@@ -213,73 +233,59 @@ export function useEditorLayoutLogic({
           : null;
         let node = anchorParent;
         while (node && editorContainer && editorContainer.contains(node)) {
-          if (node.tagName === 'A') {
-            hasLink = true;
-          }
-          if (node.tagName === 'MARK') {
-            hasHighlight = true;
-          }
-          if (node.tagName === 'CODE') {
-            hasCode = true;
-          }
-          if (hasLink && hasHighlight && hasCode) break;
+          checkNodeFormats(node);
           node = node.parentElement;
         }
 
-        // 2. Check focusNode parent if anchorNode didn't find all
-        if (!hasLink || !hasHighlight || !hasCode) {
-          let focusParent = selection.focusNode
-            ? (selection.focusNode.nodeType === Node.TEXT_NODE
-              ? selection.focusNode.parentElement
-              : selection.focusNode as HTMLElement)
-            : null;
-          node = focusParent;
-          while (node && editorContainer && editorContainer.contains(node)) {
-            if (node.tagName === 'A') {
-              hasLink = true;
-            }
-            if (node.tagName === 'MARK') {
-              hasHighlight = true;
-            }
-            if (node.tagName === 'CODE') {
-              hasCode = true;
-            }
-            if (hasLink && hasHighlight && hasCode) break;
-            node = node.parentElement;
-          }
+        // 2. Check focusNode parent if not all found
+        let focusParent = selection.focusNode
+          ? (selection.focusNode.nodeType === Node.TEXT_NODE
+            ? selection.focusNode.parentElement
+            : selection.focusNode as HTMLElement)
+          : null;
+        node = focusParent;
+        while (node && editorContainer && editorContainer.contains(node)) {
+          checkNodeFormats(node);
+          node = node.parentElement;
         }
 
         // 3. Check if selection range spans across/encloses tags
-        if (!hasLink || !hasHighlight || !hasCode) {
-          try {
-            const range = selection.getRangeAt(0);
-            const fragment = range.cloneContents();
-            const tempDiv = document.createElement('div');
-            tempDiv.appendChild(fragment);
-            if (!hasLink && tempDiv.querySelector('a')) {
-              hasLink = true;
-            }
-            if (!hasHighlight && tempDiv.querySelector('mark')) {
-              hasHighlight = true;
-            }
-            if (!hasCode && tempDiv.querySelector('code')) {
-              hasCode = true;
-            }
-          } catch (e) {
-            // ignore range extraction issues
-          }
+        try {
+          const range = selection.getRangeAt(0);
+          const fragment = range.cloneContents();
+          const tempDiv = document.createElement('div');
+          tempDiv.appendChild(fragment);
+          if (!hasLink && tempDiv.querySelector('a')) hasLink = true;
+          if (!hasHighlight && tempDiv.querySelector('mark')) hasHighlight = true;
+          if (!hasCode && tempDiv.querySelector('code')) hasCode = true;
+          if (!hasBold && (tempDiv.querySelector('b, strong') || (tempDiv.querySelector('[style*="font-weight"]') as HTMLElement)?.style?.fontWeight === 'bold')) hasBold = true;
+          if (!hasItalic && (tempDiv.querySelector('i, em') || (tempDiv.querySelector('[style*="font-style"]') as HTMLElement)?.style?.fontStyle === 'italic')) hasItalic = true;
+          if (!hasUnderline && (tempDiv.querySelector('u') || (tempDiv.querySelector('[style*="text-decoration"]') as HTMLElement)?.style?.textDecoration?.includes('underline'))) hasUnderline = true;
+          if (!hasStrikethrough && (tempDiv.querySelector('s, del, strike') || (tempDiv.querySelector('[style*="text-decoration"]') as HTMLElement)?.style?.textDecoration?.includes('line-through'))) hasStrikethrough = true;
+          if (!hasSuperscript && tempDiv.querySelector('sup')) hasSuperscript = true;
+          if (!hasSubscript && tempDiv.querySelector('sub')) hasSubscript = true;
+        } catch (e) {
+          // ignore range extraction issues
         }
       }
 
+      const safeQueryState = (cmd: string): boolean => {
+        try {
+          return typeof document !== 'undefined' && Boolean(document.queryCommandState(cmd));
+        } catch (e) {
+          return false;
+        }
+      };
+
       // 1. Sync format active states
       setActiveFormats({
-        bold: document.queryCommandState('bold'),
-        italic: document.queryCommandState('italic'),
-        underline: document.queryCommandState('underline'),
-        strikethrough: document.queryCommandState('strikeThrough'),
+        bold: safeQueryState('bold') || hasBold,
+        italic: safeQueryState('italic') || hasItalic,
+        underline: safeQueryState('underline') || hasUnderline,
+        strikethrough: safeQueryState('strikeThrough') || hasStrikethrough,
         code: hasCode,
-        superscript: document.queryCommandState('superscript'),
-        subscript: document.queryCommandState('subscript'),
+        superscript: safeQueryState('superscript') || hasSuperscript,
+        subscript: safeQueryState('subscript') || hasSubscript,
         link: hasLink,
         highlight: hasHighlight,
       });
