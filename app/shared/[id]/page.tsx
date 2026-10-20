@@ -201,9 +201,7 @@ export default function SharedDocumentPage() {
       {/* Navigation Header */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200/50 h-14 flex items-center justify-between px-6 shadow-sm shadow-slate-100/10">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center p-2 bg-indigo-600 text-white rounded-xl shadow-md shadow-indigo-200">
-            <IconBook className="h-4.5 w-4.5" />
-          </div>
+          <img src="/assets/navbar-logo-40x40.png" alt="ScholarFlow" className="h-8 w-8 rounded-lg object-contain shadow-sm" />
           <span className="text-sm font-extrabold tracking-tight text-slate-900">
             Scholar<span className="text-indigo-600">Flow</span>
           </span>

@@ -214,8 +214,28 @@ export function ParaphraseStudio({
           </p>
           <div className="flex flex-col gap-1.5">
             {prioritySentences.map((s, i) => (
-              <div key={i} className="flex flex-col gap-1 p-2 bg-white/60 dark:bg-slate-900/50 rounded border border-amber-100 dark:border-amber-900/50 cursor-pointer hover:bg-white transition-colors" onClick={() => handleGenerate(s.text)}>
-                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-500">{s.words} {isEn ? 'words' : 'kata'}</span>
+              <div
+                key={i}
+                className={`flex flex-col gap-1 p-2 rounded border transition-colors cursor-pointer ${
+                  selectedSentence === s.text
+                    ? 'border-indigo-400 bg-indigo-50/50 dark:border-indigo-600 dark:bg-indigo-950/40'
+                    : 'border-amber-100 dark:border-amber-900/50 bg-white/60 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900'
+                }`}
+                onClick={() => {
+                  setSelectedSentence(s.text);
+                  if (!isFreePlan) {
+                    handleGenerate(s.text);
+                  }
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-amber-700 dark:text-amber-500">{s.words} {isEn ? 'words' : 'kata'}</span>
+                  {isFreePlan && (
+                    <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-100/80 dark:bg-amber-900/40 px-1.5 py-0.5 rounded">
+                      PRO
+                    </span>
+                  )}
+                </div>
                 <span className="text-xs text-slate-700 dark:text-slate-300 line-clamp-2">{s.text}</span>
               </div>
             ))}

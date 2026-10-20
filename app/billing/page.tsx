@@ -79,6 +79,7 @@ export default function BillingPage() {
         <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
           <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
+              <img src="/assets/navbar-logo-40x40.png" alt="ScholarFlow" className="h-7 w-7 rounded-lg object-contain shadow-sm" />
               <h1 className="text-lg font-bold text-slate-700">
                 {t('navbar.billing')}
               </h1>

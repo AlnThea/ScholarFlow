@@ -148,6 +148,7 @@ export default function DashboardPage() {
         <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-xl border-b border-white/20 shadow-sm transition-all duration-300">
           <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
+              <img src="/assets/navbar-logo-40x40.png" alt="ScholarFlow" className="h-8 w-8 rounded-lg object-contain shadow-sm" />
               <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600">
                 {t('navbar.dashboard')}
               </h1>

@@ -147,13 +147,16 @@ export default function LibraryPage() {
         
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              My Library
-            </h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">
-              Manage your saved references, import new papers, and organize your research.
-            </p>
+          <div className="flex items-center gap-3.5">
+            <img src="/assets/navbar-logo-40x40.png" alt="ScholarFlow" className="h-10 w-10 rounded-xl object-contain shadow-sm" />
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                My Library
+              </h1>
+              <p className="text-gray-500 dark:text-gray-400 mt-1">
+                Manage your saved references, import new papers, and organize your research.
+              </p>
+            </div>
           </div>
           <div className="flex space-x-3">
             <input 

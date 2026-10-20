@@ -26,16 +26,28 @@ export function buildHistoryMethods(props: EditorJsMethodsProps) {
 
   return {
     undo: () => {
-          if (undoRef.current) {
-            undoRef.current.undo();
+      if (undoRef.current) {
+        try {
+          if (typeof undoRef.current.canUndo === 'function' && !undoRef.current.canUndo()) {
+            return;
           }
+          undoRef.current.undo();
+        } catch (err) {
+          console.warn('[ScholarFlow Undo] Batas riwayat tercapai atau tidak ada perubahan yang bisa di-undo:', err);
         }
-,
+      }
+    },
     redo: () => {
-          if (undoRef.current) {
-            undoRef.current.redo();
+      if (undoRef.current) {
+        try {
+          if (typeof undoRef.current.canRedo === 'function' && !undoRef.current.canRedo()) {
+            return;
           }
+          undoRef.current.redo();
+        } catch (err) {
+          console.warn('[ScholarFlow Redo] Batas riwayat tercapai atau tidak ada perubahan yang bisa di-redo:', err);
         }
-,
+      }
+    },
   };
 }

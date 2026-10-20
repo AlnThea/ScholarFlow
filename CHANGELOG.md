@@ -2,6 +2,45 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.42.4] - 2026-10-20 (Brand Logo & Academic Integrity Speedometer Gauge Geometry Fix)
+
+### 🎯 Academic Integrity Barometer Speedometer Geometry Hardening (`components/editor/academic-integrity-barometer.tsx`)
+- **SVG Arc & Gauge Geometry Calibration**:
+  - Eliminated the broken circle-clipping bug caused by `-rotate-90` combined with `h-24 overflow-hidden`, which previously chopped the speedometer in half and caused it to render as a bizarre detached right-side curve.
+  - Rebuilt the gauge using a true 180° semicircular SVG coordinate path (`viewBox="0 0 200 110"`) with exact mathematical quadrant boundaries:
+    - **Red Zone (0% - 45%)**: High AI Likeness / Low Originality (`#f43f5e`, 25 to 88.27).
+    - **Yellow Zone (45% - 75%)**: Moderate AI Rhythm / Review Recommended (`#f59e0b`, 88.27 to 153.03).
+    - **Green Zone (75% - 100%)**: Strong Human Originality (`#10b981`, 153.03 to 175).
+  - Recalibrated needle pivot point and central axis to `(100, 100)`, ensuring smooth, centered rotation matching the 0%–100% dial sweep.
+- **Paraphrase Studio Free-Tier Gate & Selection UX (`components/editor/paraphrase-studio.tsx`)**:
+  - Refactored `Priority Sentences` card click handler: clicking a priority sentence now loads and focuses the sentence into `selectedSentence` without abruptly triggering the subscription paywall modal.
+  - Added subtle `PRO` badges on priority sentence items in Free tier and restricted instant AI generation to Pro accounts, allowing Free users to preview and manually inspect sentences comfortably.
+- **Precise DOM Sentence Selection & Highlight Targeting (`components/editor/academic-integrity-barometer.tsx`)**:
+  - Replaced paragraph-level `classList.add('bg-amber-100')` (which improperly colored the entire paragraph block) with DOM TreeWalker text range selection (`window.getSelection().addRange(range)`).
+  - Clicking a sentence card under "Kalimat Berisiko Perlu Penyesuaian" now accurately selects and blocks only the specific sentence (from its first word to its punctuation) while smoothly scrolling it into view.
+- **Smart Fallback Document-Wide Integrity Analysis (`components/editor/sidebar-burstiness-tab.tsx`)**:
+  - Automatically evaluates the full manuscript when no text is highlighted, eliminating the misleading 100% "Awaiting Text" state.
+  - Implemented auto-reactive `Entire Doc` toggle state: toggle is automatically ON when no text is selected (indicating full document scope), and automatically flips to OFF when text is highlighted (focusing on the selection), with a dynamic badge showing active word count and scope.
+- **History Undo/Redo Boundary Exception Shielding (`lib/editor/methods/history-methods.ts`)**:
+  - Protected `undoRef.current.undo()` and `redo()` with `canUndo()` / `canRedo()` guards and defensive `try...catch` blocks to prevent `TypeError: can't access property "data", t[n] is undefined` when undo history boundary is reached.
+
+### 🎨 Official Brand Logo & Responsive Icon Integration (Non-Editor Scopes)
+- **Homepage Landing Page Integration (`app/page.tsx`)**:
+  - Integrated official brand logo (`navbar-logo-40x40.png`) across the Landing Page top navigation bar, initial loading screen, and bottom footer brand mark.
+- **Root Metadata & Multi-Resolution Favicon Suite (`app/layout.tsx`, `public/favicon.ico`, `app/favicon.ico`)**:
+  - Configured high-resolution favicon links (16x16, 32x32, 192x192, 512x512) and Apple Touch Icon (180x180) in Next.js RootLayout metadata.
+  - Linked OpenGraph social share card (`og-social-share-1200x630.png`) for social previews.
+- **Authentication Pages Brand Elevation (`app/(auth)/login/page.tsx`, `app/(auth)/register/page.tsx`)**:
+  - Replaced generic SVG book icons with official high-res logo emblem (`navbar-logo-64x64.png`) wrapped in frosted-glass badge with interactive hover animations.
+- **Main Dashboard & Workspace Navbars (`app/dashboard/page.tsx`, `app/billing/page.tsx`, `app/settings/page.tsx`)**:
+  - Added official navbar logo mark (`navbar-logo-40x40.png`) to top headers alongside module titles.
+- **Sidebar & Workspace Navigation Logo (`components/editor/sidebar/sidebar-logo.tsx`)**:
+  - Replaced legacy SVG purple gradient circle (`SF`) in the dashboard sidebar with the official high-resolution logo (`navbar-logo-40x40.png`).
+- **Specialty Workspaces & Public Sharing (`app/dashboard/library/page.tsx`, `app/dashboard/bibliometric/page.tsx`, `app/shared/[id]/page.tsx`, `app/not-found.tsx`)**:
+  - Integrated official brand mark on Reference Library, Bibliometric Network Workspace, Co-Editor Shared Document header, and 404 Not Found screen.
+  - Strict preservation of Editor canvas & ribbon components as requested ("kecuali yang halaman editor").
+
+
 ## ⚡ [v0.42.3] - 2026-10-19 (Zen Mode Autosave Debounce & Zero-Latency Local Snapshot)
 
 ### 🧘 Zen / Focused Mode Autosave Delay (4,500ms) & Zero-Latency Local Cache

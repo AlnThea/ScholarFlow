@@ -4,9 +4,12 @@ export default function NotFound() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-surface px-6">
       <section className="w-full max-w-md rounded-lg border border-line bg-panel p-6 shadow-soft">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
-          ScholarFlow
-        </p>
+        <div className="flex items-center gap-2.5 mb-3">
+          <img src="/assets/navbar-logo-40x40.png" alt="ScholarFlow" className="h-7 w-7 rounded-lg object-contain shadow-sm" />
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+            ScholarFlow
+          </p>
+        </div>
         <h1 className="mt-2 text-2xl font-semibold text-text">Page not found</h1>
         <p className="mt-3 text-sm leading-6 text-muted">
           The workspace page you requested is unavailable.

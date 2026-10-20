@@ -486,9 +486,7 @@ export default function BibliometricPage() {
         {/* Top Header */}
         <header className="h-16 border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md flex items-center justify-between px-6 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center">
-              <IconChartBar className="w-5 h-5" />
-            </div>
+            <img src="/assets/navbar-logo-40x40.png" alt="ScholarFlow" className="h-8 w-8 rounded-lg object-contain shadow-sm" />
             <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">Bibliometric Workspace</h1>
           </div>
           <div className="flex items-center gap-3">

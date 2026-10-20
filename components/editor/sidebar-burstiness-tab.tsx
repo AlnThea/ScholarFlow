@@ -19,7 +19,7 @@ export const SidebarBurstinessTab = (props: any) => {
   const language = props.language || ctxLanguage || 'id';
   const isEn = language === 'en';
   const isFreePlan = props.activePlanId === 'free';
-  const [analyzeAll, setAnalyzeAll] = useState(false);
+  const [manualAnalyzeAll, setManualAnalyzeAll] = useState<boolean | null>(null);
   const [heatmapActive, setHeatmapActive] = useState(false);
   const [selectedSentenceForStudio, setSelectedSentenceForStudio] = useState<string>('');
 
@@ -68,7 +68,14 @@ export const SidebarBurstinessTab = (props: any) => {
     return extractTextFromContent(currentDocument.content);
   }, [currentDocument?.content]);
 
-  const activeContent = analyzeAll ? documentText : selectedText;
+  const isSelectionActive = Boolean(selectedText && selectedText.trim());
+
+  useEffect(() => {
+    setManualAnalyzeAll(null);
+  }, [selectedText]);
+
+  const analyzeAll = manualAnalyzeAll !== null ? manualAnalyzeAll : !isSelectionActive;
+  const activeContent = analyzeAll ? documentText : (isSelectionActive ? selectedText : documentText);
   const [debouncedContent] = useDebounce(activeContent, 500);
   const metrics = useMemo(() => calculateBurstiness(debouncedContent), [debouncedContent]);
 
@@ -159,15 +166,26 @@ export const SidebarBurstinessTab = (props: any) => {
                 {isEn ? 'Entire Doc' : 'Semua Dokumen'}
               </span>
               <div className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${analyzeAll ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-600'}`}>
-                <input type="checkbox" className="sr-only" checked={analyzeAll} onChange={() => setAnalyzeAll(!analyzeAll)} />
+                <input type="checkbox" className="sr-only" checked={analyzeAll} onChange={() => setManualAnalyzeAll(!analyzeAll)} />
                 <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${analyzeAll ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
               </div>
             </label>
           </div>
-          <div className="mb-3 flex flex-col gap-1 rounded-md border border-line dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-2.5 text-[10px] leading-4 text-muted dark:text-slate-400">
+          <div className="mb-3 flex flex-col gap-1.5 rounded-md border border-line dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-2.5 text-[10px] leading-4 text-muted dark:text-slate-400">
+            <div className="flex items-center justify-between pb-1 border-b border-slate-200/60 dark:border-slate-800">
+              <span className="font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                <span className={`inline-block w-2 h-2 rounded-full ${analyzeAll ? 'bg-indigo-500' : 'bg-amber-500'}`} />
+                {analyzeAll
+                  ? (isEn ? 'Scope: Entire Document' : 'Cakupan: Seluruh Dokumen')
+                  : (isEn ? 'Scope: Selected Text' : 'Cakupan: Teks Terpilih')}
+              </span>
+              <span className="text-[10px] text-slate-400 font-medium">
+                {metrics.totalWords} {isEn ? 'words' : 'kata'}
+              </span>
+            </div>
             <div className="flex items-start gap-1.5">
               <IconInfoCircle className="h-3 w-3 shrink-0 mt-0.5" />
-              <span>{isEn ? "Select text in the editor or toggle 'Entire Doc' to analyze burstiness (variation in sentence length and structure). A higher burstiness score indicates more human-like writing." : "Blok/pilih teks di editor atau nyalakan 'Semua Dokumen' untuk menganalisis skor burstiness. Skor yang tinggi menandakan tulisan yang lebih natural/mirip manusia."}</span>
+              <span>{isEn ? "Select text in the editor to analyze a specific paragraph, or toggle 'Entire Doc' to analyze the whole manuscript." : "Blok teks di editor untuk menganalisis paragraf tertentu, atau nyalakan 'Semua Dokumen' untuk menganalisis seluruh naskah."}</span>
             </div>
           </div>
           <BurstinessChart content={activeContent} />

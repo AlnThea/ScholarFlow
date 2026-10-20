@@ -30,6 +30,79 @@ export interface AcademicIntegrityBarometerProps {
   className?: string;
 }
 
+/**
+ * Accurately selects a specific sentence across text nodes inside a contenteditable block.
+ */
+function selectTextInElement(element: HTMLElement, targetText: string): boolean {
+  const normalizedTarget = targetText.trim();
+  if (!normalizedTarget || typeof window === 'undefined') return false;
+
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+  let fullText = '';
+  const textNodes: Text[] = [];
+  const nodeStartOffsets: number[] = [];
+
+  let currentNode = walker.nextNode() as Text | null;
+  while (currentNode) {
+    nodeStartOffsets.push(fullText.length);
+    textNodes.push(currentNode);
+    fullText += currentNode.textContent || '';
+    currentNode = walker.nextNode() as Text | null;
+  }
+
+  // Find index of target in full text
+  let startIndex = fullText.indexOf(normalizedTarget);
+  let matchLength = normalizedTarget.length;
+
+  if (startIndex === -1 && normalizedTarget.length > 25) {
+    const sub = normalizedTarget.slice(0, 25);
+    startIndex = fullText.indexOf(sub);
+    if (startIndex !== -1) {
+      matchLength = Math.min(normalizedTarget.length, fullText.length - startIndex);
+    }
+  }
+
+  if (startIndex === -1) return false;
+
+  const endIndex = startIndex + matchLength;
+
+  let startNode: Text | null = null;
+  let startOffset = 0;
+  let endNode: Text | null = null;
+  let endOffset = 0;
+
+  for (let i = 0; i < textNodes.length; i++) {
+    const nodeStart = nodeStartOffsets[i];
+    const nodeEnd = nodeStart + (textNodes[i].textContent || '').length;
+
+    if (!startNode && startIndex >= nodeStart && startIndex < nodeEnd) {
+      startNode = textNodes[i];
+      startOffset = startIndex - nodeStart;
+    }
+    if (!endNode && endIndex > nodeStart && endIndex <= nodeEnd) {
+      endNode = textNodes[i];
+      endOffset = endIndex - nodeStart;
+    }
+  }
+
+  if (startNode && endNode) {
+    const selection = window.getSelection();
+    if (selection) {
+      const range = document.createRange();
+      range.setStart(startNode, startOffset);
+      range.setEnd(endNode, endOffset);
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      const parentEl = startNode.parentElement || element;
+      parentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export function AcademicIntegrityBarometer({
   content,
   language,
@@ -47,15 +120,19 @@ export function AcademicIntegrityBarometer({
 
   const [selectedSentenceIndex, setSelectedSentenceIndex] = useState<number | null>(null);
 
+  const hasText = report.metrics.totalWords > 0;
   // Speedometer Needle Angle calculation (-90 deg = 0%, 0 deg = 50%, +90 deg = 100%)
-  const needleAngle = -90 + (report.overallScore / 100) * 180;
+  const needleAngle = !hasText ? -90 : (-90 + (report.overallScore / 100) * 180);
 
   // Status colors & icons
-  const isGreen = report.riskLevel === 'low';
-  const isYellow = report.riskLevel === 'medium';
-  const isRed = report.riskLevel === 'high';
+  const isGreen = hasText && report.riskLevel === 'low';
+  const isYellow = hasText && report.riskLevel === 'medium';
+  const isRed = hasText && report.riskLevel === 'high';
+  const isWaiting = !hasText;
 
-  const statusBg = isGreen
+  const statusBg = isWaiting
+    ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+    : isGreen
     ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
     : isYellow
     ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200'
@@ -64,21 +141,33 @@ export function AcademicIntegrityBarometer({
   const handleSentenceClick = (sentence: SentenceIntegrity) => {
     setSelectedSentenceIndex(sentence.index);
 
-    // Scroll canvas to text if found
+    // Accurately select and highlight ONLY the specific sentence in the editor DOM
     try {
       const blocks = document.querySelectorAll('.ce-block [contenteditable="true"]');
+      let found = false;
+      const target = sentence.text.trim();
+
       for (const block of Array.from(blocks)) {
-        if (block.textContent?.includes(sentence.text.slice(0, 30))) {
-          block.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          block.classList.add('bg-amber-100', 'dark:bg-amber-900/40', 'transition-colors');
-          setTimeout(() => {
-            block.classList.remove('bg-amber-100', 'dark:bg-amber-900/40', 'transition-colors');
-          }, 2000);
-          break;
+        const el = block as HTMLElement;
+        const textContent = el.textContent || '';
+        
+        if (textContent.includes(target) || (target.length > 25 && textContent.includes(target.slice(0, 25)))) {
+          found = selectTextInElement(el, target);
+          if (found) break;
         }
       }
-    } catch {
-      // ignore DOM error
+
+      // Fallback: if selection failed, smooth scroll without tinting entire paragraph block
+      if (!found) {
+        for (const block of Array.from(blocks)) {
+          if (block.textContent?.includes(target.slice(0, 25))) {
+            block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            break;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[IntegrityBarometer] Failed to select sentence in DOM:', err);
     }
 
     if (onSelectSentenceForParaphrase) {
@@ -138,73 +227,59 @@ export function AcademicIntegrityBarometer({
       </div>
 
       {/* Speedometer Gauge Visualizer */}
-      <div className="flex flex-col items-center justify-center pt-1 pb-2">
-        <div className="relative w-48 h-24 flex items-end justify-center overflow-hidden">
-          {/* SVG Half-Circle Arc Gauge */}
-          <svg className="w-48 h-48 -rotate-90 transform" viewBox="0 0 100 100">
+      <div className="flex flex-col items-center justify-center pt-2 pb-2">
+        <div className="relative w-52 h-28 flex items-end justify-center">
+          {/* SVG Semicircle Arc Gauge */}
+          <svg className="w-52 h-28" viewBox="0 0 200 110">
             {/* Background Arc */}
-            <circle
-              cx="50"
-              cy="50"
-              r="40"
-              fill="transparent"
+            <path
+              d="M 25 100 A 75 75 0 0 1 175 100"
+              fill="none"
               stroke="#e2e8f0"
-              strokeWidth="10"
-              strokeDasharray="125.6 251.2"
+              strokeWidth="12"
+              strokeLinecap="round"
               className="dark:stroke-slate-800"
             />
-            {/* Red Zone (0 - 45%) */}
-            <circle
-              cx="50"
-              cy="50"
-              r="40"
-              fill="transparent"
+            {/* Red Zone (0 - 45%: High AI Risk / Low Originality) */}
+            <path
+              d="M 25 100 A 75 75 0 0 1 88.27 25.92"
+              fill="none"
               stroke="#f43f5e"
-              strokeWidth="10"
-              strokeDasharray="56.5 251.2"
-              strokeDashoffset="0"
+              strokeWidth="12"
               strokeLinecap="round"
             />
-            {/* Yellow Zone (45 - 75%) */}
-            <circle
-              cx="50"
-              cy="50"
-              r="40"
-              fill="transparent"
+            {/* Yellow / Amber Zone (45 - 75%: Moderate / Needs Review) */}
+            <path
+              d="M 88.27 25.92 A 75 75 0 0 1 153.03 46.97"
+              fill="none"
               stroke="#f59e0b"
-              strokeWidth="10"
-              strokeDasharray="37.6 251.2"
-              strokeDashoffset="-56.5"
+              strokeWidth="12"
             />
-            {/* Green Zone (75 - 100%) */}
-            <circle
-              cx="50"
-              cy="50"
-              r="40"
-              fill="transparent"
+            {/* Green Zone (75 - 100%: Strong Human / High Originality) */}
+            <path
+              d="M 153.03 46.97 A 75 75 0 0 1 175 100"
+              fill="none"
               stroke="#10b981"
-              strokeWidth="10"
-              strokeDasharray="31.5 251.2"
-              strokeDashoffset="-94.1"
+              strokeWidth="12"
               strokeLinecap="round"
             />
           </svg>
 
           {/* Needle Indicator */}
           <div
-            className="absolute bottom-0 w-1 h-20 bg-slate-800 dark:bg-white rounded-full origin-bottom transition-transform duration-700 ease-out shadow-md"
+            className="absolute bottom-[10px] w-1.5 h-[68px] bg-slate-800 dark:bg-white rounded-full origin-bottom transition-transform duration-700 ease-out shadow-md"
             style={{ transform: `rotate(${needleAngle}deg)` }}
           />
 
           {/* Center Pivot Circle */}
-          <div className="absolute bottom-0 w-4 h-4 rounded-full bg-slate-900 dark:bg-white border-2 border-white dark:border-slate-900 shadow" />
+          <div className="absolute bottom-[2px] w-4 h-4 rounded-full bg-slate-900 dark:bg-white border-2 border-white dark:border-slate-900 shadow-md" />
         </div>
 
         {/* Big Score Display & Status Badge */}
         <div className="flex flex-col items-center mt-2">
           <div className="flex items-baseline gap-1">
             <span className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-              {report.overallScore}%
+              {hasText ? `${report.overallScore}%` : '—'}
             </span>
             <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">
               {isEn ? 'Originality' : 'Orisinalitas'}
@@ -212,7 +287,9 @@ export function AcademicIntegrityBarometer({
           </div>
 
           <div className={`mt-1.5 px-3 py-1 rounded-full text-[11px] font-bold border ${statusBg}`}>
-            {isEn ? report.riskLabel.en : report.riskLabel.id}
+            {hasText
+              ? (isEn ? report.riskLabel.en : report.riskLabel.id)
+              : (isEn ? 'Awaiting Text in Editor' : 'Menunggu Naskah di Editor')}
           </div>
         </div>
       </div>

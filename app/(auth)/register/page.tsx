@@ -52,11 +52,8 @@ export default function RegisterPage() {
     <>
       {/* Logo + Heading */}
       <div className="mb-8 text-center">
-        <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/30 mb-4">
-          <svg className="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-          </svg>
+        <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-2 shadow-xl shadow-indigo-500/20 mb-4 hover:scale-105 transition-transform">
+          <img src="/assets/navbar-logo-64x64.png" alt="ScholarFlow Logo" className="h-12 w-12 object-contain" />
         </div>
         <h1 className="text-2xl font-bold text-white tracking-tight">Create your account</h1>
         <p className="text-slate-400 text-sm mt-1">Start your academic writing journey</p>

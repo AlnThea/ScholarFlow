@@ -148,9 +148,7 @@ export default function LandingPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-3 animate-pulse">
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
-            <span className="text-white font-bold text-xl leading-none">S</span>
-          </div>
+          <img src="/assets/navbar-logo-40x40.png" alt="ScholarFlow" className="w-11 h-11 rounded-xl object-contain shadow-md" />
         </div>
       </div>
     );
@@ -183,9 +181,7 @@ export default function LandingPage() {
       <header className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/80 backdrop-blur-md border-b border-slate-200 py-3 shadow-sm' : 'bg-transparent py-5'}`}>
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-600/30">
-              <span className="text-white font-bold text-lg leading-none">S</span>
-            </div>
+            <img src="/assets/navbar-logo-40x40.png" alt="ScholarFlow" className="w-9 h-9 rounded-xl object-contain shadow-md shadow-indigo-600/20" />
             <span className="text-xl font-extrabold text-slate-800 tracking-tight">
               ScholarFlow
             </span>
@@ -382,10 +378,8 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-12">
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-slate-200 rounded flex items-center justify-center">
-              <span className="text-slate-500 font-bold text-xs">S</span>
-            </div>
+          <div className="flex items-center gap-2.5">
+            <img src="/assets/navbar-logo-40x40.png" alt="ScholarFlow" className="w-6 h-6 rounded-md object-contain" />
             <span className="font-bold text-slate-700">ScholarFlow</span>
           </div>
           <p className="text-slate-500 text-sm">
