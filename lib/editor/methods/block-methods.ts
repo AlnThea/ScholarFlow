@@ -217,6 +217,7 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
     
             // Save active caret position inside user's editing block so typing is never jumped or interrupted
             let activeCaretInfo: { element: HTMLElement; offset: number } | null = null;
+            let biblioHtml = '';
             if (typeof window !== 'undefined') {
               const sel = window.getSelection();
               if (sel && sel.rangeCount > 0) {
@@ -251,7 +252,7 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
             };
     
             // Build labeled list as HTML paragraph
-            let biblioHtml = entries
+            biblioHtml = entries
               .map(e => {
                 const formatted = isFreeTier ? scrambleHtmlText(e.formatted) : e.formatted;
                 return `[${e.label}] ${formatted}`;
@@ -336,7 +337,7 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
             );
     
             // Build labeled list as HTML paragraph
-            let biblioHtml = entries
+            biblioHtml = entries
               .map(e => {
                 const formatted = isFreeTier ? scrambleHtmlText(e.formatted) : e.formatted;
                 return `[${e.label}] ${formatted}`;
