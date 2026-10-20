@@ -207,15 +207,38 @@ export function useEditorCitation(
       label: e.label,
       formatted: e.formatted,
     }));
-    const biblioKey = JSON.stringify({ entries, isFreeTier: activePlanId === 'free' });
+    const isFreeTier = activePlanId === 'free';
+    const biblioKey = JSON.stringify({ entries, isFreeTier });
     if (lastUpsertedBibliographyKeyRef.current === biblioKey) {
       return;
     }
-    const timer = setTimeout(() => {
-      lastUpsertedBibliographyKeyRef.current = biblioKey;
-      editorJsRef.current?.upsertBibliography(entries, activePlanId === 'free');
-    }, 100);
-    return () => clearTimeout(timer);
+
+    let isMounted = true;
+    let retryCount = 0;
+
+    const tryUpsert = async () => {
+      if (!isMounted) return;
+      try {
+        const result = await editorJsRef.current?.upsertBibliography(entries, isFreeTier);
+        if (result) {
+          lastUpsertedBibliographyKeyRef.current = biblioKey;
+        } else if (retryCount < 5) {
+          retryCount++;
+          setTimeout(tryUpsert, 300);
+        }
+      } catch (err) {
+        if (retryCount < 5) {
+          retryCount++;
+          setTimeout(tryUpsert, 300);
+        }
+      }
+    };
+
+    const timer = setTimeout(tryUpsert, 100);
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
   }, [bibliographyEntries, hydrated, activePlanId, editorJsRef]);
 
   // Editor Actions

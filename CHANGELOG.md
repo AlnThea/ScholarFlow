@@ -2,6 +2,25 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.42.7] - 2026-10-20 (Free Tier Bibliography Visual Blur & Editor.js Toolbar Deletion Guard Hardening)
+
+### 🎯 Bibliography Lock, Visual Obfuscation & Editor.js Toolbar Suppression (`components/editor/editorjs-editor.tsx`, `lib/editor/methods/block-methods.ts`, `app/globals.css`, `hooks/use-editor-citation.ts`)
+- **Restored Visual Obfuscation & Premium Blur (`lib/editor/methods/block-methods.ts`, `app/globals.css`)**:
+  - Resolved regression where the generated bibliography section (`Daftar Pustaka / References`) rendered fully exposed and readable for Free tier users.
+  - Re-applied `.sf-bibliography-blur` (3px blur with reduced opacity) and `.sf-bibliography-fade-container` along with scrambleHtmlText (`Xxxxx, X. (2024)...`) on free tier accounts.
+  - Reinstated the prominent "References are a paid feature - Upgrade Now" call-to-action banner card (`.sf-premium-banner-container`).
+  - Added non-intrusive retry timer in `use-editor-citation.ts` to ensure bibliography insertion waits until Editor.js finishes initial rendering rather than dropping citations silently.
+- **Editor.js Floating Toolbar (`+` and `::`) Suppression on Locked Blocks (`editorjs-editor.tsx`, `app/globals.css`)**:
+  - Eliminated the issue where hovering over the locked references block caused Editor.js's floating tune controls (`.ce-toolbar`, including `.ce-toolbar__plus` and `.ce-toolbar__settings-btn` / `::`) to appear, allowing users to open the tune menu and delete the locked block.
+  - Intercepted Editor.js internal modules `Toolbar.moveAndOpen` and `BlockSettings.open` in `editorjs-editor.tsx` to automatically abort and close the floating toolbar whenever targeting system-locked blocks.
+  - Added dynamic cursor vertical tracking via `onMouseMove` and `onMouseDownCapture` on the editor canvas container: if the pointer Y coordinate intersects any system-locked block's vertical bounding box, `.ce-toolbar` is immediately hidden (`opacity: 0`, `visibility: hidden`, `pointer-events: none`) and click events are cancelled.
+  - Added CSS `:has()` rules in `app/globals.css` ensuring `.ce-toolbar` is suppressed whenever hovering on `.sf-system-locked-block` or `.sf-bibliography-blur`.
+- **System-Locked Immutability & Deletion Interception**:
+  - Wrapped `editor.blocks.delete` in `editorjs-editor.tsx` to prevent accidental or programmatic deletion of system-locked blocks.
+  - Prevented keyboard `Backspace` and `Delete` keydowns from removing or merging into system-locked blocks in `onKeyDown`.
+- **Test Suite Verification**:
+  - All 221 unit tests across 27 test files continue to pass with 0 errors.
+
 ## ⚡ [v0.42.6] - 2026-10-20 (Persistent Inline Formatting Toggle & Post-Reload DOM Unwrapping Hardening)
 
 ### 🎯 Inline Formatting State & Bidirectional Toggle Hardening (`lib/editor/methods/inline-methods.ts`)

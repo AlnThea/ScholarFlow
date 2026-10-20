@@ -418,6 +418,24 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
     };
     document.addEventListener('input', handleCodeInput);
 
+    // Hide EditorJS floating block toolbar (+ and ::) when hovering over system-locked blocks
+    const handleEditorMouseOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      const lockedBlock = target.closest('.sf-system-locked-block, .sf-bibliography-fade-container, .sf-bibliography-blur, .sf-premium-banner-container');
+      const toolbar = document.querySelector('#' + holderId + ' .ce-toolbar') as HTMLElement | null;
+      if (lockedBlock) {
+        if (toolbar) {
+          toolbar.style.opacity = '0';
+          toolbar.style.pointerEvents = 'none';
+        }
+      } else if (toolbar && toolbar.style.pointerEvents === 'none') {
+        toolbar.style.opacity = '';
+        toolbar.style.pointerEvents = '';
+      }
+    };
+    document.addEventListener('mouseover', handleEditorMouseOver, true);
+
     // Dynamically import EditorJS and its plugins to prevent SSR import errors
     import('@editorjs/editorjs')
       .then(({ default: EditorJS }) =>
@@ -547,6 +565,69 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
               // Initialize Undo/Redo manager
               undoRef.current = new Undo({ editor });
 
+              // Intercept and prevent deletion of system-locked blocks (Daftar Pustaka & Premium Banner)
+              const originalDelete = editor.blocks.delete.bind(editor.blocks);
+              editor.blocks.delete = (index?: number) => {
+                if (!isRenderingRef.current) {
+                  const currentIdx = typeof index === 'number' ? index : editor.blocks.getCurrentBlockIndex();
+                  if (currentIdx >= 0) {
+                    const blockHolder = document.querySelectorAll('#' + holderId + ' .ce-block')[currentIdx];
+                    if (blockHolder && (
+                      blockHolder.classList.contains('sf-system-locked-block') ||
+                      blockHolder.querySelector('.sf-system-locked-block, .sf-bibliography-blur, .sf-premium-banner-container') ||
+                      blockHolder.textContent?.trim() === 'Daftar Pustaka / References'
+                    )) {
+                      console.warn('ScholarFlow: Blocked deletion of system-locked bibliography block');
+                      return;
+                    }
+                  }
+                }
+                return originalDelete(index);
+              };
+
+              // Intercept Toolbar module to prevent opening toolbar next to system-locked blocks
+              const toolbarModule = (editor as any).moduleInstances?.Toolbar;
+              if (toolbarModule && typeof toolbarModule.moveAndOpen === 'function') {
+                const originalMoveAndOpen = toolbarModule.moveAndOpen.bind(toolbarModule);
+                toolbarModule.moveAndOpen = (block: any) => {
+                  const targetBlock = block || (editor as any).moduleInstances?.BlockManager?.currentBlock;
+                  if (targetBlock && targetBlock.holder) {
+                    const holderEl = targetBlock.holder as HTMLElement;
+                    if (
+                      holderEl.classList.contains('sf-system-locked-block') ||
+                      holderEl.querySelector('.sf-system-locked-block, .sf-bibliography-blur, .sf-premium-banner-container, [data-sf-system-locked="true"]') ||
+                      holderEl.textContent?.trim() === 'Daftar Pustaka / References'
+                    ) {
+                      try {
+                        toolbarModule.close();
+                      } catch (_) {}
+                      return;
+                    }
+                  }
+                  return originalMoveAndOpen(block);
+                };
+              }
+
+              // Intercept BlockSettings module to prevent tunes settings popover on system-locked blocks
+              const blockSettingsModule = (editor as any).moduleInstances?.BlockSettings;
+              if (blockSettingsModule && typeof blockSettingsModule.open === 'function') {
+                const origSettingsOpen = blockSettingsModule.open.bind(blockSettingsModule);
+                blockSettingsModule.open = (targetBlock: any) => {
+                  const b = targetBlock || (editor as any).moduleInstances?.BlockManager?.currentBlock;
+                  if (b && b.holder) {
+                    const holderEl = b.holder as HTMLElement;
+                    if (
+                      holderEl.classList.contains('sf-system-locked-block') ||
+                      holderEl.querySelector('.sf-system-locked-block, .sf-bibliography-blur, .sf-premium-banner-container, [data-sf-system-locked="true"]') ||
+                      holderEl.textContent?.trim() === 'Daftar Pustaka / References'
+                    ) {
+                      return;
+                    }
+                  }
+                  return origSettingsOpen(targetBlock);
+                };
+              }
+
               // Render initial content if provided, otherwise render pending content
               const contentToRender = sanitizeEditorContent(initialContent || pendingContentRef.current);
               if (contentToRender) {
@@ -561,6 +642,48 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
                       renderAllInlineMath();
                       calculateLiveStats();
                       adjustAllCodeTextareaHeights();
+                      try {
+                        const holder = document.getElementById(holderId);
+                        if (holder) {
+                          const ceBlocks = Array.from(holder.querySelectorAll('.ce-block'));
+                          const headerIdx = ceBlocks.findIndex(blockEl => {
+                            const header = blockEl.querySelector('h2, .ce-header, [contenteditable]');
+                            return header && header.textContent?.trim() === 'Daftar Pustaka / References';
+                          });
+                          if (headerIdx >= 0) {
+                            const headerBlockEl = ceBlocks[headerIdx];
+                            const header = headerBlockEl.querySelector('h2, .ce-header, [contenteditable]');
+                            if (header) {
+                              header.setAttribute('contenteditable', 'false');
+                              header.setAttribute('data-sf-system-locked', 'true');
+                              headerBlockEl.classList.add('sf-system-locked-block');
+                            }
+                            if (headerIdx + 1 < ceBlocks.length) {
+                              const contentBlockEl = ceBlocks[headerIdx + 1];
+                              const paragraphEl = contentBlockEl.querySelector('.ce-paragraph, [contenteditable]') as HTMLElement | null;
+                              if (paragraphEl) {
+                                paragraphEl.setAttribute('contenteditable', 'false');
+                                paragraphEl.setAttribute('data-sf-system-locked', 'true');
+                                contentBlockEl.classList.add('sf-system-locked-block');
+                                if (paragraphEl.textContent && paragraphEl.textContent.includes('Xxxxx')) {
+                                  paragraphEl.classList.add('sf-bibliography-fade-container', 'sf-bibliography-blur');
+                                  let overlay = paragraphEl.querySelector('.sf-fade-overlay');
+                                  if (!overlay) {
+                                    overlay = document.createElement('div');
+                                    overlay.className = 'sf-fade-overlay';
+                                    overlay.setAttribute('contenteditable', 'false');
+                                    paragraphEl.style.position = 'relative';
+                                    paragraphEl.appendChild(overlay);
+                                  }
+                                }
+                              }
+                            }
+                            if (headerIdx + 2 < ceBlocks.length && ceBlocks[headerIdx + 2].querySelector('.sf-premium-banner-container')) {
+                              ceBlocks[headerIdx + 2].classList.add('sf-system-locked-block');
+                            }
+                          }
+                        }
+                      } catch (e) {}
                       setTimeout(() => {
                         isRenderingRef.current = false;
                       }, 400);
@@ -614,6 +737,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
     return () => {
       isMounted = false;
       document.removeEventListener('input', handleCodeInput);
+      document.removeEventListener('mouseover', handleEditorMouseOver, true);
       if (editorRef.current) {
         try {
           if (typeof editorRef.current.destroy === 'function') {
@@ -646,6 +770,56 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
     <div className="sf-editor flex flex-col min-h-full w-full max-w-3xl mr-auto pb-8 relative">
       <div
         id={holderId}
+        onMouseMove={(e) => {
+          const holder = e.currentTarget;
+          const lockedBlocks = holder.querySelectorAll('.sf-system-locked-block, .sf-bibliography-blur, .sf-premium-banner-container');
+          if (!lockedBlocks.length) return;
+          const clientY = e.clientY;
+          let isOverLocked = false;
+          for (let i = 0; i < lockedBlocks.length; i++) {
+            const rect = lockedBlocks[i].getBoundingClientRect();
+            if (clientY >= rect.top - 6 && clientY <= rect.bottom + 6) {
+              isOverLocked = true;
+              break;
+            }
+          }
+          const toolbar = holder.querySelector('.ce-toolbar') as HTMLElement | null;
+          if (toolbar) {
+            if (isOverLocked) {
+              toolbar.style.opacity = '0';
+              toolbar.style.pointerEvents = 'none';
+              toolbar.style.visibility = 'hidden';
+              toolbar.classList.remove('ce-toolbar--opened');
+              try {
+                editorRef.current?.toolbar?.close();
+              } catch (_) {}
+            } else if (toolbar.style.visibility === 'hidden') {
+              toolbar.style.opacity = '';
+              toolbar.style.pointerEvents = '';
+              toolbar.style.visibility = '';
+            }
+          }
+        }}
+        onMouseDownCapture={(e) => {
+          const target = e.target as HTMLElement;
+          const toolbarAction = target.closest('.ce-toolbar__actions, .ce-toolbar__settings-btn, .ce-toolbar__plus, .ce-settings, .ce-popover');
+          if (toolbarAction) {
+            const holder = e.currentTarget;
+            const lockedBlocks = holder.querySelectorAll('.sf-system-locked-block, .sf-bibliography-blur, .sf-premium-banner-container');
+            const clientY = e.clientY;
+            for (let i = 0; i < lockedBlocks.length; i++) {
+              const rect = lockedBlocks[i].getBoundingClientRect();
+              if (clientY >= rect.top - 6 && clientY <= rect.bottom + 6) {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                  editorRef.current?.toolbar?.close();
+                } catch (_) {}
+                return;
+              }
+            }
+          }
+        }}
         onClick={(e) => {
           const target = e.target as HTMLElement;
 
@@ -744,6 +918,35 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
           // Check if external editor keydown handler (e.g. Ghostwriter autocomplete) handles the event
           if (onEditorKeyDown && onEditorKeyDown(e)) {
             return;
+          }
+
+          // Guard against deleting or backspacing system-locked blocks (Daftar Pustaka & Premium Banner)
+          if (e.key === 'Backspace' || e.key === 'Delete') {
+            const sel = window.getSelection();
+            if (sel && sel.anchorNode) {
+              const anchorEl = sel.anchorNode.nodeType === Node.TEXT_NODE
+                ? sel.anchorNode.parentElement
+                : (sel.anchorNode as HTMLElement);
+              if (anchorEl) {
+                const lockedEl = anchorEl.closest('.sf-bibliography-blur, .sf-bibliography-fade-container, .sf-premium-banner-container, .sf-system-locked-block, [data-sf-system-locked="true"]');
+                if (lockedEl) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  return;
+                }
+                if (e.key === 'Backspace') {
+                  const currentBlock = anchorEl.closest('.ce-block');
+                  if (currentBlock && (!anchorEl.textContent || anchorEl.textContent.trim() === '')) {
+                    const prevBlock = currentBlock.previousElementSibling;
+                    if (prevBlock && (prevBlock.classList.contains('sf-system-locked-block') || prevBlock.querySelector('.sf-system-locked-block, .sf-premium-banner-container'))) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      return;
+                    }
+                  }
+                }
+              }
+            }
           }
 
           // Keyboard shortcut for inline math (Ctrl+Shift+M or Alt+M)

@@ -1,5 +1,19 @@
 # ScholarFlow Changelog
 
+## v0.43.5 - Free Tier Bibliography Visual Blur & Editor.js Toolbar Deletion Guard Hardening
+
+- **Free Tier Bibliography Visual Blur & Lock (`components/editor/editorjs-editor.tsx`, `lib/editor/methods/block-methods.ts`, `app/globals.css`, `hooks/use-editor-citation.ts`)**:
+  - Restored blurred and scrambled references text (`Xxxxx, X. (2024)...`) with `.sf-bibliography-blur` and `.sf-bibliography-fade-container` for Free tier users.
+  - Reinstated the "References are a paid feature - Upgrade Now" call-to-action banner card (`.sf-premium-banner-container`).
+  - Added persistent locking attributes `contenteditable="false"` and `data-sf-system-locked="true"`.
+- **Editor.js Floating Toolbar (`+` and `::`) Suppression on Locked Blocks**:
+  - Intercepted Editor.js internal modules `Toolbar.moveAndOpen` and `BlockSettings.open` in `editorjs-editor.tsx` to automatically abort and close the floating toolbar whenever hovering or targeting system-locked blocks.
+  - Implemented dynamic cursor tracking via `onMouseMove` and `onMouseDownCapture` on the editor canvas container: if cursor Y coordinate intersects any system-locked block's vertical bounding box, `.ce-toolbar` is immediately hidden (`opacity: 0`, `visibility: hidden`, `pointer-events: none`).
+  - Added CSS `:has()` rules in `app/globals.css` ensuring `.ce-toolbar` is hidden whenever hovering on `.sf-system-locked-block` or `.sf-bibliography-blur`.
+- **System-Locked Immutability & Deletion Interception**:
+  - Wrapped `editor.blocks.delete` in `editorjs-editor.tsx` to prevent accidental or programmatic deletion of system-locked blocks.
+  - Intercepted keyboard `Backspace` and `Delete` keydowns from removing or merging into system-locked blocks in `onKeyDown`.
+
 ## v0.43.4 - Targeted Action Buttons Relocation (Export, Share, 49.2k, Settings) to Ribbon Tools Row
 
 - **Targeted Action Buttons Relocation (`components/editor/editor-header-actions.tsx`, `components/editor/editor-header.tsx`, `components/editor/editor-layout.tsx`, `components/editor/editorjs-toolbar.tsx`)**:

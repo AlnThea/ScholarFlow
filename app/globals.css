@@ -484,6 +484,36 @@ h6.ce-header {
   pointer-events: none !important;
 }
 
+/* System Locked Blocks (e.g. Generated Bibliography & Premium Banner) */
+.sf-system-locked-block {
+  user-select: none !important;
+}
+
+.sf-system-locked-block [contenteditable="true"],
+.sf-system-locked-block [contenteditable="false"] {
+  caret-color: transparent !important;
+}
+
+.ce-block.sf-system-locked-block .ce-toolbar__actions {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+/* Hide floating toolbar and tune controls when cursor/hover is on system locked blocks */
+.codex-editor:has(.sf-system-locked-block:hover) .ce-toolbar,
+.codex-editor:has(.sf-bibliography-blur:hover) .ce-toolbar,
+.codex-editor:has(.sf-bibliography-fade-container:hover) .ce-toolbar,
+.codex-editor:has(.sf-premium-banner-container:hover) .ce-toolbar,
+.codex-editor:has([data-sf-system-locked="true"]:hover) .ce-toolbar,
+#editor-page-container:has(.sf-system-locked-block:hover) .ce-toolbar,
+#editor-page-container:has(.sf-bibliography-blur:hover) .ce-toolbar,
+#editor-page-container:has(.sf-bibliography-fade-container:hover) .ce-toolbar,
+#editor-page-container:has(.sf-premium-banner-container:hover) .ce-toolbar {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
 /* Comment Highlight Styling */
 mark[data-comment-id], mark.sf-comment-mark, .sf-comment-mark {
   background-color: #FEF08A !important;

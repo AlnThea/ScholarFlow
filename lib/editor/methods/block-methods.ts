@@ -279,20 +279,55 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
               if (entries.length > 0 && existingHeaderIdx >= 0 && existingHeaderIdx + 1 < ceBlocks.length) {
                 const contentBlockEl = ceBlocks[existingHeaderIdx + 1];
                 const contentText = contentBlockEl.querySelector('.ce-paragraph, [contenteditable]')?.innerHTML || '';
+                const paragraphEl = contentBlockEl.querySelector('.ce-paragraph, [contenteditable]') as HTMLElement | null;
+                const isBlurred = paragraphEl ? paragraphEl.classList.contains('sf-bibliography-blur') : false;
                 const hasBannerIfFree = !isFreeTier || (existingHeaderIdx + 2 < ceBlocks.length && Boolean(ceBlocks[existingHeaderIdx + 2].querySelector('.sf-premium-banner-container')));
+                
+                // Ensure blur and overlay are active if free tier
+                if (isFreeTier && paragraphEl && !isBlurred) {
+                  paragraphEl.classList.add('sf-bibliography-fade-container', 'sf-bibliography-blur');
+                  let overlay = paragraphEl.querySelector('.sf-fade-overlay');
+                  if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.className = 'sf-fade-overlay';
+                    overlay.setAttribute('contenteditable', 'false');
+                    paragraphEl.style.position = 'relative';
+                    paragraphEl.appendChild(overlay);
+                  }
+                }
+
+                // Ensure system locked class and contenteditable="false" attributes are consistently present
+                const headerBlockEl = ceBlocks[existingHeaderIdx];
+                if (headerBlockEl) {
+                  headerBlockEl.classList.add('sf-system-locked-block');
+                  const headerEl = headerBlockEl.querySelector('h2, .ce-header, [contenteditable]');
+                  if (headerEl) {
+                    headerEl.setAttribute('contenteditable', 'false');
+                    headerEl.setAttribute('data-sf-system-locked', 'true');
+                  }
+                }
+                contentBlockEl.classList.add('sf-system-locked-block');
+                if (paragraphEl) {
+                  paragraphEl.setAttribute('contenteditable', 'false');
+                  paragraphEl.setAttribute('data-sf-system-locked', 'true');
+                }
+                if (isFreeTier && existingHeaderIdx + 2 < ceBlocks.length) {
+                  ceBlocks[existingHeaderIdx + 2].classList.add('sf-system-locked-block');
+                }
+
                 if (contentText === biblioHtml && hasBannerIfFree) {
                   if (wasReadOnly) {
                     await editorRef.current.readOnly.toggle(true);
                   }
                   isRenderingRef.current = false;
-                  return;
+                  return true;
                 }
               } else if (entries.length === 0 && existingHeaderIdx === -1) {
                 if (wasReadOnly) {
                   await editorRef.current.readOnly.toggle(true);
                 }
                 isRenderingRef.current = false;
-                return;
+                return true;
               }
             }
 
@@ -390,37 +425,56 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
                 false,
               );
     
-              // Apply DOM classes directly to bypass paragraph tool sanitize stripping
-              setTimeout(() => {
+              // Apply DOM classes and locking attributes directly
+              const applyBlurClasses = () => {
                 try {
                   const holder = document.getElementById(holderId);
                   if (!holder) return;
                   const ceBlocks = Array.from(holder.querySelectorAll('.ce-block'));
                   const headerIdx = ceBlocks.findIndex(blockEl => {
-                    const header = blockEl.querySelector('h2, .ce-header');
+                    const header = blockEl.querySelector('h2, .ce-header, [contenteditable]');
                     return header && header.textContent?.trim() === 'Daftar Pustaka / References';
                   });
-                  if (headerIdx >= 0 && headerIdx + 1 < ceBlocks.length) {
-                    const contentBlockEl = ceBlocks[headerIdx + 1];
-                    const paragraphEl = contentBlockEl.querySelector('.ce-paragraph, [contenteditable]') as HTMLElement | null;
-                    if (paragraphEl) {
-                      paragraphEl.classList.add('sf-bibliography-fade-container', 'sf-bibliography-blur');
-    
-                      // Append the fade overlay if not present
-                      let overlay = paragraphEl.querySelector('.sf-fade-overlay');
-                      if (!overlay) {
-                        overlay = document.createElement('div');
-                        overlay.className = 'sf-fade-overlay';
-                        overlay.setAttribute('contenteditable', 'false');
-                        paragraphEl.style.position = 'relative';
-                        paragraphEl.appendChild(overlay);
+                  if (headerIdx >= 0) {
+                    const headerBlockEl = ceBlocks[headerIdx];
+                    const header = headerBlockEl.querySelector('h2, .ce-header, [contenteditable]');
+                    if (header) {
+                      header.setAttribute('contenteditable', 'false');
+                      header.setAttribute('data-sf-system-locked', 'true');
+                      headerBlockEl.classList.add('sf-system-locked-block');
+                    }
+                    if (headerIdx + 1 < ceBlocks.length) {
+                      const contentBlockEl = ceBlocks[headerIdx + 1];
+                      const paragraphEl = contentBlockEl.querySelector('.ce-paragraph, [contenteditable]') as HTMLElement | null;
+                      if (paragraphEl) {
+                        paragraphEl.setAttribute('contenteditable', 'false');
+                        paragraphEl.setAttribute('data-sf-system-locked', 'true');
+                        contentBlockEl.classList.add('sf-system-locked-block');
+                        if (isFreeTier) {
+                          paragraphEl.classList.add('sf-bibliography-fade-container', 'sf-bibliography-blur');
+                          let overlay = paragraphEl.querySelector('.sf-fade-overlay');
+                          if (!overlay) {
+                            overlay = document.createElement('div');
+                            overlay.className = 'sf-fade-overlay';
+                            overlay.setAttribute('contenteditable', 'false');
+                            paragraphEl.style.position = 'relative';
+                            paragraphEl.appendChild(overlay);
+                          }
+                        }
                       }
+                    }
+                    if (isFreeTier && headerIdx + 2 < ceBlocks.length) {
+                      const bannerBlockEl = ceBlocks[headerIdx + 2];
+                      bannerBlockEl.classList.add('sf-system-locked-block');
                     }
                   }
                 } catch (err) {
-                  console.warn('Error applying bibliography blur class:', err);
+                  console.warn('Error applying bibliography blur and lock classes:', err);
                 }
-              }, 100);
+              };
+              applyBlurClasses();
+              setTimeout(applyBlurClasses, 50);
+              setTimeout(applyBlurClasses, 200);
             }
     
             // Restore active caret position so typing is never jumped or interrupted
