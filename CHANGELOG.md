@@ -2,6 +2,23 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.42.6] - 2026-10-20 (Persistent Inline Formatting Toggle & Post-Reload DOM Unwrapping Hardening)
+
+### 🎯 Inline Formatting State & Bidirectional Toggle Hardening (`lib/editor/methods/inline-methods.ts`)
+- **Multi-Layered Active State Detection (`toggleInlineFormat`)**:
+  - Resolved the bug where bold, italic, underline, or strikethrough formatting applied prior to a page refresh could not be removed or untoggled upon page reload.
+  - Implemented multi-layered detection combining native `document.queryCommandState(cmd)`, bidirectional DOM tree traversal (checking parent tags and computed CSS styles `fontWeight >= 600`, `fontStyle: italic`, `textDecoration: underline`), and downward DOM inspection across `blockEl.getElementsByTagName(tag)` intersecting the active selection.
+  - Added comprehensive tag and command mapping for all inline styles: `bold` (`B`, `STRONG`), `italic` (`I`, `EM`), `underline` (`U`), `strikethrough` (`S`, `DEL`, `STRIKE`), `superscript` (`SUP`), `subscript` (`SUB`), and `code` (`CODE`).
+- **Precise Post-Reload DOM Element Unwrapping**:
+  - Eliminated the bug where failing upward traversal from `range.commonAncestorContainer` (which defaults to `<div class="ce-paragraph">` on reloaded text selections) caused `toggleTag` to wrap already-formatted text in duplicate tags (`<b><b>...</b></b>`).
+  - Added deterministic unwrap mechanics using `DocumentFragment` extraction, unwrapping parent containers as well as all enclosed formatting elements within the selection boundary while preserving surrounding inner text.
+- **Immediate State Synchronization & Autosave Hook Trigger**:
+  - Dispatched synthetic `input` and `selectionchange` events directly on the active block element post-mutation, keeping Editor.js's internal data model and toolbar active button indicators in complete synchronicity.
+  - Chained `calculateLiveStats()` and `saveCleanContent().then(content => onContentChange(content))` to immediately persist format toggling to cloud storage.
+- **Unit Test Coverage (`__tests__/utils/editor-lifecycle-hardening.test.ts`)**:
+  - Added automated test suite validating that pre-existing HTML bold tags (`<b>`) loaded from stored cloud data are properly unwrapped and untoggled by `toggleInlineFormat('bold')`, confirming DOM mutation and `onContentChange` invocation.
+  - Full test suite passing at **221/221 unit tests across 27 test files**.
+
 ## ⚡ [v0.42.5] - 2026-10-20 (Autosave Caret Position Preservation & Bibliography Sync Hardening)
 
 ### 🎯 Caret Position Stability & Autosave Cloud Sync Hardening

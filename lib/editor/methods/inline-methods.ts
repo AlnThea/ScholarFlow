@@ -26,91 +26,202 @@ export function buildInlineMethods(props: EditorJsMethodsProps) {
 
   return {
     toggleInlineFormat: (format: string, color?: string) => {
-          const toggleTag = (tagName: string, className?: string) => {
+          const FORMAT_CONFIG: Record<string, { cmd?: string; tags: string[]; createTag: string; defaultClass?: string }> = {
+            bold: { cmd: "bold", tags: ["B", "STRONG"], createTag: "b" },
+            italic: { cmd: "italic", tags: ["I", "EM"], createTag: "i" },
+            underline: { cmd: "underline", tags: ["U"], createTag: "u" },
+            strikethrough: { cmd: "strikeThrough", tags: ["S", "DEL", "STRIKE"], createTag: "s" },
+            superscript: { cmd: "superscript", tags: ["SUP"], createTag: "sup" },
+            subscript: { cmd: "subscript", tags: ["SUB"], createTag: "sub" },
+            code: { tags: ["CODE"], createTag: "code", defaultClass: "bg-slate-100 dark:bg-slate-800 text-rose-600 px-1 py-0.5 rounded font-mono text-xs" }
+          };
+
+          const toggleTag = (formatKey: string) => {
+            const config = FORMAT_CONFIG[formatKey];
+            if (!config) return;
+
             const selection = window.getSelection();
             if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
-    
+
             const range = selection.getRangeAt(0);
-    
-            // Find closest parent that matches the holder container or tag
-            let parent = range.commonAncestorContainer as HTMLElement | null;
-            if (parent && parent.nodeType === Node.TEXT_NODE) {
-              parent = parent.parentElement;
+            const container = range.commonAncestorContainer;
+            const blockEl = (container.nodeType === Node.ELEMENT_NODE
+              ? (container as HTMLElement)
+              : container.parentElement)?.closest("[contenteditable=\"true\"]") as HTMLElement | null;
+
+            if (blockEl && document.activeElement !== blockEl) {
+              blockEl.focus();
             }
-    
-            const targetTag = tagName.toUpperCase();
-            let node: HTMLElement | null = parent;
-            let isWrapped = false;
-    
-            while (node && node.id !== holderId && node.tagName !== 'DIV') {
-              if (node.tagName === targetTag && (!className || className.split(' ').every(c => node?.classList.contains(c)))) {
-                isWrapped = true;
-                break;
-              }
-              node = node.parentElement;
-            }
-    
-            if (isWrapped && node) {
-              // Unwrap: replace node with its child nodes
-              const fragment = document.createDocumentFragment();
-              while (node.firstChild) {
-                fragment.appendChild(node.firstChild);
-              }
-              node.parentNode?.replaceChild(fragment, node);
-            } else {
-              // Wrap: wrap selection contents in a new element
-              const element = document.createElement(tagName);
-              if (className) {
-                element.className = className;
-              }
+
+            let isActive = false;
+            if (config.cmd) {
               try {
-                const fragment = range.extractContents();
-                element.appendChild(fragment);
-                range.insertNode(element);
-    
-                // Re-select wrapped element
-                const newRange = document.createRange();
-                newRange.selectNodeContents(element);
-                selection.removeAllRanges();
-                selection.addRange(newRange);
+                isActive = Boolean(document.queryCommandState(config.cmd));
               } catch (e) {
-                console.warn('Failed to wrap selection:', e);
+                isActive = false;
               }
+            }
+
+            const matchingTags = config.tags;
+            const isMatchingElement = (el: HTMLElement | null) => {
+              if (!el || el.id === holderId) return false;
+              if (matchingTags.includes(el.tagName)) return true;
+              if (formatKey === "bold" && (el.style.fontWeight === "bold" || parseInt(el.style.fontWeight, 10) >= 600)) return true;
+              if (formatKey === "italic" && el.style.fontStyle === "italic") return true;
+              if (formatKey === "underline" && el.style.textDecoration && el.style.textDecoration.includes("underline")) return true;
+              if (formatKey === "strikethrough" && el.style.textDecoration && el.style.textDecoration.includes("line-through")) return true;
+              return false;
+            };
+
+            // 1. Check upwards from commonAncestorContainer, anchorNode, and focusNode
+            let existingWrapNode: HTMLElement | null = null;
+            const checkParents = [
+              container.nodeType === Node.TEXT_NODE ? container.parentElement : container as HTMLElement,
+              selection.anchorNode?.nodeType === Node.TEXT_NODE ? selection.anchorNode.parentElement : selection.anchorNode as HTMLElement | null,
+              selection.focusNode?.nodeType === Node.TEXT_NODE ? selection.focusNode.parentElement : selection.focusNode as HTMLElement | null
+            ];
+
+            for (const startParent of checkParents) {
+              let curr = startParent;
+              while (curr && curr.id !== holderId && !curr.classList.contains("ce-block")) {
+                if (isMatchingElement(curr)) {
+                  existingWrapNode = curr;
+                  isActive = true;
+                  break;
+                }
+                curr = curr.parentElement;
+              }
+              if (existingWrapNode) break;
+            }
+
+            // 2. Check downwards if selection encloses or intersects matching tags
+            const enclosedMatchingNodes: HTMLElement[] = [];
+            if (blockEl) {
+              matchingTags.forEach(tag => {
+                const els = Array.from(blockEl.getElementsByTagName(tag)) as HTMLElement[];
+                els.forEach(el => {
+                  try {
+                    if (selection.containsNode(el, true)) {
+                      enclosedMatchingNodes.push(el);
+                      isActive = true;
+                    }
+                  } catch (e) {}
+                });
+              });
+            }
+
+            if (isActive) {
+              // UNWRAP / REMOVE FORMAT
+              if (config.cmd) {
+                try {
+                  document.execCommand(config.cmd, false);
+                } catch (e) {}
+              }
+
+              if (existingWrapNode && existingWrapNode.parentNode) {
+                const fragment = document.createDocumentFragment();
+                while (existingWrapNode.firstChild) {
+                  fragment.appendChild(existingWrapNode.firstChild);
+                }
+                existingWrapNode.parentNode.replaceChild(fragment, existingWrapNode);
+              }
+
+              enclosedMatchingNodes.forEach(node => {
+                if (node.parentNode) {
+                  const fragment = document.createDocumentFragment();
+                  while (node.firstChild) {
+                    fragment.appendChild(node.firstChild);
+                  }
+                  node.parentNode.replaceChild(fragment, node);
+                }
+              });
+            } else {
+              // APPLY FORMAT
+              let appliedViaExec = false;
+              if (config.cmd && !config.defaultClass) {
+                try {
+                  appliedViaExec = document.execCommand(config.cmd, false);
+                } catch (e) {
+                  appliedViaExec = false;
+                }
+              }
+
+              if (!appliedViaExec) {
+                const element = document.createElement(config.createTag);
+                if (config.defaultClass) {
+                  element.className = config.defaultClass;
+                }
+                try {
+                  const fragment = range.extractContents();
+                  element.appendChild(fragment);
+                  range.insertNode(element);
+
+                  const newRange = document.createRange();
+                  newRange.selectNodeContents(element);
+                  selection.removeAllRanges();
+                  selection.addRange(newRange);
+                } catch (e) {
+                  console.warn("Failed to wrap selection:", e);
+                }
+              }
+            }
+
+            // Notify EditorJS & synchronizer
+            if (blockEl) {
+              blockEl.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+            if (typeof document !== "undefined") {
+              document.dispatchEvent(new Event("selectionchange"));
             }
             calculateLiveStats();
+            if (onContentChange && editorRef.current && saveCleanContent) {
+              saveCleanContent().then(content => {
+                if (content) onContentChange(content);
+              }).catch(console.error);
+            }
           };
-    
-          if (format === 'bold') {
-            toggleTag('b');
-          } else if (format === 'italic') {
-            toggleTag('i');
-          } else if (format === 'underline') {
-            toggleTag('u');
-          } else if (format === 'strikethrough') {
-            toggleTag('s');
-          } else if (format === 'superscript') {
-            toggleTag('sup');
-          } else if (format === 'subscript') {
-            toggleTag('sub');
-          } else if (format === 'highlight') {
+
+          if (format === "bold") {
+            toggleTag("bold");
+          } else if (format === "italic") {
+            toggleTag("italic");
+          } else if (format === "underline") {
+            toggleTag("underline");
+          } else if (format === "strikethrough") {
+            toggleTag("strikethrough");
+          } else if (format === "superscript") {
+            toggleTag("superscript");
+          } else if (format === "subscript") {
+            toggleTag("subscript");
+          } else if (format === "code") {
+            toggleTag("code");
+          } else if (format === "highlight") {
             const selection = window.getSelection();
             if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
     
             const range = selection.getRangeAt(0);
+            const container = range.commonAncestorContainer;
+            const blockEl = (container.nodeType === Node.ELEMENT_NODE
+              ? (container as HTMLElement)
+              : container.parentElement)?.closest("[contenteditable=\"true\"]") as HTMLElement | null;
+
+            if (blockEl && document.activeElement !== blockEl) {
+              blockEl.focus();
+            }
     
             const getColorClass = (colorKey?: string) => {
               switch (colorKey) {
-                case 'green':
-                  return 'bg-green-200/80 text-green-900 px-1 py-0.5 rounded';
-                case 'blue':
-                  return 'bg-sky-200/80 text-sky-900 px-1 py-0.5 rounded';
-                case 'pink':
-                  return 'bg-pink-200/80 text-pink-900 px-1 py-0.5 rounded';
-                case 'purple':
-                  return 'bg-purple-200/80 text-purple-950 px-1 py-0.5 rounded';
-                case 'yellow':
+                case "green":
+                  return "bg-green-200/80 text-green-900 px-1 py-0.5 rounded";
+                case "blue":
+                  return "bg-sky-200/80 text-sky-900 px-1 py-0.5 rounded";
+                case "pink":
+                  return "bg-pink-200/80 text-pink-900 px-1 py-0.5 rounded";
+                case "purple":
+                  return "bg-purple-200/80 text-purple-950 px-1 py-0.5 rounded";
+                case "yellow":
                 default:
-                  return 'bg-yellow-200/80 text-yellow-900 px-1 py-0.5 rounded';
+                  return "bg-yellow-200/80 text-yellow-900 px-1 py-0.5 rounded";
               }
             };
     
@@ -122,8 +233,8 @@ export function buildInlineMethods(props: EditorJsMethodsProps) {
     
             let existingMark: HTMLElement | null = null;
             let node = parent;
-            while (node && node.id !== holderId && node.tagName !== 'DIV') {
-              if (node.tagName === 'MARK') {
+            while (node && node.id !== holderId && node.tagName !== "DIV") {
+              if (node.tagName === "MARK") {
                 existingMark = node;
                 break;
               }
@@ -133,10 +244,10 @@ export function buildInlineMethods(props: EditorJsMethodsProps) {
             // Also check if selection contains a MARK tag
             if (!existingMark) {
               try {
-                const container = range.commonAncestorContainer;
-                const parentEl = container.nodeType === Node.TEXT_NODE ? container.parentElement : container as HTMLElement;
+                const containerEl = range.commonAncestorContainer;
+                const parentEl = containerEl.nodeType === Node.TEXT_NODE ? containerEl.parentElement : containerEl as HTMLElement;
                 if (parentEl) {
-                  const markTags = parentEl.getElementsByTagName('mark');
+                  const markTags = parentEl.getElementsByTagName("mark");
                   for (let i = 0; i < markTags.length; i++) {
                     if (selection.containsNode(markTags[i], true)) {
                       existingMark = markTags[i];
@@ -148,7 +259,7 @@ export function buildInlineMethods(props: EditorJsMethodsProps) {
             }
     
             if (existingMark) {
-              if (color === 'clear') {
+              if (color === "clear") {
                 // Unwrap: replace mark tag with its children
                 const fragment = document.createDocumentFragment();
                 while (existingMark.firstChild) {
@@ -159,9 +270,9 @@ export function buildInlineMethods(props: EditorJsMethodsProps) {
                 // Update class name with new color
                 existingMark.className = getColorClass(color);
               }
-            } else if (color !== 'clear') {
+            } else if (color !== "clear") {
               // Wrap selection in a new MARK tag
-              const element = document.createElement('mark');
+              const element = document.createElement("mark");
               element.className = getColorClass(color);
               try {
                 const fragment = range.extractContents();
@@ -174,11 +285,23 @@ export function buildInlineMethods(props: EditorJsMethodsProps) {
                 selection.removeAllRanges();
                 selection.addRange(newRange);
               } catch (e) {
-                console.warn('Failed to wrap selection with mark:', e);
+                console.warn("Failed to wrap selection with mark:", e);
               }
             }
-          } else if (format === 'code') {
-            toggleTag('code', 'bg-slate-100 dark:bg-slate-800 text-rose-600 px-1 py-0.5 rounded font-mono text-xs');
+
+            // Notify EditorJS & synchronizer
+            if (blockEl) {
+              blockEl.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+            if (typeof document !== "undefined") {
+              document.dispatchEvent(new Event("selectionchange"));
+            }
+            calculateLiveStats();
+            if (onContentChange && editorRef.current && saveCleanContent) {
+              saveCleanContent().then(content => {
+                if (content) onContentChange(content);
+              }).catch(console.error);
+            }
           } else if (format === 'link') {
             const selection = window.getSelection();
             if (!selection || selection.isCollapsed) return;

@@ -4,7 +4,7 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.42.5 (Autosave Caret Position Preservation, Referential Guard & Bibliography Sync Hardening, 220/220 tests passing).
+v0.42.6 (Persistent Inline Formatting Toggle & Post-Reload DOM Unwrapping Hardening, 221/221 tests passing).
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
@@ -18,6 +18,7 @@ v0.42.5 (Autosave Caret Position Preservation, Referential Guard & Bibliography 
 - [x] Phase 39: Automated Journal Submission Package Builder & Cover Letter AI.
 - [x] Phase 40: Canvas & Document Editor Interaction Hardening & Data Flow Reliability.
 - [x] Phase 41: Editor Canvas Lifecycle, Block Persistence & Rich Content Bridge.
+- [x] Phase 42: Persistent Inline Formatting Bidirectional Toggle & Post-Reload DOM Unwrapping.
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.

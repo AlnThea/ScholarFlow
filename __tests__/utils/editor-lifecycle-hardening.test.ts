@@ -4,6 +4,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { createSuggestionMarkup, applyAcceptSuggestionToHtml } from '@/lib/editor/suggesting-engine';
 import { getCaretCharacterOffsetWithin, setCaretCharacterOffsetWithin } from '@/lib/editor/editor-utils';
+import { buildInlineMethods } from '@/lib/editor/methods/inline-methods';
 
 describe('Phase 41: Editor Canvas Lifecycle & Content Bridge Hardening Unit Tests', () => {
   it('preserves rich HTML <cite> tag without stripping when building in-text citation HTML', () => {
@@ -131,5 +132,65 @@ describe('Phase 41: Editor Canvas Lifecycle & Content Bridge Hardening Unit Test
     expect(measured).toBe(targetOffset);
 
     document.body.removeChild(container);
+  });
+
+  it('correctly unwraps bold formatting when re-selecting pre-existing <b> or <strong> tags', async () => {
+    const holder = document.createElement('div');
+    holder.id = 'editorjs-holder';
+    const block = document.createElement('div');
+    block.className = 'ce-block';
+    const paragraph = document.createElement('div');
+    paragraph.setAttribute('contenteditable', 'true');
+    paragraph.innerHTML = 'Normal text <b>bold text</b> end text';
+    block.appendChild(paragraph);
+    holder.appendChild(block);
+    document.body.appendChild(holder);
+
+    const boldEl = paragraph.querySelector('b')!;
+    expect(boldEl).toBeDefined();
+
+    // Select the contents of <b>
+    const range = document.createRange();
+    range.selectNodeContents(boldEl);
+    const sel = window.getSelection()!;
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    let contentSaved = false;
+    const inlineMethods = buildInlineMethods({
+      editorRef: { current: { save: async () => ({ blocks: [] }) } } as any,
+      undoRef: { current: null },
+      holderId: 'editorjs-holder',
+      activeBlockIndexRef: { current: 0 },
+      lastSelectionRangeRef: { current: null },
+      lastHighlightedRangeRef: { current: null },
+      savedLinkRangeRef: { current: null },
+      isRenderingRef: { current: false },
+      pendingContentRef: { current: null },
+      onContentChange: () => { contentSaved = true; },
+      onBlockTypeChange: () => {},
+      onAlignmentChange: () => {},
+      onStatsChange: () => {},
+      onInsertLinkRequest: () => {},
+      restoreBlockAlignments: () => {},
+      calculateLiveStats: () => {},
+      saveCleanContent: async () => ({ blocks: [] }),
+      renderAllInlineMath: () => {},
+      adjustAllCodeTextareaHeights: () => {},
+      insertInlineEquationLocal: () => {}
+    });
+
+    // Toggle bold off
+    inlineMethods.toggleInlineFormat('bold');
+
+    // <b> tag should be unwrapped into plain text
+    expect(paragraph.querySelector('b')).toBeNull();
+    expect(paragraph.textContent).toBe('Normal text bold text end text');
+
+    // Wait for microtask saveCleanContent resolution
+    await Promise.resolve();
+    expect(contentSaved).toBe(true);
+
+    document.body.removeChild(holder);
   });
 });
