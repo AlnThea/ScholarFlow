@@ -71,7 +71,7 @@ export function EditorBubbleMenu(props: EditorBubbleMenuProps) {
       
                   <div
       
-                    className="fixed z-50 bg-white border border-slate-200/80 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.1)] flex flex-col transition-all duration-150 backdrop-blur-sm overflow-hidden"
+                    className="fixed z-50 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.15)] flex flex-col transition-all duration-150 backdrop-blur-sm overflow-hidden text-slate-800 dark:text-slate-100"
       
                     style={(() => {
       

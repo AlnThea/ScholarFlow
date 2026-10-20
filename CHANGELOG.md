@@ -15,6 +15,10 @@ All notable changes, architectural milestones, and UI improvements to the Schola
 - **Immediate State Synchronization & Autosave Hook Trigger**:
   - Dispatched synthetic `input` and `selectionchange` events directly on the active block element post-mutation, keeping Editor.js's internal data model and toolbar active button indicators in complete synchronicity.
   - Chained `calculateLiveStats()` and `saveCleanContent().then(content => onContentChange(content))` to immediately persist format toggling to cloud storage.
+- **Right-Click Context Menu & Floating Bubble Menu Parity (`format-menu.tsx`, `editor-bubble-menu.tsx`)**:
+  - Fixed truncated `getBtnClass` template literal in `FormatMenu`, ensuring right-click/selection popup buttons accurately reflect active formatting states (`bg-indigo-100 font-bold`).
+  - Added `IconSuperscript` and `IconSubscript` to the right-click bubble menu for complete feature alignment with the main top ribbon toolbar.
+  - Full Dark Mode compatibility applied across popup containers and button rows (`dark:bg-slate-900`, `dark:border-slate-800`).
 - **Unit Test Coverage (`__tests__/utils/editor-lifecycle-hardening.test.ts`)**:
   - Added automated test suite validating that pre-existing HTML bold tags (`<b>`) loaded from stored cloud data are properly unwrapped and untoggled by `toggleInlineFormat('bold')`, confirming DOM mutation and `onContentChange` invocation.
   - Full test suite passing at **221/221 unit tests across 27 test files**.

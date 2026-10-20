@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   IconBold, IconItalic, IconUnderline, IconStrikethrough, IconCode, 
-  IconLink, IconHighlight, IconSparkles, IconLoader, IconLanguage, IconSum, IconSearch
+  IconLink, IconHighlight, IconSparkles, IconLoader, IconLanguage, IconSum, IconSearch, IconSuperscript, IconSubscript
 } from '@tabler/icons-react';
 
 export type FormatMenuProps = {
@@ -40,15 +40,19 @@ export function FormatMenu({
   setShowRightSidebar, onParaphrase, setShowBubbleMenu, setBubbleMode, onFindCitation, aiError
 }: FormatMenuProps) {
   const getBtnClass = (isActive: boolean) => {
-    return `p-1.5 rounded transition $`;
+    return `p-1.5 rounded transition cursor-pointer ${
+      isActive
+        ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300 font-bold'
+        : 'text-slate-650 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+    }`;
   };
 
   return (
-                      <div className="flex flex-col">
+                      <div className="flex flex-col bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">
       
                         {/* Inline format buttons */}
       
-                        <div className="p-2 flex items-center gap-0.5 justify-between px-3 bg-slate-50/20 border-b border-slate-100">
+                        <div className="p-2 flex items-center gap-0.5 justify-between px-3 bg-slate-50/40 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
       
                           <button className={getBtnClass(activeFormats.bold)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('bold')} title="Bold"><IconBold className="h-3.5 w-3.5" /></button>
       
@@ -59,6 +63,10 @@ export function FormatMenu({
                           <button className={getBtnClass(activeFormats.strikethrough)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('strikethrough')} title="Strikethrough"><IconStrikethrough className="h-3.5 w-3.5" /></button>
       
                           <button className={getBtnClass(activeFormats.code)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('code')} title="Code"><IconCode className="h-3.5 w-3.5" /></button>
+      
+                          <button className={getBtnClass(activeFormats.superscript)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('superscript')} title="Superscript"><IconSuperscript className="h-3.5 w-3.5" /></button>
+
+                          <button className={getBtnClass(activeFormats.subscript)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('subscript')} title="Subscript"><IconSubscript className="h-3.5 w-3.5" /></button>
       
                           <button className={getBtnClass(activeFormats.link)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('link')} title="Link"><IconLink className="h-3.5 w-3.5" /></button>
       

@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { IconX, IconCheck, IconTrash, IconSparkles, IconInfoCircle, IconRefresh, IconLanguage, IconBold, IconItalic, IconUnderline, IconStrikethrough, IconCode, IconLink, IconHighlight, IconLoader, IconQuote, IconExternalLink, IconSearch, IconMessage, IconSum } from '@tabler/icons-react';
+import { IconX, IconCheck, IconTrash, IconSparkles, IconInfoCircle, IconRefresh, IconLanguage, IconBold, IconItalic, IconUnderline, IconStrikethrough, IconCode, IconLink, IconHighlight, IconLoader, IconQuote, IconExternalLink, IconSearch, IconMessage, IconSum, IconSuperscript, IconSubscript } from '@tabler/icons-react';
 
 export const SharedBubbleMenu = (props: any) => {
   const {
@@ -34,7 +34,7 @@ export const SharedBubbleMenu = (props: any) => {
             }}
           />
           <div
-            className="fixed z-[9998] bg-white border border-slate-200/80 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.15)] flex flex-col transition-all duration-150 backdrop-blur-sm overflow-hidden text-slate-800"
+            className="fixed z-[9998] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.2)] flex flex-col transition-all duration-150 backdrop-blur-sm overflow-hidden text-slate-800 dark:text-slate-100"
             style={(() => {
               const isCitation = bubbleMode === 'citation';
               const menuWidth = isCitation ? 480 : 310;
@@ -75,12 +75,14 @@ export const SharedBubbleMenu = (props: any) => {
             {bubbleMode === 'format' && (
               <div className="flex flex-col">
                 {/* Inline format buttons */}
-                <div className="p-2 flex items-center gap-0.5 justify-between px-3 bg-slate-50/20 border-b border-slate-100">
+                <div className="p-2 flex items-center gap-0.5 justify-between px-3 bg-slate-50/40 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
                   <button className={getBtnClass(activeFormats.bold)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('bold')} title="Bold"><IconBold className="h-3.5 w-3.5" /></button>
                   <button className={getBtnClass(activeFormats.italic)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('italic')} title="Italic"><IconItalic className="h-3.5 w-3.5" /></button>
                   <button className={getBtnClass(activeFormats.underline)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('underline')} title="Underline"><IconUnderline className="h-3.5 w-3.5" /></button>
                   <button className={getBtnClass(activeFormats.strikethrough)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('strikethrough')} title="Strikethrough"><IconStrikethrough className="h-3.5 w-3.5" /></button>
                   <button className={getBtnClass(activeFormats.code)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('code')} title="Code"><IconCode className="h-3.5 w-3.5" /></button>
+                  <button className={getBtnClass(activeFormats.superscript)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('superscript')} title="Superscript"><IconSuperscript className="h-3.5 w-3.5" /></button>
+                  <button className={getBtnClass(activeFormats.subscript)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('subscript')} title="Subscript"><IconSubscript className="h-3.5 w-3.5" /></button>
                   <button className={getBtnClass(activeFormats.link)} onMouseDown={e => e.preventDefault()} onClick={() => editorJsRef.current?.toggleInlineFormat('link')} title="Link"><IconLink className="h-3.5 w-3.5" /></button>
                   <button className={getBtnClass(activeFormats.highlight)} onMouseDown={e => e.preventDefault()} onClick={(e) => handleHighlightButtonClick(e)} title="Highlight text"><IconHighlight className="h-3.5 w-3.5" /></button>
                 </div>
