@@ -2,6 +2,26 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.42.5] - 2026-10-20 (Autosave Caret Position Preservation & Bibliography Sync Hardening)
+
+### 🎯 Caret Position Stability & Autosave Cloud Sync Hardening
+- **Autosave Referential Guard & Content Identity Preservation (`hooks/use-editor-document.ts`)**:
+  - Implemented referential equality preservation in `setCurrentDocument` on debounce completion: if `contentToSave` is structurally identical to `prev.content`, `prev.content` retains its exact object reference.
+  - Prevents downstream hooks (`useMemo`, `useEffect`) from unnecessarily invalidating and re-running on routine background autosaves when the user is actively typing.
+- **Ordered Reference IDs Keying & Upsert Idempotency (`hooks/use-editor-citation.ts`)**:
+  - Replaced object-reference dependency in `bibliographyEntries` with `orderedReferenceIdsKey`, ensuring bibliography entries only recompute when actual `<cite>` tags are added, removed, or reordered.
+  - Added `lastUpsertedBibliographyKeyRef` guard in the `useEffect` that calls `upsertBibliography`: if the formatted entries and plan tier haven't changed, `upsertBibliography` execution is completely bypassed.
+- **Intelligent Bibliography DOM Cache & Caret Restoration (`lib/editor/methods/block-methods.ts`)**:
+  - Added pre-mutation DOM comparison in `upsertBibliography`: if the existing bibliography header and formatted paragraphs already exist in the canvas with identical HTML, the function immediately returns without deleting or modifying blocks.
+  - Implemented `getCaretCharacterOffsetWithin` and `setCaretCharacterOffsetWithin` helpers in `lib/editor/editor-utils.tsx`: if the user is typing in a paragraph block while bibliography synchronization occurs, their active `contentEditable` element and character offset are captured and restored post-mutation.
+  - Eliminated automatic `caret.setToBlock(foundIdx - 1, 'end')` cursor displacement when the user is actively typing in a non-bibliography block.
+- **Heatmap Highlight Caret Preservation (`components/editor/sidebar-burstiness-tab.tsx`)**:
+  - Enhanced `toggleHeatmap` in `SidebarBurstinessTab` to preserve and restore the active caret character offset across `innerHTML` highlight regex replacements when AI Heatmap is enabled.
+- **Unit Test Suite Expansion (`__tests__/utils/editor-lifecycle-hardening.test.ts`)**:
+  - Added unit tests verifying `getCaretCharacterOffsetWithin` and `setCaretCharacterOffsetWithin` accuracy in nested contenteditable DOM elements and styled formatting tags.
+  - Total test suite passing at **220/220 unit tests across 27 test files**.
+
+
 ## ⚡ [v0.42.4] - 2026-10-20 (Brand Logo & Academic Integrity Speedometer Gauge Geometry Fix)
 
 ### 🎯 Academic Integrity Barometer Speedometer Geometry Hardening (`components/editor/academic-integrity-barometer.tsx`)

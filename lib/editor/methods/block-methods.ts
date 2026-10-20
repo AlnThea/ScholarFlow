@@ -1,6 +1,7 @@
 import type { EditorJsMethodsProps } from '@/hooks/use-editorjs-methods';
 import { scrambleHtmlText } from '@/lib/editor/editor-tools';
 import { sanitizeEditorContent } from '@/lib/utils/sanitize';
+import { getCaretCharacterOffsetWithin, setCaretCharacterOffsetWithin } from '@/lib/editor/editor-utils';
 
 export function buildBlockMethods(props: EditorJsMethodsProps) {
   const {
@@ -88,7 +89,7 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
             setTimeout(() => {
               editorRef.current?.caret.setToBlock(index, 'end');
               restoreBlockAlignments();
-              calculateLiveStats();
+            calculateLiveStats();
               if (onContentChange && saveCleanContent) {
                 saveCleanContent().then((content) => {
                   if (content) onContentChange(content);
@@ -214,6 +215,30 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
               await editorRef.current.readOnly.toggle(false);
             }
     
+            // Save active caret position inside user's editing block so typing is never jumped or interrupted
+            let activeCaretInfo: { element: HTMLElement; offset: number } | null = null;
+            if (typeof window !== 'undefined') {
+              const sel = window.getSelection();
+              if (sel && sel.rangeCount > 0) {
+                const anchorNode = sel.anchorNode;
+                const editableEl = anchorNode?.nodeType === Node.TEXT_NODE
+                  ? (anchorNode.parentElement?.closest('[contenteditable="true"]') as HTMLElement | null)
+                  : ((anchorNode as HTMLElement | null)?.closest('[contenteditable="true"]') as HTMLElement | null);
+                if (editableEl) {
+                  const isInsideBiblio = Boolean(
+                    editableEl.closest('.sf-bibliography-blur, .sf-premium-banner-container') ||
+                    editableEl.textContent?.trim() === 'Daftar Pustaka / References'
+                  );
+                  if (!isInsideBiblio) {
+                    activeCaretInfo = {
+                      element: editableEl,
+                      offset: getCaretCharacterOffsetWithin(editableEl)
+                    };
+                  }
+                }
+              }
+            }
+
             // Helper to find the bibliography header block index dynamically in the DOM
             const findBibliographyBlockIndex = (): number => {
               const holder = document.getElementById(holderId);
@@ -225,6 +250,42 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
               });
             };
     
+            // Build labeled list as HTML paragraph
+            let biblioHtml = entries
+              .map(e => {
+                const formatted = isFreeTier ? scrambleHtmlText(e.formatted) : e.formatted;
+                return `[${e.label}] ${formatted}`;
+              })
+              .join('<br><br>');
+
+            // Fast check: if existing bibliography already exists in DOM with identical content, avoid disruptive block deletion/insertion
+            const holderEl = document.getElementById(holderId);
+            if (holderEl) {
+              const ceBlocks = Array.from(holderEl.querySelectorAll('.ce-block'));
+              const existingHeaderIdx = ceBlocks.findIndex(blockEl => {
+                const header = blockEl.querySelector('h2, .ce-header, [contenteditable="true"]');
+                return header && header.textContent?.trim() === 'Daftar Pustaka / References';
+              });
+              if (entries.length > 0 && existingHeaderIdx >= 0 && existingHeaderIdx + 1 < ceBlocks.length) {
+                const contentBlockEl = ceBlocks[existingHeaderIdx + 1];
+                const contentText = contentBlockEl.querySelector('.ce-paragraph, [contenteditable]')?.innerHTML || '';
+                const hasBannerIfFree = !isFreeTier || (existingHeaderIdx + 2 < ceBlocks.length && Boolean(ceBlocks[existingHeaderIdx + 2].querySelector('.sf-premium-banner-container')));
+                if (contentText === biblioHtml && hasBannerIfFree) {
+                  if (wasReadOnly) {
+                    await editorRef.current.readOnly.toggle(true);
+                  }
+                  isRenderingRef.current = false;
+                  return;
+                }
+              } else if (entries.length === 0 && existingHeaderIdx === -1) {
+                if (wasReadOnly) {
+                  await editorRef.current.readOnly.toggle(true);
+                }
+                isRenderingRef.current = false;
+                return;
+              }
+            }
+
             // Remove all existing bibliography blocks (header + content) to clean up duplicates
             let foundIdx = findBibliographyBlockIndex();
             while (foundIdx >= 0) {
@@ -232,7 +293,7 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
     
               // Pindahkan caret ke block sebelumnya jika caret saat ini berada di dalam block yang akan dihapus
               const currentIdx = editorRef.current.blocks.getCurrentBlockIndex();
-              if (currentIdx >= foundIdx && foundIdx > 0) {
+              if (!activeCaretInfo && currentIdx >= foundIdx && foundIdx > 0) {
                 try {
                   editorRef.current.caret.setToBlock(foundIdx - 1, 'end');
                 } catch (err) {
@@ -255,7 +316,7 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
             }
     
             if (entries.length === 0) {
-              calculateLiveStats();
+            calculateLiveStats();
               if (wasReadOnly) {
                 await editorRef.current.readOnly.toggle(true);
               }
@@ -352,6 +413,15 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
               }, 100);
             }
     
+            // Restore active caret position so typing is never jumped or interrupted
+            if (activeCaretInfo && activeCaretInfo.element.isConnected) {
+              try {
+                setCaretCharacterOffsetWithin(activeCaretInfo.element, activeCaretInfo.offset);
+              } catch (e) {
+                // safe fallback
+              }
+            }
+
             calculateLiveStats();
             if (wasReadOnly) {
               await editorRef.current.readOnly.toggle(true);
@@ -409,7 +479,7 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
                 isRenderingRef.current = false;
                 adjustAllCodeTextareaHeights();
               }, 150);
-              calculateLiveStats();
+            calculateLiveStats();
             } catch (e) {
               console.error('EditorJS render promise error:', e);
               isRenderingRef.current = false;

@@ -173,3 +173,76 @@ export const getContentComparisonString = (content: any): string => {
   return JSON.stringify(parsed);
 };
 
+/**
+ * Safely calculates character offset of current caret within a contentEditable element.
+ */
+export function getCaretCharacterOffsetWithin(element: Node): number {
+  if (typeof window === 'undefined') return 0;
+  let caretOffset = 0;
+  const doc = element.ownerDocument || document;
+  const win = doc.defaultView || window;
+  const sel = win.getSelection();
+  if (sel && sel.rangeCount > 0) {
+    try {
+      const range = sel.getRangeAt(0);
+      if (element.contains(range.commonAncestorContainer)) {
+        const preCaretRange = range.cloneRange();
+        preCaretRange.selectNodeContents(element);
+        preCaretRange.setEnd(range.endContainer, range.endOffset);
+        caretOffset = preCaretRange.toString().length;
+      }
+    } catch (e) {
+      // safe fallback
+    }
+  }
+  return caretOffset;
+}
+
+/**
+ * Safely restores caret to the exact character offset inside a contentEditable element.
+ */
+export function setCaretCharacterOffsetWithin(element: Node, offset: number) {
+  if (typeof window === 'undefined') return;
+  const doc = element.ownerDocument || document;
+  const win = doc.defaultView || window;
+  const sel = win.getSelection();
+  if (!sel) return;
+
+  try {
+    let currentOffset = 0;
+    const range = doc.createRange();
+    range.setStart(element, 0);
+    range.collapse(true);
+
+    const nodeStack: Node[] = [element];
+    let node: Node | undefined;
+    let found = false;
+
+    while (!found && (node = nodeStack.pop())) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const nextOffset = currentOffset + (node.nodeValue?.length || 0);
+        if (offset >= currentOffset && offset <= nextOffset) {
+          range.setStart(node, Math.max(0, offset - currentOffset));
+          range.collapse(true);
+          found = true;
+          break;
+        }
+        currentOffset = nextOffset;
+      } else {
+        let i = node.childNodes.length;
+        while (i--) {
+          nodeStack.push(node.childNodes[i]);
+        }
+      }
+    }
+
+    if (found) {
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  } catch (e) {
+    // safe fallback
+  }
+}
+
+

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { searchCitations, type CitationCandidate } from '@/lib/api/citations';
 import { fetchCitationLibrary, saveCitationToLibrary } from '@/lib/api/citation-library';
 import { addCitationHistoryEntry, type CitationHistoryEntry } from '@/lib/editor/citation-history';
@@ -177,11 +177,17 @@ export function useEditorCitation(
     }
   }, [activeModalCitation, citationLibrary]);
 
+  const lastUpsertedBibliographyKeyRef = useRef<string>('');
+
+  const orderedReferenceIdsKey = useMemo(() => {
+    return extractReferenceIdsInOrder(currentDocument?.content).join('|');
+  }, [currentDocument?.content]);
+
   // Bibliography Entries (reactively sorted: Numeric -> Order of appearance, Author-Year -> Alphabetical A-Z)
   const bibliographyEntries = useMemo(() => {
     const style = currentDocument?.settings?.citationStyle || 'apa';
     const lang = currentDocument?.settings?.citationLocale || 'en-US';
-    const orderedIds = extractReferenceIdsInOrder(currentDocument?.content);
+    const orderedIds = orderedReferenceIdsKey ? orderedReferenceIdsKey.split('|') : [];
     
     // Combine unique reference IDs from document scan and live DOM state
     const allUniqueIds = Array.from(new Set([...orderedIds, ...activeReferenceIds]));
@@ -193,7 +199,7 @@ export function useEditorCitation(
       orderedIds,
       lang
     );
-  }, [citationLibrary, activeReferenceIds, currentDocument?.content, currentDocument?.settings?.citationStyle, currentDocument?.settings?.citationLocale]);
+  }, [citationLibrary, activeReferenceIds, orderedReferenceIdsKey, currentDocument?.settings?.citationStyle, currentDocument?.settings?.citationLocale]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -201,7 +207,12 @@ export function useEditorCitation(
       label: e.label,
       formatted: e.formatted,
     }));
+    const biblioKey = JSON.stringify({ entries, isFreeTier: activePlanId === 'free' });
+    if (lastUpsertedBibliographyKeyRef.current === biblioKey) {
+      return;
+    }
     const timer = setTimeout(() => {
+      lastUpsertedBibliographyKeyRef.current = biblioKey;
       editorJsRef.current?.upsertBibliography(entries, activePlanId === 'free');
     }, 100);
     return () => clearTimeout(timer);

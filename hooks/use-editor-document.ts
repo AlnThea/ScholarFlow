@@ -123,7 +123,7 @@ export function useEditorDocument(showToast: (msg: string, type: 'success' | 'er
             return {
               ...prev,
               title: titleToSave,
-              content: contentToSave,
+              content: getContentComparisonString(prev.content) === getContentComparisonString(contentToSave) ? prev.content : contentToSave,
               settings: finalSettings,
               updated_at: nowIso
             };

@@ -5,7 +5,7 @@ import {
 import { useDebounce } from 'use-debounce';
 import { BurstinessChart } from './burstiness-chart';
 import { ParaphraseStudio } from './paraphrase-studio';
-import { extractTextFromContent } from '@/lib/editor/editor-utils';
+import { extractTextFromContent, getCaretCharacterOffsetWithin, setCaretCharacterOffsetWithin } from '@/lib/editor/editor-utils';
 import { calculateBurstiness, AI_BUZZWORDS } from '@/lib/editor/burstiness-engine';
 import { AcademicIntegrityBarometer } from './academic-integrity-barometer';
 import { useLanguage } from '../i18n/language-context';
@@ -39,6 +39,12 @@ export const SidebarBurstinessTab = (props: any) => {
     const toggleHeatmap = () => {
       const blocks = document.querySelectorAll('.ce-block [contenteditable="true"]');
       blocks.forEach(block => {
+        const isFocused = typeof window !== 'undefined' && (
+          block.contains(document.activeElement) ||
+          (window.getSelection()?.anchorNode && block.contains(window.getSelection()!.anchorNode))
+        );
+        const caretOffset = isFocused ? getCaretCharacterOffsetWithin(block) : 0;
+
         // remove old highlights
         block.innerHTML = block.innerHTML.replace(/<span class="ai-heatmap-highlight[^>]*>(.*?)<\/span>/gi, '$1');
         
@@ -47,6 +53,10 @@ export const SidebarBurstinessTab = (props: any) => {
         block.innerHTML = block.innerHTML.replace(/(>|^)([^<]+)(<|$)/g, (match, p1, p2, p3) => {
           return p1 + p2.replace(regex, '<span class="ai-heatmap-highlight bg-rose-200/80 dark:bg-rose-900/50 text-rose-900 dark:text-rose-200 rounded px-1 border-b-2 border-rose-400">$1</span>') + p3;
         });
+
+        if (isFocused) {
+          setCaretCharacterOffsetWithin(block, caretOffset);
+        }
       });
     };
 

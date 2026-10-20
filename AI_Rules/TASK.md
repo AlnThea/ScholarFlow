@@ -4,7 +4,7 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.42.4 (Official Brand Logo & Multi-Resolution App Assets, Speedometer Geometry Fix, Smart Burstiness Scope & Undo Exception Shielding, 218/218 tests passing).
+v0.42.5 (Autosave Caret Position Preservation, Referential Guard & Bibliography Sync Hardening, 220/220 tests passing).
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).

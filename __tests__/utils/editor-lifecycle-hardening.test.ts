@@ -3,6 +3,7 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { createSuggestionMarkup, applyAcceptSuggestionToHtml } from '@/lib/editor/suggesting-engine';
+import { getCaretCharacterOffsetWithin, setCaretCharacterOffsetWithin } from '@/lib/editor/editor-utils';
 
 describe('Phase 41: Editor Canvas Lifecycle & Content Bridge Hardening Unit Tests', () => {
   it('preserves rich HTML <cite> tag without stripping when building in-text citation HTML', () => {
@@ -88,5 +89,47 @@ describe('Phase 41: Editor Canvas Lifecycle & Content Bridge Hardening Unit Test
     // Caller 2: calls render
     fakeEditor.render({ time: 200, blocks: [{ type: 'header', data: { text: 'Title' } }] });
     expect(renderedData.blocks[0].data.text).toBe('Title');
+  });
+
+  it('accurately computes and restores caret character offset inside contenteditable elements without resetting to end', () => {
+    const container = document.createElement('div');
+    container.setAttribute('contenteditable', 'true');
+    container.innerHTML = 'This is an academic sentence that we are typing in the middle.';
+    document.body.appendChild(container);
+
+    // Simulate caret at character 11 (after "This is an ")
+    const targetOffset = 11;
+    setCaretCharacterOffsetWithin(container, targetOffset);
+
+    // Read back offset
+    const measuredOffset = getCaretCharacterOffsetWithin(container);
+    expect(measuredOffset).toBe(targetOffset);
+
+    // Modify a sibling element or non-interfering DOM attribute
+    container.setAttribute('data-modified', 'true');
+
+    // Restore caret position
+    setCaretCharacterOffsetWithin(container, targetOffset);
+    const restoredOffset = getCaretCharacterOffsetWithin(container);
+    expect(restoredOffset).toBe(targetOffset);
+    expect(restoredOffset).not.toBe(container.textContent?.length);
+
+    document.body.removeChild(container);
+  });
+
+  it('correctly handles caret restoration in elements with nested HTML formatting tags', () => {
+    const container = document.createElement('div');
+    container.setAttribute('contenteditable', 'true');
+    container.innerHTML = 'Hello <b>bold world</b> and <i>italic text</i>.';
+    document.body.appendChild(container);
+
+    // Place caret inside "bold world" at total offset 10 ("Hello bold")
+    const targetOffset = 10;
+    setCaretCharacterOffsetWithin(container, targetOffset);
+
+    const measured = getCaretCharacterOffsetWithin(container);
+    expect(measured).toBe(targetOffset);
+
+    document.body.removeChild(container);
   });
 });
