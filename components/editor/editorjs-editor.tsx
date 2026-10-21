@@ -589,13 +589,15 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
                   const currentIdx = typeof index === 'number' ? index : editor.blocks.getCurrentBlockIndex();
                   if (currentIdx >= 0) {
                     const blockHolder = document.querySelectorAll('#' + holderId + ' .ce-block')[currentIdx];
-                    if (blockHolder && (
-                      blockHolder.classList.contains('sf-system-locked-block') ||
-                      blockHolder.querySelector('.sf-system-locked-block, .sf-bibliography-blur, .sf-premium-banner-container') ||
-                      isBibliographyHeaderText(blockHolder.textContent)
-                    )) {
-                      console.warn('ScholarFlow: Blocked deletion of system-locked bibliography block');
-                      return;
+                    if (blockHolder) {
+                      const headerEl = blockHolder.querySelector('h1, h2, h3, h4, h5, h6, .ce-header');
+                      const isBibHeader = headerEl && isBibliographyHeaderText(headerEl.textContent);
+                      const hasLockedClass = blockHolder.classList.contains('sf-system-locked-block') ||
+                        Boolean(blockHolder.querySelector('.sf-system-locked-block, .sf-bibliography-blur, .sf-premium-banner-container, [data-sf-system-locked="true"]'));
+                      if (isBibHeader || hasLockedClass) {
+                        console.warn('ScholarFlow: Blocked deletion of system-locked bibliography block');
+                        return;
+                      }
                     }
                   }
                 }
@@ -663,10 +665,15 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
                         const holder = document.getElementById(holderId);
                         if (holder) {
                           const ceBlocks = Array.from(holder.querySelectorAll('.ce-block'));
-                          const headerIdx = ceBlocks.findIndex(blockEl => {
-                            const header = blockEl.querySelector('h2, .ce-header, [contenteditable]');
-                            return header && isBibliographyHeaderText(header.textContent);
-                          });
+                          const searchLimit = Math.max(0, ceBlocks.length - 4);
+                          let headerIdx = -1;
+                          for (let i = ceBlocks.length - 1; i >= searchLimit; i--) {
+                            const header = ceBlocks[i].querySelector('h1, h2, h3, h4, h5, h6, .ce-header');
+                            if (header && isBibliographyHeaderText(header.textContent)) {
+                              headerIdx = i;
+                              break;
+                            }
+                          }
                           if (headerIdx >= 0) {
                             const headerBlockEl = ceBlocks[headerIdx];
                             const header = headerBlockEl.querySelector('h2, .ce-header, [contenteditable]');

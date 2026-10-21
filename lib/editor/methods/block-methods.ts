@@ -259,62 +259,65 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
               }
             }
 
-            // Helper to find all indices of existing bibliography blocks in Editor.js
-            const findBibliographyBlockIndices = (): number[] => {
-              if (!editorRef.current || !editorRef.current.blocks) return [];
+            // Helper to locate the bibliography header index strictly at the bottom of the document.
+            // Since bibliography is always at the end, scan backwards only the last 4 blocks.
+            // This strictly protects all previous body/chapter blocks from ever being touched.
+            const findBibliographyHeaderIndex = (): number => {
+              if (!editorRef.current || !editorRef.current.blocks) return -1;
               const total = editorRef.current.blocks.getBlocksCount();
-              const indices: number[] = [];
+              if (total === 0) return -1;
 
-              for (let i = 0; i < total; i++) {
+              const searchLimit = Math.max(0, total - 4);
+              for (let i = total - 1; i >= searchLimit; i--) {
                 const block = editorRef.current.blocks.getBlockByIndex(i);
                 if (!block || !block.holder) continue;
-                const holder = block.holder;
 
-                const headerEl = holder.querySelector('h1, h2, h3, h4, h5, h6, .ce-header, [contenteditable]');
-                const headerText = headerEl?.textContent?.trim() || '';
-                const isBibHeader = isBibliographyHeaderText(headerText);
-
-                const hasBibClasses = Boolean(
-                  holder.classList.contains('sf-system-locked-block') ||
-                  holder.classList.contains('sf-bibliography-blur') ||
-                  holder.classList.contains('sf-bibliography-fade-container') ||
-                  holder.querySelector('.sf-system-locked-block, .sf-bibliography-blur, .sf-premium-banner-container, [data-sf-system-locked="true"]')
-                );
-
-                if (isBibHeader || hasBibClasses) {
-                  indices.push(i);
+                // Match only actual headings (h1..h6) or .ce-header class
+                const headerEl = block.holder.querySelector('h1, h2, h3, h4, h5, h6, .ce-header');
+                if (headerEl && isBibliographyHeaderText(headerEl.textContent)) {
+                  return i;
                 }
               }
-
-              return indices;
+              return -1;
             };
 
-            // Helper to cleanly delete all existing bibliography blocks from bottom to top so indices never shift
+            // Safely delete ONLY the bibliography blocks located at the bottom of the canvas
             const deleteExistingBibliographyBlocks = () => {
               if (!editorRef.current || !editorRef.current.blocks) return;
-              const indices = findBibliographyBlockIndices();
-              indices.sort((a, b) => b - a);
-              for (const idx of indices) {
+              const total = editorRef.current.blocks.getBlocksCount();
+              const headerIdx = findBibliographyHeaderIndex();
+              if (headerIdx === -1) return;
+
+              // Delete strictly from total - 1 down to headerIdx (only the bottom bibliography blocks)
+              for (let i = total - 1; i >= headerIdx; i--) {
                 const currentIdx = editorRef.current.blocks.getCurrentBlockIndex();
-                if (!activeCaretInfo && typeof currentIdx === 'number' && currentIdx === idx && idx > 0) {
+                if (!activeCaretInfo && typeof currentIdx === 'number' && currentIdx === i && i > 0) {
                   try {
-                    editorRef.current.caret.setToBlock(idx - 1, 'end');
+                    editorRef.current.caret.setToBlock(i - 1, 'end');
                   } catch (err) {
                     console.warn('Gagal memindahkan caret sebelum menghapus block:', err);
                   }
                 }
                 try {
-                  editorRef.current.blocks.delete(idx);
+                  editorRef.current.blocks.delete(i);
                 } catch (err) {
                   console.warn('Gagal menghapus block bibliography:', err);
                 }
               }
             };
 
-            // When no citations exist, purge all bibliography blocks and persist clean document
+            // When no citations exist, purge only the bottom bibliography if present and persist
             if (entries.length === 0) {
-              deleteExistingBibliographyBlocks();
-              calculateLiveStats();
+              const hadBiblio = findBibliographyHeaderIndex() !== -1;
+              if (hadBiblio) {
+                deleteExistingBibliographyBlocks();
+                calculateLiveStats();
+                if (onContentChange && editorRef.current) {
+                  saveCleanContent().then((cleanData) => {
+                    if (cleanData) onContentChange(cleanData);
+                  }).catch(console.error);
+                }
+              }
               if (wasReadOnly) {
                 await editorRef.current.readOnly.toggle(true);
               }
@@ -324,11 +327,6 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
                 } catch (e) {
                   // safe fallback
                 }
-              }
-              if (onContentChange && editorRef.current) {
-                saveCleanContent().then((cleanData) => {
-                  if (cleanData) onContentChange(cleanData);
-                }).catch(console.error);
               }
               return true;
             }
@@ -341,14 +339,15 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
               })
               .join('<br><br>');
 
-            // Fast check: if existing bibliography already exists with identical content & title, avoid disruptive re-insertion
-            const existingIndices = findBibliographyBlockIndices();
-            if (existingIndices.length >= 2) {
-              const headerBlock = editorRef.current.blocks.getBlockByIndex(existingIndices[0]);
-              const contentBlock = editorRef.current.blocks.getBlockByIndex(existingIndices[1]);
-              const currentHeader = headerBlock?.holder?.querySelector('h1, h2, h3, h4, h5, h6, .ce-header, [contenteditable]')?.textContent?.trim();
+            // Fast check: if existing bibliography already exists at bottom with identical content & title, avoid disruptive re-insertion
+            const existingHeaderIdx = findBibliographyHeaderIndex();
+            const totalBlocks = editorRef.current.blocks.getBlocksCount();
+            if (existingHeaderIdx !== -1 && existingHeaderIdx + 1 < totalBlocks) {
+              const headerBlock = editorRef.current.blocks.getBlockByIndex(existingHeaderIdx);
+              const contentBlock = editorRef.current.blocks.getBlockByIndex(existingHeaderIdx + 1);
+              const currentHeader = headerBlock?.holder?.querySelector('h1, h2, h3, h4, h5, h6, .ce-header')?.textContent?.trim();
               const currentContent = contentBlock?.holder?.querySelector('.ce-paragraph, [contenteditable]')?.innerHTML || '';
-              const hasBannerIfFree = !isFreeTier || (existingIndices.length >= 3 && Boolean(editorRef.current.blocks.getBlockByIndex(existingIndices[2])?.holder?.querySelector('.sf-premium-banner-container')));
+              const hasBannerIfFree = !isFreeTier || (existingHeaderIdx + 2 < totalBlocks && Boolean(editorRef.current.blocks.getBlockByIndex(existingHeaderIdx + 2)?.holder?.querySelector('.sf-premium-banner-container')));
 
               if (currentHeader === biblioTitle && currentContent === biblioHtml && hasBannerIfFree) {
                 if (wasReadOnly) {
@@ -358,7 +357,7 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
               }
             }
 
-            // Delete old bibliography blocks before inserting fresh ones
+            // Delete old bibliography blocks from the bottom before inserting fresh ones
             deleteExistingBibliographyBlocks();
     
             // Fresh block count after deletion
