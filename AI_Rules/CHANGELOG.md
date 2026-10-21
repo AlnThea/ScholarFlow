@@ -1,5 +1,20 @@
 # ScholarFlow Changelog
 
+## v0.43.14 - Dropdown Stacking Context & Overflow Fix: Notifications & Export Button Overlap Resolution
+
+- **Z-Index Layering Hierarchy (`components/editor/editor-header.tsx`, `components/editor/editor-sidebar.tsx`, `components/editor/editorjs-toolbar.tsx`)**:
+  - Elevated `EditorHeader` (Navbar 1) to `z-40` and `EditorJsToolbar` (Navbar 2) to `z-30`.
+  - Normalized `EditorSidebar` (Citations & Library) to `z-20` (matching other canvas sidebars).
+  - Completely eliminates dropdown clipping and stacking overlap ("ketimpa") where the Notifications and Export dropdowns were previously trapped beneath Citations & Library.
+- **Toolbar Dropdown Overflow Fix (`components/editor/editorjs-toolbar.tsx`)**:
+  - Changed `EditorJsToolbar` tools row to `overflow-visible`, preventing browser `overflow-y: auto` clipping of the Export dropdown.
+- **Natural Popover Positioning (`components/editor/editor-header.tsx`, `components/editor/editor-header-actions.tsx`)**:
+  - Aligned Export menu with `left-0` for direct alignment beneath the Export trigger.
+  - Aligned Notifications dropdown with `right-0 sm:-right-20 md:-right-24 max-w-[calc(100vw-2rem)]` to prevent covering the Export button below.
+- **Verification**:
+  - TypeScript check passed with 0 errors. All 227 Vitest unit tests pass across 27 files.
+
+
 ## v0.43.13 - Navbar Layout Optimization: Relocated Research Assistant, History & Reviewer to Ribbon Bar
 
 - **Ribbon Tab Quick Actions Integration (`components/editor/editorjs-toolbar.tsx`, `components/editor/editor-header.tsx`, `components/editor/editor-layout.tsx`)**:

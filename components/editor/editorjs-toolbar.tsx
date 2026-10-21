@@ -147,7 +147,7 @@ export const EditorJsToolbar = ({
   ];
 
   return (
-    <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 lg:sticky lg:top-[57px] z-10 shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition-colors">
+    <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 lg:sticky lg:top-[57px] z-30 shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition-colors">
       {/* 1. Baris Tab Ribbon ala Modern Microsoft Word */}
       <div className="flex items-center justify-between px-6 border-b border-slate-150 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 select-none overflow-x-auto scrollbar-none">
         <nav className="flex items-center gap-1 -mb-px">
@@ -236,7 +236,7 @@ export const EditorJsToolbar = ({
       </div>
 
       {/* 2. Isi Bilah Ribbon Sesuai Tab Aktif */}
-      <div className="flex flex-wrap items-center gap-2 px-6 py-2 min-h-[48px] overflow-x-auto">
+      <div className="flex flex-wrap items-center gap-2 px-6 py-2 min-h-[48px] overflow-visible">
         {/* ============================================================== */}
         {/* TAB 1: BERANDA (HOME) - Teks & Pemformatan Dokumen Inti       */}
         {/* ============================================================== */}

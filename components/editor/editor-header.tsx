@@ -91,7 +91,7 @@ export const EditorHeader = ({
   const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   return (
-    <header className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 px-6 py-2.5 lg:sticky lg:top-0 z-30 backdrop-blur whitespace-nowrap transition-colors">
+    <header className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 px-6 py-2.5 lg:sticky lg:top-0 z-40 backdrop-blur whitespace-nowrap transition-colors">
       <div className="flex items-center gap-2.5 flex-1 min-w-0 pr-4">
         <button
           type="button"
@@ -239,7 +239,7 @@ export const EditorHeader = ({
             {showNotificationsDropdown && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowNotificationsDropdown(false)} />
-                <div className="absolute right-0 mt-2 w-80 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-2 shadow-2xl z-50 animate-scale-in max-h-96 overflow-y-auto">
+                <div className="absolute right-0 sm:-right-20 md:-right-24 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-2 shadow-2xl z-50 animate-scale-in max-h-96 overflow-y-auto">
                   <div className="flex items-center justify-between px-4 py-2 border-b border-slate-100 dark:border-slate-700">
                     <h4 className="text-xs font-bold text-slate-800 dark:text-white">
                       {language === 'en' ? 'Notifications' : 'Notifikasi'}

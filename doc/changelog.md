@@ -5,6 +5,21 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.43.6] - 2026-10-21 (Dropdown Stacking Context & Overflow Fix: Notifications & Export Button Overlap Resolution)
+
+### 🎯 Z-Index Hierarchy & Dropdown Overflow Isolation (`components/editor/editor-header.tsx`, `components/editor/editor-sidebar.tsx`, `components/editor/editorjs-toolbar.tsx`, `components/editor/editor-header-actions.tsx`)
+- **Penyesuaian Stacking Context Z-Index ("Ketimpa")**:
+  - `EditorHeader` (Navbar 1) dinaikkan dari `z-30` ke `z-40` agar dropdown Notifikasi selalu berada di atas bilah di bawahnya.
+  - `EditorJsToolbar` (Navbar 2) dinaikkan dari `z-10` ke `z-30` agar menu popup Ekspor selalu berada di atas canvas dan sidebar.
+  - `EditorSidebar` (Citations & Library) diselaraskan dari `z-40` ke `z-20` (sesuai standar sidebar canvas), sehingga tidak lagi menutupi / memotong dropdown Notifikasi dan Ekspor.
+- **Perbaikan Overflow Dropdown Toolbar**:
+  - Baris tools pada `EditorJsToolbar` diubah menjadi `overflow-visible` agar dropdown menu Ekspor tidak terpotong oleh clipping `overflow-y: auto`.
+- **Optimalisasi Posisi Dropdown**:
+  - Menu Ekspor diatur dengan `left-0` agar muncul tepat di bawah tombol Ekspor.
+  - Popover Notifikasi diatur dengan `right-0 sm:-right-20 md:-right-24 max-w-[calc(100vw-2rem)]` agar pas dengan margin kanan dan tidak menutupi tombol Ekspor.
+- **Verifikasi**:
+  - TypeScript: 0 error. Vitest: 227/227 test lolos 100%.
+
 ## ⚡ [v0.43.5] - 2026-10-21 (Navbar Layout Optimization: Relocated Research Assistant, History & Reviewer to Ribbon Bar)
 
 ### 🎯 Navbar Layout Refinement & Ribbon Bar Integration (`components/editor/editorjs-toolbar.tsx`, `components/editor/editor-header.tsx`, `components/editor/editor-layout.tsx`)

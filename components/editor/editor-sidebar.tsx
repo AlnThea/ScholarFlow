@@ -358,7 +358,7 @@ export function EditorSidebar(props: SidebarProps) {
 
   return (
     <>
-      <aside className={`relative h-full flex flex-row border-l border-slate-100 bg-transparent overflow-hidden transition-all duration-300 ${isExpanded ? 'w-[480px]' : 'w-12'} shrink-0 z-40`}>
+      <aside className={`relative h-full flex flex-row border-l border-slate-100 bg-transparent overflow-hidden transition-all duration-300 ${isExpanded ? 'w-[480px]' : 'w-12'} shrink-0 z-20`}>
         {/* Main Content Area */}
         <div className={`flex min-h-0 flex-col transition-all duration-300 overflow-hidden bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 ${isExpanded ? 'flex-1 opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}>
           <div className="border-b border-slate-100 dark:border-slate-800 px-4 py-4 flex items-center justify-between min-h-[65px] bg-slate-50/50 dark:bg-slate-900/80">

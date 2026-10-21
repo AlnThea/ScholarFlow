@@ -2,6 +2,25 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.43.6] - 2026-10-21 (Dropdown Stacking Context & Overflow Fix: Notifications & Export Button Overlap Resolution)
+
+### 🎯 Z-Index Hierarchy & Dropdown Overflow Isolation (`components/editor/editor-header.tsx`, `components/editor/editor-sidebar.tsx`, `components/editor/editorjs-toolbar.tsx`, `components/editor/editor-header-actions.tsx`)
+- **Resolved Dropdown Overlap & Stacking Context Conflict ("Ketimpa")**:
+  - Fixed issue where the **Notifications** dropdown popup and **Export** dropdown menu were clipped or covered by the Right Sidebar ("Citations & Library" / `EditorSidebar`).
+  - Adjusted root stacking contexts to establish a strict, clean layering hierarchy:
+    - `EditorHeader` (Navbar 1): elevated from `z-30` to `z-40`, ensuring all top-level dropdowns (Notifications, etc.) float above lower layers.
+    - `EditorJsToolbar` (Navbar 2): elevated from `z-10` to `z-30`, ensuring toolbar popovers (Export, Citation styles) render above the canvas and sidebars.
+    - `EditorSidebar` (Citations & Library): normalized from `z-40` to `z-20` (matching `MinimalSidebar` `z-20` and canvas panels), preventing it from slicing or covering sticky header dropdowns.
+- **Toolbar Dropdown Overflow Unclipping (`components/editor/editorjs-toolbar.tsx`)**:
+  - Changed row 2 of `EditorJsToolbar` from `overflow-x-auto` to `overflow-visible`, preventing the browser from computing `overflow-y: auto` and clipping the Export dropdown menu.
+- **Natural Popover Alignment (`components/editor/editor-header.tsx`, `components/editor/editor-header-actions.tsx`)**:
+  - Aligned Export dropdown with `left-0` so it extends directly beneath the Export button instead of spanning across distant tools.
+  - Aligned Notifications dropdown with `right-0 sm:-right-20 md:-right-24 max-w-[calc(100vw-2rem)]` to prevent it from overlaying the Export button while staying within viewport margins.
+- **Verification**:
+  - Full TypeScript type-checking (`npx tsc --noEmit`) passes with 0 errors.
+  - Vitest test suite passes all 227 unit tests across 27 test files.
+
+
 ## ⚡ [v0.43.5] - 2026-10-21 (Navbar Layout Optimization: Relocated Research Assistant, History & Reviewer to Ribbon Bar)
 
 ### 🎯 Navbar Layout Refinement & Ribbon Bar Integration (`components/editor/editorjs-toolbar.tsx`, `components/editor/editor-header.tsx`, `components/editor/editor-layout.tsx`)

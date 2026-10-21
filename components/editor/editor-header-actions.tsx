@@ -104,7 +104,7 @@ export const EditorHeaderActions = ({
         {showExportDropdown && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setShowExportDropdown(false)} />
-            <div className="absolute right-0 mt-2 w-56 rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 py-1 shadow-[0_10px_35px_rgba(0,0,0,0.15)] z-50 animate-scale-in">
+            <div className="absolute left-0 mt-2 w-56 rounded-lg border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 py-1 shadow-[0_10px_35px_rgba(0,0,0,0.15)] z-50 animate-scale-in">
               {/* Document Exporters */}
               <div className="px-3 py-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
                 {language === 'en' ? 'Document' : 'Dokumen'}
