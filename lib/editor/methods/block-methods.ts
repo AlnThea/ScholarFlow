@@ -1,7 +1,7 @@
 import type { EditorJsMethodsProps } from '@/hooks/use-editorjs-methods';
 import { scrambleHtmlText } from '@/lib/editor/editor-tools';
 import { sanitizeEditorContent } from '@/lib/utils/sanitize';
-import { getCaretCharacterOffsetWithin, setCaretCharacterOffsetWithin } from '@/lib/editor/editor-utils';
+import { getCaretCharacterOffsetWithin, setCaretCharacterOffsetWithin, isBibliographyHeaderText } from '@/lib/editor/editor-utils';
 
 export function buildBlockMethods(props: EditorJsMethodsProps) {
   const {
@@ -13,6 +13,7 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
     lastHighlightedRangeRef,
     savedLinkRangeRef,
     isRenderingRef,
+    isProgrammaticSystemUpdateRef,
     pendingContentRef,
     onContentChange,
     onBlockTypeChange,
@@ -208,7 +209,11 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
           }
         }
 ,
-    upsertBibliography: async (entries: Array<{ label: string; formatted: string }>, isFreeTier: boolean = false): Promise<boolean> => {
+    upsertBibliography: async (
+          entries: Array<{ label: string; formatted: string }>,
+          isFreeTier: boolean = false,
+          language: 'en' | 'id' = 'id'
+        ): Promise<boolean> => {
           if (!editorRef.current) return false;
           try {
             await editorRef.current.isReady;
@@ -218,7 +223,12 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
           if (!editorRef.current.blocks) return false;
     
           const wasReadOnly = editorRef.current.readOnly.isEnabled;
+          const biblioTitle = language === 'en' ? 'References' : 'Daftar Pustaka';
+
           try {
+            if (isProgrammaticSystemUpdateRef) {
+              isProgrammaticSystemUpdateRef.current = true;
+            }
             isRenderingRef.current = true;
             if (wasReadOnly) {
               await editorRef.current.readOnly.toggle(false);
@@ -237,7 +247,7 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
                 if (editableEl) {
                   const isInsideBiblio = Boolean(
                     editableEl.closest('.sf-bibliography-blur, .sf-premium-banner-container') ||
-                    editableEl.textContent?.trim() === 'Daftar Pustaka / References'
+                    isBibliographyHeaderText(editableEl.textContent)
                   );
                   if (!isInsideBiblio) {
                     activeCaretInfo = {
@@ -249,118 +259,61 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
               }
             }
 
-            // Helper to find the bibliography header block index dynamically in the DOM
-            const findBibliographyBlockIndex = (): number => {
-              const holder = document.getElementById(holderId);
-              if (!holder) return -1;
-              const ceBlocks = Array.from(holder.querySelectorAll('.ce-block'));
-              return ceBlocks.findIndex(blockEl => {
-                const header = blockEl.querySelector('h2, .ce-header, [contenteditable="true"]');
-                return header && header.textContent?.trim() === 'Daftar Pustaka / References';
-              });
-            };
-    
-            // Build labeled list as HTML paragraph
-            biblioHtml = entries
-              .map(e => {
-                const formatted = isFreeTier ? scrambleHtmlText(e.formatted) : e.formatted;
-                return `[${e.label}] ${formatted}`;
-              })
-              .join('<br><br>');
-
-            // Fast check: if existing bibliography already exists in DOM with identical content, avoid disruptive block deletion/insertion
-            const holderEl = document.getElementById(holderId);
-            if (holderEl) {
-              const ceBlocks = Array.from(holderEl.querySelectorAll('.ce-block'));
-              const existingHeaderIdx = ceBlocks.findIndex(blockEl => {
-                const header = blockEl.querySelector('h2, .ce-header, [contenteditable="true"]');
-                return header && header.textContent?.trim() === 'Daftar Pustaka / References';
-              });
-              if (entries.length > 0 && existingHeaderIdx >= 0 && existingHeaderIdx + 1 < ceBlocks.length) {
-                const contentBlockEl = ceBlocks[existingHeaderIdx + 1];
-                const contentText = contentBlockEl.querySelector('.ce-paragraph, [contenteditable]')?.innerHTML || '';
-                const paragraphEl = contentBlockEl.querySelector('.ce-paragraph, [contenteditable]') as HTMLElement | null;
-                const isBlurred = paragraphEl ? paragraphEl.classList.contains('sf-bibliography-blur') : false;
-                const hasBannerIfFree = !isFreeTier || (existingHeaderIdx + 2 < ceBlocks.length && Boolean(ceBlocks[existingHeaderIdx + 2].querySelector('.sf-premium-banner-container')));
-                
-                // Ensure blur and overlay are active if free tier
-                if (isFreeTier && paragraphEl && !isBlurred) {
-                  paragraphEl.classList.add('sf-bibliography-fade-container', 'sf-bibliography-blur');
-                  let overlay = paragraphEl.querySelector('.sf-fade-overlay');
-                  if (!overlay) {
-                    overlay = document.createElement('div');
-                    overlay.className = 'sf-fade-overlay';
-                    overlay.setAttribute('contenteditable', 'false');
-                    paragraphEl.style.position = 'relative';
-                    paragraphEl.appendChild(overlay);
-                  }
-                }
-
-                // Ensure system locked class and contenteditable="false" attributes are consistently present
-                const headerBlockEl = ceBlocks[existingHeaderIdx];
-                if (headerBlockEl) {
-                  headerBlockEl.classList.add('sf-system-locked-block');
-                  const headerEl = headerBlockEl.querySelector('h2, .ce-header, [contenteditable]');
-                  if (headerEl) {
-                    headerEl.setAttribute('contenteditable', 'false');
-                    headerEl.setAttribute('data-sf-system-locked', 'true');
-                  }
-                }
-                contentBlockEl.classList.add('sf-system-locked-block');
-                if (paragraphEl) {
-                  paragraphEl.setAttribute('contenteditable', 'false');
-                  paragraphEl.setAttribute('data-sf-system-locked', 'true');
-                }
-                if (isFreeTier && existingHeaderIdx + 2 < ceBlocks.length) {
-                  ceBlocks[existingHeaderIdx + 2].classList.add('sf-system-locked-block');
-                }
-
-                if (contentText === biblioHtml && hasBannerIfFree) {
-                  if (wasReadOnly) {
-                    await editorRef.current.readOnly.toggle(true);
-                  }
-                  isRenderingRef.current = false;
-                  return true;
-                }
-              } else if (entries.length === 0 && existingHeaderIdx === -1) {
-                if (wasReadOnly) {
-                  await editorRef.current.readOnly.toggle(true);
-                }
-                isRenderingRef.current = false;
-                return true;
-              }
-            }
-
-            // Remove all existing bibliography blocks (header + content) to clean up duplicates
-            let foundIdx = findBibliographyBlockIndex();
-            while (foundIdx >= 0) {
+            // Helper to find all indices of existing bibliography blocks in Editor.js
+            const findBibliographyBlockIndices = (): number[] => {
+              if (!editorRef.current || !editorRef.current.blocks) return [];
               const total = editorRef.current.blocks.getBlocksCount();
-    
-              // Pindahkan caret ke block sebelumnya jika caret saat ini berada di dalam block yang akan dihapus
-              const currentIdx = editorRef.current.blocks.getCurrentBlockIndex();
-              if (!activeCaretInfo && currentIdx >= foundIdx && foundIdx > 0) {
+              const indices: number[] = [];
+
+              for (let i = 0; i < total; i++) {
+                const block = editorRef.current.blocks.getBlockByIndex(i);
+                if (!block || !block.holder) continue;
+                const holder = block.holder;
+
+                const headerEl = holder.querySelector('h1, h2, h3, h4, h5, h6, .ce-header, [contenteditable]');
+                const headerText = headerEl?.textContent?.trim() || '';
+                const isBibHeader = isBibliographyHeaderText(headerText);
+
+                const hasBibClasses = Boolean(
+                  holder.classList.contains('sf-system-locked-block') ||
+                  holder.classList.contains('sf-bibliography-blur') ||
+                  holder.classList.contains('sf-bibliography-fade-container') ||
+                  holder.querySelector('.sf-system-locked-block, .sf-bibliography-blur, .sf-premium-banner-container, [data-sf-system-locked="true"]')
+                );
+
+                if (isBibHeader || hasBibClasses) {
+                  indices.push(i);
+                }
+              }
+
+              return indices;
+            };
+
+            // Helper to cleanly delete all existing bibliography blocks from bottom to top so indices never shift
+            const deleteExistingBibliographyBlocks = () => {
+              if (!editorRef.current || !editorRef.current.blocks) return;
+              const indices = findBibliographyBlockIndices();
+              indices.sort((a, b) => b - a);
+              for (const idx of indices) {
+                const currentIdx = editorRef.current.blocks.getCurrentBlockIndex();
+                if (!activeCaretInfo && typeof currentIdx === 'number' && currentIdx === idx && idx > 0) {
+                  try {
+                    editorRef.current.caret.setToBlock(idx - 1, 'end');
+                  } catch (err) {
+                    console.warn('Gagal memindahkan caret sebelum menghapus block:', err);
+                  }
+                }
                 try {
-                  editorRef.current.caret.setToBlock(foundIdx - 1, 'end');
+                  editorRef.current.blocks.delete(idx);
                 } catch (err) {
-                  console.warn('Gagal memindahkan caret sebelum menghapus block:', err);
+                  console.warn('Gagal menghapus block bibliography:', err);
                 }
               }
-    
-              if (foundIdx + 2 < total) {
-                const nextNextBlock = editorRef.current.blocks.getBlockByIndex(foundIdx + 2);
-                if (nextNextBlock && nextNextBlock.holder.querySelector('.sf-premium-banner-container')) {
-                  editorRef.current.blocks.delete(foundIdx + 2);
-                }
-              }
-    
-              if (foundIdx + 1 < total) {
-                editorRef.current.blocks.delete(foundIdx + 1); // delete content block
-              }
-              editorRef.current.blocks.delete(foundIdx);       // delete header block
-              foundIdx = findBibliographyBlockIndex();
-            }
-    
+            };
+
+            // When no citations exist, purge all bibliography blocks and persist clean document
             if (entries.length === 0) {
+              deleteExistingBibliographyBlocks();
               calculateLiveStats();
               if (wasReadOnly) {
                 await editorRef.current.readOnly.toggle(true);
@@ -379,14 +332,42 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
               }
               return true;
             }
+
+            // Build labeled list as HTML paragraph
+            biblioHtml = entries
+              .map(e => {
+                const formatted = isFreeTier ? scrambleHtmlText(e.formatted) : e.formatted;
+                return `[${e.label}] ${formatted}`;
+              })
+              .join('<br><br>');
+
+            // Fast check: if existing bibliography already exists with identical content & title, avoid disruptive re-insertion
+            const existingIndices = findBibliographyBlockIndices();
+            if (existingIndices.length >= 2) {
+              const headerBlock = editorRef.current.blocks.getBlockByIndex(existingIndices[0]);
+              const contentBlock = editorRef.current.blocks.getBlockByIndex(existingIndices[1]);
+              const currentHeader = headerBlock?.holder?.querySelector('h1, h2, h3, h4, h5, h6, .ce-header, [contenteditable]')?.textContent?.trim();
+              const currentContent = contentBlock?.holder?.querySelector('.ce-paragraph, [contenteditable]')?.innerHTML || '';
+              const hasBannerIfFree = !isFreeTier || (existingIndices.length >= 3 && Boolean(editorRef.current.blocks.getBlockByIndex(existingIndices[2])?.holder?.querySelector('.sf-premium-banner-container')));
+
+              if (currentHeader === biblioTitle && currentContent === biblioHtml && hasBannerIfFree) {
+                if (wasReadOnly) {
+                  await editorRef.current.readOnly.toggle(true);
+                }
+                return true;
+              }
+            }
+
+            // Delete old bibliography blocks before inserting fresh ones
+            deleteExistingBibliographyBlocks();
     
             // Fresh block count after deletion
             const insertAt = editorRef.current.blocks.getBlocksCount();
     
-            // Insert References header
+            // Insert localized References / Daftar Pustaka header
             editorRef.current.blocks.insert(
               'header',
-              { text: 'Daftar Pustaka / References', level: 2 },
+              { text: biblioTitle, level: 2 },
               undefined,
               insertAt,
               false,
@@ -445,7 +426,7 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
                   const ceBlocks = Array.from(holder.querySelectorAll('.ce-block'));
                   const headerIdx = ceBlocks.findIndex(blockEl => {
                     const header = blockEl.querySelector('h2, .ce-header, [contenteditable]');
-                    return header && header.textContent?.trim() === 'Daftar Pustaka / References';
+                    return header && isBibliographyHeaderText(header.textContent);
                   });
                   if (headerIdx >= 0) {
                     const headerBlockEl = ceBlocks[headerIdx];
@@ -512,6 +493,9 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
             console.error('Error upserting bibliography:', err);
             return false;
           } finally {
+            if (isProgrammaticSystemUpdateRef) {
+              isProgrammaticSystemUpdateRef.current = false;
+            }
             setTimeout(() => {
               isRenderingRef.current = false;
               adjustAllCodeTextareaHeights();

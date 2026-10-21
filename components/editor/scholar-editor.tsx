@@ -285,7 +285,8 @@ export function ScholarEditor() {
     setWarningMessage,
     (msg) => setAiErrorRef.current(msg),
     selectedText,
-    editorJsStats !== null
+    editorJsStats !== null,
+    (language as 'en' | 'id') || 'id'
   );
 
   const {

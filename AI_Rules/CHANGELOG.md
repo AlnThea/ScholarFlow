@@ -1,5 +1,18 @@
 # ScholarFlow Changelog
 
+## v0.43.8 - Zero-Citation Canvas Purge, Bilingual Bibliography Header & Academic Integrity Barometer Exclusion
+
+- **Programmatic System Deletion Bypass & Zero-Citation Purge (`components/editor/editorjs-editor.tsx`, `lib/editor/methods/block-methods.ts`, `hooks/use-editorjs-methods.ts`)**:
+  - Introduced `isProgrammaticSystemUpdateRef` to prevent internal system deletions during `upsertBibliography` from getting blocked by Editor.js user-deletion guards.
+  - Replaced DOM querying while-loop with direct index iteration in descending order (`findBibliographyBlockIndices().sort((a,b) => b - a)`), reliably purging header, content, and upgrade banner blocks when citations reach zero.
+- **Bilingual Bibliography Header Localization (`lib/editor/editor-utils.tsx`, `hooks/use-editor-citation.ts`, `components/editor/scholar-editor.tsx`, `lib/editor/editor-tools.ts`)**:
+  - Dynamically titles the bibliography header based on user active language: 'Daftar Pustaka' (ID) vs 'References' (EN), while recognizing legacy multi-language strings with `isBibliographyHeaderText`.
+- **Bibliography Exclusion from Academic Integrity Barometer & AI Burstiness (`lib/editor/editor-utils.tsx`, `lib/editor/burstiness-engine.ts`, `lib/editor/academic-integrity.ts`, `components/editor/sidebar-burstiness-tab.tsx`)**:
+  - Excluded bibliography header and formatted reference lists from `extractTextFromContent`, `calculateBurstiness`, and `calculateAcademicIntegrity` to ensure reference lists never skew manuscript originality or sentence rhythm.
+  - Prevented Canvas Heatmap buzzword highlights from decorating system-locked bibliography blocks.
+- **Unit Testing**:
+  - Added unit test in `__tests__/utils/academic-integrity.test.ts`. All 223 unit tests passing across 27 files.
+
 ## v0.43.7 - Dynamic In-Text Citation Deletion & Real-Time Bibliography Synchronization
 
 - **Reactive DOM Reference IDs & Set-Union Bug Fix (`hooks/use-editor-citation.ts`)**:

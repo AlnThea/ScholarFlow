@@ -1,18 +1,57 @@
 import React from 'react';
 
 
+export function isBibliographyHeaderText(text?: string | null): boolean {
+  if (!text) return false;
+  const t = text.trim().toLowerCase();
+  return (
+    t === 'daftar pustaka' ||
+    t === 'references' ||
+    t === 'daftar pustaka / references' ||
+    t === 'daftar pustaka/references' ||
+    t === 'references / daftar pustaka' ||
+    t === 'daftar pustaka & references' ||
+    t === 'daftar referensi' ||
+    t === 'bibliografi' ||
+    t === 'bibliography'
+  );
+}
+
 export function extractTextFromContent(content: any): string {
   if (!content || !content.blocks || !Array.isArray(content.blocks)) return '';
   const texts: string[] = [];
+  let inBibliography = false;
+
   for (const block of content.blocks) {
-    if (block.type === 'paragraph' || block.type === 'header') {
+    if (block.type === 'header') {
+      const txt = block.data?.text;
+      const clean = txt ? txt.replace(/<[^>]*>/g, '').trim() : '';
+      if (isBibliographyHeaderText(clean)) {
+        inBibliography = true;
+        continue; // Exclude bibliography header from text analysis
+      }
+      if (inBibliography) {
+        // If a new standard section appears, reset flag
+        inBibliography = false;
+      }
+      if (clean) texts.push(clean);
+    } else if (block.type === 'paragraph') {
       const txt = block.data?.text;
       if (txt) {
-        // Strip HTML tags because Editor.js stores styled html
+        if (
+          inBibliography ||
+          txt.includes('sf-bibliography-blur') ||
+          txt.includes('sf-bibliography-fade-container') ||
+          txt.includes('sf-premium-banner-container') ||
+          txt.includes('References are a paid feature')
+        ) {
+          continue; // Exclude bibliography content and upgrade cards from text analysis
+        }
         const clean = txt.replace(/<[^>]*>/g, '').trim();
         if (clean) texts.push(clean);
       }
     } else if (block.type === 'list') {
+      if (inBibliography) continue;
       const items = block.data?.items;
       if (items && Array.isArray(items)) {
         for (const item of items) {

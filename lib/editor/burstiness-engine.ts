@@ -32,9 +32,22 @@ export const AI_BUZZWORDS = [
   'peluang', 'mendasar', 'pilar', 'fondasi', 'berkesinambungan'
 ];
 
+export function stripBibliographyFromText(text: string): string {
+  if (!text) return '';
+  // Match standalone bibliography headers (Daftar Pustaka, References, etc.) and strip everything after
+  const biblioRegex = /(?:^|\n+)\s*(?:daftar\s+pustaka(?:\s*[\/&]\s*references)?|references|bibliografi|bibliography)\s*(?:\n+|$)/i;
+  const match = text.search(biblioRegex);
+  if (match !== -1) {
+    return text.substring(0, match).trim();
+  }
+  return text;
+}
+
 export function calculateBurstiness(text: string): BurstinessMetrics {
+  // Strip bibliography section first so citations do not distort originality and sentence rhythm
+  const strippedText = stripBibliographyFromText(text);
   // Clean HTML if passed directly from editor
-  const cleanText = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const cleanText = strippedText.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
   
   if (!cleanText) {
     return {

@@ -4,7 +4,7 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.42.9 (Dynamic In-Text Citation Deletion & Real-Time Bibliography Synchronization, 222/222 tests passing).
+v0.43.0 (Zero-Citation Purge, Bilingual Bibliography Header & Academic Integrity Barometer Exclusion, 223/223 tests passing).
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
@@ -22,6 +22,7 @@ v0.42.9 (Dynamic In-Text Citation Deletion & Real-Time Bibliography Synchronizat
 - [x] Phase 43: Free Tier Bibliography Visual Blur & Editor.js Toolbar Deletion Guard Hardening.
 - [x] Phase 44: Right-Click Context Menu & Bubble Menu Citation Search Synchronization.
 - [x] Phase 45: Dynamic In-Text Citation Deletion & Real-Time Bibliography Synchronization.
+- [x] Phase 46: Zero-Citation Canvas Purge, Bilingual Header & Academic Integrity Barometer Exclusion.
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.

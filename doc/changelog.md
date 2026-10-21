@@ -5,6 +5,24 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.43.0] - 2026-10-21 (Zero-Citation Purge, Bilingual Bibliography Header & Academic Integrity Barometer Exclusion)
+
+### 🎯 Zero-Citation Purge & Academic Integrity Isolation (`lib/editor/methods/block-methods.ts`, `components/editor/editorjs-editor.tsx`, `lib/editor/editor-utils.tsx`, `lib/editor/burstiness-engine.ts`, `lib/editor/academic-integrity.ts`, `hooks/use-editor-citation.ts`)
+- **Reliable Zero-Citation Deletion via Programmatic Bypass (`components/editor/editorjs-editor.tsx`, `lib/editor/methods/block-methods.ts`)**:
+  - Resolved regression where deleting all citations in a document left behind ghost "Daftar Pustaka / References" headers and blurred reference blocks.
+  - Root cause: `editor.blocks.delete` user-guard blocked deletions when `isRenderingRef` was reset prematurely by asynchronous `onReady` timeouts.
+  - Added dedicated `isProgrammaticSystemUpdateRef` to safely bypass user-deletion blocks during internal `upsertBibliography` operations.
+  - Refactored bibliography block cleanup to query block models directly from `editorRef.current.blocks` and delete in descending index order (`[N, N-1, ...]`): prevents index-shifting errors and cleans up header, content, and banner cards in a single atomic pass.
+- **Bilingual Bibliography Header (Daftar Pustaka ↔ References) (`lib/editor/editor-utils.tsx`, `hooks/use-editor-citation.ts`, `components/editor/scholar-editor.tsx`)**:
+  - Dynamically renders header as **Daftar Pustaka** when active language is Indonesian (`id`) and **References** when English (`en`), reactively updating on language toggle.
+  - Implemented `isBibliographyHeaderText` to recognize all variations across legacy and new formats.
+- **Exclusion from Academic Integrity Barometer, Heatmap & AI Burstiness (`lib/editor/editor-utils.tsx`, `lib/editor/burstiness-engine.ts`, `lib/editor/academic-integrity.ts`, `components/editor/sidebar-burstiness-tab.tsx`)**:
+  - Bibliography header, citations, and upgrade cards are strictly stripped from `extractTextFromContent`, `calculateBurstiness`, and `calculateAcademicIntegrity`.
+  - Academic Integrity Barometer (`70% Originality`, AI-likeness, rhythm) and Canvas Heatmap analyze only author manuscript prose without reference list noise.
+- **Verification**:
+  - Full TypeScript type check (`npx tsc --noEmit`) passes with 0 errors.
+  - Full Vitest suite passes all 223 unit tests across 27 test files.
+
 ## ⚡ [v0.42.9] - 2026-10-21 (Dynamic In-Text Citation Deletion & Real-Time Bibliography Synchronization)
 
 ### 🎯 Live DOM & Bibliography Synchronization Hardening (`hooks/use-editor-citation.ts`, `lib/editor/methods/block-methods.ts`, `components/editor/editorjs-editor.tsx`, `components/editor/scholar-editor.tsx`)

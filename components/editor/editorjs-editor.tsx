@@ -6,6 +6,7 @@ import type EditorJS from '@editorjs/editorjs';
 import 'katex/dist/katex.min.css';
 
 import { MathBlockTool, InlineMathSanitizerTool, CitationSanitizerTool, CustomFormatsSanitizerTool, scrambleHtmlText } from '@/lib/editor/editor-tools';
+import { isBibliographyHeaderText } from '@/lib/editor/editor-utils';
 import type { EditorJsMethods } from '@/lib/editor/editor-tools';
 import { buildEditorJsMethods } from '@/hooks/use-editorjs-methods';
 import { sanitizeHtml, sanitizeEditorContent } from '@/lib/utils/sanitize';
@@ -51,6 +52,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
   const undoRef = useRef<any>(null);
   const pendingContentRef = useRef<any>(null);
   const isRenderingRef = useRef<boolean>(false);
+  const isProgrammaticSystemUpdateRef = useRef<boolean>(false);
   const holderId = 'editorjs-holder';
   const [isReady, setIsReady] = useState(false);
   const activeBlockIndexRef = useRef<number>(0);
@@ -401,6 +403,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
     lastHighlightedRangeRef,
     savedLinkRangeRef,
     isRenderingRef,
+    isProgrammaticSystemUpdateRef,
     pendingContentRef,
     onContentChange,
     onBlockTypeChange,
@@ -582,14 +585,14 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
               // Intercept and prevent deletion of system-locked blocks (Daftar Pustaka & Premium Banner)
               const originalDelete = editor.blocks.delete.bind(editor.blocks);
               editor.blocks.delete = (index?: number) => {
-                if (!isRenderingRef.current) {
+                if (!isRenderingRef.current && !isProgrammaticSystemUpdateRef.current) {
                   const currentIdx = typeof index === 'number' ? index : editor.blocks.getCurrentBlockIndex();
                   if (currentIdx >= 0) {
                     const blockHolder = document.querySelectorAll('#' + holderId + ' .ce-block')[currentIdx];
                     if (blockHolder && (
                       blockHolder.classList.contains('sf-system-locked-block') ||
                       blockHolder.querySelector('.sf-system-locked-block, .sf-bibliography-blur, .sf-premium-banner-container') ||
-                      blockHolder.textContent?.trim() === 'Daftar Pustaka / References'
+                      isBibliographyHeaderText(blockHolder.textContent)
                     )) {
                       console.warn('ScholarFlow: Blocked deletion of system-locked bibliography block');
                       return;
@@ -610,7 +613,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
                     if (
                       holderEl.classList.contains('sf-system-locked-block') ||
                       holderEl.querySelector('.sf-system-locked-block, .sf-bibliography-blur, .sf-premium-banner-container, [data-sf-system-locked="true"]') ||
-                      holderEl.textContent?.trim() === 'Daftar Pustaka / References'
+                      isBibliographyHeaderText(holderEl.textContent)
                     ) {
                       try {
                         toolbarModule.close();
@@ -633,7 +636,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
                     if (
                       holderEl.classList.contains('sf-system-locked-block') ||
                       holderEl.querySelector('.sf-system-locked-block, .sf-bibliography-blur, .sf-premium-banner-container, [data-sf-system-locked="true"]') ||
-                      holderEl.textContent?.trim() === 'Daftar Pustaka / References'
+                      isBibliographyHeaderText(holderEl.textContent)
                     ) {
                       return;
                     }
@@ -662,7 +665,7 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
                           const ceBlocks = Array.from(holder.querySelectorAll('.ce-block'));
                           const headerIdx = ceBlocks.findIndex(blockEl => {
                             const header = blockEl.querySelector('h2, .ce-header, [contenteditable]');
-                            return header && header.textContent?.trim() === 'Daftar Pustaka / References';
+                            return header && isBibliographyHeaderText(header.textContent);
                           });
                           if (headerIdx >= 0) {
                             const headerBlockEl = ceBlocks[headerIdx];

@@ -3,7 +3,7 @@
 // Evaluates Burstiness (sentence length variance), Lexical Diversity (TTR),
 // AI Cliché/Buzzword Frequency, and Syntactic Variance to predict AI-likeness and publication readiness.
 
-import { calculateBurstiness, AI_BUZZWORDS, type BurstinessMetrics } from '@/lib/editor/burstiness-engine';
+import { calculateBurstiness, stripBibliographyFromText, AI_BUZZWORDS, type BurstinessMetrics } from '@/lib/editor/burstiness-engine';
 
 export type IntegrityRiskLevel = 'low' | 'medium' | 'high';
 
@@ -42,7 +42,9 @@ export interface AcademicIntegrityReport {
  * Calculates the Composite Academic Integrity Index for a given text.
  */
 export function calculateAcademicIntegrity(text: string): AcademicIntegrityReport {
-  const burstiness = calculateBurstiness(text);
+  // Strip bibliography section so citations and references do not skew originality or sentence metrics
+  const cleanedText = stripBibliographyFromText(text);
+  const burstiness = calculateBurstiness(cleanedText);
 
   if (burstiness.totalWords === 0 || burstiness.totalSentences === 0) {
     return {

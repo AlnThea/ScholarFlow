@@ -17,6 +17,7 @@ export interface EditorJsMethodsProps {
   lastHighlightedRangeRef: MutableRefObject<Range | null>;
   savedLinkRangeRef: MutableRefObject<Range | null>;
   isRenderingRef: MutableRefObject<boolean>;
+  isProgrammaticSystemUpdateRef?: MutableRefObject<boolean>;
   pendingContentRef: MutableRefObject<any>;
   onContentChange?: (content: any) => void;
   onBlockTypeChange?: (type: string) => void;

@@ -22,7 +22,8 @@ export function useEditorCitation(
   setWarningMessage: (msg: string) => void,
   setAiError: (msg: string | null) => void,
   selectedText: string,
-  hasInitializedLiveStats: boolean = false
+  hasInitializedLiveStats: boolean = false,
+  language: 'en' | 'id' = 'id'
 ) {
   const [citationResults, setCitationResults] = useState<CitationCandidate[]>([]);
   const [citationLibrary, setCitationLibrary] = useState<Record<string, CitationCandidate>>({});
@@ -216,7 +217,7 @@ export function useEditorCitation(
       formatted: e.formatted,
     }));
     const isFreeTier = activePlanId === 'free';
-    const biblioKey = JSON.stringify({ entries, isFreeTier });
+    const biblioKey = JSON.stringify({ entries, isFreeTier, language });
     if (lastUpsertedBibliographyKeyRef.current === biblioKey) {
       return;
     }
@@ -227,7 +228,7 @@ export function useEditorCitation(
     const tryUpsert = async () => {
       if (!isMounted) return;
       try {
-        const result = await editorJsRef.current?.upsertBibliography(entries, isFreeTier);
+        const result = await editorJsRef.current?.upsertBibliography(entries, isFreeTier, language);
         if (result) {
           lastUpsertedBibliographyKeyRef.current = biblioKey;
         } else if (retryCount < 5) {
@@ -247,7 +248,7 @@ export function useEditorCitation(
       isMounted = false;
       clearTimeout(timer);
     };
-  }, [bibliographyEntries, hydrated, activePlanId, editorJsRef]);
+  }, [bibliographyEntries, hydrated, activePlanId, editorJsRef, language]);
 
   // Editor Actions
   const insertCitation = useCallback(() => {

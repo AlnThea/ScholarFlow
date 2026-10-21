@@ -80,4 +80,20 @@ describe('Phase 24: Academic Integrity & AI-Likeness Barometer Engine Unit Tests
     const report = calculateAcademicIntegrity(repetitiveText);
     expect(report.metrics.uniqueWordRatio).toBeLessThan(0.5);
   });
+
+  it('excludes bibliography and reference sections from academic integrity analysis', () => {
+    const textWithBibliography = `
+      Artificial intelligence algorithms can identify biomarkers in genomic sequences with high precision.
+      These computational models assist pathologists in discovering novel oncological targets.
+      
+      Daftar Pustaka
+      [1] Adharma, B., Pratama, R., & Wibowo, S. (2024). Deep learning paradigms in molecular biology. Nature Biotech, 12(3), 45-56.
+      [2] Doe, J., & Smith, A. (2023). Neural network interpretability in clinical workflows. Lancet Digital Health, 5(2), 112-120.
+    `;
+
+    const report = calculateAcademicIntegrity(textWithBibliography);
+    // References must NOT be counted as sentences or words in the manuscript analysis
+    expect(report.metrics.totalSentences).toBe(2);
+    expect(report.sentences.every(s => !s.text.includes('Adharma') && !s.text.includes('Lancet'))).toBe(true);
+  });
 });

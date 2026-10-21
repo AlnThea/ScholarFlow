@@ -5,7 +5,7 @@ import {
 import { useDebounce } from 'use-debounce';
 import { BurstinessChart } from './burstiness-chart';
 import { ParaphraseStudio } from './paraphrase-studio';
-import { extractTextFromContent, getCaretCharacterOffsetWithin, setCaretCharacterOffsetWithin } from '@/lib/editor/editor-utils';
+import { extractTextFromContent, getCaretCharacterOffsetWithin, setCaretCharacterOffsetWithin, isBibliographyHeaderText } from '@/lib/editor/editor-utils';
 import { calculateBurstiness, AI_BUZZWORDS } from '@/lib/editor/burstiness-engine';
 import { AcademicIntegrityBarometer } from './academic-integrity-barometer';
 import { useLanguage } from '../i18n/language-context';
@@ -44,6 +44,17 @@ export const SidebarBurstinessTab = (props: any) => {
           (window.getSelection()?.anchorNode && block.contains(window.getSelection()!.anchorNode))
         );
         const caretOffset = isFocused ? getCaretCharacterOffsetWithin(block) : 0;
+
+        // Do not highlight inside bibliography section
+        const blockHolder = block.closest('.ce-block');
+        if (
+          blockHolder?.classList.contains('sf-system-locked-block') ||
+          blockHolder?.querySelector('.sf-system-locked-block, .sf-bibliography-blur, .sf-premium-banner-container, [data-sf-system-locked="true"]') ||
+          block.closest('.sf-bibliography-blur, .sf-premium-banner-container') ||
+          isBibliographyHeaderText(block.textContent)
+        ) {
+          return;
+        }
 
         // remove old highlights
         block.innerHTML = block.innerHTML.replace(/<span class="ai-heatmap-highlight[^>]*>(.*?)<\/span>/gi, '$1');
