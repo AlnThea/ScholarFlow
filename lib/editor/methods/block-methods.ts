@@ -208,14 +208,14 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
           }
         }
 ,
-    upsertBibliography: async (entries: Array<{ label: string; formatted: string }>, isFreeTier: boolean = false) => {
-          if (!editorRef.current) return;
+    upsertBibliography: async (entries: Array<{ label: string; formatted: string }>, isFreeTier: boolean = false): Promise<boolean> => {
+          if (!editorRef.current) return false;
           try {
             await editorRef.current.isReady;
           } catch (e) {
-            return;
+            return false;
           }
-          if (!editorRef.current.blocks) return;
+          if (!editorRef.current.blocks) return false;
     
           const wasReadOnly = editorRef.current.readOnly.isEnabled;
           try {
@@ -361,11 +361,23 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
             }
     
             if (entries.length === 0) {
-            calculateLiveStats();
+              calculateLiveStats();
               if (wasReadOnly) {
                 await editorRef.current.readOnly.toggle(true);
               }
-              return;
+              if (activeCaretInfo && activeCaretInfo.element.isConnected) {
+                try {
+                  setCaretCharacterOffsetWithin(activeCaretInfo.element, activeCaretInfo.offset);
+                } catch (e) {
+                  // safe fallback
+                }
+              }
+              if (onContentChange && editorRef.current) {
+                saveCleanContent().then((cleanData) => {
+                  if (cleanData) onContentChange(cleanData);
+                }).catch(console.error);
+              }
+              return true;
             }
     
             // Fresh block count after deletion
@@ -490,8 +502,15 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
             if (wasReadOnly) {
               await editorRef.current.readOnly.toggle(true);
             }
+            if (onContentChange && editorRef.current) {
+              saveCleanContent().then((cleanData) => {
+                if (cleanData) onContentChange(cleanData);
+              }).catch(console.error);
+            }
+            return true;
           } catch (err) {
             console.error('Error upserting bibliography:', err);
+            return false;
           } finally {
             setTimeout(() => {
               isRenderingRef.current = false;

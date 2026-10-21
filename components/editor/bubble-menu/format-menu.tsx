@@ -28,8 +28,9 @@ export type FormatMenuProps = {
   onParaphrase: () => void;
   setShowBubbleMenu: (show: boolean) => void;
   setBubbleMode: (mode: 'format' | 'citation') => void;
-  onFindCitation: () => void;
+  onFindCitation: (query?: string) => void;
   aiError: string | null;
+  selectedText?: string;
 };
 
 export function FormatMenu({
@@ -37,7 +38,7 @@ export function FormatMenu({
   selectedAiModel, setSelectedAiModel, aiModels, selectedAiTone, setSelectedAiTone,
   editorMode, setSelectedTextForSuggestion, setNewTextForSuggestion, setIsSuggestionModalOpen,
   isImproving, activePlanId, showAlertModal, setIsPlanModalOpen, onImproveWriting,
-  setShowRightSidebar, onParaphrase, setShowBubbleMenu, setBubbleMode, onFindCitation, aiError
+  setShowRightSidebar, onParaphrase, setShowBubbleMenu, setBubbleMode, onFindCitation, aiError, selectedText
 }: FormatMenuProps) {
   const getBtnClass = (isActive: boolean) => {
     return `p-1.5 rounded transition cursor-pointer ${
@@ -524,7 +525,9 @@ export function FormatMenu({
       
                               setBubbleMode('citation');
       
-                              onFindCitation();
+                              const sel = typeof window !== 'undefined' ? window.getSelection()?.toString()?.trim() : '';
+                              const query = selectedText?.trim() || sel || '';
+                              onFindCitation(query);
       
                               setShowRightSidebar?.(true);
       

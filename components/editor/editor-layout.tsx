@@ -972,6 +972,10 @@ export function EditorLayout({
 
                     if (holder && anchorEl && holder.contains(anchorEl)) {
                       e.preventDefault();
+                      const text = selection.toString().trim();
+                      if (text) {
+                        onSelectionChange?.(text);
+                      }
                       setBubbleMenuRect(new DOMRect(e.clientX, e.clientY, 0, 0));
                       setBubbleMode('format');
                       setShowBubbleMenu(true);

@@ -176,6 +176,20 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
     const words = trimmed ? trimmed.split(/\s+/).filter(Boolean).length : 0;
     const chars = text.length;
 
+    // Clean up empty ghost cite tags that the browser may leave behind when user deletes text
+    Array.from(holder.querySelectorAll('cite[data-citation]')).forEach((el) => {
+      if (!el.textContent || el.textContent.trim().length === 0) {
+        el.remove();
+      }
+    });
+
+    // Clean up empty ghost cite tags that the browser may leave behind when user deletes text
+    Array.from(holder.querySelectorAll('cite[data-citation]')).forEach((el) => {
+      if (!el.textContent || el.textContent.trim().length === 0) {
+        el.remove();
+      }
+    });
+
     const citationEls = Array.from(holder.querySelectorAll('cite[data-citation]'))
       .filter(el => el.textContent && el.textContent.trim().length > 0);
     const citations = citationEls.length;
@@ -994,6 +1008,12 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
         onMouseUp={() => {
           syncActiveBlockType();
           calculateLiveStats();
+        }}
+        onInput={() => {
+          debouncedCalculateLiveStats();
+        }}
+        onCut={() => {
+          setTimeout(calculateLiveStats, 50);
         }}
         className="flex-1 outline-none ProseMirror"
       />

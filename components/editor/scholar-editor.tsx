@@ -244,6 +244,8 @@ export function ScholarEditor() {
 
   const setAiErrorRef = useRef<(msg: string | null) => void>(() => {});
   
+  const [selectedText, setSelectedText] = useState('');
+
   const {
     citationResults,
     citationLibrary,
@@ -282,11 +284,11 @@ export function ScholarEditor() {
     editorJsRef as any,
     setWarningMessage,
     (msg) => setAiErrorRef.current(msg),
-    '' // selectedText will be passed as empty initially
+    selectedText,
+    editorJsStats !== null
   );
 
   const {
-    selectedText, setSelectedText,
     improvedResult, setImprovedResult,
     selectedAiModel, setSelectedAiModel,
     selectedAiTone, setSelectedAiTone,
@@ -318,7 +320,9 @@ export function ScholarEditor() {
     setContentBeforeApply,
     setIsApplied,
     setSavedAt,
-    hydrated
+    hydrated,
+    selectedText,
+    setSelectedText
   );
   setAiErrorRef.current = setAiError;
 

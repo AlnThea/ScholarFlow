@@ -24,7 +24,7 @@ export type EditorBubbleMenuProps = {
   findMostRelevantSentence: (abs: string | null | undefined, query: string) => string;
   isImproving: boolean;
   isSearchingCitations: boolean;
-  onFindCitation: () => void;
+  onFindCitation: (query?: string) => void;
   onImproveWriting: () => void;
   onInsertCitationCandidate: (candidate: any, isFromSearch?: boolean) => void;
   onParaphrase: () => void;
@@ -172,6 +172,7 @@ export function EditorBubbleMenu(props: EditorBubbleMenuProps) {
                         setBubbleMode={setBubbleMode}
                         onFindCitation={onFindCitation}
                         aiError={aiError}
+                        selectedText={selectedText}
                       />
                     )}
 

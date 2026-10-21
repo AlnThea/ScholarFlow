@@ -2,6 +2,43 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.42.9] - 2026-10-21 (Dynamic In-Text Citation Deletion & Real-Time Bibliography Synchronization)
+
+### 🎯 Live DOM & Bibliography Synchronization Hardening (`hooks/use-editor-citation.ts`, `lib/editor/methods/block-methods.ts`, `components/editor/editorjs-editor.tsx`, `components/editor/scholar-editor.tsx`)
+- **Reactive DOM Reference IDs & Set-Union Bug Resolution (`hooks/use-editor-citation.ts`)**:
+  - Fixed issue where deleting in-text citations (`<cite>`) from document content did not remove them from the 'Citations & Library' sidebar tab or bottom bibliography list.
+  - Root cause: `bibliographyEntries = useMemo(...)` computed unique IDs via `allUniqueIds = Array.from(new Set([...orderedIds, ...activeReferenceIds]))`. Because mathematical set union always retains elements from `orderedIds` (loaded from static document blocks), deleted citations could never be evicted.
+  - Added `hasInitializedLiveStats` flag to `useEditorCitation`: once live stats initialize (`editorJsStats !== null`), reference IDs are strictly derived from live DOM elements (`activeReferenceIds`). If all citations are removed, the library and bibliography immediately clear reactively.
+- **Empty Bibliography Cleanup & Persistence (`lib/editor/methods/block-methods.ts`, `lib/editor/editor-tools.ts`)**:
+  - Updated `upsertBibliography`: when all citations are deleted (`entries.length === 0`), all existing bibliography blocks (header, content, and premium lock cards) are deleted from the Editor.js canvas.
+  - Dispatches `saveCleanContent().then(onContentChange)` to persist the cleared state to database/storage, and safely restores caret position.
+  - Standardized `upsertBibliography` return types to `Promise<boolean>`, ensuring `lastUpsertedBibliographyKeyRef` properly flags success and prevents loop retries.
+- **Ghost Citation Pruning & Real-Time Typing/Cut Listeners (`components/editor/editorjs-editor.tsx`)**:
+  - Enhanced `calculateLiveStats()` to remove empty/ghost `<cite data-citation="true">` elements that can linger in `contenteditable` when users backspace citation tags.
+  - Added `onInput` and `onCut` event listeners to the editor canvas wrapper to immediately trigger live stats recalculation whenever users delete, cut, or backspace citations.
+- **Automated Verification**:
+  - Full TypeScript validation (`npx tsc --noEmit`) passes with 0 errors.
+  - Full Vitest suite passes all 222 unit tests across 27 test files.
+
+## ⚡ [v0.42.8] - 2026-10-21 (Right-Click Context Menu & Bubble Menu Citation Search Synchronization)
+
+### 🎯 Citation Search Query State Synchronization & Context Menu Hardening (`components/editor/scholar-editor.tsx`, `hooks/use-editor-citation.ts`, `hooks/use-editor-ai.ts`, `components/editor/bubble-menu/format-menu.tsx`, `components/editor/bubble-menu/citation-menu.tsx`, `components/editor/editor-layout.tsx`)
+- **Direct Selection State Linking (`scholar-editor.tsx`, `use-editor-citation.ts`, `use-editor-ai.ts`)**:
+  - Resolved regression where highlighting text and clicking 'Cari Kutipan / Sitasi' (Find Citations) from right-click context menu or floating bubble menu resulted in premature 'No citations found'.
+  - Identified root cause: `useEditorCitation` was previously passed an empty string `''` placeholder (`// selectedText will be passed as empty initially`), causing `runCitationSearch` to immediately exit on `if (!selectedText.trim()) return;` without querying the OpenAlex/Crossref API.
+  - Lifted and bound `selectedText` / `setSelectedText` state in `ScholarEditor`, sharing it simultaneously across `useEditorCitation` and `useEditorAi`.
+- **Multi-Source Query Fallback Engine (`use-editor-citation.ts`, `format-menu.tsx`)**:
+  - Upgraded `runCitationSearch` to accept an explicit `customQuery?: string` with robust 3-stage fallback: explicit query -> `selectedText` state -> DOM `window.getSelection()?.toString()`.
+  - Updated `FormatMenu` button click to immediately extract and pass the active selection query to `onFindCitation(query)`.
+- **Right-Click Context Menu Event Dispatch Guard (`editor-layout.tsx`)**:
+  - Added immediate `onSelectionChange?.(text)` dispatch in `onContextMenu` when user right-clicks selected text, ensuring state is synchronized before opening the popup.
+- **Dark Mode & Bilingual Polish on Citation Results Modal (`citation-menu.tsx`)**:
+  - Integrated `useLanguage()` with dynamic English/Indonesian labels for loading, error, and empty result banners.
+  - Added full Tailwind `dark:` variants across article cards, header, and buttons.
+- **Automated Unit Testing (`__tests__/utils/editor-interaction-hardening.test.ts`)**:
+  - Added unit test validating multi-stage query resolution with fallback to window selection.
+  - All 222 unit tests passing with 0 errors across 27 test files.
+
 ## ⚡ [v0.42.7] - 2026-10-20 (Free Tier Bibliography Visual Blur & Editor.js Toolbar Deletion Guard Hardening)
 
 ### 🎯 Bibliography Lock, Visual Obfuscation & Editor.js Toolbar Suppression (`components/editor/editorjs-editor.tsx`, `lib/editor/methods/block-methods.ts`, `app/globals.css`, `hooks/use-editor-citation.ts`)

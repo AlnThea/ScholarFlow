@@ -225,7 +225,7 @@ export interface EditorJsMethods {
   insertText: (text: string) => void;
   setFontSize: (size: string) => void;
   insertBibliographyText: (text: string) => void;
-  upsertBibliography: (entries: Array<{ label: string; formatted: string }>, isFreeTier?: boolean) => void;
+  upsertBibliography: (entries: Array<{ label: string; formatted: string }>, isFreeTier?: boolean) => Promise<boolean> | boolean | void;
   renderContent: (data: any) => void;
   insertCitationSearch: () => void;
   insertCitationAtSearch: (label: string, referenceId: string) => void;

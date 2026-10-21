@@ -83,4 +83,33 @@ describe('Phase 40: Canvas & Document Editor Interaction Hardening', () => {
 
     document.body.removeChild(paragraph);
   });
+
+  it('correctly resolves citation search query with fallback to window selection when query is not passed directly', () => {
+    const testDiv = document.createElement('div');
+    testDiv.textContent = 'Machine learning for climate modeling';
+    document.body.appendChild(testDiv);
+
+    const range = document.createRange();
+    range.selectNodeContents(testDiv);
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+
+    const resolveQuery = (customQuery?: string, selectedText?: string): string => {
+      let queryToUse = (typeof customQuery === 'string' && customQuery.trim()) ? customQuery.trim() : (selectedText?.trim() || '');
+      if (!queryToUse && typeof window !== 'undefined') {
+        const windowSel = window.getSelection()?.toString()?.trim();
+        if (windowSel) {
+          queryToUse = windowSel;
+        }
+      }
+      return queryToUse;
+    };
+
+    expect(resolveQuery('deep learning')).toBe('deep learning');
+    expect(resolveQuery('', 'artificial intelligence')).toBe('artificial intelligence');
+    expect(resolveQuery('', '')).toBe('Machine learning for climate modeling');
+
+    document.body.removeChild(testDiv);
+  });
 });

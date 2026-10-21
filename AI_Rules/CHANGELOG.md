@@ -1,5 +1,32 @@
 # ScholarFlow Changelog
 
+## v0.43.7 - Dynamic In-Text Citation Deletion & Real-Time Bibliography Synchronization
+
+- **Reactive DOM Reference IDs & Set-Union Bug Fix (`hooks/use-editor-citation.ts`)**:
+  - Fixed issue where deleting in-text citations from document content did not remove them from the Citations & Library sidebar tab or bottom bibliography list.
+  - Switched from additive union `[...orderedIds, ...activeReferenceIds]` to dynamic live tracking via `hasInitializedLiveStats`: once editor live stats are active, references strictly track live DOM `activeReferenceIds`.
+- **Empty Bibliography Canvas Cleanup & Auto-Save (`lib/editor/methods/block-methods.ts`)**:
+  - When `entries.length === 0`, deletes all bibliography blocks and dispatches `saveCleanContent().then(onContentChange)`.
+  - Standardized return values to `Promise<boolean>` for reliable caller syncing.
+- **Ghost Citation Removal & Real-Time Listeners (`components/editor/editorjs-editor.tsx`)**:
+  - Added cleanup of empty `<cite>` tags on backspaces.
+  - Added `onInput` and `onCut` events to reactively recalculate live citation stats immediately.
+
+## v0.43.6 - Right-Click Context Menu & Bubble Menu Citation Search Synchronization
+
+- **Direct Selection State Linking (scholar-editor.tsx, use-editor-citation.ts, use-editor-ai.ts)**:
+  - Resolved regression where highlighting text and clicking 'Cari Kutipan / Sitasi' (Find Citations) from right-click context menu or floating bubble menu resulted in premature 'No citations found'.
+  - Fixed empty string placeholder in useEditorCitation, lifting and linking selectedText / setSelectedText state in ScholarEditor.
+- **Multi-Source Query Fallback Engine (use-editor-citation.ts, format-menu.tsx)**:
+  - Upgraded runCitationSearch with 3-stage query fallback: explicit query -> selectedText state -> DOM window.getSelection().
+  - Updated FormatMenu button click to immediately pass active selection to onFindCitation(query).
+- **Right-Click Context Menu Dispatch Guard (editor-layout.tsx)**:
+  - Added immediate onSelectionChange(text) dispatch in onContextMenu.
+- **Dark Mode & Bilingual Polish on Citation Results Modal (citation-menu.tsx)**:
+  - Integrated useLanguage() with dynamic English/Indonesian labels for loading, error, and empty result states, and added full Tailwind dark variants.
+- **Unit Testing**:
+  - Added unit test in __tests__/utils/editor-interaction-hardening.test.ts. All 222 unit tests passing.
+
 ## v0.43.5 - Free Tier Bibliography Visual Blur & Editor.js Toolbar Deletion Guard Hardening
 
 - **Free Tier Bibliography Visual Blur & Lock (`components/editor/editorjs-editor.tsx`, `lib/editor/methods/block-methods.ts`, `app/globals.css`, `hooks/use-editor-citation.ts`)**:

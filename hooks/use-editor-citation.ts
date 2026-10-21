@@ -21,7 +21,8 @@ export function useEditorCitation(
   editorJsRef: React.MutableRefObject<EditorJsMethods | null>,
   setWarningMessage: (msg: string) => void,
   setAiError: (msg: string | null) => void,
-  selectedText: string
+  selectedText: string,
+  hasInitializedLiveStats: boolean = false
 ) {
   const [citationResults, setCitationResults] = useState<CitationCandidate[]>([]);
   const [citationLibrary, setCitationLibrary] = useState<Record<string, CitationCandidate>>({});
@@ -187,19 +188,26 @@ export function useEditorCitation(
   const bibliographyEntries = useMemo(() => {
     const style = currentDocument?.settings?.citationStyle || 'apa';
     const lang = currentDocument?.settings?.citationLocale || 'en-US';
-    const orderedIds = orderedReferenceIdsKey ? orderedReferenceIdsKey.split('|') : [];
+    const orderedIdsFromDoc = orderedReferenceIdsKey ? orderedReferenceIdsKey.split('|').filter(Boolean) : [];
     
-    // Combine unique reference IDs from document scan and live DOM state
-    const allUniqueIds = Array.from(new Set([...orderedIds, ...activeReferenceIds]));
+    // If live editor has initialized and scanned DOM, activeReferenceIds is the authoritative ground truth.
+    // If activeReferenceIds is empty before live DOM scan runs, fall back to orderedIdsFromDoc.
+    const targetReferenceIds = hasInitializedLiveStats
+      ? Array.from(new Set(activeReferenceIds))
+      : (activeReferenceIds.length > 0 ? Array.from(new Set(activeReferenceIds)) : orderedIdsFromDoc);
+
+    const docOrderIds = hasInitializedLiveStats && activeReferenceIds.length > 0
+      ? activeReferenceIds
+      : orderedIdsFromDoc;
 
     return sortAndFormatBibliography(
-      allUniqueIds,
+      targetReferenceIds,
       citationLibrary,
       style,
-      orderedIds,
+      docOrderIds,
       lang
     );
-  }, [citationLibrary, activeReferenceIds, orderedReferenceIdsKey, currentDocument?.settings?.citationStyle, currentDocument?.settings?.citationLocale]);
+  }, [citationLibrary, activeReferenceIds, orderedReferenceIdsKey, hasInitializedLiveStats, currentDocument?.settings?.citationStyle, currentDocument?.settings?.citationLocale]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -371,9 +379,16 @@ export function useEditorCitation(
     }
   }, [currentDocument, setAiError]);
 
-  const runCitationSearch = useCallback(async () => {
-    if (!selectedText.trim()) return;
-    await runCitationSearchForQuery(selectedText);
+  const runCitationSearch = useCallback(async (customQuery?: string) => {
+    let queryToUse = (typeof customQuery === 'string' && customQuery.trim()) ? customQuery.trim() : (selectedText?.trim() || '');
+    if (!queryToUse && typeof window !== 'undefined') {
+      const windowSel = window.getSelection()?.toString()?.trim();
+      if (windowSel) {
+        queryToUse = windowSel;
+      }
+    }
+    if (!queryToUse) return;
+    await runCitationSearchForQuery(queryToUse);
   }, [runCitationSearchForQuery, selectedText]);
 
   const repeatCitationSearch = useCallback((query: string) => {

@@ -16,7 +16,9 @@ export function useEditorAi(
   setContentBeforeApply: (content: any) => void,
   setIsApplied: (val: boolean) => void,
   setSavedAt: (val: string) => void,
-  hydrated: boolean
+  hydrated: boolean,
+  externalSelectedText?: string,
+  externalSetSelectedText?: (text: string) => void
 ) {
   const { user, profile, refreshProfile } = useAuth();
   const [tokensUsed, setTokensUsed] = useState<number>(0);
@@ -34,7 +36,9 @@ export function useEditorAi(
     }
   }, [refreshProfile]);
 
-  const [selectedText, setSelectedText] = useState('');
+  const [internalSelectedText, setInternalSelectedText] = useState('');
+  const selectedText = externalSelectedText !== undefined ? externalSelectedText : internalSelectedText;
+  const setSelectedText = externalSetSelectedText || setInternalSelectedText;
   const [improvedResult, setImprovedResult] = useState<ImproveWritingResponse | null>(null);
   const [selectedAiModel, setSelectedAiModel] = useState('gemini');
   const [selectedAiTone, setSelectedAiTone] = useState('academic');
