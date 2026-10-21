@@ -2,6 +2,22 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.43.7] - 2026-10-21 (LaTeX & Journal Package Pro Tier Gating & HTML Entity Clean Output)
+
+### 🎯 Pro Tier Exclusivity & Clean LaTeX Escaping (`components/editor/editor-header-actions.tsx`, `components/editor/editor-layout.tsx`, `components/editor/modals/latex-export-modal.tsx`, `components/editor/modals/export-upgrade-modal.tsx`, `lib/editor/latex-exporter.ts`)
+- **Pro Tier Gating for LaTeX & Journal Package Exporter**:
+  - Gated the **LaTeX Package (.tex + .bib zip)** feature to Pro Writer plans and above (excluding Free tier), matching bibliography export rules.
+  - Free tier users clicking LaTeX export from the Export dropdown, global shortcut (`Ctrl+Shift+X`), or the Command Palette are now shown the Pro upgrade modal with clear messaging.
+  - Added visual `🔒 PRO` indicator in the Export dropdown and modal header for Free accounts.
+  - For Pro tier users, the feature opens with full unhindered access and instant one-click download for Overleaf packages.
+- **HTML Entity Decoding in LaTeX Exporter (`lib/editor/latex-exporter.ts`)**:
+  - Decoded HTML entities (`&amp;`, `&lt;`, `&gt;`, `&quot;`, `&#39;`, `&nbsp;`) before LaTeX character escaping.
+  - Resolved issue where author names and citations containing `&` rendered as literal `\&amp;` (e.g., `[Putri \&amp; Kurniawati]`) instead of valid LaTeX `\&` (`[Putri \& Kurniawati]`).
+- **Unit Tests & Verification**:
+  - Added 2 new unit tests in `__tests__/utils/latex-exporter.test.ts`.
+  - All 229 Vitest unit tests pass across 27 test files with 0 TypeScript compiler errors.
+
+
 ## ⚡ [v0.43.6] - 2026-10-21 (Dropdown Stacking Context & Overflow Fix: Notifications & Export Button Overlap Resolution)
 
 ### 🎯 Z-Index Hierarchy & Dropdown Overflow Isolation (`components/editor/editor-header.tsx`, `components/editor/editor-sidebar.tsx`, `components/editor/editorjs-toolbar.tsx`, `components/editor/editor-header-actions.tsx`)

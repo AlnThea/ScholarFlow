@@ -4,7 +4,7 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.43.6 (Dropdown Stacking Context & Overflow Fix: Notifications & Export Button Overlap Resolution, 227/227 tests passing).
+v0.43.7 (LaTeX & Journal Package Pro Tier Gating & HTML Entity Clean Output, 229/229 tests passing).
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
@@ -29,6 +29,7 @@ v0.43.6 (Dropdown Stacking Context & Overflow Fix: Notifications & Export Button
 - [x] Phase 50: HTML Entity & Non-Breaking Space Normalization & Save Persistence.
 - [x] Phase 51: Navbar Layout Optimization: Relocated Research Assistant, History & Reviewer to Ribbon Bar.
 - [x] Phase 52: Dropdown Stacking Context & Overflow Fix: Notifications & Export Button Overlap Resolution.
+- [x] Phase 53: LaTeX & Journal Package Pro Tier Gating & HTML Entity Clean Output.
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.

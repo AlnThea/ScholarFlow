@@ -21,6 +21,13 @@ describe('Academic LaTeX & Journal Package Exporter Engine (Phase 27)', () => {
       expect(escaped).toContain('\\#');
     });
 
+    it('decodes HTML entities like &amp; so they escape as valid LaTeX \\& without &amp;', () => {
+      const raw = 'Putri &amp; Kurniawati 2026';
+      const escaped = escapeLatex(raw);
+      expect(escaped).toBe('Putri \\& Kurniawati 2026');
+      expect(escaped).not.toContain('&amp;');
+    });
+
     it('handles empty or null text safely', () => {
       expect(escapeLatex('')).toBe('');
     });
@@ -45,6 +52,13 @@ describe('Academic LaTeX & Journal Package Exporter Engine (Phase 27)', () => {
       const html = 'Given equation $E = mc^2$, energy is conserved.';
       const latex = convertHtmlToLatex(html);
       expect(latex).toContain('$E = mc^2$');
+    });
+
+    it('decodes &amp; in bibliography references so it renders as \\& instead of \\&amp;', () => {
+      const html = '[Putri &amp; Kurniawati 2026] Putri, A. K., &amp; Kurniawati, D. (2026).';
+      const latex = convertHtmlToLatex(html);
+      expect(latex).toContain('Putri \\& Kurniawati 2026');
+      expect(latex).not.toContain('&amp;');
     });
   });
 

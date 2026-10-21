@@ -468,9 +468,13 @@ export function EditorLayout({
         return;
       }
 
-      // Ctrl + Shift + X -> LaTeX Package Exporter
+      // Ctrl + Shift + X -> LaTeX Package Exporter (Pro Feature)
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'x') {
         e.preventDefault();
+        if (activePlanId === 'free') {
+          setIsExportUpgradeModalOpen(true);
+          return;
+        }
         setIsLatexExportModalOpen(true);
         return;
       }
@@ -684,6 +688,10 @@ export function EditorLayout({
         }
         break;
       case 'export_latex':
+        if (activePlanId === 'free') {
+          setIsExportUpgradeModalOpen(true);
+          break;
+        }
         setIsLatexExportModalOpen(true);
         break;
       case 'import_references':
@@ -1409,6 +1417,11 @@ export function EditorLayout({
         language={language}
         authorName={profile?.full_name || user?.email || 'ScholarFlow Author'}
         authorEmail={user?.email || 'author@scholarflow.org'}
+        activePlanId={activePlanId}
+        onUpgrade={() => {
+          setIsLatexExportModalOpen(false);
+          setIsPricingOpen(true);
+        }}
       />
       <input
         ref={referenceFileInputRef}

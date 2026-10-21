@@ -83,7 +83,15 @@ export interface LatexExportOptions {
  */
 export function escapeLatex(text: string): string {
   if (!text) return '';
-  return text
+  const cleanText = text
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&nbsp;|\u00A0/gi, ' ');
+
+  return cleanText
     .replace(/\\/g, '\\textbackslash{}')
     .replace(/([&%$#_{}])/g, '\\$1')
     .replace(/~/g, '\\textasciitilde{}')
@@ -139,6 +147,15 @@ export function convertHtmlToLatex(html: string): string {
 
   // 4. Strip remaining HTML tags
   output = output.replace(/<\/?[a-z][^>]*>/gi, '');
+
+  // 4b. Decode HTML entities so &amp; becomes &, &lt; becomes <, etc. before LaTeX escaping
+  output = output
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&nbsp;|\u00A0/gi, ' ');
 
   // 5. Escape LaTeX characters outside preserved segments
   output = output

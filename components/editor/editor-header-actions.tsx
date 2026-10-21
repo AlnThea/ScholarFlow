@@ -175,20 +175,31 @@ export const EditorHeaderActions = ({
                 <button
                   onClick={() => {
                     setShowExportDropdown(false);
+                    if (activePlanId === 'free') {
+                      setIsExportUpgradeModalOpen(true);
+                      return;
+                    }
                     onOpenLatexExport();
                   }}
                   className="w-full flex items-center justify-between px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer group"
                   title={language === 'en' 
-                    ? 'LaTeX & Journal Package: Export manuscript to .tex + .bib zip package with IEEE, Elsevier, or ACM templates for Overleaf.' 
-                    : 'Paket LaTeX & Jurnal: Ekspor naskah menjadi paket .tex + .bib zip siap kompilasi Overleaf standar IEEE, Elsevier, atau ACM.'}
+                    ? 'LaTeX & Journal Package (Pro Feature): Export manuscript to .tex + .bib zip package with IEEE, Elsevier, or ACM templates for Overleaf.' 
+                    : 'Paket LaTeX & Jurnal (Fitur Pro): Ekspor naskah menjadi paket .tex + .bib zip siap kompilasi Overleaf standar IEEE, Elsevier, atau ACM.'}
                 >
                   <div className="flex items-center gap-2">
                     <IconCode className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <span>LaTeX Package (.tex + .bib)</span>
                   </div>
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                    Overleaf / Zip
-                  </span>
+                  {activePlanId === 'free' ? (
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1">
+                      <span>🔒</span>
+                      <span>PRO</span>
+                    </span>
+                  ) : (
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                      Overleaf / Zip
+                    </span>
+                  )}
                 </button>
               )}
 

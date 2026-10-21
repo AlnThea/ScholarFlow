@@ -5,6 +5,18 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.43.7] - 2026-10-21 (LaTeX & Journal Package Pro Tier Gating & HTML Entity Clean Output)
+
+### 🎯 Pro Tier Exclusivity & Clean LaTeX Escaping (`components/editor/editor-header-actions.tsx`, `components/editor/editor-layout.tsx`, `components/editor/modals/latex-export-modal.tsx`, `lib/editor/latex-exporter.ts`)
+- **Eksklusivitas Akun Pro untuk Ekspor LaTeX & Jurnal**:
+  - Fitur ekspor paket LaTeX (.tex + .bib zip) kini dikhususkan untuk akun Pro ke atas (selain Free tier).
+  - Akun Free tier yang mengklik menu atau shortcut akan diarahkan ke modal upgrade Pro.
+  - Untuk akun Pro ke atas, modal terbuka langsung dengan tombol unduh instan (.zip / .tex) siap pakai di Overleaf.
+- **Pembersihan Entitas HTML pada LaTeX**:
+  - Mengonversi `&amp;` menjadi `&` sebelum karakter LaTeX di-escape, sehingga sitasi/daftar pustaka `[Putri &amp; Kurniawati]` ter-render bersih menjadi `[Putri \& Kurniawati]`.
+- **Verifikasi**:
+  - Seluruh 229 unit test Vitest lolos (ditambah 2 unit test baru). TypeScript 0 error.
+
 ## ⚡ [v0.43.6] - 2026-10-21 (Dropdown Stacking Context & Overflow Fix: Notifications & Export Button Overlap Resolution)
 
 ### 🎯 Z-Index Hierarchy & Dropdown Overflow Isolation (`components/editor/editor-header.tsx`, `components/editor/editor-sidebar.tsx`, `components/editor/editorjs-toolbar.tsx`, `components/editor/editor-header-actions.tsx`)

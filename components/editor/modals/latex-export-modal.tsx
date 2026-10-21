@@ -38,6 +38,8 @@ export interface LatexExportModalProps {
   language: 'en' | 'id';
   authorName?: string;
   authorEmail?: string;
+  activePlanId?: string;
+  onUpgrade?: () => void;
 }
 
 export function LatexExportModal({
@@ -49,7 +51,9 @@ export function LatexExportModal({
   bibliographyEntries = [],
   language,
   authorName = 'ScholarFlow Author',
-  authorEmail = 'author@scholarflow.org'
+  authorEmail = 'author@scholarflow.org',
+  activePlanId = 'pro',
+  onUpgrade
 }: LatexExportModalProps) {
   const isEn = language === 'en';
   const [selectedTemplate, setSelectedTemplate] = useState<JournalTemplate>('ieee');
@@ -107,6 +111,10 @@ export function LatexExportModal({
   }, [citationLibrary]);
 
   const handleCopyCode = async () => {
+    if (activePlanId === 'free') {
+      onUpgrade?.();
+      return;
+    }
     const targetCode = activeTab === 'tex' ? fullLatexCode : bibtexCode;
     try {
       await navigator.clipboard.writeText(targetCode);
@@ -118,6 +126,10 @@ export function LatexExportModal({
   };
 
   const handleDownloadZip = async () => {
+    if (activePlanId === 'free') {
+      onUpgrade?.();
+      return;
+    }
     setIsExportingZip(true);
     try {
       await downloadLatexZipPackage(exportOptions);
@@ -129,6 +141,10 @@ export function LatexExportModal({
   };
 
   const handleDownloadTexOnly = () => {
+    if (activePlanId === 'free') {
+      onUpgrade?.();
+      return;
+    }
     const blob = new Blob([fullLatexCode], { type: 'application/x-tex;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -165,6 +181,12 @@ export function LatexExportModal({
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                   Overleaf Ready
                 </span>
+                {activePlanId === 'free' && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1">
+                    <span>🔒</span>
+                    <span>{isEn ? 'Pro Feature' : 'Fitur Pro'}</span>
+                  </span>
+                )}
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {isEn
@@ -329,28 +351,41 @@ export function LatexExportModal({
           </div>
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={handleDownloadTexOnly}
-              className="flex-1 sm:flex-none px-3 py-2 text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition cursor-pointer"
-              title={isEn ? 'Download standalone main.tex file only' : 'Unduh hanya berkas main.tex saja'}
-            >
-              {isEn ? 'Download .tex Only' : 'Unduh .tex Saja'}
-            </button>
-            <button
-              type="button"
-              onClick={handleDownloadZip}
-              disabled={isExportingZip}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-sm transition cursor-pointer disabled:opacity-60"
-              title={isEn ? 'Download complete ZIP package ready for Overleaf upload' : 'Unduh paket ZIP lengkap siap upload ke Overleaf'}
-            >
-              <IconDownload className="h-4 w-4" />
-              <span>
-                {isExportingZip
-                  ? (isEn ? 'Packing ZIP...' : 'Mengemas ZIP...')
-                  : (isEn ? 'Download Overleaf Package (.zip)' : 'Unduh Paket Overleaf (.zip)')}
-              </span>
-            </button>
+            {activePlanId === 'free' ? (
+              <button
+                type="button"
+                onClick={onUpgrade}
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition cursor-pointer"
+              >
+                <span>🔒</span>
+                <span>{isEn ? 'Upgrade to Pro to Export & Download' : 'Upgrade ke Pro untuk Ekspor & Unduh'}</span>
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={handleDownloadTexOnly}
+                  className="flex-1 sm:flex-none px-3 py-2 text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition cursor-pointer"
+                  title={isEn ? 'Download standalone main.tex file only' : 'Unduh hanya berkas main.tex saja'}
+                >
+                  {isEn ? 'Download .tex Only' : 'Unduh .tex Saja'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadZip}
+                  disabled={isExportingZip}
+                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-sm transition cursor-pointer disabled:opacity-60"
+                  title={isEn ? 'Download complete ZIP package ready for Overleaf upload' : 'Unduh paket ZIP lengkap siap upload ke Overleaf'}
+                >
+                  <IconDownload className="h-4 w-4" />
+                  <span>
+                    {isExportingZip
+                      ? (isEn ? 'Packing ZIP...' : 'Mengemas ZIP...')
+                      : (isEn ? 'Download Overleaf Package (.zip)' : 'Unduh Paket Overleaf (.zip)')}
+                  </span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

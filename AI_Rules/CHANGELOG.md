@@ -1,5 +1,16 @@
 # ScholarFlow Changelog
 
+## v0.43.15 - LaTeX & Journal Package Pro Tier Gating & HTML Entity Clean Output
+
+- **Pro Account Gating (`components/editor/editor-header-actions.tsx`, `components/editor/editor-layout.tsx`, `components/editor/modals/latex-export-modal.tsx`)**:
+  - Gated the LaTeX & Journal Package exporter to Pro plans and above. Free tier accounts are shown upgrade dialogs and `🔒 PRO` indicators.
+  - Pro accounts get full instant access, clean preview, and one-click Overleaf .zip download.
+- **LaTeX Entity Escaping Fix (`lib/editor/latex-exporter.ts`, `__tests__/utils/latex-exporter.test.ts`)**:
+  - Decoded HTML entities (`&amp;` -> `&`, etc.) prior to LaTeX symbol escaping, resolving raw `\&amp;` output in bibliography and body text into clean valid LaTeX `\&`.
+- **Verification**:
+  - All 229 Vitest unit tests pass across 27 files (2 new tests added). TypeScript passed with 0 errors.
+
+
 ## v0.43.14 - Dropdown Stacking Context & Overflow Fix: Notifications & Export Button Overlap Resolution
 
 - **Z-Index Layering Hierarchy (`components/editor/editor-header.tsx`, `components/editor/editor-sidebar.tsx`, `components/editor/editorjs-toolbar.tsx`)**:
