@@ -21,6 +21,21 @@ export interface ExtractTextOptions {
   excludeHeaders?: boolean;
 }
 
+export function cleanBlockHtmlText(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\u00A0/g, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/[ \t]+/g, ' ')
+    .trim();
+}
+
 export function extractTextFromContent(content: any, options?: ExtractTextOptions): string {
   if (!content || !content.blocks || !Array.isArray(content.blocks)) return '';
   const texts: string[] = [];
@@ -32,7 +47,7 @@ export function extractTextFromContent(content: any, options?: ExtractTextOption
         continue; // Exclude headings (Bab, sub-bab) from body sentence analysis
       }
       const txt = block.data?.text;
-      const clean = txt ? txt.replace(/<[^>]*>/g, '').trim() : '';
+      const clean = cleanBlockHtmlText(txt);
       if (isBibliographyHeaderText(clean)) {
         inBibliography = true;
         continue; // Exclude bibliography header from text analysis
@@ -54,7 +69,7 @@ export function extractTextFromContent(content: any, options?: ExtractTextOption
         ) {
           continue; // Exclude bibliography content and upgrade cards from text analysis
         }
-        const clean = txt.replace(/<[^>]*>/g, '').trim();
+        const clean = cleanBlockHtmlText(txt);
         if (clean) texts.push(clean);
       }
     } else if (block.type === 'list') {
@@ -62,7 +77,8 @@ export function extractTextFromContent(content: any, options?: ExtractTextOption
       const items = block.data?.items;
       if (items && Array.isArray(items)) {
         for (const item of items) {
-          const cleanItem = item.replace(/<[^>]*>/g, '').trim();
+          const rawItem = typeof item === 'string' ? item : item?.content || '';
+          const cleanItem = cleanBlockHtmlText(rawItem);
           if (cleanItem) texts.push(cleanItem);
         }
       }
@@ -189,7 +205,7 @@ function normalizeBlockDataForComparison(data: any): any {
   for (const key of Object.keys(data).sort()) {
     const val = data[key];
     if (typeof val === 'string') {
-      normalized[key] = val.replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+      normalized[key] = val.replace(/&nbsp;/gi, ' ').replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
     } else if (typeof val === 'object' && val !== null) {
       normalized[key] = normalizeBlockDataForComparison(val);
     } else {

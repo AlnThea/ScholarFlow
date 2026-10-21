@@ -127,4 +127,24 @@ describe('Phase 24: Academic Integrity & AI-Likeness Barometer Engine Unit Tests
     expect(withoutHeaders).not.toContain('1.1 Latar Belakang');
     expect(withoutHeaders).toContain('Akselerasi adopsi teknologi informasi pada era digital.');
   });
+
+  it('normalizes &nbsp; and non-breaking spaces so they never appear in sentence texts', () => {
+    const editorContent = {
+      blocks: [
+        {
+          type: 'paragraph',
+          data: {
+            text: '&nbsp;Sistem Informasi Manajemen (SIM) merupakan sekumpulan komponen yang saling terintegrasi.'
+          }
+        }
+      ]
+    };
+    const extracted = extractTextFromContent(editorContent);
+    expect(extracted).not.toContain('&nbsp;');
+    expect(extracted).toBe('Sistem Informasi Manajemen (SIM) merupakan sekumpulan komponen yang saling terintegrasi.');
+
+    const report = calculateAcademicIntegrity(extracted);
+    expect(report.sentences[0].text).not.toContain('&nbsp;');
+    expect(report.sentences[0].text.startsWith('Sistem Informasi Manajemen')).toBe(true);
+  });
 });

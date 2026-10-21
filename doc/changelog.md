@@ -5,6 +5,18 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.43.4] - 2026-10-21 (HTML Entity & Non-Breaking Space Normalization & Save Persistence)
+
+### 🎯 Non-Breaking Space (`&nbsp;` / `\u00A0`) Normalization & Clean Block Persistence (`lib/utils/sanitize.ts`, `components/editor/editorjs-editor.tsx`, `lib/editor/editor-utils.tsx`, `lib/editor/burstiness-engine.ts`, `components/editor/academic-integrity-barometer.tsx`)
+- **Stray Leading `&nbsp;` Stripping on Render & Save (`lib/utils/sanitize.ts`, `components/editor/editorjs-editor.tsx`)**:
+  - Automatically purges accidental leading non-breaking spaces (`&nbsp;` or `\u00A0`) at block starts upon render (`sanitizeEditorContent`) and upon save (`cleanSavedContent`), fixing persistence across page refreshes.
+- **HTML Entity Decoding in Text Analysis (`lib/editor/editor-utils.tsx`, `lib/editor/burstiness-engine.ts`)**:
+  - Implemented `cleanBlockHtmlText`: decodes `&nbsp;`, `\u00A0`, `&amp;`, `&lt;`, `&gt;`, `&quot;`, `&#39;` into proper readable characters rather than raw entity strings.
+- **Resilient Range Selection in Editor DOM (`components/editor/academic-integrity-barometer.tsx`)**:
+  - Standardized `selectTextInElement` and `handleSentenceClick` with `\u00A0` normalization across DOM text nodes.
+- **Verification**:
+  - Added unit test in `__tests__/utils/sanitize.test.ts` and `__tests__/utils/academic-integrity.test.ts`. Full Vitest suite passes all 227 unit tests across 27 test files.
+
 ## ⚡ [v0.43.3] - 2026-10-21 (Paragraph & Heading Isolation in Academic Integrity & Flagged Sentences)
 
 ### 🎯 Hard Paragraph Boundaries & Heading Exclusion from AI Sentence Flagging (`lib/editor/burstiness-engine.ts`, `lib/editor/editor-utils.tsx`, `components/editor/sidebar-burstiness-tab.tsx`, `components/editor/academic-integrity-barometer.tsx`, `__tests__/utils/academic-integrity.test.ts`)

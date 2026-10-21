@@ -44,5 +44,20 @@ describe('Sanitization Utils', () => {
       expect(sanitizedData.blocks[0].data.text).not.toContain('onerror');
       expect(sanitizedData.blocks[0].data.text).toContain('<img src="x">');
     });
+
+    it('should strip accidental leading non-breaking spaces and whitespace from block texts', () => {
+      const editorData = {
+        blocks: [
+          {
+            type: 'paragraph',
+            data: {
+              text: '&nbsp;Sistem Informasi Manajemen (SIM) merupakan sekumpulan komponen.'
+            }
+          }
+        ]
+      };
+      const sanitizedData = sanitizeEditorContent(editorData);
+      expect(sanitizedData.blocks[0].data.text).toBe('Sistem Informasi Manajemen (SIM) merupakan sekumpulan komponen.');
+    });
   });
 });

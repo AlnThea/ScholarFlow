@@ -2,6 +2,22 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.43.4] - 2026-10-21 (HTML Entity & Non-Breaking Space Normalization & Save Persistence)
+
+### 🎯 Non-Breaking Space (`&nbsp;` / `\u00A0`) Normalization & Clean Block Persistence (`lib/utils/sanitize.ts`, `components/editor/editorjs-editor.tsx`, `lib/editor/editor-utils.tsx`, `lib/editor/burstiness-engine.ts`, `components/editor/academic-integrity-barometer.tsx`)
+- **Stray Leading `&nbsp;` Stripping on Render & Save (`lib/utils/sanitize.ts`, `components/editor/editorjs-editor.tsx`)**:
+  - Resolved issue where accidental non-breaking spaces (`&nbsp;` or `\u00A0`) at the beginning of paragraphs were preserved and persisted across page reloads even after manual user deletion.
+  - Root cause: `normalizeBlockDataForComparison` previously trimmed whitespace during autosave change detection, masking the difference between text with leading `&nbsp;` and without it, which suppressed autosave triggers.
+  - Added automatic leading non-breaking space purging in `sanitizeEditorContent` and `cleanSavedContent` (`replace(/^(&nbsp;|\u00A0|\s)+/, '')`), ensuring clean paragraph starts upon load and save.
+- **HTML Entity Decoding in Text Analysis (`lib/editor/editor-utils.tsx`, `lib/editor/burstiness-engine.ts`)**:
+  - Implemented `cleanBlockHtmlText`: decodes `&nbsp;`, `\u00A0`, `&amp;`, `&lt;`, `&gt;`, `&quot;`, `&#39;` into proper readable characters rather than raw entity strings.
+  - Flagged Sentences (AI-Likeness) cards now display clean natural language text without raw `&nbsp;` code artifacts.
+- **Resilient Range Selection in Editor DOM (`components/editor/academic-integrity-barometer.tsx`)**:
+  - Standardized `selectTextInElement` and `handleSentenceClick` with `\u00A0` normalization across DOM text nodes, allowing seamless click-to-highlight even if browsers insert non-breaking spaces.
+- **Verification**:
+  - Added unit test in `__tests__/utils/sanitize.test.ts` and `__tests__/utils/academic-integrity.test.ts`.
+  - Full Vitest suite passes all 227 unit tests across 27 test files. Full TypeScript check passes with 0 errors.
+
 ## ⚡ [v0.43.3] - 2026-10-21 (Paragraph & Heading Isolation in Academic Integrity & Flagged Sentences)
 
 ### 🎯 Hard Paragraph Boundaries & Heading Exclusion from AI Sentence Flagging (`lib/editor/burstiness-engine.ts`, `lib/editor/editor-utils.tsx`, `components/editor/sidebar-burstiness-tab.tsx`, `components/editor/academic-integrity-barometer.tsx`, `__tests__/utils/academic-integrity.test.ts`)

@@ -1,5 +1,16 @@
 # ScholarFlow Changelog
 
+## v0.43.12 - HTML Entity & Non-Breaking Space Normalization & Save Persistence
+
+- **Stray Leading Non-Breaking Space Purging (`lib/utils/sanitize.ts`, `components/editor/editorjs-editor.tsx`)**:
+  - Automatically strips leading `&nbsp;`, `\u00A0`, and spaces at block starts upon render (`sanitizeEditorContent`) and upon save (`cleanSavedContent`), fixing persistence across page refreshes.
+- **HTML Entity Decoding in Text Analysis (`lib/editor/editor-utils.tsx`, `lib/editor/burstiness-engine.ts`)**:
+  - Introduced `cleanBlockHtmlText` to decode HTML entities (`&nbsp;`, `\u00A0`, `&amp;`, `&lt;`, `&gt;`, `&quot;`, `&#39;`) into human-readable characters rather than raw entity codes.
+- **DOM Range Selection Normalization (`components/editor/academic-integrity-barometer.tsx`)**:
+  - Normalized `\u00A0` to standard space within `selectTextInElement` and `handleSentenceClick` for 100% reliable click-to-highlight in the editor.
+- **Unit Testing**:
+  - Added unit tests in `__tests__/utils/sanitize.test.ts` and `__tests__/utils/academic-integrity.test.ts`. All 227 unit tests passing across 27 files.
+
 ## v0.43.11 - Paragraph & Heading Isolation in Academic Integrity & Flagged Sentences
 
 - **Strict Paragraph Boundary Segmentation (`lib/editor/burstiness-engine.ts`)**:

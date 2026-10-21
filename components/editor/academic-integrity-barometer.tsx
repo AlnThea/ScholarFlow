@@ -34,7 +34,7 @@ export interface AcademicIntegrityBarometerProps {
  * Accurately selects a specific sentence across text nodes inside a contenteditable block.
  */
 function selectTextInElement(element: HTMLElement, targetText: string): boolean {
-  const normalizedTarget = targetText.trim();
+  const normalizedTarget = targetText.replace(/&nbsp;/gi, ' ').replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
   if (!normalizedTarget || typeof window === 'undefined') return false;
 
   const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
@@ -46,7 +46,7 @@ function selectTextInElement(element: HTMLElement, targetText: string): boolean 
   while (currentNode) {
     nodeStartOffsets.push(fullText.length);
     textNodes.push(currentNode);
-    fullText += currentNode.textContent || '';
+    fullText += (currentNode.textContent || '').replace(/\u00A0/g, ' ');
     currentNode = walker.nextNode() as Text | null;
   }
 
@@ -146,11 +146,11 @@ export function AcademicIntegrityBarometer({
       const blocks = document.querySelectorAll('.ce-block [contenteditable="true"]');
       let found = false;
       const target = sentence.text.trim();
-      const normalizedTarget = target.replace(/\s+/g, ' ');
+      const normalizedTarget = target.replace(/&nbsp;/gi, ' ').replace(/\u00A0/g, ' ').replace(/\s+/g, ' ');
 
       for (const block of Array.from(blocks)) {
         const el = block as HTMLElement;
-        const textContent = (el.textContent || '').replace(/\s+/g, ' ');
+        const textContent = (el.textContent || '').replace(/&nbsp;/gi, ' ').replace(/\u00A0/g, ' ').replace(/\s+/g, ' ');
         
         if (
           textContent.includes(normalizedTarget) ||
@@ -165,7 +165,7 @@ export function AcademicIntegrityBarometer({
       // Fallback: if range selection failed, smooth scroll to the containing paragraph block
       if (!found) {
         for (const block of Array.from(blocks)) {
-          const textContent = (block.textContent || '').replace(/\s+/g, ' ');
+          const textContent = (block.textContent || '').replace(/&nbsp;/gi, ' ').replace(/\u00A0/g, ' ').replace(/\s+/g, ' ');
           if (
             (normalizedTarget.length > 25 && textContent.includes(normalizedTarget.slice(0, 25))) ||
             (normalizedTarget.length > 15 && textContent.includes(normalizedTarget.slice(0, 15)))
@@ -180,7 +180,7 @@ export function AcademicIntegrityBarometer({
     }
 
     if (onSelectSentenceForParaphrase) {
-      onSelectSentenceForParaphrase(sentence.text);
+      onSelectSentenceForParaphrase(sentence.text.replace(/&nbsp;/gi, ' ').replace(/\u00A0/g, ' ').trim());
     }
   };
 

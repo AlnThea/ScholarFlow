@@ -50,14 +50,16 @@ export const sanitizeEditorContent = (content: any): any => {
     if (block?.data) {
       // Sanitize standard text fields in paragraphs, headings, quotes, etc.
       if (typeof block.data.text === 'string') {
-        block.data.text = sanitizeHtml(block.data.text);
+        let text = sanitizeHtml(block.data.text);
+        text = text.replace(/^(&nbsp;|\u00A0|\s)+/, '');
+        block.data.text = text;
       }
       // Sanitize lists
       if (Array.isArray(block.data.items)) {
         block.data.items = block.data.items.map((item: any) => {
-          if (typeof item === 'string') return sanitizeHtml(item);
-          if (item?.content) {
-            item.content = sanitizeHtml(item.content);
+          if (typeof item === 'string') return sanitizeHtml(item).replace(/^(&nbsp;|\u00A0|\s)+/, '');
+          if (item?.content && typeof item.content === 'string') {
+            item.content = sanitizeHtml(item.content).replace(/^(&nbsp;|\u00A0|\s)+/, '');
           }
           return item;
         });

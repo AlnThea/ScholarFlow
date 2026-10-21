@@ -69,7 +69,7 @@ export function calculateAcademicIntegrity(text: string): AcademicIntegrityRepor
     };
   }
 
-  const cleanText = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const cleanText = text.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
   const rawWords = cleanText.toLowerCase().match(/\b[a-z0-9_-]+\b/g) || [];
   const totalWords = rawWords.length;
   const uniqueWords = new Set(rawWords).size;

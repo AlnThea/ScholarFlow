@@ -70,7 +70,7 @@ export function calculateBurstiness(text: string): BurstinessMetrics {
   // Split and clean sentences by newline / paragraph boundaries first (strict paragraph isolation)
   const rawParagraphs = strippedText
     .split(/\r?\n+/)
-    .map((p) => p.replace(/<[^>]+>/g, ' ').replace(/[ \t]+/g, ' ').trim())
+    .map((p) => p.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\u00A0/g, ' ').replace(/[ \t]+/g, ' ').trim())
     .filter((p) => p.length > 0);
 
   const rawSentences: string[] = [];

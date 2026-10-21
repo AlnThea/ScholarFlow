@@ -155,7 +155,9 @@ export const EditorJsEditor = forwardRef<EditorJsMethods, EditorJsEditorProps>((
 
     cloned.blocks.forEach((block: any) => {
       if (block.data && typeof block.data.text === 'string') {
-        block.data.text = cleanHtmlContent(block.data.text);
+        let text = cleanHtmlContent(block.data.text);
+        text = text.replace(/^(&nbsp;|\u00A0|\s)+/, '');
+        block.data.text = text;
       }
     });
 
