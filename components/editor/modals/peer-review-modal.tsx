@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   IconX,
   IconMicroscope,
@@ -43,6 +43,17 @@ export interface PeerReviewModalProps {
   onTokensUpdated?: (tokensUsed: number, monthlyQuota?: number) => void;
 }
 
+function detectDocumentLanguage(text: string, title: string, fallback: 'en' | 'id'): 'en' | 'id' {
+  const combined = (title + ' ' + (text || '')).toLowerCase();
+  const idMarkers = ['yang', 'dan', 'dengan', 'untuk', 'pada', 'dalam', 'penelitian', 'metode', 'hasil', 'latar belakang', 'adalah', 'dari', 'ini', 'pembahasan', 'kesimpulan'];
+  let idMatches = 0;
+  for (const word of idMarkers) {
+    if (combined.includes(word)) idMatches++;
+  }
+  if (idMatches >= 2) return 'id';
+  return fallback;
+}
+
 export function PeerReviewModal({
   isOpen,
   onClose,
@@ -59,28 +70,41 @@ export function PeerReviewModal({
   onTokensUpdated,
 }: PeerReviewModalProps) {
   const isEn = language === 'en';
+  
+  // Smart language detection: auto-detect Indonesian manuscript even if UI is in English
+  const detectedDocLang = useMemo(() => {
+    return detectDocumentLanguage(documentContent, documentTitle, language as 'en' | 'id');
+  }, [documentContent, documentTitle, language]);
+
+  const [reviewLanguage, setReviewLanguage] = useState<'en' | 'id'>(detectedDocLang);
   const [report, setReport] = useState<PeerReviewAuditReport | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [targetTier, setTargetTier] = useState<string>('scopus_q2');
   const [expandedRubric, setExpandedRubric] = useState<string | null>('methodology');
   const [checklistState, setChecklistState] = useState<Record<string, boolean>>({});
 
+  // Synchronize detected language if document changes
+  useEffect(() => {
+    setReviewLanguage(detectedDocLang);
+  }, [detectedDocLang]);
+
   // Load cached audit on open (language-aware)
   useEffect(() => {
     if (!isOpen) return;
 
-    const cached = loadCachedPeerReviewAudit(documentId, language);
+    const cached = loadCachedPeerReviewAudit(documentId, reviewLanguage);
     if (cached) {
       setReport(cached);
     } else {
       // Auto run simulation on first open or when switching language
-      handleRunAudit();
+      handleRunAudit(reviewLanguage);
     }
-  }, [isOpen, documentId, language]);
+  }, [isOpen, documentId, reviewLanguage]);
 
   if (!isOpen) return null;
 
-  const handleRunAudit = async () => {
+  const handleRunAudit = async (overrideLang?: 'en' | 'id') => {
+    const activeLang = overrideLang || reviewLanguage;
     setIsLoading(true);
     try {
       const res = await fetch('/api/v1/ai/peer-review', {
@@ -93,7 +117,7 @@ export function PeerReviewModal({
           wordCount,
           citationCount,
           targetTier,
-          language: isEn ? 'en' : 'id',
+          language: activeLang,
           userId,
           userPlan,
         }),
@@ -105,7 +129,7 @@ export function PeerReviewModal({
 
       const data: any = await res.json();
       setReport(data);
-      saveCachedPeerReviewAudit(documentId, data, language);
+      saveCachedPeerReviewAudit(documentId, data, activeLang);
 
       // Instantly trigger reactive token update without requiring page reload
       if (typeof data.tokens_used === 'number') {
@@ -133,10 +157,10 @@ export function PeerReviewModal({
         documentTitle,
         wordCount,
         citationCount,
-        language: isEn ? 'en' : 'id',
+        language: activeLang,
       });
       setReport(fallback);
-      saveCachedPeerReviewAudit(documentId, fallback, language);
+      saveCachedPeerReviewAudit(documentId, fallback, activeLang);
       onShowToast?.(
         isEn ? 'Audit simulation completed (standard mode).' : 'Audit simulasi selesai (mode standar).',
         'info'
@@ -209,6 +233,25 @@ export function PeerReviewModal({
                 <option value="sinta_1_2">SINTA 1 & 2 (Nasional)</option>
                 <option value="general">General Peer-Reviewed Journal</option>
               </select>
+
+              <select
+                value={reviewLanguage}
+                onChange={(e) => {
+                  const newLang = e.target.value as 'en' | 'id';
+                  setReviewLanguage(newLang);
+                  const cached = loadCachedPeerReviewAudit(documentId, newLang);
+                  if (cached) {
+                    setReport(cached);
+                  } else {
+                    handleRunAudit(newLang);
+                  }
+                }}
+                className="text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-0.5 font-semibold text-slate-700 dark:text-slate-300 outline-none cursor-pointer"
+                title={isEn ? 'Reviewer Feedback Language' : 'Bahasa Hasil Reviewer'}
+              >
+                <option value="id">🇮🇩 Bahasa Indonesia</option>
+                <option value="en">🇬🇧 English</option>
+              </select>
             </div>
 
             <h3 className="text-base font-bold text-slate-900 dark:text-white line-clamp-1">
@@ -223,7 +266,7 @@ export function PeerReviewModal({
             <button
               type="button"
               disabled={isLoading}
-              onClick={handleRunAudit}
+              onClick={() => handleRunAudit()}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer"
             >
               <IconRefresh className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />

@@ -1,5 +1,15 @@
 # ScholarFlow Changelog
 
+## v0.43.17 - Smart Document Language Detection & Reviewer #2 Language Override
+
+- **Smart Manuscript Language Detection (`components/editor/modals/peer-review-modal.tsx`)**:
+  - Automatically identifies whether a manuscript is written in Indonesian even when the UI is in English, defaulting Reviewer #2 feedback to Bahasa Indonesia.
+- **Dedicated Language Selector in Reviewer #2**:
+  - Embedded an instant language toggle (`🇮🇩 Bahasa Indonesia` / `🇬🇧 English`) inside the Reviewer #2 header for complete user autonomy.
+- **Verification**:
+  - TypeScript 0 errors. All 229 Vitest unit tests pass across 27 files.
+
+
 ## v0.43.16 - Real-Time Reactive Token Quota Deductions & Bilingual Reviewer #2 Localization
 
 - **Reactive Token Quota Updates (`app/api/v1/ai/peer-review/route.ts`, `components/editor/modals/peer-review-modal.tsx`, `hooks/use-editor-ai.ts`)**:

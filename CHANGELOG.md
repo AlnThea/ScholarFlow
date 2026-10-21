@@ -2,6 +2,20 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.43.9] - 2026-10-21 (Smart Document Language Detection & Reviewer #2 Language Override)
+
+### 🎯 Document Language Auto-Detection & Modal Language Switcher (`components/editor/modals/peer-review-modal.tsx`)
+- **Document Language Auto-Detection (`components/editor/modals/peer-review-modal.tsx`)**:
+  - Implemented `detectDocumentLanguage`: scans manuscript content and title for Indonesian marker words (`penelitian`, `metode`, `hasil`, `yang`, `dengan`, etc.).
+  - Resolves cross-language scenarios: if the application UI is in English (`en`), but the user writes an Indonesian manuscript (e.g. skripsi, tesis, makalah), Reviewer #2 automatically recognizes the Indonesian manuscript and produces Indonesian feedback.
+- **Header Language Selector Dropdown in Reviewer #2**:
+  - Added an interactive language selector (`🇮🇩 Bahasa Indonesia` / `🇬🇧 English`) right in the Reviewer #2 header modal next to the Target Journal benchmark selector.
+  - Allows users to seamlessly override the review language at any time with 1 click, automatically loading language-cached audits or triggering a re-audit in the selected language.
+- **Verification**:
+  - Full TypeScript type-checking (`npx tsc --noEmit`) passes with 0 errors.
+  - Vitest test suite passes all 229 unit tests across 27 test files.
+
+
 ## ⚡ [v0.43.8] - 2026-10-21 (Real-Time Reactive Token Quota Deductions & Bilingual Reviewer #2 Localization)
 
 ### 🎯 Instant Reactive Token Synchronization (`app/api/v1/ai/peer-review/route.ts`, `components/editor/modals/peer-review-modal.tsx`, `hooks/use-editor-ai.ts`, `components/editor/scholar-editor.tsx`, `components/editor/editor-layout.tsx`, `components/editor/types.ts`)

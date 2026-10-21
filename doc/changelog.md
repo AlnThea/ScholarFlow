@@ -5,6 +5,17 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.43.9] - 2026-10-21 (Smart Document Language Detection & Reviewer #2 Language Override)
+
+### 🎯 Deteksi Otomatis Bahasa Naskah & Pemilih Bahasa Reviewer #2
+- **Deteksi Cerdas Bahasa Dokumen**:
+  - Menyelesaikan skenario di mana antarmuka aplikasi disetel ke Bahasa Inggris (`en`), namun naskah yang diketik adalah naskah Bahasa Indonesia (skripsi/tesis).
+  - Sistem secara cerdas mendeteksi kata-kata penanda naskah Indonesia (`penelitian`, `metode`, `hasil`, dsb.) dan otomatis mengarahkan telaah ke Bahasa Indonesia.
+- **Dropdown Pemilih Bahasa di Modal Reviewer #2**:
+  - Menambahkan dropdown bahasa ulasan (`🇮🇩 Bahasa Indonesia` / `🇬🇧 English`) langsung di samping pilihan Target Jurnal, memungkinkan pengguna berganti bahasa ulasan kapan saja dengan 1 klik.
+- **Verifikasi**:
+  - TypeScript: 0 error. Seluruh 229 unit test Vitest lolos 100%.
+
 ## ⚡ [v0.43.8] - 2026-10-21 (Real-Time Reactive Token Quota Deductions & Bilingual Reviewer #2 Localization)
 
 ### 🎯 Sinkronisasi Kuota Token Real-Time & Bahasa Hasil Reviewer #2
