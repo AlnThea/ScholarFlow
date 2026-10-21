@@ -1,5 +1,14 @@
 # ScholarFlow Changelog
 
+## v0.43.13 - Navbar Layout Optimization: Relocated Research Assistant, History & Reviewer to Ribbon Bar
+
+- **Ribbon Tab Quick Actions Integration (`components/editor/editorjs-toolbar.tsx`, `components/editor/editor-header.tsx`, `components/editor/editor-layout.tsx`)**:
+  - Relocated **Research Assistant**, **Version History**, and **Reviewer #2** buttons to the right side of the Ribbon Tab row in Navbar 2, adjacent to the navigation tabs.
+  - Purged the static placeholder text `• Ribbon Bar Active` to create a functional action bar.
+  - Retained dark mode styling and bilingual localization (ID ↔ EN) with responsive text hide on small screens.
+- **Verification**:
+  - Full TypeScript type check passes with 0 errors. All 227 Vitest unit tests pass across 27 test files.
+
 ## v0.43.12 - HTML Entity & Non-Breaking Space Normalization & Save Persistence
 
 - **Stray Leading Non-Breaking Space Purging (`lib/utils/sanitize.ts`, `components/editor/editorjs-editor.tsx`)**:

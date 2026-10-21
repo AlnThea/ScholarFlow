@@ -4,7 +4,7 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.43.4 (HTML Entity & Non-Breaking Space Normalization & Save Persistence, 227/227 tests passing).
+v0.43.5 (Navbar Layout Optimization: Relocated Research Assistant, History & Reviewer to Ribbon Bar, 227/227 tests passing).
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
@@ -27,6 +27,7 @@ v0.43.4 (HTML Entity & Non-Breaking Space Normalization & Save Persistence, 227/
 - [x] Phase 48: Auto-Purge Leftover Bibliography on Version History Restore & Zero-Citation Canvas Load.
 - [x] Phase 49: Strict Paragraph & Heading Isolation in Academic Integrity & Flagged Sentences.
 - [x] Phase 50: HTML Entity & Non-Breaking Space Normalization & Save Persistence.
+- [x] Phase 51: Navbar Layout Optimization: Relocated Research Assistant, History & Reviewer to Ribbon Bar.
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.

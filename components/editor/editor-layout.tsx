@@ -846,6 +846,10 @@ export function EditorLayout({
             citationStyle={citationStyle || currentDocument?.settings?.citationStyle || 'apa'}
             onChangeCitationStyle={onChangeCitationStyle}
             documentContent={activeDocumentText}
+            showRightSidebar={showRightSidebar}
+            setShowRightSidebar={setShowRightSidebar}
+            onOpenVersionHistory={versionHistory.openVersionHistory}
+            onOpenPeerReview={() => setIsPeerReviewModalOpen(true)}
             onOpenIntegrityTab={() => {
               setShowRightSidebar(true);
               setIsRightSidebarExpanded(true);

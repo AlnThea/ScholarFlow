@@ -21,7 +21,10 @@ import {
   IconAlignRight,
   IconAlignJustified,
   IconCalculator,
-  IconBookmark
+  IconBookmark,
+  IconLayoutSidebarRightCollapse,
+  IconHistory,
+  IconMicroscope
 } from '@tabler/icons-react';
 import type { EditorJsMethods } from '@/hooks/use-editorjs-methods';
 import { GhostwriterToggle } from './ghostwriter-toggle';
@@ -63,6 +66,10 @@ export type EditorToolbarProps = {
   onChangeCitationStyle?: (style: any) => void;
   onOpenFileHub?: () => void;
   rightActions?: React.ReactNode;
+  showRightSidebar?: boolean;
+  setShowRightSidebar?: React.Dispatch<React.SetStateAction<boolean>>;
+  onOpenVersionHistory?: () => void;
+  onOpenPeerReview?: () => void;
 };
 
 type RibbonTabKey = 'beranda' | 'sisipkan' | 'referensi' | 'tinjauan';
@@ -101,6 +108,10 @@ export const EditorJsToolbar = ({
   onOpenCrossReferenceModal,
   onOpenFileHub,
   rightActions,
+  showRightSidebar,
+  setShowRightSidebar,
+  onOpenVersionHistory,
+  onOpenPeerReview,
 }: EditorToolbarProps) => {
   const [activeRibbonTab, setActiveRibbonTab] = useState<RibbonTabKey>('beranda');
 
@@ -171,10 +182,56 @@ export const EditorJsToolbar = ({
           })}
         </nav>
 
-        {/* Status Indikator di Ujung Kanan Baris Tab */}
-        <div className="hidden md:flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-          <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>{language === 'en' ? 'Ribbon Bar Active' : 'Bilah Ribbon Aktif'}</span>
+        {/* Quick Action Navigation Buttons (Research Assistant, History, Reviewer #2) */}
+        <div className="flex items-center gap-1.5 py-1">
+          {/* Research Assistant Button */}
+          {showRightSidebar !== undefined && setShowRightSidebar && (
+            <button
+              data-tour="header-research-assistant"
+              type="button"
+              onClick={() => setShowRightSidebar(prev => !prev)}
+              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${showRightSidebar
+                ? 'bg-white dark:bg-slate-700 text-indigo-750 dark:text-indigo-400 shadow-2xs font-bold border border-indigo-200/60 dark:border-indigo-800/60'
+                : 'text-slate-650 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white border border-transparent'
+                }`}
+              title={language === 'en' ? 'Toggle Research Assistant Panel' : 'Buka/Tutup Bilah Asisten Riset'}
+            >
+              <IconLayoutSidebarRightCollapse className={`h-3.5 w-3.5 ${showRightSidebar ? 'text-indigo-650 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400'}`} />
+              <span className="hidden sm:inline">{language === 'en' ? 'Research Assistant' : 'Asisten Riset'}</span>
+            </button>
+          )}
+
+          {/* Version History Button */}
+          {onOpenVersionHistory && (
+            <>
+              <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-0.5" />
+              <button
+                type="button"
+                onClick={onOpenVersionHistory}
+                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold text-slate-650 hover:bg-white hover:text-slate-900 transition cursor-pointer dark:text-slate-350 dark:hover:bg-slate-800 dark:hover:text-white"
+                title={language === 'en' ? 'Version History & Time Machine' : 'Riwayat Versi & Time Machine'}
+              >
+                <IconHistory className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                <span className="hidden sm:inline">{language === 'en' ? 'History' : 'Riwayat'}</span>
+              </button>
+            </>
+          )}
+
+          {/* Peer Reviewer #2 Simulation Button */}
+          {onOpenPeerReview && (
+            <>
+              <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-0.5" />
+              <button
+                type="button"
+                onClick={onOpenPeerReview}
+                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 hover:text-rose-800 transition cursor-pointer dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-900/60 border border-rose-200/80 dark:border-rose-800/80 shadow-2xs"
+                title={language === 'en' ? 'Reviewer #2 Simulator & Journal Readiness Audit' : 'Simulasi Reviewer #2 & Audit Kesiapan Jurnal'}
+              >
+                <IconMicroscope className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" />
+                <span className="hidden sm:inline">{language === 'en' ? 'Reviewer #2' : 'Reviewer #2'}</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
 

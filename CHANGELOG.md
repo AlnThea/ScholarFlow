@@ -2,6 +2,19 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.43.5] - 2026-10-21 (Navbar Layout Optimization: Relocated Research Assistant, History & Reviewer to Ribbon Bar)
+
+### 🎯 Navbar Layout Refinement & Ribbon Bar Integration (`components/editor/editorjs-toolbar.tsx`, `components/editor/editor-header.tsx`, `components/editor/editor-layout.tsx`)
+- **Relocated Quick Action Buttons to Ribbon Tab Row (`components/editor/editorjs-toolbar.tsx`)**:
+  - Moved **Research Assistant**, **Version History**, and **Reviewer #2** buttons from Navbar 1 to Navbar 2, positioning them neatly on the right side of the Ribbon Tab row (alongside Home, Insert, Layout, References, Review, View tabs).
+  - Deleted the static placeholder text `• Ribbon Bar Active` to free up space for these interactive tools.
+  - Fully localized tooltips and button labels with bilingual support (ID ↔ EN) and responsive visibility (`hidden sm:inline`).
+- **Streamlined Document Header (`components/editor/editor-header.tsx`)**:
+  - Cleaned up Navbar 1 to focus primarily on document identity, notifications, and subscription controls, removing clutter from the top document row.
+- **Verification**:
+  - Full TypeScript validation (`npx tsc --noEmit`) passes with 0 errors.
+  - Full Vitest suite passes all 227 unit tests across 27 test files.
+
 ## ⚡ [v0.43.4] - 2026-10-21 (HTML Entity & Non-Breaking Space Normalization & Save Persistence)
 
 ### 🎯 Non-Breaking Space (`&nbsp;` / `\u00A0`) Normalization & Clean Block Persistence (`lib/utils/sanitize.ts`, `components/editor/editorjs-editor.tsx`, `lib/editor/editor-utils.tsx`, `lib/editor/burstiness-engine.ts`, `components/editor/academic-integrity-barometer.tsx`)
