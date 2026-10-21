@@ -1,5 +1,15 @@
 # ScholarFlow Changelog
 
+## v0.43.18 - Reviewer #2 Pro Tier Gating & Visual Badge Indicator
+
+- **Pro Tier Gating (`components/editor/editor-layout.tsx`, `components/editor/editorjs-toolbar.tsx`)**:
+  - Gated the AI Peer Reviewer (Reviewer #2) to Pro Writer and Campus accounts.
+  - Automatically redirects Free tier users to the pricing upgrade dialog when clicking Reviewer #2, pressing `Ctrl+Shift+R`, or invoking via Command Palette.
+  - Added a responsive `🔒 PRO` badge on the toolbar button for Free tier accounts with full dark mode support.
+- **Verification**:
+  - TypeScript 0 errors. All 229 Vitest unit tests pass across 27 files.
+
+
 ## v0.43.17 - Smart Document Language Detection & Reviewer #2 Language Override
 
 - **Smart Manuscript Language Detection (`components/editor/modals/peer-review-modal.tsx`)**:

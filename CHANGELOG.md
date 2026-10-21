@@ -2,6 +2,23 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.44.0] - 2026-10-21 (Reviewer #2 Pro Tier Gating & Visual Badge Indicator)
+
+### 🎯 Pro Tier Exclusivity & Upgrade Interception (`components/editor/editor-layout.tsx`, `components/editor/editorjs-toolbar.tsx`)
+- **Pro Tier Gating for Reviewer #2**:
+  - Gated the **AI Peer Reviewer (Reviewer #2)** feature strictly to **Pro Writer** and **Campus/Institutional** tiers, reserving Free tier from heavy multi-metric simulation token consumption.
+  - Implemented `handleOpenPeerReview` interception in `components/editor/editor-layout.tsx`:
+    - Checks `activePlanId === 'free'`.
+    - If free, triggers `setIsPricingOpen(true)` with the pricing upgrade modal rather than opening the review window.
+    - Wire-checked across all interaction paths: Toolbar button click, keyboard shortcut (`Ctrl+Shift+R`), and Command Palette (`open_peer_review`).
+- **Visual `🔒 PRO` Badge in Ribbon Toolbar**:
+  - Added a distinct `🔒 PRO` badge on the Reviewer #2 button in `components/editor/editorjs-toolbar.tsx` when the active tier is `free`.
+  - Seamlessly styled with dark mode support (`bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300`).
+- **Verification**:
+  - Full TypeScript type-checking (`npx tsc --noEmit`) passes with 0 errors.
+  - Vitest test suite passes all 229 unit tests across 27 test files.
+
+
 ## ⚡ [v0.43.9] - 2026-10-21 (Smart Document Language Detection & Reviewer #2 Language Override)
 
 ### 🎯 Document Language Auto-Detection & Modal Language Switcher (`components/editor/modals/peer-review-modal.tsx`)

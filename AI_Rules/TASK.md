@@ -4,7 +4,7 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.43.9 (Smart Document Language Detection & Reviewer #2 Language Override, 229/229 tests passing).
+v0.44.0 (Reviewer #2 Pro Tier Gating & Visual Badge Indicator, 229/229 tests passing).
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
@@ -32,6 +32,7 @@ v0.43.9 (Smart Document Language Detection & Reviewer #2 Language Override, 229/
 - [x] Phase 53: LaTeX & Journal Package Pro Tier Gating & HTML Entity Clean Output.
 - [x] Phase 54: Real-Time Reactive Token Quota Deductions & Bilingual Reviewer #2 Localization.
 - [x] Phase 55: Smart Document Language Detection & Reviewer #2 Language Override.
+- [x] Phase 56: Reviewer #2 Pro Tier Gating & Visual Badge Indicator.
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.

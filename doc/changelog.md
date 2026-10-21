@@ -5,6 +5,17 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.44.0] - 2026-10-21 (Reviewer #2 Pro Tier Gating & Visual Badge Indicator)
+
+### 🎯 Eksklusivitas Akun Pro untuk AI Peer Reviewer (Reviewer #2)
+- **Gating Fitur Reviewer #2 untuk Akun Pro ke Atas**:
+  - Membatasi fitur AI Peer Reviewer khusus untuk pengguna tier Pro Writer dan Institusi/Kampus.
+  - Intersepsi pada toolbar ribbon, shortcut `Ctrl+Shift+R`, dan Command Palette: jika pengguna berada di tier Free, sistem otomatis membuka modal upgrade paket (*pricing modal*).
+- **Badge Visual `🔒 PRO` di Toolbar**:
+  - Tombol Reviewer #2 menampilkan badge `🔒 PRO` yang elegan dan ramah dark mode bagi pengguna akun Free.
+- **Verifikasi**:
+  - TypeScript: 0 error. Seluruh 229 unit test Vitest lolos 100%.
+
 ## ⚡ [v0.43.9] - 2026-10-21 (Smart Document Language Detection & Reviewer #2 Language Override)
 
 ### 🎯 Deteksi Otomatis Bahasa Naskah & Pemilih Bahasa Reviewer #2

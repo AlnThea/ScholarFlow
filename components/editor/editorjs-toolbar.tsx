@@ -70,6 +70,7 @@ export type EditorToolbarProps = {
   setShowRightSidebar?: React.Dispatch<React.SetStateAction<boolean>>;
   onOpenVersionHistory?: () => void;
   onOpenPeerReview?: () => void;
+  activePlanId?: string;
 };
 
 type RibbonTabKey = 'beranda' | 'sisipkan' | 'referensi' | 'tinjauan';
@@ -112,6 +113,7 @@ export const EditorJsToolbar = ({
   setShowRightSidebar,
   onOpenVersionHistory,
   onOpenPeerReview,
+  activePlanId,
 }: EditorToolbarProps) => {
   const [activeRibbonTab, setActiveRibbonTab] = useState<RibbonTabKey>('beranda');
 
@@ -229,6 +231,12 @@ export const EditorJsToolbar = ({
               >
                 <IconMicroscope className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" />
                 <span className="hidden sm:inline">{language === 'en' ? 'Reviewer #2' : 'Reviewer #2'}</span>
+                {activePlanId === 'free' && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-0.5">
+                    <span>🔒</span>
+                    <span>PRO</span>
+                  </span>
+                )}
               </button>
             </>
           )}

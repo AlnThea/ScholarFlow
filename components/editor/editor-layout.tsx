@@ -4,7 +4,7 @@
 import { EditorModalsWrapper } from './editor-modals-wrapper';
 import { OnboardingTour } from '@/components/onboarding-tour';
 import { TokenQuotaModal } from '@/components/ai/token-quota-modal';
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
 import { EditorJsEditor } from './editorjs-editor';
@@ -343,6 +343,14 @@ export function EditorLayout({
 
   const [isPeerReviewModalOpen, setIsPeerReviewModalOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
+  const handleOpenPeerReview = useCallback(() => {
+    if (activePlanId === 'free') {
+      setIsPricingOpen(true);
+      return;
+    }
+    setIsPeerReviewModalOpen(true);
+  }, [activePlanId, setIsPricingOpen]);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [isLatexExportModalOpen, setIsLatexExportModalOpen] = useState(false);
 
@@ -415,10 +423,10 @@ export function EditorLayout({
         return;
       }
 
-      // Ctrl + Shift + R -> Reviewer #2 Simulation
+      // Ctrl + Shift + R -> Reviewer #2 Simulation (Pro Feature)
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'r') {
         e.preventDefault();
-        setIsPeerReviewModalOpen(true);
+        handleOpenPeerReview();
         return;
       }
 
@@ -572,7 +580,7 @@ export function EditorLayout({
   const handleExecuteCommand = (actionId: string) => {
     switch (actionId) {
       case 'open_peer_review':
-        setIsPeerReviewModalOpen(true);
+        handleOpenPeerReview();
         break;
       case 'open_integrity_barometer':
         setShowRightSidebar(true);
@@ -814,7 +822,7 @@ export function EditorLayout({
             setShowRightSidebar={setShowRightSidebar}
             onOpenSettings={onOpenSettings}
             onOpenVersionHistory={versionHistory.openVersionHistory}
-            onOpenPeerReview={() => setIsPeerReviewModalOpen(true)}
+            onOpenPeerReview={handleOpenPeerReview}
             onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
             onOpenShortcuts={() => setIsShortcutsOpen(true)}
             onOpenLatexExport={() => setIsLatexExportModalOpen(true)}
@@ -858,7 +866,8 @@ export function EditorLayout({
             showRightSidebar={showRightSidebar}
             setShowRightSidebar={setShowRightSidebar}
             onOpenVersionHistory={versionHistory.openVersionHistory}
-            onOpenPeerReview={() => setIsPeerReviewModalOpen(true)}
+            onOpenPeerReview={handleOpenPeerReview}
+            activePlanId={activePlanId}
             onOpenIntegrityTab={() => {
               setShowRightSidebar(true);
               setIsRightSidebarExpanded(true);
@@ -892,7 +901,7 @@ export function EditorLayout({
                 setShowRightSidebar={setShowRightSidebar}
                 onOpenSettings={onOpenSettings}
                 onOpenVersionHistory={versionHistory.openVersionHistory}
-                onOpenPeerReview={() => setIsPeerReviewModalOpen(true)}
+                onOpenPeerReview={handleOpenPeerReview}
                 onOpenShortcuts={() => setIsShortcutsOpen(true)}
                 onOpenLatexExport={() => setIsLatexExportModalOpen(true)}
                 activeUsers={activeUsers}
@@ -1181,7 +1190,7 @@ export function EditorLayout({
                   onOpenTokenQuotaModal={onOpenTokenQuotaModal}
                   citationLibrary={citationLibrary}
                   onInsertCitationText={onInsertCitationText}
-                  onOpenPeerReview={() => setIsPeerReviewModalOpen(true)}
+                  onOpenPeerReview={handleOpenPeerReview}
                   onOpenProjectBinder={() => setIsProjectBinderModalOpen(true)}
                   onOpenLinter={() => setIsLinterModalOpen(true)}
                   onOpenSlideDeck={() => setIsSlideDeckModalOpen(true)}
