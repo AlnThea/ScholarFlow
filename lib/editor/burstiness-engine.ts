@@ -46,10 +46,8 @@ export function stripBibliographyFromText(text: string): string {
 export function calculateBurstiness(text: string): BurstinessMetrics {
   // Strip bibliography section first so citations do not distort originality and sentence rhythm
   const strippedText = stripBibliographyFromText(text);
-  // Clean HTML if passed directly from editor
-  const cleanText = strippedText.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-  
-  if (!cleanText) {
+  const cleanText = strippedText.replace(/<[^>]+>/g, ' ');
+  if (!cleanText || !cleanText.trim()) {
     return {
       totalWords: 0,
       totalSentences: 0,
@@ -69,21 +67,36 @@ export function calculateBurstiness(text: string): BurstinessMetrics {
   // This is a simplified regex; negative lookbehind is supported in modern JS.
   const sentenceRegex = /(?<!\be\.g)(?<!\bi\.e)(?<!\bal)(?<!\bvs)(?<!\bJan)(?<!\bFeb)(?<!\bMar)(?<!\bApr)(?<!\bAug)(?<!\bSep)(?<!\bOct)(?<!\bNov)(?<!\bDec)(?<!\bDr)(?<!\bMr)(?<!\bMs)(?<!\bProf)(?<!\d)([.!?])\s+(?=[A-Z0-9]|$)/g;
 
-  // Split and clean sentences
-  const rawSentences = cleanText.split(sentenceRegex).reduce((acc: string[], val: string, i: number, arr: string[]) => {
-    // Re-attach punctuation
-    if (i % 2 === 0) {
-      if (arr[i+1]) {
-         acc.push((val + arr[i+1]).trim());
-      } else {
-         acc.push(val.trim());
+  // Split and clean sentences by newline / paragraph boundaries first (strict paragraph isolation)
+  const rawParagraphs = strippedText
+    .split(/\r?\n+/)
+    .map((p) => p.replace(/<[^>]+>/g, ' ').replace(/[ \t]+/g, ' ').trim())
+    .filter((p) => p.length > 0);
+
+  const rawSentences: string[] = [];
+
+  for (const para of rawParagraphs) {
+    const paraSentences = para.split(sentenceRegex).reduce((acc: string[], val: string, i: number, arr: string[]) => {
+      // Re-attach punctuation
+      if (i % 2 === 0) {
+        if (arr[i+1]) {
+           acc.push((val + arr[i+1]).trim());
+        } else {
+           acc.push(val.trim());
+        }
       }
+      return acc;
+    }, []).filter(s => s.length > 0);
+
+    if (paraSentences.length > 0) {
+      rawSentences.push(...paraSentences);
+    } else {
+      rawSentences.push(para);
     }
-    return acc;
-  }, []).filter(s => s.length > 0);
+  }
 
   // If the regex splitting fails or produces no punctuation match, fallback
-  const sentences = rawSentences.length > 0 ? rawSentences : [cleanText];
+  const sentences = rawSentences.length > 0 ? rawSentences : [strippedText.trim()];
 
   const sentenceData = sentences.map((s, index) => {
     const wordCount = s.split(/\s+/).filter(w => w.length > 0).length;
@@ -141,8 +154,8 @@ export function calculateBurstiness(text: string): BurstinessMetrics {
   const detectedBuzzwordsMap = new Map<string, number>();
   let buzzwordCount = 0;
   
-  const wordsList = cleanText.toLowerCase().match(/\b([a-z]+)\b/g) || [];
-  wordsList.forEach(w => {
+  const wordsList: string[] = cleanText.toLowerCase().match(/\b([a-z]+)\b/g) || [];
+  wordsList.forEach((w: string) => {
     if (AI_BUZZWORDS.includes(w)) {
       detectedBuzzwordsMap.set(w, (detectedBuzzwordsMap.get(w) || 0) + 1);
       buzzwordCount++;

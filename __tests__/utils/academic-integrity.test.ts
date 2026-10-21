@@ -3,6 +3,7 @@ import {
   calculateAcademicIntegrity,
   type AcademicIntegrityReport,
 } from '@/lib/editor/academic-integrity';
+import { extractTextFromContent } from '@/lib/editor/editor-utils';
 
 describe('Phase 24: Academic Integrity & AI-Likeness Barometer Engine Unit Tests', () => {
   it('returns awaiting content state for empty or whitespace text', () => {
@@ -95,5 +96,35 @@ describe('Phase 24: Academic Integrity & AI-Likeness Barometer Engine Unit Tests
     // References must NOT be counted as sentences or words in the manuscript analysis
     expect(report.metrics.totalSentences).toBe(2);
     expect(report.sentences.every(s => !s.text.includes('Adharma') && !s.text.includes('Lancet'))).toBe(true);
+  });
+
+  it('strictly isolates paragraphs across newline boundaries without merging unpunctuated headings into subsequent sentences', () => {
+    const sampleWithHeadings = `
+      BAB 1: PENDAHULUAN
+      
+      1.1 Latar Belakang
+      
+      Akselerasi adopsi teknologi informasi dan komunikasi pada era digital telah mendorong transformasi fundamental dalam operasionalisasi pelbagai sektor bisnis, termasuk industri perhotelan.
+      
+      Namun, pada kenyataan nya masih banyak terdapat banyak pengelola hotel yang menghadapi tantangan dalam beradaptasi.
+    `;
+    const report = calculateAcademicIntegrity(sampleWithHeadings);
+    // Sentences must NOT concatenate "BAB 1: PENDAHULUAN" into "Akselerasi adopsi..."
+    expect(report.sentences.some(s => s.text.startsWith('BAB 1: PENDAHULUAN 1.1'))).toBe(false);
+    expect(report.sentences.some(s => s.text.startsWith('Akselerasi adopsi'))).toBe(true);
+  });
+
+  it('extractTextFromContent with excludeHeaders true removes section headings from body sentence analysis', () => {
+    const editorContent = {
+      blocks: [
+        { type: 'header', data: { text: 'BAB 1: PENDAHULUAN', level: 1 } },
+        { type: 'header', data: { text: '1.1 Latar Belakang', level: 2 } },
+        { type: 'paragraph', data: { text: 'Akselerasi adopsi teknologi informasi pada era digital.' } }
+      ]
+    };
+    const withoutHeaders = extractTextFromContent(editorContent, { excludeHeaders: true });
+    expect(withoutHeaders).not.toContain('BAB 1: PENDAHULUAN');
+    expect(withoutHeaders).not.toContain('1.1 Latar Belakang');
+    expect(withoutHeaders).toContain('Akselerasi adopsi teknologi informasi pada era digital.');
   });
 });

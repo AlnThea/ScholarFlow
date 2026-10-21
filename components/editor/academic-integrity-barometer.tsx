@@ -146,21 +146,30 @@ export function AcademicIntegrityBarometer({
       const blocks = document.querySelectorAll('.ce-block [contenteditable="true"]');
       let found = false;
       const target = sentence.text.trim();
+      const normalizedTarget = target.replace(/\s+/g, ' ');
 
       for (const block of Array.from(blocks)) {
         const el = block as HTMLElement;
-        const textContent = el.textContent || '';
+        const textContent = (el.textContent || '').replace(/\s+/g, ' ');
         
-        if (textContent.includes(target) || (target.length > 25 && textContent.includes(target.slice(0, 25)))) {
+        if (
+          textContent.includes(normalizedTarget) ||
+          (normalizedTarget.length > 25 && textContent.includes(normalizedTarget.slice(0, 25))) ||
+          (normalizedTarget.length > 15 && textContent.includes(normalizedTarget.slice(0, 15)))
+        ) {
           found = selectTextInElement(el, target);
           if (found) break;
         }
       }
 
-      // Fallback: if selection failed, smooth scroll without tinting entire paragraph block
+      // Fallback: if range selection failed, smooth scroll to the containing paragraph block
       if (!found) {
         for (const block of Array.from(blocks)) {
-          if (block.textContent?.includes(target.slice(0, 25))) {
+          const textContent = (block.textContent || '').replace(/\s+/g, ' ');
+          if (
+            (normalizedTarget.length > 25 && textContent.includes(normalizedTarget.slice(0, 25))) ||
+            (normalizedTarget.length > 15 && textContent.includes(normalizedTarget.slice(0, 15)))
+          ) {
             block.scrollIntoView({ behavior: 'smooth', block: 'center' });
             break;
           }

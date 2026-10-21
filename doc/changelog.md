@@ -5,6 +5,19 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.43.3] - 2026-10-21 (Paragraph & Heading Isolation in Academic Integrity & Flagged Sentences)
+
+### 🎯 Hard Paragraph Boundaries & Heading Exclusion from AI Sentence Flagging (`lib/editor/burstiness-engine.ts`, `lib/editor/editor-utils.tsx`, `components/editor/sidebar-burstiness-tab.tsx`, `components/editor/academic-integrity-barometer.tsx`, `__tests__/utils/academic-integrity.test.ts`)
+- **Strict Paragraph & Line Boundary Segmentation (`lib/editor/burstiness-engine.ts`)**:
+  - Resolved issue where chapter headers (e.g., "BAB 1: PENDAHULUAN"), sub-section numbers ("1.1 Latar Belakang"), and the opening manuscript paragraph were concatenated into a single oversized sentence.
+  - Implemented newline segmentation first (`.split(/\r?\n+/)`), ensuring each block/paragraph is processed as an isolated unit.
+- **Section Heading Exclusion from AI Sentence Analysis (`lib/editor/editor-utils.tsx`, `components/editor/sidebar-burstiness-tab.tsx`)**:
+  - Enhanced `extractTextFromContent` with `options?: { excludeHeaders?: boolean }` so structural titles are never flagged as AI prose or prompted for paraphrasing.
+- **Accurate Canvas Sentence Targeting & DOM Range Selection (`components/editor/academic-integrity-barometer.tsx`)**:
+  - Standardized whitespace normalization (`.replace(/\s+/g, ' ')`) in `handleSentenceClick` and `selectTextInElement`, ensuring clicked flagged sentences directly highlight and center the exact matching sentence on the canvas.
+- **Automated Verification**:
+  - Added 2 new unit tests in `__tests__/utils/academic-integrity.test.ts`. Full Vitest suite passes all 225 unit tests across 27 test files. Full TypeScript check passes with 0 errors.
+
 ## ⚡ [v0.43.2] - 2026-10-21 (Auto-Purge Leftover Bibliography on Version History Restore & Zero-Citation Canvas Load)
 
 ### 🎯 Zero-Citation Version Restore & Canvas Auto-Cleanup (`components/editor/editorjs-editor.tsx`, `lib/editor/methods/block-methods.ts`)

@@ -86,7 +86,7 @@ export const SidebarBurstinessTab = (props: any) => {
 
   const documentText = useMemo(() => {
     if (!currentDocument?.content) return '';
-    return extractTextFromContent(currentDocument.content);
+    return extractTextFromContent(currentDocument.content, { excludeHeaders: true });
   }, [currentDocument?.content]);
 
   const isSelectionActive = Boolean(selectedText && selectedText.trim());

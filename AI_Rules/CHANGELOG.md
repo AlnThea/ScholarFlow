@@ -1,5 +1,16 @@
 # ScholarFlow Changelog
 
+## v0.43.11 - Paragraph & Heading Isolation in Academic Integrity & Flagged Sentences
+
+- **Strict Paragraph Boundary Segmentation (`lib/editor/burstiness-engine.ts`)**:
+  - Replaced global whitespace flattening with newline-first paragraph segmentation (`.split(/\r?\n+/)`), preventing chapter headers (e.g., "BAB 1: PENDAHULUAN") and sub-sections ("1.1 Latar Belakang") from merging into adjacent paragraph sentences.
+- **Section Heading Exclusion from AI Sentence Analysis (`lib/editor/editor-utils.tsx`, `components/editor/sidebar-burstiness-tab.tsx`)**:
+  - Implemented `excludeHeaders` option in `extractTextFromContent` and applied it to `sidebar-burstiness-tab.tsx` so structural headings are not treated as AI prose or prompted for paraphrasing.
+- **Precise DOM Sentence Highlighting (`components/editor/academic-integrity-barometer.tsx`)**:
+  - Standardized whitespace matching in `handleSentenceClick`, ensuring clicking a flagged sentence immediately navigates to and highlights the corresponding sentence in the editor canvas.
+- **Unit Testing**:
+  - Added unit tests in `__tests__/utils/academic-integrity.test.ts`. All 225 unit tests passing across 27 files.
+
 ## v0.43.10 - Auto-Purge Leftover Bibliography on Version History Restore & Zero-Citation Canvas Load
 
 - **Version History Restore Auto-Purge (`lib/editor/methods/block-methods.ts`)**:

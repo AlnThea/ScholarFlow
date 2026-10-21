@@ -17,13 +17,20 @@ export function isBibliographyHeaderText(text?: string | null): boolean {
   );
 }
 
-export function extractTextFromContent(content: any): string {
+export interface ExtractTextOptions {
+  excludeHeaders?: boolean;
+}
+
+export function extractTextFromContent(content: any, options?: ExtractTextOptions): string {
   if (!content || !content.blocks || !Array.isArray(content.blocks)) return '';
   const texts: string[] = [];
   let inBibliography = false;
 
   for (const block of content.blocks) {
     if (block.type === 'header') {
+      if (options?.excludeHeaders) {
+        continue; // Exclude headings (Bab, sub-bab) from body sentence analysis
+      }
       const txt = block.data?.text;
       const clean = txt ? txt.replace(/<[^>]*>/g, '').trim() : '';
       if (isBibliographyHeaderText(clean)) {
