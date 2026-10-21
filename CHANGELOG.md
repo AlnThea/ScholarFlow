@@ -2,6 +2,19 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.43.1] - 2026-10-21 (Bottom-Anchored Bibliography Isolation Protecting Manuscript Body)
+
+### 🎯 Bulletproof Manuscript Body Isolation & Safe Bibliography Operations (`lib/editor/methods/block-methods.ts`, `components/editor/editorjs-editor.tsx`)
+- **Bottom-Anchored Boundary Guard (`lib/editor/methods/block-methods.ts`)**:
+  - Replaced global block-index querying with `findBibliographyHeaderIndex`: strictly inspects backwards only the last 4 blocks of the document (`total - 1` down to `Math.max(0, total - 4)`).
+  - Deletes only from `total - 1` down to `headerIdx`, ensuring that all preceding manuscript text, chapter headers, and introduction paragraphs are physically inaccessible to the bibliography lifecycle.
+  - When `entries.length === 0`, checks if a bibliography header exists in the bottom 4 blocks: if none exists, zero blocks are deleted; if present, only bottom bibliography blocks are purged.
+- **Targeted Deletion Guard Refinement (`components/editor/editorjs-editor.tsx`)**:
+  - Refined `editor.blocks.delete` interception to verify actual heading elements (`h1..h6`, `.ce-header`) and specific bibliography styling classes, preventing any normal author paragraph from being flagged as a locked block.
+- **Verification**:
+  - Full TypeScript type check (`npx tsc --noEmit`) passes with 0 errors.
+  - Full Vitest suite passes all 223 unit tests across 27 test files.
+
 ## ⚡ [v0.43.0] - 2026-10-21 (Zero-Citation Purge, Bilingual Bibliography Header & Academic Integrity Barometer Exclusion)
 
 ### 🎯 Zero-Citation Purge & Academic Integrity Isolation (`lib/editor/methods/block-methods.ts`, `components/editor/editorjs-editor.tsx`, `lib/editor/editor-utils.tsx`, `lib/editor/burstiness-engine.ts`, `lib/editor/academic-integrity.ts`, `hooks/use-editor-citation.ts`)

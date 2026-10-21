@@ -1,5 +1,17 @@
 # ScholarFlow Changelog
 
+## v0.43.9 - Bottom-Anchored Bibliography Isolation Protecting Manuscript Body
+
+- **Bottom-Anchored Backward Scan (`lib/editor/methods/block-methods.ts`)**:
+  - Replaced global document block scanning with `findBibliographyHeaderIndex()`, which strictly scans backwards only within the bottom 4 blocks of the document (`total - 1` down to `Math.max(0, total - 4)`).
+  - Matches strictly on heading tags (`h1..h6`, `.ce-header`) containing localized bibliography titles ("Daftar Pustaka" / "References").
+  - Guaranteed physical immunity for all preceding manuscript body blocks: paragraphs, chapters, and sections are 100% untouched during bibliography updates or zero-citation purges.
+- **Strict Keyboard Deletion Guard (`components/editor/editorjs-editor.tsx`)**:
+  - Tightened block delete interception in Editor.js to strictly check for heading bibliography titles or `.sf-bibliography-blur` / `.sf-premium-banner-container`, preventing user paragraphs from false-matching system lock attributes.
+- **Verification**:
+  - Full TypeScript type check (`npx tsc --noEmit`) passes with 0 errors.
+  - Full Vitest suite passes all 223 unit tests across 27 test files.
+
 ## v0.43.8 - Zero-Citation Canvas Purge, Bilingual Bibliography Header & Academic Integrity Barometer Exclusion
 
 - **Programmatic System Deletion Bypass & Zero-Citation Purge (`components/editor/editorjs-editor.tsx`, `lib/editor/methods/block-methods.ts`, `hooks/use-editorjs-methods.ts`)**:
