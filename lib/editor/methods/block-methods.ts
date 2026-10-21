@@ -513,6 +513,52 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
                     undoRef.current.initialize(sanitizedData);
                   }
                   renderAllInlineMath();
+                  calculateLiveStats();
+
+                  // Auto-purge leftover bibliography blocks if restored snapshot has 0 in-text citations
+                  try {
+                    const holder = document.getElementById(holderId);
+                    const activeCites = holder ? holder.querySelectorAll('cite[data-citation]') : [];
+                    const hasInTextCitations = Array.from(activeCites).some(el => el.textContent && el.textContent.trim().length > 0);
+
+                    if (!hasInTextCitations && editorRef.current && editorRef.current.blocks) {
+                      const total = editorRef.current.blocks.getBlocksCount();
+                      const searchLimit = Math.max(0, total - 4);
+                      let bibHeaderIdx = -1;
+                      for (let i = total - 1; i >= searchLimit; i--) {
+                        const block = editorRef.current.blocks.getBlockByIndex(i);
+                        if (!block || !block.holder) continue;
+                        const headerEl = block.holder.querySelector('h1, h2, h3, h4, h5, h6, .ce-header');
+                        if (headerEl && isBibliographyHeaderText(headerEl.textContent)) {
+                          bibHeaderIdx = i;
+                          break;
+                        }
+                      }
+
+                      if (bibHeaderIdx !== -1) {
+                        if (isProgrammaticSystemUpdateRef) {
+                          isProgrammaticSystemUpdateRef.current = true;
+                        }
+                        for (let i = total - 1; i >= bibHeaderIdx; i--) {
+                          try {
+                            editorRef.current.blocks.delete(i);
+                          } catch (_) {}
+                        }
+                        if (isProgrammaticSystemUpdateRef) {
+                          isProgrammaticSystemUpdateRef.current = false;
+                        }
+                        calculateLiveStats();
+                        if (onContentChange) {
+                          saveCleanContent().then(cleanData => {
+                            if (cleanData) onContentChange(cleanData);
+                          }).catch(console.error);
+                        }
+                      }
+                    }
+                  } catch (e) {
+                    console.warn('Auto-cleanup of restored bibliography error:', e);
+                  }
+
                   setTimeout(() => {
                     isRenderingRef.current = false;
                     adjustAllCodeTextareaHeights();

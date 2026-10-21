@@ -4,7 +4,7 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.43.1 (Bottom-Anchored Bibliography Isolation Protecting Manuscript Body, 223/223 tests passing).
+v0.43.2 (Auto-Purge Leftover Bibliography on Version History Restore & Zero-Citation Canvas Load, 223/223 tests passing).
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
@@ -24,6 +24,7 @@ v0.43.1 (Bottom-Anchored Bibliography Isolation Protecting Manuscript Body, 223/
 - [x] Phase 45: Dynamic In-Text Citation Deletion & Real-Time Bibliography Synchronization.
 - [x] Phase 46: Zero-Citation Canvas Purge, Bilingual Header & Academic Integrity Barometer Exclusion.
 - [x] Phase 47: Bottom-Anchored Bibliography Isolation Protecting Manuscript Body.
+- [x] Phase 48: Auto-Purge Leftover Bibliography on Version History Restore & Zero-Citation Canvas Load.
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.

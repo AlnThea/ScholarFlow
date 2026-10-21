@@ -1,5 +1,18 @@
 # ScholarFlow Changelog
 
+## v0.43.10 - Auto-Purge Leftover Bibliography on Version History Restore & Zero-Citation Canvas Load
+
+- **Version History Restore Auto-Purge (`lib/editor/methods/block-methods.ts`)**:
+  - In `renderContent` (invoked when restoring a revision from Version History), added automated zero-citation detection via DOM `<cite[data-citation]>`.
+  - When restored content has 0 in-text citations, automatically purges leftover bibliography header ("Daftar Pustaka" / "References") and blurred content from the bottom 4 blocks.
+  - Safely saves and broadcasts clean content via `saveCleanContent().then(onContentChange)`.
+- **Canvas Mount Auto-Cleanup (`components/editor/editorjs-editor.tsx`)**:
+  - In `editor.render().then(...)` on initial load, auto-purges leftover bottom bibliography blocks if 0 citations are detected, preventing ghost bibliographies from persisting across sessions.
+  - Fully protects active citations (> 0) without any accidental loss or deletion of author manuscript text.
+- **Verification**:
+  - Full TypeScript validation (`npx tsc --noEmit`) passes with 0 errors.
+  - Full Vitest suite passes all 223 unit tests across 27 test files.
+
 ## v0.43.9 - Bottom-Anchored Bibliography Isolation Protecting Manuscript Body
 
 - **Bottom-Anchored Backward Scan (`lib/editor/methods/block-methods.ts`)**:

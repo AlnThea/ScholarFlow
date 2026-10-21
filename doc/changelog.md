@@ -5,6 +5,19 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.43.2] - 2026-10-21 (Auto-Purge Leftover Bibliography on Version History Restore & Zero-Citation Canvas Load)
+
+### 🎯 Zero-Citation Version Restore & Canvas Auto-Cleanup (`components/editor/editorjs-editor.tsx`, `lib/editor/methods/block-methods.ts`)
+- **Version History Restore Auto-Purge (`lib/editor/methods/block-methods.ts`)**:
+  - In `renderContent` (used by Version History restore and document switching), added an automated post-render check: if the restored revision contains 0 in-text citations (`cite[data-citation]`), any leftover "Daftar Pustaka" / "References" header, blurred list, and upgrade banner anchored at the bottom are automatically purged.
+  - Utilizes `isProgrammaticSystemUpdateRef` to safely bypass deletion guards and calls `saveCleanContent().then(onContentChange)` to persist the cleaned document state immediately.
+- **Initial Canvas Mount Auto-Cleanup (`components/editor/editorjs-editor.tsx`)**:
+  - Reinforced `onReady` post-render hook in `EditorJsEditor`: if a document loaded with 0 citations has a leftover bibliography header in its bottom 4 blocks, it purges those blocks cleanly and updates live statistics.
+  - Guaranteed citation safety: whenever in-text citations exist (> 0), the bibliography is completely preserved and dynamically generated from active references.
+- **Verification**:
+  - Full TypeScript validation (`npx tsc --noEmit`) passes with 0 errors.
+  - Full Vitest suite passes all 223 unit tests across 27 test files.
+
 ## ⚡ [v0.43.1] - 2026-10-21 (Bottom-Anchored Bibliography Isolation Protecting Manuscript Body)
 
 ### 🎯 Bulletproof Manuscript Body Isolation & Safe Bibliography Operations (`lib/editor/methods/block-methods.ts`, `components/editor/editorjs-editor.tsx`)
