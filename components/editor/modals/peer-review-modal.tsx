@@ -40,6 +40,7 @@ export interface PeerReviewModalProps {
   userPlan?: string;
   onNavigateToSection?: (section: string) => void;
   onShowToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
+  onTokensUpdated?: (tokensUsed: number, monthlyQuota?: number) => void;
 }
 
 export function PeerReviewModal({
@@ -55,6 +56,7 @@ export function PeerReviewModal({
   userPlan = 'free',
   onNavigateToSection,
   onShowToast,
+  onTokensUpdated,
 }: PeerReviewModalProps) {
   const isEn = language === 'en';
   const [report, setReport] = useState<PeerReviewAuditReport | null>(null);
@@ -63,18 +65,18 @@ export function PeerReviewModal({
   const [expandedRubric, setExpandedRubric] = useState<string | null>('methodology');
   const [checklistState, setChecklistState] = useState<Record<string, boolean>>({});
 
-  // Load cached audit on open
+  // Load cached audit on open (language-aware)
   useEffect(() => {
     if (!isOpen) return;
 
-    const cached = loadCachedPeerReviewAudit(documentId);
+    const cached = loadCachedPeerReviewAudit(documentId, language);
     if (cached) {
       setReport(cached);
     } else {
-      // Auto run simulation on first open
+      // Auto run simulation on first open or when switching language
       handleRunAudit();
     }
-  }, [isOpen, documentId]);
+  }, [isOpen, documentId, language]);
 
   if (!isOpen) return null;
 
@@ -101,9 +103,25 @@ export function PeerReviewModal({
         throw new Error(isEn ? 'Failed to generate review audit' : 'Gagal menghasilkan audit reviewer');
       }
 
-      const data: PeerReviewAuditReport = await res.json();
+      const data: any = await res.json();
       setReport(data);
-      saveCachedPeerReviewAudit(documentId, data);
+      saveCachedPeerReviewAudit(documentId, data, language);
+
+      // Instantly trigger reactive token update without requiring page reload
+      if (typeof data.tokens_used === 'number') {
+        onTokensUpdated?.(data.tokens_used, data.monthly_quota);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('scholarflow:tokens-updated', {
+              detail: {
+                tokensUsed: data.tokens_used,
+                monthlyQuota: data.monthly_quota,
+              },
+            })
+          );
+        }
+      }
+
       onShowToast?.(
         isEn ? 'Peer review simulation completed!' : 'Simulasi Reviewer #2 selesai!',
         'success'
@@ -118,7 +136,7 @@ export function PeerReviewModal({
         language: isEn ? 'en' : 'id',
       });
       setReport(fallback);
-      saveCachedPeerReviewAudit(documentId, fallback);
+      saveCachedPeerReviewAudit(documentId, fallback, language);
       onShowToast?.(
         isEn ? 'Audit simulation completed (standard mode).' : 'Audit simulasi selesai (mode standar).',
         'info'

@@ -169,6 +169,7 @@ export function EditorLayout({
   activeSidebarTab, setActiveSidebarTab,
   tokensUsed,
   monthlyQuota,
+  onTokensUpdated,
   isTokenQuotaModalOpen,
   onOpenTokenQuotaModal,
   onCloseTokenQuotaModal,
@@ -1395,6 +1396,7 @@ export function EditorLayout({
         language={language}
         userId={user?.id}
         userPlan={activePlanId || 'free'}
+        onTokensUpdated={onTokensUpdated}
       />
       <CommandPaletteModal
         isOpen={isCommandPaletteOpen}

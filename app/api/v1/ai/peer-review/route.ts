@@ -29,6 +29,9 @@ function buildPeerReviewPrompt(params: {
     return `You are a distinguished Senior Editor and renowned "Reviewer #2" for top-tier international scientific journals (e.g. Nature, IEEE Transactions, Elsevier, Springer).
 You are conducting a rigorous, highly constructive peer-review audit simulation on this academic manuscript.
 
+LANGUAGE REQUIREMENT:
+The user has selected ENGLISH language interface. All output critique (executiveSummary, rubric strengths/vulnerabilities, critical inquiries, suggested remedies, and actionable checklist items) MUST be written in academic English.
+
 TARGET JOURNAL BENCHMARK: ${targetTier.toUpperCase()}
 MANUSCRIPT TITLE: "${documentTitle}"
 TOTAL WORD COUNT: ${wordCount}
@@ -112,6 +115,9 @@ You MUST reply strictly in JSON matching this schema:
   return `Anda adalah seorang Dewan Editor Senior dan "Reviewer #2" terkemuka untuk jurnal ilmiah bereputasi internasional (Scopus Q1/Q2 dan SINTA 1/2).
 Tugas Anda adalah melakukan simulasi audit peer-review yang sangat kritis, objektif, dan konstruktif terhadap naskah karya ilmiah ini sebelum disubmit ke jurnal.
 
+PENTING - KETENTUAN BAHASA:
+Pengguna saat ini memilih antarmuka BAHASA INDONESIA. Oleh karena itu, SELURUH isi ulasan yang Anda hasilkan (mulai dari executiveSummary, strengths, vulnerabilities, pertanyaan criticalInquiries, suggestedRemedy, hingga actionableChecklist) WAJIB DITULIS 100% DALAM BAHASA INDONESIA yang baku, formal, dan akademis, bahkan jika naskah sumber atau judul ditulis dalam bahasa Inggris!
+
 TARGET AKREDITASI JURNAL: ${targetTier.toUpperCase()}
 JUDUL NASKAH: "${documentTitle}"
 JUMLAH KATA: ${wordCount}
@@ -135,8 +141,8 @@ PETUNJUK EVALUASI:
    - "MAJOR_REVISION" (Skor Kesiapan 50-69: Ada celah metodologis/analisis yang harus ditambal)
    - "REJECT" (Skor Kesiapan < 50: Naskah belum memenuhi standar bukti empiris jurnal ilmiah)
 
-3. Berikan 2-3 Pertanyaan Kritis Khas "Reviewer #2" yang wajib diantisipasi penulis.
-4. Buat 3-4 daftar perbaikan konkret (checklist) sebelum naskah disubmit ke editor jurnal.
+3. Berikan 2-3 Pertanyaan Kritis Khas "Reviewer #2" yang wajib diantisipasi penulis (dalam Bahasa Indonesia).
+4. Buat 3-4 daftar perbaikan konkret (checklist) sebelum naskah disubmit ke editor jurnal (dalam Bahasa Indonesia).
 
 FORMAT OUTPUT:
 Anda WAJIB menjawab HANYA dalam format JSON valid persis seperti ini:
@@ -355,8 +361,9 @@ export async function POST(request: NextRequest) {
 
     // 6. Deduct Quota Tokens & Complete Logger
     const actualTokens = Math.max(estimateTokens(documentContent.slice(0, 4000)), 50);
+    let usageRecord: any = null;
     if (userId) {
-      await recordPersonalTokenConsumption(userId, actualTokens);
+      usageRecord = await recordPersonalTokenConsumption(userId, actualTokens, userPlan);
       if (aiGenerationId) {
         await completeAiGeneration(aiGenerationId, {
           resultText: report.executiveSummary,
@@ -369,10 +376,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 7. Cache Response
-    setIdempotentAiResponse(idempotencyKey, report, 5 * 60 * 1000);
+    const finalReport = {
+      ...report,
+      language: (language === 'en' ? 'en' : 'id') as 'en' | 'id',
+      tokens_consumed: actualTokens,
+      tokens_used: usageRecord ? usageRecord.used : undefined,
+      monthly_quota: usageRecord ? usageRecord.limit : undefined,
+      tokens_remaining: usageRecord ? usageRecord.remaining : undefined,
+    };
 
-    return NextResponse.json(report);
+    // 7. Cache Response
+    setIdempotentAiResponse(idempotencyKey, finalReport, 5 * 60 * 1000);
+
+    return NextResponse.json(finalReport);
   } catch (err: any) {
     console.error('[PeerReviewer] Route handler error:', err);
     return NextResponse.json(

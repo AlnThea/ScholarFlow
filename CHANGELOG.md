@@ -2,6 +2,23 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.43.8] - 2026-10-21 (Real-Time Reactive Token Quota Deductions & Bilingual Reviewer #2 Localization)
+
+### 🎯 Instant Reactive Token Synchronization (`app/api/v1/ai/peer-review/route.ts`, `components/editor/modals/peer-review-modal.tsx`, `hooks/use-editor-ai.ts`, `components/editor/scholar-editor.tsx`, `components/editor/editor-layout.tsx`, `components/editor/types.ts`)
+- **Instant Token Badge Deductions Without Page Refresh**:
+  - Resolved issue where running Reviewer #2 required manual page refresh to show the updated token consumption badge.
+  - `/api/v1/ai/peer-review/route.ts` now calculates `usageRecord = recordPersonalTokenConsumption(...)` and returns `tokens_used`, `monthly_quota`, and `tokens_remaining` in the response payload.
+  - Added dual reactive updating:
+    - Direct prop callback: `onTokensUpdated` passed through `scholar-editor.tsx` -> `editor-layout.tsx` -> `peer-review-modal.tsx`.
+    - Cross-component event listener: `window.dispatchEvent('scholarflow:tokens-updated')` caught by `use-editor-ai.ts` to immediately update token state and call `refreshProfile()` in real-time.
+- **Language-Aware Reviewer #2 Simulation & Cache Isolation (`app/api/v1/ai/peer-review/route.ts`, `lib/editor/peer-reviewer.ts`, `components/editor/modals/peer-review-modal.tsx`)**:
+  - Explicitly instructed the LLM prompt that when the Indonesian interface (`id`) is active, all evaluation text (executive summary, rubric strengths/vulnerabilities, critical inquiries, remedy suggestions, checklist) must be generated 100% in formal academic Indonesian, even if the source paper is written in English.
+  - Upgraded client-side caching (`loadCachedPeerReviewAudit` & `saveCachedPeerReviewAudit`) to be language-aware (`scholarflow.peer_review.v1.<docId>.<lang>`), preventing old English audit reports from lingering when switching to Indonesian.
+- **Verification**:
+  - Full TypeScript type-checking (`npx tsc --noEmit`) passes with 0 errors.
+  - Vitest test suite passes all 229 unit tests across 27 test files.
+
+
 ## ⚡ [v0.43.7] - 2026-10-21 (LaTeX & Journal Package Pro Tier Gating & HTML Entity Clean Output)
 
 ### 🎯 Pro Tier Exclusivity & Clean LaTeX Escaping (`components/editor/editor-header-actions.tsx`, `components/editor/editor-layout.tsx`, `components/editor/modals/latex-export-modal.tsx`, `components/editor/modals/export-upgrade-modal.tsx`, `lib/editor/latex-exporter.ts`)

@@ -89,6 +89,24 @@ export function useEditorAi(
     };
   }, [isImproving, isSynthesizing]);
 
+  // Reactive cross-component token quota synchronization
+  useEffect(() => {
+    const handleTokensUpdated = (e: any) => {
+      if (typeof e.detail?.tokensUsed === 'number') {
+        setTokensUsed(e.detail.tokensUsed);
+      }
+      if (typeof e.detail?.monthlyQuota === 'number') {
+        setMonthlyQuota(e.detail.monthlyQuota);
+      }
+      refreshProfile?.();
+    };
+
+    window.addEventListener('scholarflow:tokens-updated', handleTokensUpdated);
+    return () => {
+      window.removeEventListener('scholarflow:tokens-updated', handleTokensUpdated);
+    };
+  }, [refreshProfile]);
+
   useEffect(() => {
     if (profile) {
       setTokensUsed(typeof profile.ai_tokens_used === 'number' ? profile.ai_tokens_used : 0);

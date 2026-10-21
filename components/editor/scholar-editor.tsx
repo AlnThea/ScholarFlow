@@ -69,7 +69,7 @@ import { EditorToast } from './editor-toast';
 import { RemoteUpdateBanner } from './remote-update-banner';
 export function ScholarEditor() {
   const { language, t } = useLanguage();
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const params = useParams();
@@ -705,6 +705,11 @@ export function ScholarEditor() {
         activeSidebarTab={activeSidebarTab} setActiveSidebarTab={setActiveSidebarTab}
         tokensUsed={tokensUsed}
         monthlyQuota={monthlyQuota}
+        onTokensUpdated={(used, quota) => {
+          if (typeof used === 'number') setTokensUsed(used);
+          if (typeof quota === 'number') setMonthlyQuota(quota);
+          refreshProfile?.();
+        }}
         isTokenQuotaModalOpen={isTokenQuotaModalOpen}
         onOpenTokenQuotaModal={() => setIsTokenQuotaModalOpen(true)}
         onCloseTokenQuotaModal={() => setIsTokenQuotaModalOpen(false)}

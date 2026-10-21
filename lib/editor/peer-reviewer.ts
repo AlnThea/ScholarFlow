@@ -22,6 +22,7 @@ export interface PeerReviewAuditReport {
   id: string;
   documentId?: string;
   documentTitle?: string;
+  language?: 'en' | 'id';
   overallVerdict: PeerReviewVerdict;
   readinessScore: number; // 0 - 100
   executiveSummary: string;
@@ -46,12 +47,20 @@ const PEER_REVIEW_STORAGE_PREFIX = 'scholarflow.peer_review.v1.';
 /**
  * Load cached peer review audit for a document from localStorage
  */
-export function loadCachedPeerReviewAudit(documentId: string): PeerReviewAuditReport | null {
+export function loadCachedPeerReviewAudit(documentId: string, language?: 'en' | 'id'): PeerReviewAuditReport | null {
   if (typeof window === 'undefined' || !documentId) return null;
   try {
+    if (language) {
+      const langSpecific = window.localStorage.getItem(`${PEER_REVIEW_STORAGE_PREFIX}${documentId}.${language}`);
+      if (langSpecific) return JSON.parse(langSpecific) as PeerReviewAuditReport;
+    }
     const raw = window.localStorage.getItem(`${PEER_REVIEW_STORAGE_PREFIX}${documentId}`);
     if (!raw) return null;
-    return JSON.parse(raw) as PeerReviewAuditReport;
+    const parsed = JSON.parse(raw) as PeerReviewAuditReport;
+    if (language && parsed.language && parsed.language !== language) {
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }
@@ -60,10 +69,14 @@ export function loadCachedPeerReviewAudit(documentId: string): PeerReviewAuditRe
 /**
  * Save cached peer review audit for a document to localStorage
  */
-export function saveCachedPeerReviewAudit(documentId: string, report: PeerReviewAuditReport): void {
+export function saveCachedPeerReviewAudit(documentId: string, report: PeerReviewAuditReport, language?: 'en' | 'id'): void {
   if (typeof window === 'undefined' || !documentId) return;
   try {
-    window.localStorage.setItem(`${PEER_REVIEW_STORAGE_PREFIX}${documentId}`, JSON.stringify(report));
+    const reportWithLang = language ? { ...report, language } : report;
+    if (language) {
+      window.localStorage.setItem(`${PEER_REVIEW_STORAGE_PREFIX}${documentId}.${language}`, JSON.stringify(reportWithLang));
+    }
+    window.localStorage.setItem(`${PEER_REVIEW_STORAGE_PREFIX}${documentId}`, JSON.stringify(reportWithLang));
   } catch (err) {
     console.warn('[PeerReviewer] Failed to cache audit report:', err);
   }

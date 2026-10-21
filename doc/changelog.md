@@ -5,6 +5,18 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.43.8] - 2026-10-21 (Real-Time Reactive Token Quota Deductions & Bilingual Reviewer #2 Localization)
+
+### 🎯 Sinkronisasi Kuota Token Real-Time & Bahasa Hasil Reviewer #2
+- **Pengurangan Token Otomatis Tanpa Perlu Refresh Halaman**:
+  - API `/api/v1/ai/peer-review` kini mengembalikan `tokens_used`, `monthly_quota`, dan `tokens_remaining`.
+  - Mengimplementasikan callback `onTokensUpdated` dan event bus `scholarflow:tokens-updated` sehingga badge kuota token di navbar langsung berkurang otomatis begitu proses audit selesai tanpa perlu memuat ulang halaman.
+- **Hasil Reviewer #2 Sesuai Bahasa Aktif (Bilingual ID/EN)**:
+  - Instruksi LLM dipertegas agar seluruh hasil telaah (ringkasan eksekutif, kelebihan/kelemahan rubrik, pertanyaan kritis, checklist) wajib diterbitkan 100% dalam Bahasa Indonesia ketika mode `id` aktif, meskipun draf naskah berbahasa Inggris.
+  - Cache naskah di-isolasi berdasarkan bahasa aktif (`<docId>.<lang>`) agar cache bahasa Inggris lama tidak tertinggal saat pengguna memilih Bahasa Indonesia.
+- **Verifikasi**:
+  - TypeScript: 0 error. Seluruh 229 unit test Vitest lolos 100%.
+
 ## ⚡ [v0.43.7] - 2026-10-21 (LaTeX & Journal Package Pro Tier Gating & HTML Entity Clean Output)
 
 ### 🎯 Pro Tier Exclusivity & Clean LaTeX Escaping (`components/editor/editor-header-actions.tsx`, `components/editor/editor-layout.tsx`, `components/editor/modals/latex-export-modal.tsx`, `lib/editor/latex-exporter.ts`)

@@ -1,5 +1,17 @@
 # ScholarFlow Changelog
 
+## v0.43.16 - Real-Time Reactive Token Quota Deductions & Bilingual Reviewer #2 Localization
+
+- **Reactive Token Quota Updates (`app/api/v1/ai/peer-review/route.ts`, `components/editor/modals/peer-review-modal.tsx`, `hooks/use-editor-ai.ts`)**:
+  - Automatically updates the header token counter immediately when Reviewer #2 finishes without requiring manual page refresh.
+  - Returns `tokens_used`, `monthly_quota`, and `tokens_remaining` from the API route and updates React state via direct callback and custom window events.
+- **Language-Aware Reviewer #2 Localization (`app/api/v1/ai/peer-review/route.ts`, `lib/editor/peer-reviewer.ts`)**:
+  - Enforced strict Indonesian output instruction when `language === 'id'`, guaranteeing 100% Indonesian evaluation even if the manuscript is written in English.
+  - Isolated cache entries by language (`<documentId>.<lang>`), preventing stale reports across language switches.
+- **Verification**:
+  - TypeScript 0 errors. All 229 Vitest unit tests pass across 27 files.
+
+
 ## v0.43.15 - LaTeX & Journal Package Pro Tier Gating & HTML Entity Clean Output
 
 - **Pro Account Gating (`components/editor/editor-header-actions.tsx`, `components/editor/editor-layout.tsx`, `components/editor/modals/latex-export-modal.tsx`)**:

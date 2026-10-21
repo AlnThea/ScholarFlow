@@ -108,6 +108,7 @@ export type EditorLayoutProps = {
   activeSidebarTab?: 'library' | 'writing' | 'document' | 'comments' | 'burstiness' | 'stats'; setActiveSidebarTab?: (tab: 'library' | 'writing' | 'document' | 'comments' | 'burstiness' | 'stats') => void;
   tokensUsed?: number;
   monthlyQuota?: number;
+  onTokensUpdated?: (tokensUsed: number, monthlyQuota?: number) => void;
   isTokenQuotaModalOpen?: boolean;
   onOpenTokenQuotaModal?: () => void;
   onCloseTokenQuotaModal?: () => void;
