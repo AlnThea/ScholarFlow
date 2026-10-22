@@ -2,6 +2,19 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.45.5] - 2026-10-22 (BYOK Architecture for PaperChat: Zero-Quota Deduction, Multi-Tenant Campus & Personal Key Support, Pro Model Access & Active Visual Badge)
+
+### 🎯 BYOK Architecture & Zero-Quota Deduction (`app/api/v1/ai/paper-chat/route.ts`, `components/editor/modals/paper-chat-modal.tsx`, `components/editor/sidebar-library-tab.tsx`)
+- **BYOK Multi-Tenant & Personal Custom Key Support**:
+  - Automatically resolves dedicated campus keys and personal API keys in `/api/v1/ai/paper-chat`.
+  - Bypasses personal quota limits (`tokensConsumed: 0`) and unblocks access to Pro-grade models (*Claude 3.5 Sonnet*, *GPT-4o*) for BYOK users.
+- **Visual BYOK Unlimited Status Indicator**:
+  - Displays emerald `🔑 BYOK UNLIMITED` badge in the PaperChatModal header when user queries are routed through their own API credentials.
+- **Verification**:
+  - TypeScript validation passes with 0 errors (`npx tsc --noEmit`).
+  - Vitest test suite passes all 229 unit tests across 27 test files.
+
+
 ## ⚡ [v0.45.4] - 2026-10-22 (PaperChat Freemium Hybrid Tier Strategy: Free Monthly Token Guard with Pro Model Gating & Reactive In-Modal Upgrade Triggers)
 
 ### 🎯 PaperChat Freemium Architecture & In-Modal Pro Upgrade Triggers (`app/api/v1/ai/paper-chat/route.ts`, `components/editor/modals/paper-chat-modal.tsx`, `components/editor/sidebar-library-tab.tsx`)

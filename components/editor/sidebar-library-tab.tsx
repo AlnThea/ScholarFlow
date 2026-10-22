@@ -534,6 +534,7 @@ export const SidebarLibraryTab = (props: any) => {
           userId={user?.id}
           userPlan={activePlanId || 'free'}
           selectedAiModel={selectedAiModel}
+          customApiKey={props.customApiKey || props.config?.customApiKey}
           onInsertToEditor={onInsertCitationText || onInsertSynthesizedText}
           onUpgradePro={() => {
             setIsPaperChatOpen(false);

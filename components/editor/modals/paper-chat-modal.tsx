@@ -20,6 +20,7 @@ import {
   IconCrown,
   IconBolt,
   IconArrowUpRight,
+  IconKey,
 } from '@tabler/icons-react';
 import {
   loadPaperChatHistory,
@@ -51,6 +52,7 @@ export interface PaperChatModalProps {
   onInsertToEditor?: (text: string, referenceId?: string, label?: string) => void;
   onShowToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
   onUpgradePro?: () => void;
+  customApiKey?: string;
 }
 
 export function PaperChatModal({
@@ -64,6 +66,7 @@ export function PaperChatModal({
   onInsertToEditor,
   onShowToast,
   onUpgradePro,
+  customApiKey,
 }: PaperChatModalProps) {
   const isEn = language === 'en';
   const isProUser = userPlan?.toLowerCase() === 'pro' || userPlan?.toLowerCase() === 'premium';
@@ -72,6 +75,7 @@ export function PaperChatModal({
   const [isLoading, setIsLoading] = useState(false);
   const [quotaExceeded, setQuotaExceeded] = useState(false);
   const [requiresPro, setRequiresPro] = useState(false);
+  const [isByokActive, setIsByokActive] = useState<boolean>(Boolean(customApiKey && customApiKey.trim().length > 5));
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [insertedId, setInsertedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'chat' | 'insights'>('chat');
@@ -219,6 +223,7 @@ export function PaperChatModal({
           language: (/[\b](yang|dan|berapa|apa|bagaimana|adalah|di|ke|pada|untuk|dari|sampel|metode|penelitian)[\b]/i.test(textToSend)) ? 'id' : (isEn ? 'en' : 'id'),
           userId,
           userPlan,
+          customApiKey,
         }),
       });
 
@@ -234,6 +239,9 @@ export function PaperChatModal({
       }
 
       const result = await response.json();
+      if (result.is_byok) {
+        setIsByokActive(true);
+      }
       const updatedMessages = result.conversation || nextConversation;
       setMessages(updatedMessages);
 
@@ -309,7 +317,12 @@ export function PaperChatModal({
                 [{labelText}]
               </span>
 
-              {isProUser ? (
+              {isByokActive ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60" title={isEn ? "Dedicated BYOK API Key Active - Unlimited Quota" : "Kunci API BYOK Mandiri Aktif - Bebas Kuota"}>
+                  <IconKey className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                  BYOK UNLIMITED
+                </span>
+              ) : isProUser ? (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60">
                   <IconCrown className="w-3 h-3 text-amber-500" />
                   PRO

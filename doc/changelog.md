@@ -5,6 +5,19 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.45.5] - 2026-10-22 (BYOK Architecture for PaperChat: Zero-Quota Deduction, Multi-Tenant Campus & Personal Key Support, Pro Model Access & Active Visual Badge)
+
+### 🎯 Integrasi BYOK (Bring Your Own Key) & Nol Potongan Kuota Token
+- **Dukungan Kunci Mandiri Kampus & Pengguna Pribadi (`app/api/v1/ai/paper-chat/route.ts`)**:
+  - Mendeteksi secara otomatis apakah permintaan menggunakan kredensial kampus (`tenantKeyRes.source === 'campus_byok'`) atau API key mandiri pengguna (`customApiKey`).
+  - **Nol Potongan Kuota (*Zero-Quota Deduction*)**: Melewati batasan kuota token server ScholarFlow sehingga pemakaian token dicatat 0 di akun pengguna dan tidak mengurangi jatah 50.000 token bulanan.
+  - **Akses Terbuka ke Model Premium Pro**: Pengguna Free yang memakai kunci BYOK pribadi diizinkan mengakses model kelas atas (*Claude 3.5 Sonnet*, *GPT-4o*) karena biaya API ditanggung oleh akun mereka sendiri.
+- **Badge Indikator Status BYOK Aktif (`components/editor/modals/paper-chat-modal.tsx`)**:
+  - Menampilkan badge berwarna hijau emerald `🔑 BYOK UNLIMITED` pada header modal PaperChat jika kunci mandiri terdeteksi aktif.
+- **Verifikasi**:
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 229 dari 229 unit test lolos 100%.
+
 ## ⚡ [v0.45.4] - 2026-10-22 (PaperChat Freemium Hybrid Tier Strategy: Free Monthly Token Guard with Pro Model Gating & Reactive In-Modal Upgrade Triggers)
 
 ### 🎯 Strategi Tingkatan Freemium Hybrid untuk Chat Paper & Pemicu Upgrade Pro

@@ -4,7 +4,7 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.45.4 (PaperChat Freemium Hybrid Tier Strategy: Free Monthly Token Guard with Pro Model Gating & Reactive In-Modal Upgrade Triggers, 229/229 tests passing, 0 TypeScript errors).
+v0.45.5 (BYOK Architecture for PaperChat: Zero-Quota Deduction, Multi-Tenant Campus & Personal Key Support, Pro Model Access & Active Visual Badge, 229/229 tests passing, 0 TypeScript errors).
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
@@ -47,6 +47,7 @@ v0.45.4 (PaperChat Freemium Hybrid Tier Strategy: Free Monthly Token Guard with 
 - [x] Phase 68: PaperChat Multi-Provider OpenRouter Cascading, Strict Scope Guardrails & Intelligent Language Detection.
 - [x] Phase 69: Real-Time Reactive Token Quota Deductions for PaperChat & Global Quota Event Bus.
 - [x] Phase 70: PaperChat Freemium Hybrid Tier Strategy: Free Monthly Token Guard with Pro Model Gating & Reactive In-Modal Upgrade Triggers.
+- [x] Phase 71: BYOK Architecture for PaperChat: Zero-Quota Deduction, Multi-Tenant Campus & Personal Key Support, Pro Model Access & Active Visual Badge.
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.

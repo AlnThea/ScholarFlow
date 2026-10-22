@@ -1,5 +1,19 @@
 # ScholarFlow Changelog
 
+## v0.45.5 - BYOK Architecture for PaperChat: Zero-Quota Deduction, Multi-Tenant Campus & Personal Key Support, Pro Model Access & Active Visual Badge
+
+- **BYOK (Bring Your Own Key) Engine Integration in PaperChat (`app/api/v1/ai/paper-chat/route.ts`)**:
+  - Dynamically detects BYOK from multi-tenant campus keys (`tenantKeyRes.source === 'campus_byok'`) or personal user custom keys (`customApiKey`).
+  - **Zero-Quota Deduction**: Completely bypasses the server monthly 50k token quota guard when BYOK is active (`tokensConsumed: 0`, preserving user quota).
+  - **Unrestricted Pro Model Access**: Allows Free-tier users with BYOK to use premium models (*Claude 3.5 Sonnet*, *GPT-4o*) without subscription gating, as tokens are billed to their own external API keys.
+- **BYOK Indicator & Active Visual Badge (`components/editor/modals/paper-chat-modal.tsx`)**:
+  - Added reactive `isByokActive` state and header badge: displays emerald `🔑 BYOK UNLIMITED` badge with tooltip when custom keys are active.
+  - Passes `customApiKey` from sidebar library tab into PaperChat query pipeline.
+- **Verification**:
+  - TypeScript 0 errors (`npx tsc --noEmit`).
+  - 229 of 229 Vitest unit tests pass across 27 files.
+
+
 ## v0.45.4 - PaperChat Freemium Hybrid Tier Strategy: Free Monthly Token Guard with Pro Model Gating & Reactive In-Modal Upgrade Triggers
 
 - **Freemium Tier Gating on PaperChat (`app/api/v1/ai/paper-chat/route.ts`)**:

@@ -304,6 +304,7 @@ export async function POST(request: NextRequest) {
       language = 'id',
       userId,
       userPlan = 'free',
+      customApiKey,
     } = body;
 
     if (!question || !question.trim()) {
@@ -330,29 +331,37 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 2. Personal Token Quota Guard
-    const estimatedCost = estimateTokens(question + (paperAbstract || ''));
-    const quotaCheck = await checkPersonalQuota(userId, userPlan);
-    if (!quotaCheck.allowed) {
-      return NextResponse.json(
-        {
-          error: 'Personal monthly AI token quota exceeded.',
-          quotaExceeded: true,
-          tokensUsed: quotaCheck.used,
-          monthlyQuota: quotaCheck.limit,
-          remainingTokens: quotaCheck.remaining,
-          percentUsed: quotaCheck.percentUsed,
-        },
-        { status: 403 }
-      );
-    }
-
-    // 3. Multi-Tenant Dedicated Key Resolver
+    // 2. Multi-Tenant Dedicated Key & BYOK Resolver
     const tenantKeyRes = await resolveTenantKey({
       userId,
       userPlan,
       category: 'text',
     });
+
+    const isByok = Boolean(
+      (customApiKey && customApiKey.trim().length > 5) ||
+      (tenantKeyRes.customKey && (tenantKeyRes.source === 'campus_byok' || tenantKeyRes.customKey.trim().length > 5))
+    );
+
+    // 3. Personal Token Quota Guard (Otomatis dilewati jika user menggunakan kunci BYOK sendiri)
+    let quotaCheck: any = null;
+    if (!isByok) {
+      const estimatedCost = estimateTokens(question + (paperAbstract || ''));
+      quotaCheck = await checkPersonalQuota(userId, userPlan);
+      if (!quotaCheck.allowed) {
+        return NextResponse.json(
+          {
+            error: 'Personal monthly AI token quota exceeded.',
+            quotaExceeded: true,
+            tokensUsed: quotaCheck.used,
+            monthlyQuota: quotaCheck.limit,
+            remainingTokens: quotaCheck.remaining,
+            percentUsed: quotaCheck.percentUsed,
+          },
+          { status: 403 }
+        );
+      }
+    }
 
     // 4. Background Task Tracker (ChatGPT-Style Logger)
     let aiGenerationId: string | null = null;
@@ -412,20 +421,25 @@ export async function POST(request: NextRequest) {
       { id: 'claude', name: 'Claude 3.5 (Pro OR)', model_id: 'anthropic/claude-3.5-sonnet', is_enabled: true, is_premium: true }
     ];
 
+    const effectiveCustomKey = (customApiKey && customApiKey.trim().length > 5)
+      ? customApiKey.trim()
+      : tenantKeyRes.customKey;
+
     const getModelKey = (item: any) => {
+      if (effectiveCustomKey) return effectiveCustomKey;
       const provider = providersList.find(p => p.id === (item.provider_id || item.provider_type));
       return provider?.api_key || item.custom_api_key || defaultOpenRouterKey;
     };
 
     const chosenModel = modelsList.find(m => m.id === model || m.model_id === model);
 
-    // Gating model premium (Pro Only)
-    if (chosenModel && chosenModel.is_premium && userPlan !== 'pro') {
+    // Gating model premium (Pro Only, dilewati secara otomatis jika pengguna memakai kunci BYOK sendiri)
+    if (chosenModel && chosenModel.is_premium && userPlan !== 'pro' && !isByok) {
       return NextResponse.json(
         {
           error: language === 'en'
-            ? `The selected model (${chosenModel.name}) is reserved for Pro subscribers. Please upgrade to Pro or switch to a standard model.`
-            : `Model yang dipilih (${chosenModel.name}) khusus untuk pelanggan Pro. Silakan upgrade ke Pro atau pilih model standar.`,
+            ? `The selected model (${chosenModel.name}) is reserved for Pro subscribers or BYOK users. Please upgrade to Pro or configure your personal API key.`
+            : `Model yang dipilih (${chosenModel.name}) khusus untuk pelanggan Pro atau pengguna BYOK. Silakan upgrade ke Pro atau gunakan API key mandiri.`,
           requiresPro: true,
         },
         { status: 403 }
@@ -438,7 +452,7 @@ export async function POST(request: NextRequest) {
       if (chosenModel.id === 'gemini') {
         attempts.push({
           name: chosenModel.name,
-          run: () => callGeminiForPaperChat(prompt, chosenModel.model_id, tenantKeyRes.customKey)
+          run: () => callGeminiForPaperChat(prompt, chosenModel.model_id, effectiveCustomKey)
         });
       } else {
         const key = getModelKey(chosenModel);
@@ -450,7 +464,7 @@ export async function POST(request: NextRequest) {
     } else if (model === 'gemini' || model === 'gemini-1.5-flash') {
       attempts.push({
         name: 'Gemini Flash (Direct)',
-        run: () => callGeminiForPaperChat(prompt, 'gemini-1.5-flash', tenantKeyRes.customKey)
+        run: () => callGeminiForPaperChat(prompt, 'gemini-1.5-flash', effectiveCustomKey)
       });
     }
 
@@ -521,24 +535,25 @@ export async function POST(request: NextRequest) {
     const extractedInsights = parsedData.extractedInsights || {};
     const suggestedCitationSentence = parsedData.suggestedCitationSentence || '';
 
-    // 6. Deduct Quota Tokens
+    // 6. Deduct Quota Tokens (Hanya jika bukan menggunakan kunci BYOK sendiri)
     const actualTokens = Math.max(estimateTokens(question + answer), 20);
-    let quotaRemaining = quotaCheck.remaining;
+    let quotaRemaining = quotaCheck ? quotaCheck.remaining : undefined;
     let quotaRecord: any = null;
-    if (userId) {
-      quotaRecord = await recordPersonalTokenConsumption(userId, actualTokens);
-      quotaRemaining = quotaRecord.remaining;
+    if (userId && !isByok) {
+      quotaRecord = await recordPersonalTokenConsumption(userId, actualTokens, userPlan);
+      quotaRemaining = quotaRecord ? quotaRecord.remaining : undefined;
+    }
 
-      if (aiGenerationId) {
-        await completeAiGeneration(aiGenerationId, {
-          resultText: answer,
-          tokensConsumed: actualTokens,
-          metadata: {
-            extractedInsights,
-            suggestedCitationSentence,
-          },
-        });
-      }
+    if (userId && aiGenerationId) {
+      await completeAiGeneration(aiGenerationId, {
+        resultText: answer,
+        tokensConsumed: isByok ? 0 : actualTokens,
+        metadata: {
+          extractedInsights,
+          suggestedCitationSentence,
+          isByok,
+        },
+      });
     }
 
     // 7. Prepare new messages and persist to Supabase paper_conversations
@@ -586,10 +601,11 @@ export async function POST(request: NextRequest) {
       extractedInsights,
       suggestedCitationSentence,
       conversation: updatedConversation,
-      tokensConsumed: actualTokens,
+      tokensConsumed: isByok ? 0 : actualTokens,
       quotaRemaining,
       tokens_used: quotaRecord ? quotaRecord.used : undefined,
       monthly_quota: quotaRecord ? quotaRecord.limit : undefined,
+      is_byok: isByok,
     };
 
     // 8. Cache response (5 min TTL)
