@@ -2,6 +2,21 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.44.5] - 2026-10-22 (Writing Tools Tooltip Alignment & Native Tooltip Clashing Fix)
+
+### 🎯 Tooltip Positioning & Clean UX Polishing (`components/editor/sidebar-writing-tab.tsx`)
+- **Column-Aware Alignment**:
+  - Fixed corner displacement where tooltips were pushed too far to the right due to a translate axis mismatch.
+  - Implemented smart `align="left"` (for buttons in column 1: Improve Style, Summarize, Find Citation) and `align="right"` (for buttons in column 2: Paraphrase, Gen Abstract, Auto-Cite).
+  - Left column tooltips align flush left (`left-0 items-start`) with arrow pointer anchored at `ml-14` pointing directly into the button center.
+  - Right column tooltips align flush right (`right-0 items-end`) with arrow pointer anchored at `mr-14` pointing directly into the button center.
+- **Native Browser Tooltip Removal**:
+  - Removed redundant `title={description}` from buttons to eliminate duplicate native browser tooltip boxes.
+- **Verification**:
+  - TypeScript validation passes with 0 errors (`npx tsc --noEmit`).
+  - Vitest test suite passes all 229 unit tests across 27 test files.
+
+
 ## ⚡ [v0.44.4] - 2026-10-22 (Compact 2-Column Writing Tools Grid with Hover Tooltips and Tiered Free/Pro Access Gating)
 
 ### 🎯 Writing Tools UI & Tiered Access Upgrade (`components/editor/sidebar-writing-tab.tsx`)

@@ -5,6 +5,20 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.44.5] - 2026-10-22 (Writing Tools Tooltip Alignment & Native Tooltip Clashing Fix)
+
+### 🎯 Penyesuaian Posisi Tooltip & Pembersihan Tooltip Ganda Bawaan Browser
+- **Penyesuaian Posisi Tooltip Kolom Kiri & Kanan (`components/editor/sidebar-writing-tab.tsx`)**:
+  - Memperbaiki bug pergeseran posisi tooltip yang sebelumnya terlalu ke pojok kanan karena kekeliruan sumbu translate.
+  - Menerapkan penyesuaian kolom pintar `align="left"` (kolom 1) dan `align="right"` (kolom 2):
+    - **Kolom Kiri**: Tooltip sejajar rapi dari tepi kiri tombol (`left-0 items-start`) dengan panah lancip di `ml-14` yang mengarah tepat ke tengah tombol tanpa menabrak batas kiri sidebar.
+    - **Kolom Kanan**: Tooltip sejajar rapi dari tepi kanan tombol (`right-0 items-end`) dengan panah lancip di `mr-14` yang mengarah tepat ke tengah tombol tanpa menabrak batas kanan sidebar.
+- **Pembersihan Tooltip Native Browser**:
+  - Menghapus atribut `title={description}` bawaan HTML pada tombol, sehingga tidak ada lagi tooltip kotak putih ganda dari browser yang saling bertumpuk dengan custom tooltip.
+- **Verifikasi**:
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 229 dari 229 unit test lolos 100%.
+
 ## ⚡ [v0.44.4] - 2026-10-22 (Compact 2-Column Writing Tools Grid with Hover Tooltips and Tiered Free/Pro Access Gating)
 
 ### 🎯 Tampilan Grid 2 Kolom, Hover Tooltip & Gating Free/Pro pada Alat Penulisan

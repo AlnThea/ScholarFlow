@@ -16,6 +16,7 @@ interface CompactToolButtonProps {
   isPro?: boolean;
   isActivePro?: boolean;
   isLoading?: boolean;
+  align?: 'left' | 'right';
 }
 
 function CompactToolButton({
@@ -26,7 +27,8 @@ function CompactToolButton({
   disabled,
   isPro,
   isActivePro,
-  isLoading
+  isLoading,
+  align = 'left'
 }: CompactToolButtonProps) {
   return (
     <div className="relative group">
@@ -34,7 +36,6 @@ function CompactToolButton({
         type="button"
         onClick={onClick}
         disabled={disabled || isLoading}
-        title={description}
         className={`w-full p-2.5 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between h-[68px] relative ${
           disabled
             ? 'opacity-50 cursor-not-allowed bg-slate-50 dark:bg-slate-850 border-slate-200 dark:border-slate-800'
@@ -61,12 +62,20 @@ function CompactToolButton({
         </span>
       </button>
 
-      {/* Hover Tooltip Popup */}
-      <div className="absolute bottom-full left-1/2 -translate-y-1/2 mb-1.5 hidden group-hover:flex flex-col items-center pointer-events-none z-30 transition-all duration-150 w-48">
-        <div className="bg-slate-900 dark:bg-slate-750 text-white text-[11px] font-medium rounded-lg py-1.5 px-2.5 shadow-xl text-center leading-tight border border-slate-700">
+      {/* Hover Tooltip Popup - Aligned to avoid overflowing sidebar boundaries */}
+      <div
+        className={`absolute bottom-full mb-2 hidden group-hover:flex flex-col pointer-events-none z-30 transition-all duration-150 w-48 ${
+          align === 'right' ? 'right-0 items-end' : 'left-0 items-start'
+        }`}
+      >
+        <div className="bg-slate-900 dark:bg-slate-800 text-white text-[11px] font-medium rounded-lg py-2 px-2.5 shadow-xl leading-snug border border-slate-700 text-center w-full">
           {description}
         </div>
-        <div className="w-2 h-2 bg-slate-900 dark:bg-slate-750 rotate-45 -mt-1 border-r border-b border-slate-700" />
+        <div
+          className={`w-2.5 h-2.5 bg-slate-900 dark:bg-slate-800 rotate-45 -mt-1 border-r border-b border-slate-700 ${
+            align === 'right' ? 'mr-14' : 'ml-14'
+          }`}
+        />
       </div>
     </div>
   );
@@ -144,6 +153,7 @@ export const SidebarWritingTab = (props: any) => {
               isPro={true}
               isActivePro={isProUser}
               isLoading={isImproving}
+              align="left"
             />
 
             {/* 2. Paraphrase (FREE) */}
@@ -156,6 +166,7 @@ export const SidebarWritingTab = (props: any) => {
               isPro={false}
               isActivePro={isProUser}
               isLoading={isImproving}
+              align="right"
             />
 
             {/* 3. Summarize (FREE) */}
@@ -168,6 +179,7 @@ export const SidebarWritingTab = (props: any) => {
               isPro={false}
               isActivePro={isProUser}
               isLoading={isImproving}
+              align="left"
             />
 
             {/* 4. Generate Abstract (PRO) */}
@@ -180,6 +192,7 @@ export const SidebarWritingTab = (props: any) => {
               isPro={true}
               isActivePro={isProUser}
               isLoading={isImproving}
+              align="right"
             />
 
             {/* 5. Find Citation (FREE) */}
@@ -192,6 +205,7 @@ export const SidebarWritingTab = (props: any) => {
               isPro={false}
               isActivePro={isProUser}
               isLoading={isSearchingCitations}
+              align="left"
             />
 
             {/* 6. Auto-Suggest Citation (PRO) */}
@@ -212,6 +226,7 @@ export const SidebarWritingTab = (props: any) => {
               disabled={!selectedText.trim()}
               isPro={true}
               isActivePro={isProUser}
+              align="right"
             />
           </div>
 

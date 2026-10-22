@@ -1,5 +1,19 @@
 # ScholarFlow Changelog
 
+## v0.44.5 - Writing Tools Tooltip Alignment & Native Tooltip Clashing Fix
+
+- **Column-Aware Tooltip Alignment (`components/editor/sidebar-writing-tab.tsx`)**:
+  - Resolved issue where hover tooltips appeared displaced toward the far corner (`-translate-y-1/2` typo on horizontal axis instead of `-translate-x-1/2`).
+  - Added smart `align?: 'left' | 'right'` property to `CompactToolButton`:
+    - **Left Column Buttons**: Tooltip aligns flush to the left (`left-0 items-start`) with arrow pointer anchored at `ml-14`, pointing directly down into the button center without spilling outside the card's left margin.
+    - **Right Column Buttons**: Tooltip aligns flush to the right (`right-0 items-end`) with arrow pointer anchored at `mr-14`, pointing directly down into the button center without spilling outside the card's right margin.
+- **Removed Native Browser Tooltip Clashing (`components/editor/sidebar-writing-tab.tsx`)**:
+  - Removed redundant `title={description}` attribute from the `<button>` element to prevent the browser's default white tooltip box from overlaying and clashing with the dark floating tooltip.
+- **Verification**:
+  - TypeScript 0 errors (`npx tsc --noEmit`).
+  - 229 of 229 Vitest unit tests pass across 27 files.
+
+
 ## v0.44.4 - Compact 2-Column Writing Tools Grid with Hover Tooltips and Tiered Free/Pro Access Gating
 
 - **2-Column Grid Layout (`components/editor/sidebar-writing-tab.tsx`)**:
