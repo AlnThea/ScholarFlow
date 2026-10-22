@@ -2,6 +2,19 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.44.8] - 2026-10-22 (Unified Find Citation Flow: In-Canvas Floating Search Popup & Tab Switching Removal)
+
+### 🎯 Citation Search UX Unification (`components/editor/editor-layout.tsx`, `components/editor/editor-sidebar.tsx`)
+- **Direct Floating Citation Search from Sidebar**:
+  - Fixed UX behavior where clicking "Find Citation" in the Writing Tools sidebar forcibly switched to the `library` tab (which contains inserted bibliography collections, not search results).
+  - Unified the experience with right-click citation search: clicking "Find Citation" now opens the interactive floating `CitationMenu` popup directly on top of the highlighted sentence on the manuscript canvas.
+  - Removed unwanted tab-jumping side-effects in `EditorSidebar`.
+  - Users can view live citation candidate cards, search queries, and click "Insert Citation" without leaving their writing workspace.
+- **Verification**:
+  - TypeScript validation passes with 0 errors (`npx tsc --noEmit`).
+  - Vitest test suite passes all 229 unit tests across 27 test files.
+
+
 ## ⚡ [v0.44.7] - 2026-10-22 (Connected OpenRouter & Custom Provider Database Keys to AI Generation Routes & Added Model Selector)
 
 ### 🎯 Multi-Provider API Key Architecture & UI Model Selector (`app/api/v1/ai/`, `components/editor/sidebar-writing-tab.tsx`)

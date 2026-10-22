@@ -1,5 +1,17 @@
 # ScholarFlow Changelog
 
+## v0.44.8 - Unified Find Citation Flow: In-Canvas Floating Search Popup & Tab Switching Removal
+
+- **Unified In-Canvas Floating Citation Search (`components/editor/editor-layout.tsx`, `components/editor/editor-sidebar.tsx`)**:
+  - Resolved UX inconsistency where clicking "Find Citation" in the sidebar's Writing Tools unexpectedly switched the user to the `library` tab (which displays manuscript bibliography, not search results) instead of showing the interactive citation candidate picker.
+  - Removed obsolete `useEffect` and `setWorkspaceTab('library')` in `EditorSidebar` that forcibly kicked the user out of the `writing` tab.
+  - Implemented `handleFindCitationWithPopup` in `EditorLayout`: clicking "Find Citation" now calculates the selected text coordinates on the manuscript canvas and opens the floating `CitationMenu` popup directly over the text—matching the exact same seamless experience as right-clicking.
+  - Users can view real-time Semantic Scholar / CrossRef candidates, read paper abstracts, and click "Insert Citation" into their text without leaving the writing assistant.
+- **Verification**:
+  - TypeScript 0 errors (`npx tsc --noEmit`).
+  - 229 of 229 Vitest unit tests pass across 27 files.
+
+
 ## v0.44.7 - Connected OpenRouter & Custom Provider Database Keys to AI Generation Routes & Added Model Selector
 
 - **Connected OpenRouter API Key from Database & Providers (`app/api/v1/ai/improve/route.ts`, `app/api/v1/ai/abstract/route.ts`, `app/api/v1/ai/synthesize/route.ts`)**:

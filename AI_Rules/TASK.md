@@ -4,7 +4,7 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.44.7 (Connected OpenRouter & Custom Provider API Keys to AI Generation Routes & Added Active Model Selector, 229/229 tests passing, 0 TypeScript errors).
+v0.44.8 (Unified Find Citation Flow: Trigger Floating In-Canvas Citation Search from Sidebar Writing Tools and Removed Tab Switching, 229/229 tests passing, 0 TypeScript errors).
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
@@ -40,6 +40,7 @@ v0.44.7 (Connected OpenRouter & Custom Provider API Keys to AI Generation Routes
 - [x] Phase 61: Writing Tools Tooltip Alignment (Left/Right Column-Aware) & Native Browser Tooltip Clashing Resolution.
 - [x] Phase 62: Return to Dashboard Navigation from File Document Hub Modal (Bottom Rail & Header Actions).
 - [x] Phase 63: Connected OpenRouter & Custom Provider Database Keys to AI Generation Routes & Added Model Selector.
+- [x] Phase 64: Unified Find Citation Flow: Trigger Floating In-Canvas Citation Search from Sidebar Writing Tools and Removed Tab Switching.
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.

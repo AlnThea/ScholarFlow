@@ -717,6 +717,40 @@ export function EditorLayout({
     }
   };
 
+  const handleFindCitationWithPopup = useCallback((customQuery?: string) => {
+    const sel = typeof window !== 'undefined' ? window.getSelection() : null;
+    if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+      try {
+        const range = sel.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        if (rect.width > 0 || rect.height > 0) {
+          setBubbleMenuRect(new DOMRect(rect.left, Math.max(10, rect.top - 10), rect.width, rect.height));
+        } else {
+          const page = document.getElementById('editor-page-container');
+          if (page) {
+            const pageRect = page.getBoundingClientRect();
+            setBubbleMenuRect(new DOMRect(pageRect.left + pageRect.width / 2 - 150, pageRect.top + 160, 300, 50));
+          }
+        }
+      } catch (_) {
+        const page = document.getElementById('editor-page-container');
+        if (page) {
+          const pageRect = page.getBoundingClientRect();
+          setBubbleMenuRect(new DOMRect(pageRect.left + pageRect.width / 2 - 150, pageRect.top + 160, 300, 50));
+        }
+      }
+    } else {
+      const page = document.getElementById('editor-page-container');
+      if (page) {
+        const pageRect = page.getBoundingClientRect();
+        setBubbleMenuRect(new DOMRect(pageRect.left + pageRect.width / 2 - 150, pageRect.top + 160, 300, 50));
+      }
+    }
+    setBubbleMode('citation');
+    setShowBubbleMenu(true);
+    onFindCitation(customQuery || selectedText);
+  }, [onFindCitation, selectedText]);
+
   return (
     <ErrorBoundary>
     <div className="flex min-h-screen bg-slate-50/50">
@@ -1145,7 +1179,7 @@ export function EditorLayout({
                   onParaphrase={onParaphrase}
                   onSummarize={onSummarize}
                   onGenerateAbstract={onGenerateAbstract}
-                  onFindCitation={onFindCitation}
+                  onFindCitation={handleFindCitationWithPopup}
                   onRepeatCitationSearch={onRepeatCitationSearch}
                   onInsertCitation={onInsertCitation}
                   onInsertBibliography={onInsertBibliography}

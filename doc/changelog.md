@@ -5,6 +5,18 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.44.8] - 2026-10-22 (Unified Find Citation Flow: In-Canvas Floating Search Popup & Tab Switching Removal)
+
+### 🎯 Penyatuan Alur Cari Sitasi: Popup Mengambang di Canvas & Penghapusan Perpindahan Tab
+- **Penyelarasan Aksi Cari Sitasi Sidebar dengan Klik Kanan (`components/editor/editor-layout.tsx`, `components/editor/editor-sidebar.tsx`)**:
+  - Memperbaiki alur tombol **'Find Citation' / 'Cari Sitasi'** di sidebar penulisan yang sebelumnya berpindah secara paksa ke tab `library` (yang hanya berisi daftar daftar pustaka yang telah dimasukkan, bukan hasil pencarian sitasi).
+  - Menghapus efek samping `setWorkspaceTab('library')` pada `EditorSidebar` agar pengguna tetap berada di workspace penulisan.
+  - Menerapkan `handleFindCitationWithPopup` pada `EditorLayout`: saat tombol *Find Citation* diklik, sistem menghitung posisi teks terpilih dan langsung membuka **Popup Sitasi Mengambang (`CitationMenu`)** tepat di atas kalimat naskah—sama persis seperti saat mengeklik kanan teks.
+  - Pengguna dapat melihat kandidat jurnal dari Semantic Scholar / CrossRef secara real-time dan langsung mengeklik *Insert Citation* ke dokumen.
+- **Verifikasi**:
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 229 dari 229 unit test lolos 100%.
+
 ## ⚡ [v0.44.7] - 2026-10-22 (Connected OpenRouter & Custom Provider Database Keys to AI Generation Routes & Added Model Selector)
 
 ### 🎯 Sinkronisasi API Key OpenRouter/Custom Provider dari Database & Selector Model di Sidebar

@@ -346,14 +346,8 @@ export function EditorSidebar(props: SidebarProps) {
 
 
 
-  useEffect(() => {
-    if (citationResults.length === 0) return;
-    setWorkspaceTab('library');
-  }, [citationResults.length]);
-
   const handleFindCitation = () => {
     onFindCitation();
-    setWorkspaceTab('library');
   };
 
   return (
