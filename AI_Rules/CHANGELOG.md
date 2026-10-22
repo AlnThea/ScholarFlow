@@ -1,5 +1,16 @@
 # ScholarFlow Changelog
 
+## v0.45.0 - AI Literature Review Dual-Action Synthesis: One-Click Clipboard Copying & In-Text Canvas Insertion
+
+- **Dual Action Controls on AI Literature Review (`components/editor/sidebar-library-tab.tsx`)**:
+  - Implemented responsive action row with both `Copy` and `Insert to Doc` buttons on the synthesized literature review card.
+  - Added reactive clipboard copying (`handleCopySynthesis`) with visual feedback (`IconCopy` -> `IconCheck`, `"Copied" / "Tersalin"`).
+  - Authors can now either insert the synthesized literature review directly at their cursor position in the document canvas, or copy it to their clipboard with 1-click for pasting into Chapter 2 (Literature Review), defense slides, or research notes.
+- **Verification**:
+  - TypeScript 0 errors (`npx tsc --noEmit`).
+  - 229 of 229 Vitest unit tests pass across 27 files.
+
+
 ## v0.44.9 - Smart Abstract Section Insertion, One-Click Clipboard Copying & 1-Click Auto-Cite AI Best Match Injection
 
 - **Smart Abstract Section Insertion (`lib/editor/methods/block-methods.ts`, `lib/editor/editor-tools.ts`, `hooks/use-editor-ai.ts`)**:

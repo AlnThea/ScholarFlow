@@ -2,6 +2,18 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.45.0] - 2026-10-22 (AI Literature Review Dual-Action Synthesis: One-Click Clipboard Copying & In-Text Canvas Insertion)
+
+### 🎯 Literature Review Synthesis UX Expansion (`components/editor/sidebar-library-tab.tsx`)
+- **Dual Action Button Row on Synthesis Card**:
+  - Added a clean 2-button action row (`Copy` + `Insert to Doc`) under the generated synthesis result card.
+  - Implemented 1-click clipboard copying (`handleCopySynthesis`) with reactive state (`IconCopy` -> `IconCheck`, `"Copied" / "Tersalin"`).
+  - Users can now choose to either insert the literature review directly at their active canvas cursor position, or copy the formatted synthesis to clipboard for pasting into other sections, slides, or external documents.
+- **Verification**:
+  - TypeScript validation passes with 0 errors (`npx tsc --noEmit`).
+  - Vitest test suite passes all 229 unit tests across 27 test files.
+
+
 ## ⚡ [v0.44.9] - 2026-10-22 (Smart Abstract Section Insertion, One-Click Clipboard Copying & 1-Click Auto-Cite AI Best Match Injection)
 
 ### 🎯 Smart Abstract Section Insertion & Clipboard Copy (`lib/editor/methods/block-methods.ts`, `lib/editor/editor-tools.ts`, `hooks/use-editor-ai.ts`, `components/editor/sidebar-writing-tab.tsx`)

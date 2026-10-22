@@ -42,6 +42,14 @@ export const SidebarLibraryTab = (props: any) => {
 
   const [activeChatPaper, setActiveChatPaper] = useState<any>(null);
   const [isPaperChatOpen, setIsPaperChatOpen] = useState(false);
+  const [isCopiedSynthesis, setIsCopiedSynthesis] = useState(false);
+
+  const handleCopySynthesis = () => {
+    if (!synthesizedText) return;
+    navigator.clipboard.writeText(synthesizedText);
+    setIsCopiedSynthesis(true);
+    setTimeout(() => setIsCopiedSynthesis(false), 2000);
+  };
 
   // Phase 28: Reference File Importer
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -181,13 +189,35 @@ export const SidebarLibraryTab = (props: any) => {
                           {synthesizeDisclaimer && (
                             <span className="text-[8px] text-slate-400 italic">⚠️ {synthesizeDisclaimer}</span>
                           )}
-                          <button
-                            type="button"
-                            onClick={() => onInsertSynthesizedText(synthesizedText)}
-                            className="mt-1 w-full py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-bold rounded shadow-sm transition cursor-pointer"
-                          >
-                            {isEn ? 'Insert into Document' : 'Sisipkan ke Dokumen'}
-                          </button>
+                          <div className="mt-1 flex items-center gap-1.5 w-full">
+                            <button
+                              type="button"
+                              onClick={handleCopySynthesis}
+                              title={isEn ? "Copy to clipboard" : "Salin ke clipboard"}
+                              className="flex-1 py-1 px-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-[10px] font-bold rounded shadow-xs transition cursor-pointer flex items-center justify-center gap-1"
+                            >
+                              {isCopiedSynthesis ? (
+                                <>
+                                  <IconCheck className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                                  <span>{isEn ? 'Copied' : 'Tersalin'}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <IconCopy className="h-3 w-3" />
+                                  <span>{isEn ? 'Copy' : 'Salin'}</span>
+                                </>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => onInsertSynthesizedText(synthesizedText)}
+                              title={isEn ? "Insert into document canvas" : "Sisipkan ke kanvas dokumen"}
+                              className="flex-1 py-1 px-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded shadow-xs transition cursor-pointer flex items-center justify-center gap-1"
+                            >
+                              <IconCheck className="h-3 w-3" />
+                              <span>{isEn ? 'Insert to Doc' : 'Sisipkan ke Naskah'}</span>
+                            </button>
+                          </div>
                         </div>
                       )}
 

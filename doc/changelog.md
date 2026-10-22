@@ -5,6 +5,17 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.45.0] - 2026-10-22 (AI Literature Review Dual-Action Synthesis: One-Click Clipboard Copying & In-Text Canvas Insertion)
+
+### 🎯 Pilihan Aksi Ganda pada AI Literature Review: Salin 1-Klik & Sisipkan ke Naskah
+- **Penambahan Tombol Salin & Sisipkan Berdampingan (`components/editor/sidebar-library-tab.tsx`)**:
+  - Menghadirkan baris tombol aksi ganda (*Copy* & *Insert to Doc*) pada kartu hasil sintesis tinjauan pustaka di tab *Citations & Library*.
+  - Mengimplementasikan fungsi salin 1-klik (`handleCopySynthesis`) dengan feedback visual instan (`IconCopy` → `IconCheck`, teks "Copied" / "Tersalin").
+  - Pengguna memiliki fleksibilitas penuh: dapat langsung menyisipkan hasil sintesis ke posisi kursor di naskah dokumen, atau menyalinnya ke clipboard untuk ditempelkan ke Bab 2, catatan riset, maupun slide presentasi.
+- **Verifikasi**:
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 229 dari 229 unit test lolos 100%.
+
 ## ⚡ [v0.44.9] - 2026-10-22 (Smart Abstract Section Insertion, One-Click Clipboard Copying & 1-Click Auto-Cite AI Best Match Injection)
 
 ### 🎯 Penyisipan Cerdas Abstrak di Awal Dokumen, Salin Clipboard 1-Klik & Auto-Cite Instan
