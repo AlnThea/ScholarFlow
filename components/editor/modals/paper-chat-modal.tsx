@@ -43,6 +43,7 @@ export interface PaperChatModalProps {
   language?: 'en' | 'id';
   userId?: string;
   userPlan?: string;
+  selectedAiModel?: string;
   onInsertToEditor?: (text: string, referenceId?: string, label?: string) => void;
   onShowToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
@@ -54,6 +55,7 @@ export function PaperChatModal({
   language = 'id',
   userId,
   userPlan = 'free',
+  selectedAiModel,
   onInsertToEditor,
   onShowToast,
 }: PaperChatModalProps) {
@@ -204,7 +206,8 @@ export function PaperChatModal({
           citationLabel: labelText,
           question: textToSend,
           conversationHistory: messages,
-          language: isEn ? 'en' : 'id',
+          model: selectedAiModel || 'gemini',
+          language: (/[\b](yang|dan|berapa|apa|bagaimana|adalah|di|ke|pada|untuk|dari|sampel|metode|penelitian)[\b]/i.test(textToSend)) ? 'id' : (isEn ? 'en' : 'id'),
           userId,
           userPlan,
         }),

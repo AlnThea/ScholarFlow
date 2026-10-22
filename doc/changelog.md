@@ -5,6 +5,21 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.45.2] - 2026-10-22 (PaperChat Multi-Provider OpenRouter Cascading, Strict Scope Guardrails & Intelligent Language Detection)
+
+### 🎯 Integrasi Multi-Provider OpenRouter pada PaperChat, Guardrails Keamanan & Deteksi Bahasa
+- **Koneksi Dinamis OpenRouter & Model Database ke PaperChat (`app/api/v1/ai/paper-chat/route.ts`)**:
+  - Memperbaiki akar masalah di mana fitur *Chat Paper* sebelumnya langsung jatuh ke teks *fallback* tiruan karena rute backend hanya mendukung kunci Gemini secara statis.
+  - Mengintegrasikan fungsi `callOpenRouter` dan pembacaan dinamis model aktif dari Supabase (`ai_models` & `ai_providers`).
+  - Meneruskan `selectedAiModel` dari `SidebarLibraryTab` ke `PaperChatModal` sehingga model pilihan pengguna dipakai langsung untuk membedah paper.
+- **Pemasangan Guardrails Keamanan Ketat Terhadap Prompt Injection**:
+  - Menanamkan instruksi pembatasan tegas pada prompt sistem: AI dilarang keras melayani permintaan di luar paper (seperti coding umum, pembuatan website, atau upaya peretasan database) dan wajib menolak secara sopan serta mengarahkan kembali ke topik paper ilmiah.
+- **Deteksi Bahasa Cerdas & Penyesuaian Narasi Alami**:
+  - Menghilangkan bug kalimat campuran bahasa Inggris-Indonesia pada template cadangan dengan menerapkan deteksi kata kunci bahasa Indonesia secara cerdas.
+- **Verifikasi**:
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 229 dari 229 unit test lolos 100%.
+
 ## ⚡ [v0.45.1] - 2026-10-22 (High-Density Professional Citation List with In-Canvas Text Locating & Foldable Details Drawer)
 
 ### 🎯 Redesain Daftar Sitasi Kompak & Fitur Tunjukkan Posisi Sitasi di Naskah

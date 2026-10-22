@@ -81,6 +81,11 @@ YOUR INSTRUCTIONS:
    - Study limitations or threats to validity
    - Theoretical or practical implications
 3. Also generate a concise, formal academic synthesis sentence (1-2 sentences) citing this paper that the researcher can directly insert into their academic paper or literature review.
+4. CRITICAL SAFETY & SCOPE GUARDRAIL:
+   - You are strictly an academic literature research assistant analyzing this specific research paper.
+   - You do NOT have any access to the application database, user accounts, system commands, or external networks.
+   - If the researcher asks you to write unrelated software, build websites, provide code unrelated to the paper, perform system commands, or discuss non-academic off-topic matters, POLITELY REFUSE in formal academic tone and steer back to the research paper:
+     e.g. "I am designed specifically to analyze and synthesize this academic paper. Please ask questions regarding this study's methodology, data, findings, or theoretical framework."
 
 OUTPUT FORMAT:
 You MUST reply strictly in JSON format matching this schema:
@@ -125,6 +130,11 @@ PETUNJUK JAWABAN:
    - Batasan riset (limitations) atau ancaman validitas
    - Implikasi teoritis dan praktis
 3. Sertakan pula 1 kalimat sintesis formal ilmiah yang siap disalin/disisipkan langsung ke dalam naskah skripsi/jurnal lengkap dengan rujukan sitasi [${labelStr}].
+4. ATURAN PEMBATASAN & KEAMANAN KETAT (CRITICAL GUARDRAIL):
+   - Anda adalah asisten analisis paper ilmiah akademik khusus.
+   - Anda TIDAK MEMILIKI akses ke database aplikasi, kredensial pengguna, file server, maupun eksekusi perintah sistem.
+   - Jika pengguna meminta Anda membuat kode di luar konteks paper (seperti membuat website, coding game/aplikasi, hacking, resep masakan, dll) atau hal di luar lingkup karya ilmiah ini, TOLAK SECARA SOPAN DAN TEGAS:
+     "Mohon maaf, saya dirancang khusus sebagai asisten riset untuk membedah dan menganalisis paper ilmiah ini. Silakan ajukan pertanyaan seputar metodologi, data sampel, atau temuan dari riset ini."
 
 FORMAT OUTPUT:
 Anda WAJIB menjawab HANYA dalam format JSON yang valid persis seperti ini:
@@ -194,6 +204,46 @@ async function callGeminiForPaperChat(
 }
 
 /**
+ * Panggilan terpadu ke API OpenRouter
+ */
+async function callOpenRouter(prompt: string, model: string, customApiKey?: string): Promise<string> {
+  const apiKey = customApiKey || process.env.OPENROUTER_API_KEY;
+  if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set');
+
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://scholarflow.app',
+      'X-Title': 'ScholarFlow',
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: [
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.25,
+      response_format: { type: 'json_object' }
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`OpenRouter API error (${response.status}): ${errorText}`);
+  }
+
+  const data = await response.json();
+  const text = data?.choices?.[0]?.message?.content?.trim();
+
+  if (!text) {
+    throw new Error('OpenRouter returned an empty response.');
+  }
+
+  return text;
+}
+
+/**
  * Fallback response if AI call fails
  */
 function buildFallbackResponse(params: {
@@ -204,26 +254,27 @@ function buildFallbackResponse(params: {
   question: string;
   language: 'en' | 'id';
 }) {
-  const isEn = params.language === 'en';
-  const authorLead = params.paperAuthors && params.paperAuthors[0] ? params.paperAuthors[0] : 'The authors';
+  const isQuestionIndonesian = /[\b](yang|dan|berapa|apa|bagaimana|adalah|di|ke|pada|untuk|dari|sampel|metode|penelitian)[\b]/i.test(params.question);
+  const isEn = params.language === 'en' && !isQuestionIndonesian;
+  const authorLead = params.paperAuthors && params.paperAuthors[0] ? params.paperAuthors[0] : (isEn ? 'The authors' : 'Penulis');
   const yr = params.paperYear || (isEn ? 'n.d.' : 't.t.');
   const label = params.citationLabel || 'Ref';
 
   if (isEn) {
     return {
-      answer: `Based on the literature record for "${params.paperTitle}", ${authorLead} et al. (${yr}) address relevant inquiries regarding ${params.question.toLowerCase().replace(/[?.]/g, '')}. While the full text is being indexed, the core contribution emphasizes modern methodologies and domain-specific empirical evidence.`,
+      answer: `Based on the literature record for "${params.paperTitle}", ${authorLead} et al. (${yr}) address key methodological approaches and empirical evidence relevant to your inquiry. Please ensure an active AI model (such as OpenRouter or Gemini) is connected for in-depth full-text extraction.`,
       extractedInsights: {
         methodology: 'Empirical quantitative / qualitative assessment as specified in the paper.',
         sampleSize: 'Documented within primary dataset.',
         keyFindings: `Primary contributions articulated by ${authorLead} et al. (${yr}).`,
         limitations: 'Subject to domain scope and study boundaries.',
       },
-      suggestedCitationSentence: `According to ${authorLead} et al. (${yr}), research findings indicate significant implications for scientific inquiry [${label}].`,
+      suggestedCitationSentence: `According to ${authorLead} et al. (${yr}), empirical findings provide crucial theoretical and practical implications [${label}].`,
     };
   }
 
   return {
-    answer: `Berdasarkan catatan literatur untuk "${params.paperTitle}", ${authorLead} et al. (${yr}) mengkaji aspek yang berkaitan dengan ${params.question.toLowerCase().replace(/[?.]/g, '')}. Sembari naskah lengkap diindeks lebih lanjut, fokus utama karya ini memberikan bukti empiris dan metodologis yang relevan dengan topik tersebut.`,
+    answer: `Berdasarkan catatan literatur untuk paper "${params.paperTitle}", ${authorLead} et al. (${yr}) mengkaji aspek metodologis dan data empiris terkait topik penelitian ini. Untuk membedah isi teks secara mendalam, pastikan model AI (seperti OpenRouter atau Gemini) sudah terhubung aktif.`,
     extractedInsights: {
       methodology: 'Pendekatan empiris terstruktur sesuai bidang kajian.',
       sampleSize: 'Didokumentasikan pada dataset primer riset.',
@@ -333,26 +384,115 @@ export async function POST(request: NextRequest) {
       language: language === 'en' ? 'en' : 'id',
     });
 
+    // 5. Query models & providers from DB
+    const dbClient = supabaseAdmin || supabase;
+    const { data: dbModels, error: dbError } = await dbClient
+      .from('ai_models')
+      .select('*');
+    const { data: dbProviders } = await dbClient
+      .from('ai_providers')
+      .select('*');
+
+    if (dbError) {
+      console.warn('[PaperChat] Error loading dynamic models from DB:', dbError.message);
+    }
+
+    const providersList: any[] = dbProviders || [
+      { id: 'gemini', name: 'Google Gemini Direct', type: 'gemini' },
+      { id: 'openrouter', name: 'OpenRouter API', type: 'openrouter' },
+    ];
+
+    const openRouterProvider = providersList.find(p => p.id === 'openrouter' || p.type === 'openrouter');
+    const defaultOpenRouterKey = openRouterProvider?.api_key || process.env.OPENROUTER_API_KEY;
+
+    const modelsList = dbModels || [
+      { id: 'gemini', name: 'Gemini Flash (Direct)', model_id: 'gemini-1.5-flash', is_enabled: true, is_premium: false },
+      { id: 'llama3', name: 'Llama 3 (Free OR)', model_id: 'meta-llama/llama-3-8b-instruct:free', is_enabled: true, is_premium: false },
+      { id: 'gemma2', name: 'Gemma 2 (Free OR)', model_id: 'google/gemma-2-9b-it:free', is_enabled: true, is_premium: false },
+      { id: 'claude', name: 'Claude 3.5 (Pro OR)', model_id: 'anthropic/claude-3.5-sonnet', is_enabled: true, is_premium: true }
+    ];
+
+    const getModelKey = (item: any) => {
+      const provider = providersList.find(p => p.id === (item.provider_id || item.provider_type));
+      return provider?.api_key || item.custom_api_key || defaultOpenRouterKey;
+    };
+
+    const chosenModel = modelsList.find(m => m.id === model || m.model_id === model);
+    const attempts: { name: string; run: () => Promise<string> }[] = [];
+
+    if (chosenModel && chosenModel.is_enabled) {
+      if (chosenModel.id === 'gemini') {
+        attempts.push({
+          name: chosenModel.name,
+          run: () => callGeminiForPaperChat(prompt, chosenModel.model_id, tenantKeyRes.customKey)
+        });
+      } else {
+        const key = getModelKey(chosenModel);
+        attempts.push({
+          name: chosenModel.name,
+          run: () => callOpenRouter(prompt, chosenModel.model_id, key)
+        });
+      }
+    } else if (model === 'gemini' || model === 'gemini-1.5-flash') {
+      attempts.push({
+        name: 'Gemini Flash (Direct)',
+        run: () => callGeminiForPaperChat(prompt, 'gemini-1.5-flash', tenantKeyRes.customKey)
+      });
+    }
+
+    // Masukkan model-model aktif non-premium lainnya sebagai antrean failover otomatis
+    modelsList.forEach(item => {
+      const isAlreadyTried = attempts.some(a => a.name.includes(item.name));
+      if (item.is_enabled && !item.is_premium && !isAlreadyTried) {
+        if (item.id === 'gemini') {
+          attempts.push({
+            name: `${item.name} (Fallback)`,
+            run: () => callGeminiForPaperChat(prompt, item.model_id, tenantKeyRes.customKey)
+          });
+        } else {
+          const key = getModelKey(item);
+          attempts.push({
+            name: `${item.name} (Fallback)`,
+            run: () => callOpenRouter(prompt, item.model_id, key)
+          });
+        }
+      }
+    });
+
+    if (defaultOpenRouterKey) {
+      const hasMiniTried = attempts.some(a => a.name.includes('gpt-4o-mini'));
+      if (!hasMiniTried) {
+        attempts.push({
+          name: 'GPT-4o-mini (OpenRouter Fallback)',
+          run: () => callOpenRouter(prompt, 'openai/gpt-4o-mini', defaultOpenRouterKey)
+        });
+      }
+    }
+
     let rawOutput = '';
     let parsedData: any = null;
 
-    try {
-      rawOutput = await callGeminiForPaperChat(
-        prompt,
-        'gemini-1.5-flash',
-        tenantKeyRes?.customKey || undefined
-      );
+    for (let i = 0; i < attempts.length; i++) {
+      try {
+        rawOutput = await attempts[i].run();
 
-      // Clean markdown JSON fences if present
-      const cleaned = rawOutput
-        .replace(/^```json\s*/i, '')
-        .replace(/^```\s*/i, '')
-        .replace(/\s*```$/, '')
-        .trim();
+        const cleaned = rawOutput
+          .replace(/^```json\s*/i, '')
+          .replace(/^```\s*/i, '')
+          .replace(/\s*```$/, '')
+          .trim();
 
-      parsedData = JSON.parse(cleaned);
-    } catch (aiError) {
-      console.warn('[PaperChat] Primary AI generation failed, using structured fallback:', aiError);
+        parsedData = JSON.parse(cleaned);
+        if (parsedData?.answer) {
+          break;
+        }
+      } catch (err: any) {
+        console.warn(`[PaperChat] Attempt ${i + 1} (${attempts[i].name}) failed:`, err.message);
+      }
+    }
+
+    if (!parsedData || !parsedData.answer) {
+      console.warn('[PaperChat] All AI model attempts failed, using structured fallback.');
       parsedData = buildFallbackResponse({
         paperTitle: paperTitle || 'Academic Paper',
         paperAuthors,

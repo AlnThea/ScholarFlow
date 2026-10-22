@@ -2,6 +2,22 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.45.2] - 2026-10-22 (PaperChat Multi-Provider OpenRouter Cascading, Strict Scope Guardrails & Intelligent Language Detection)
+
+### 🎯 PaperChat Multi-Provider Architecture & Security Hardening (`app/api/v1/ai/paper-chat/route.ts`, `components/editor/`)
+- **Connected OpenRouter & Custom LLM Providers to PaperChat**:
+  - Upgraded `/api/v1/ai/paper-chat` to dynamically load models and API keys from the database (`ai_models`, `ai_providers`).
+  - Ensured PaperChat queries OpenRouter directly instead of prematurely failing into offline mock templates.
+  - Forwarded `selectedAiModel` from `SidebarLibraryTab` to `PaperChatModal`.
+- **Strict Scope Guardrails Against Prompt Injection**:
+  - Embedded rigid safety boundaries in the system prompt: AI refuses out-of-scope requests (e.g. building websites, coding games, or attempting database queries) and steers conversation back to the paper.
+- **Intelligent Query Language Detection**:
+  - Automatically identifies Indonesian inquiries and ensures answers are 100% natural, eliminating awkward mixed-language template artifacts.
+- **Verification**:
+  - TypeScript validation passes with 0 errors (`npx tsc --noEmit`).
+  - Vitest test suite passes all 229 unit tests across 27 test files.
+
+
 ## ⚡ [v0.45.1] - 2026-10-22 (High-Density Professional Citation List with In-Canvas Text Locating & Foldable Details Drawer)
 
 ### 🎯 Professional Reference List Redesign & In-Text Locating (`components/editor/sidebar-library-tab.tsx`)

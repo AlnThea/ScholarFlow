@@ -533,6 +533,7 @@ export const SidebarLibraryTab = (props: any) => {
           language={isEn ? 'en' : 'id'}
           userId={user?.id}
           userPlan={activePlanId || 'free'}
+          selectedAiModel={selectedAiModel}
           onInsertToEditor={onInsertCitationText || onInsertSynthesizedText}
         />
       )}

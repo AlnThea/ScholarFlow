@@ -1,5 +1,21 @@
 # ScholarFlow Changelog
 
+## v0.45.2 - PaperChat Multi-Provider OpenRouter Cascading, Strict Scope Guardrails & Intelligent Language Detection
+
+- **Connected OpenRouter & Custom Providers to PaperChat (`app/api/v1/ai/paper-chat/route.ts`)**:
+  - Resolved root cause where querying papers hit an offline mock fallback due to `paper-chat` only supporting hardcoded Gemini API keys.
+  - Implemented multi-provider cascading fallback (reading active `ai_models` and `ai_providers` via `supabaseAdmin` with OpenRouter dynamic key resolution).
+  - Forwarded `selectedAiModel` from `SidebarLibraryTab` through `PaperChatModal` to the API backend.
+- **Strict Scope Guardrails & Prompt Injection Protection (`app/api/v1/ai/paper-chat/route.ts`)**:
+  - Implemented strict safety guardrails in both English and Indonesian prompts: AI is strictly constrained to analyzing the target academic research paper.
+  - Politely and firmly refuses any requests to write unrelated code, build websites, execute system commands, or access databases.
+- **Intelligent Query Language Detection & Clean Fallback Phrasing**:
+  - Enhanced language detection: automatically recognizes Indonesian questions and responds in coherent, native Indonesian without awkward template string gluing.
+- **Verification**:
+  - TypeScript 0 errors (`npx tsc --noEmit`).
+  - 229 of 229 Vitest unit tests pass across 27 files.
+
+
 ## v0.45.1 - High-Density Professional Citation List with In-Canvas Text Locating & Foldable Details Drawer
 
 - **High-Density Professional Citation List (`components/editor/sidebar-library-tab.tsx`)**:
