@@ -1,6 +1,7 @@
 // app/api/v1/ai/synthesize/route.ts
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { checkPersonalQuota, recordPersonalTokenConsumption, estimateTokens } from '@/lib/ai/token-quota';
 import { generateIdempotencyKey, getIdempotentAiResponse, setIdempotentAiResponse } from '@/lib/ai/idempotency-cache';
 import { createPendingAiGeneration, completeAiGeneration, failAiGeneration } from '@/lib/ai/server-ai-logger';
@@ -133,8 +134,8 @@ async function callDirectGemini(
 /**
  * Panggilan terpadu ke API OpenRouter
  */
-async function callOpenRouter(prompt: string, model: string): Promise<string> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
+async function callOpenRouter(prompt: string, model: string, customApiKey?: string): Promise<string> {
+  const apiKey = customApiKey || process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set');
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -233,14 +234,26 @@ export async function POST(request: Request) {
       });
     }
 
-    // 1. Ambil seluruh model AI dari database Supabase (untuk fallback dinamis)
-    const { data: dbModels, error: dbError } = await supabase
+    // 1. Ambil seluruh model & provider AI dari database Supabase (untuk fallback dinamis)
+    const dbClient = supabaseAdmin || supabase;
+    const { data: dbModels, error: dbError } = await dbClient
       .from('ai_models')
+      .select('*');
+    const { data: dbProviders } = await dbClient
+      .from('ai_providers')
       .select('*');
 
     if (dbError) {
       console.warn('Error loading dynamic models from DB for synthesize, using fallback list:', dbError.message);
     }
+
+    const providersList: any[] = dbProviders || [
+      { id: 'gemini', name: 'Google Gemini Direct', type: 'gemini' },
+      { id: 'openrouter', name: 'OpenRouter API', type: 'openrouter' },
+    ];
+
+    const openRouterProvider = providersList.find(p => p.id === 'openrouter' || p.type === 'openrouter');
+    const defaultOpenRouterKey = openRouterProvider?.api_key || process.env.OPENROUTER_API_KEY;
 
     const modelsList = dbModels || [
       { id: 'gemini', name: 'Gemini Flash (Direct)', model_id: 'gemini-1.5-flash', is_enabled: true, is_premium: false },
@@ -248,6 +261,11 @@ export async function POST(request: Request) {
       { id: 'gemma2', name: 'Gemma 2 (Free OR)', model_id: 'google/gemma-2-9b-it:free', is_enabled: true, is_premium: false },
       { id: 'claude', name: 'Claude 3.5 (Pro OR)', model_id: 'anthropic/claude-3.5-sonnet', is_enabled: true, is_premium: true }
     ];
+
+    const getModelKey = (item: any) => {
+      const provider = providersList.find(p => p.id === (item.provider_id || item.provider_type));
+      return provider?.api_key || item.custom_api_key || defaultOpenRouterKey;
+    };
 
     // 2. Cari model pilihan utama user
     const chosenModel = modelsList.find(m => m.id === model);
@@ -260,9 +278,10 @@ export async function POST(request: Request) {
           run: () => callDirectGemini(prompt, chosenModel.model_id, tenantKeyRes.customKey, tenantKeyRes.category)
         });
       } else {
+        const key = getModelKey(chosenModel);
         attempts.push({
           name: chosenModel.name,
-          run: () => callOpenRouter(prompt, chosenModel.model_id)
+          run: () => callOpenRouter(prompt, chosenModel.model_id, key)
         });
       }
     } else if (model === 'gemini') {
@@ -282,9 +301,10 @@ export async function POST(request: Request) {
             run: () => callDirectGemini(prompt, item.model_id, tenantKeyRes.customKey, tenantKeyRes.category)
           });
         } else {
+          const key = getModelKey(item);
           attempts.push({
             name: `${item.name} (Fallback)`,
-            run: () => callOpenRouter(prompt, item.model_id)
+            run: () => callOpenRouter(prompt, item.model_id, key)
           });
         }
       }
@@ -296,7 +316,7 @@ export async function POST(request: Request) {
     if (!isMiniTried && !hasMiniInList) {
       attempts.push({
         name: 'GPT-4o-mini (Paid Fallback)',
-        run: () => callOpenRouter(prompt, 'openai/gpt-4o-mini')
+        run: () => callOpenRouter(prompt, 'openai/gpt-4o-mini', defaultOpenRouterKey)
       });
     }
 

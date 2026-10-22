@@ -3,6 +3,7 @@ export const runtime = 'edge';
 
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { defaultAiRateLimiter } from '@/lib/ai/rate-limiter';
 import { checkPersonalQuota, recordPersonalTokenConsumption, estimateTokens } from '@/lib/ai/token-quota';
 import { generateIdempotencyKey, getIdempotentAiResponse, setIdempotentAiResponse } from '@/lib/ai/idempotency-cache';
@@ -163,8 +164,8 @@ async function callDirectGemini(
 /**
  * OpenRouter API call
  */
-async function callOpenRouter(prompt: string, model: string): Promise<string> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
+async function callOpenRouter(prompt: string, model: string, customApiKey?: string): Promise<string> {
+  const apiKey = customApiKey || process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set');
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -182,7 +183,10 @@ async function callOpenRouter(prompt: string, model: string): Promise<string> {
     }),
   });
 
-  if (!response.ok) throw new Error(`OpenRouter status ${response.status}`);
+  if (!response.ok) {
+    const errText = await response.text().catch(() => '');
+    throw new Error(`OpenRouter status ${response.status}: ${errText}`);
+  }
 
   const result = await response.json();
   const text = result?.choices?.[0]?.message?.content?.trim();
@@ -382,9 +386,10 @@ export async function POST(request: Request) {
       }
     }
 
-    // 2. Dynamic model cascading list & provider resolution
-    const { data: dbModels } = await supabase.from('ai_models').select('*');
-    const { data: dbProviders } = await supabase.from('ai_providers').select('*');
+    // 2. Dynamic model cascading list & provider resolution (Using supabaseAdmin to bypass RLS)
+    const dbClient = supabaseAdmin || supabase;
+    const { data: dbModels } = await dbClient.from('ai_models').select('*');
+    const { data: dbProviders } = await dbClient.from('ai_providers').select('*');
 
     const providersList: any[] = dbProviders || [
       { id: 'gemini', name: 'Google Gemini Direct', type: 'gemini' },
@@ -401,6 +406,9 @@ export async function POST(request: Request) {
       { id: 'claude', name: 'Claude 3.5 (Pro OR)', model_id: 'anthropic/claude-3.5-sonnet', provider_id: 'openrouter', is_enabled: true, is_premium: true, provider_type: 'openrouter' }
     ];
 
+    const openRouterProvider = providersList.find(p => p.id === 'openrouter' || p.type === 'openrouter');
+    const defaultOpenRouterKey = openRouterProvider?.api_key || process.env.OPENROUTER_API_KEY;
+
     const chosenModel = modelsList.find(m => m.id === model);
     const attempts: { name: string; run: () => Promise<string> }[] = [];
 
@@ -408,7 +416,7 @@ export async function POST(request: Request) {
       const provider = providersList.find(p => p.id === (item.provider_id || item.provider_type));
       const providerType = provider?.type || item.provider_type;
       const baseUrl = provider?.base_url || item.base_url;
-      const apiKey = provider?.api_key || item.custom_api_key;
+      const apiKey = provider?.api_key || item.custom_api_key || (providerType === 'openrouter' || !providerType ? defaultOpenRouterKey : undefined);
 
       if (providerType === 'huggingface') {
         return () => callHuggingFace(prompt, item.model_id, apiKey, baseUrl);
@@ -421,7 +429,7 @@ export async function POST(request: Request) {
       } else if (providerType === 'gemini' || item.id === 'gemini' || item.model_id.includes('gemini')) {
         return () => callDirectGemini(prompt, item.model_id, apiKey || tenantKeyRes.customKey, tenantKeyRes.category);
       } else {
-        return () => callOpenRouter(prompt, item.model_id);
+        return () => callOpenRouter(prompt, item.model_id, apiKey || defaultOpenRouterKey);
       }
     };
 

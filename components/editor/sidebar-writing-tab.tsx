@@ -87,7 +87,8 @@ export const SidebarWritingTab = (props: any) => {
     citationCount, bibliographyEntries, improvedText, isImproving, isSearchingCitations,
     aiError, citationError, citationNote, onApplyImprovedText, onImproveWriting,
     onParaphrase, onSummarize, onGenerateAbstract, onFindCitation, onRepeatCitationSearch,
-    setIsHistoryModalOpen, isApplied, t, ActionButton
+    setIsHistoryModalOpen, isApplied, t, ActionButton,
+    selectedAiModel, setSelectedAiModel, aiModels
   } = props;
 
   const hasImprovedText = improvedText !== null;
@@ -140,6 +141,27 @@ export const SidebarWritingTab = (props: any) => {
               compact={false}
             />
           </div>
+
+          {/* Active AI Model Selector */}
+          {aiModels && aiModels.length > 0 && setSelectedAiModel && (
+            <div className="mb-3 flex items-center justify-between gap-2 rounded-lg border border-line dark:border-slate-700 bg-slate-50/70 dark:bg-slate-850 p-2 text-xs">
+              <span className="font-semibold text-slate-600 dark:text-slate-300 shrink-0 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                {isEn ? 'Model:' : 'Model:'}
+              </span>
+              <select
+                value={selectedAiModel || 'gemini'}
+                onChange={(e) => setSelectedAiModel(e.target.value)}
+                className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-2 py-1 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer truncate"
+              >
+                {aiModels.filter((m: any) => m.is_enabled).map((m: any) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name} {m.is_premium ? '(PRO)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* 2-Column Responsive Tools Grid */}
           <div className="grid grid-cols-2 gap-2">

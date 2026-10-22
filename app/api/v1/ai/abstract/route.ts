@@ -3,6 +3,7 @@ export const runtime = 'edge';
 
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { defaultAiRateLimiter } from '@/lib/ai/rate-limiter';
 import { checkPersonalQuota, recordPersonalTokenConsumption, estimateTokens } from '@/lib/ai/token-quota';
 import { geminiKeyPool } from '@/lib/ai/gemini-key-pool';
@@ -103,8 +104,8 @@ async function callDirectGemini(
   return result;
 }
 
-async function callOpenRouter(prompt: string, model: string): Promise<string> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
+async function callOpenRouter(prompt: string, model: string, customApiKey?: string): Promise<string> {
+  const apiKey = customApiKey || process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set');
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -122,7 +123,10 @@ async function callOpenRouter(prompt: string, model: string): Promise<string> {
     }),
   });
 
-  if (!response.ok) throw new Error(`OpenRouter status ${response.status}`);
+  if (!response.ok) {
+    const errText = await response.text().catch(() => '');
+    throw new Error(`OpenRouter status ${response.status}: ${errText}`);
+  }
 
   const result = await response.json();
   const text = result?.choices?.[0]?.message?.content?.trim();
@@ -233,7 +237,17 @@ export async function POST(request: Request) {
       }
     }
 
-    const { data: dbModels } = await supabase.from('ai_models').select('*');
+    const dbClient = supabaseAdmin || supabase;
+    const { data: dbModels } = await dbClient.from('ai_models').select('*');
+    const { data: dbProviders } = await dbClient.from('ai_providers').select('*');
+
+    const providersList: any[] = dbProviders || [
+      { id: 'gemini', name: 'Google Gemini Direct', type: 'gemini' },
+      { id: 'openrouter', name: 'OpenRouter API', type: 'openrouter' },
+    ];
+
+    const openRouterProvider = providersList.find(p => p.id === 'openrouter' || p.type === 'openrouter');
+    const defaultOpenRouterKey = openRouterProvider?.api_key || process.env.OPENROUTER_API_KEY;
 
     const modelsList = dbModels || [
       { id: 'gemini', name: 'Gemini 2.0 Flash (Direct)', model_id: 'gemini-2.0-flash', is_enabled: true, is_premium: false },
@@ -245,6 +259,11 @@ export async function POST(request: Request) {
     const chosenModel = modelsList.find(m => m.id === model);
     const attempts: { name: string; run: () => Promise<string> }[] = [];
 
+    const getModelKey = (item: any) => {
+      const provider = providersList.find(p => p.id === (item.provider_id || item.provider_type));
+      return provider?.api_key || item.custom_api_key || defaultOpenRouterKey;
+    };
+
     if (chosenModel && chosenModel.is_enabled) {
       if (chosenModel.id === 'gemini') {
         attempts.push({
@@ -252,9 +271,10 @@ export async function POST(request: Request) {
           run: () => callDirectGemini(prompt, chosenModel.model_id, tenantKeyRes.customKey, tenantKeyRes.category)
         });
       } else {
+        const key = getModelKey(chosenModel);
         attempts.push({
           name: chosenModel.name,
-          run: () => callOpenRouter(prompt, chosenModel.model_id)
+          run: () => callOpenRouter(prompt, chosenModel.model_id, key)
         });
       }
     } else if (model === 'gemini') {
@@ -273,9 +293,10 @@ export async function POST(request: Request) {
             run: () => callDirectGemini(prompt, item.model_id, tenantKeyRes.customKey, tenantKeyRes.category)
           });
         } else {
+          const key = getModelKey(item);
           attempts.push({
             name: `${item.name} (Fallback)`,
-            run: () => callOpenRouter(prompt, item.model_id)
+            run: () => callOpenRouter(prompt, item.model_id, key)
           });
         }
       }

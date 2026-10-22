@@ -1,5 +1,20 @@
 # ScholarFlow Changelog
 
+## v0.44.7 - Connected OpenRouter & Custom Provider Database Keys to AI Generation Routes & Added Model Selector
+
+- **Connected OpenRouter API Key from Database & Providers (`app/api/v1/ai/improve/route.ts`, `app/api/v1/ai/abstract/route.ts`, `app/api/v1/ai/synthesize/route.ts`)**:
+  - Resolved root cause where OpenRouter models failed with `"OPENROUTER_API_KEY is not set"` even after saving keys in the AI Model/Provider dashboard.
+  - Updated `callOpenRouter(prompt, model, customApiKey?: string)` to accept dynamic API keys.
+  - Used `supabaseAdmin` to bypass RLS when querying `ai_providers` and `ai_models` on server-side API routes, preventing silent empty-result blocks.
+  - Added key cascading in model runners: checks `provider?.api_key || item.custom_api_key || openRouterProvider?.api_key || process.env.OPENROUTER_API_KEY`.
+- **Added Active AI Model Selector to Writing Sidebar (`components/editor/sidebar-writing-tab.tsx`)**:
+  - Embedded a dedicated, live AI Model dropdown directly above Writing Tools buttons.
+  - Allows users to directly choose OpenRouter or custom LLMs as their primary generation model without depending on Gemini failovers.
+- **Verification**:
+  - TypeScript 0 errors (`npx tsc --noEmit`).
+  - 229 of 229 Vitest unit tests pass across 27 files.
+
+
 ## v0.44.6 - Return to Dashboard Navigation from File Document Hub Modal
 
 - **Return to Dashboard Button in File Document Hub (`components/editor/modals/document-hub-modal.tsx`, `components/editor/editor-layout.tsx`)**:

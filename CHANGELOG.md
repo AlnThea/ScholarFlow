@@ -2,6 +2,21 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.44.7] - 2026-10-22 (Connected OpenRouter & Custom Provider Database Keys to AI Generation Routes & Added Model Selector)
+
+### 🎯 Multi-Provider API Key Architecture & UI Model Selector (`app/api/v1/ai/`, `components/editor/sidebar-writing-tab.tsx`)
+- **Fix OpenRouter Missing Key Error in Generation Routes**:
+  - Fixed issue where backend AI routes (`/api/v1/ai/improve`, `/api/v1/ai/abstract`, `/api/v1/ai/synthesize`) hardcoded `process.env.OPENROUTER_API_KEY` and ignored API keys saved by admins in the `ai_providers` and `ai_models` database tables.
+  - Enabled dynamic `customApiKey` parameter on `callOpenRouter`.
+  - Switched server-side provider lookup to `supabaseAdmin` to prevent Row Level Security (RLS) from silently blocking server API queries.
+  - Cascaded key lookup across Model Custom Key, Provider Key, and Global OpenRouter Provider Key.
+- **Added Live Model Selector in Writing Sidebar**:
+  - Added an intuitive AI Model dropdown directly above Writing Tools in `SidebarWritingTab` allowing users to directly switch between Gemini, OpenRouter, and custom LLMs.
+- **Verification**:
+  - TypeScript validation passes with 0 errors (`npx tsc --noEmit`).
+  - Vitest test suite passes all 229 unit tests across 27 test files.
+
+
 ## ⚡ [v0.44.6] - 2026-10-22 (Return to Dashboard Navigation from File Document Hub Modal)
 
 ### 🎯 File Modal Navigation Enhancement (`components/editor/modals/document-hub-modal.tsx`, `components/editor/editor-layout.tsx`)

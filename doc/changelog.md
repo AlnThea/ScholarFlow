@@ -5,6 +5,20 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.44.7] - 2026-10-22 (Connected OpenRouter & Custom Provider Database Keys to AI Generation Routes & Added Model Selector)
+
+### 🎯 Sinkronisasi API Key OpenRouter/Custom Provider dari Database & Selector Model di Sidebar
+- **Perbaikan Rute Pembuatan AI (`/api/v1/ai/improve`, `abstract`, `synthesize`)**:
+  - Memperbaiki bug di mana endpoint AI server hanya memeriksa `process.env.OPENROUTER_API_KEY` dan mengabaikan API Key yang telah disimpan oleh admin/pengguna di tabel `ai_providers` dan `ai_models`.
+  - Memperbarui fungsi `callOpenRouter` agar menerima parameter `customApiKey` dinamis dari konfigurasi database.
+  - Menggunakan `supabaseAdmin` di sisi server untuk melewati RLS agar data kunci API penyedia tidak diblokir secara diam-diam.
+  - Menerapkan *cascading resolution*: prioritas Kunci Model Kustom → Kunci Provider Terpilih → Kunci Provider OpenRouter Global → Variabel Environment.
+- **Penambahan Pemilih Model AI di Sidebar Penulisan (`components/editor/sidebar-writing-tab.tsx`)**:
+  - Menambahkan dropdown **Model AI** aktif tepat di atas tombol alat penulisan, memungkinkan pengguna langsung memilih model OpenRouter mereka sebagai model utama tanpa harus menunggu failover dari Gemini.
+- **Verifikasi**:
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 229 dari 229 unit test lolos 100%.
+
 ## ⚡ [v0.44.6] - 2026-10-22 (Return to Dashboard Navigation from File Document Hub Modal)
 
 ### 🎯 Penambahan Tombol Kembali ke Dashboard pada Menu File (Document Hub)
