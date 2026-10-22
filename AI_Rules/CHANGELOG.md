@@ -1,5 +1,22 @@
 # ScholarFlow Changelog
 
+## v0.44.4 - Compact 2-Column Writing Tools Grid with Hover Tooltips and Tiered Free/Pro Access Gating
+
+- **2-Column Grid Layout (`components/editor/sidebar-writing-tab.tsx`)**:
+  - Transformed the vertical stack of writing tool action buttons into a sleek `grid grid-cols-2 gap-2` layout.
+  - Reduced vertical footprint by >50%, allowing the AI Result card ("Improve result") to remain immediately visible on standard viewports without excessive scrolling.
+  - Replaced inline verbose descriptive paragraphs with floating hover tooltips (`absolute bottom-full left-1/2 -translate-y-1/2 mb-1.5`) complete with tail arrows, dark mode styling, and screen-safe bounds.
+- **Tiered Free vs. Pro Feature Gating (`components/editor/sidebar-writing-tab.tsx`)**:
+  - Free tier tools: **Paraphrase** (`onParaphrase`), **Summarize** (`onSummarize`), and **Find Citation** (`onFindCitation`).
+  - Pro tier tools: **Improve Academic Writing** (`onImproveWriting`), **Generate Abstract** (`onGenerateAbstract`), and **Auto-Suggest Citation (AI)** (`onRepeatCitationSearch`).
+  - Displayed distinguished `PRO` badge badges on Pro tools for free users.
+  - Added click interception: free users clicking Pro tools are prompted with `PricingModal` (price list and upgrade tiers) while Pro users execute the AI generation action smoothly.
+  - Fully bilingual (English & Indonesian) and dark mode compliant (`dark:` variants across all tool cards and tooltips).
+- **Verification**:
+  - TypeScript 0 errors (`npx tsc --noEmit`).
+  - 229 of 229 Vitest unit tests pass across 27 files.
+
+
 ## v0.44.3 - Rerouted Pro Upgrade Triggers from Admin Plan Creation to Pricing Plans Table Modal
 
 - **Rerouted Upgrade Triggers to `PricingModal` (`components/editor/editor-layout.tsx`)**:

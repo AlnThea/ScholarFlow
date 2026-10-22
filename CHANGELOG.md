@@ -2,6 +2,23 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.44.4] - 2026-10-22 (Compact 2-Column Writing Tools Grid with Hover Tooltips and Tiered Free/Pro Access Gating)
+
+### 🎯 Writing Tools UI & Tiered Access Upgrade (`components/editor/sidebar-writing-tab.tsx`)
+- **2-Column Compact Grid**:
+  - Transformed the full-width vertical list of AI writing tools into a modern, compact `grid grid-cols-2 gap-2` layout.
+  - Slashed the vertical footprint by over 50%, keeping the "Improve result" section in view without excessive vertical scrolling.
+- **Hover Tooltips for Action Details**:
+  - Moved detailed tool explanations into floating dark-mode tooltips (`absolute bottom-full left-1/2 -translate-y-1/2 mb-1.5`) displayed on hover.
+- **Tiered Free vs. Pro Feature Gating**:
+  - Free tier tools: **Paraphrase**, **Summarize**, and **Find Citation**.
+  - Pro tier tools: **Improve Academic Writing**, **Generate Abstract**, and **Auto-Suggest Citation (AI)**.
+  - Free users see a clean `PRO` badge and clicking opens the `PricingModal` price list. Pro users trigger instant AI synthesis.
+- **Verification**:
+  - TypeScript validation passes with 0 errors (`npx tsc --noEmit`).
+  - Vitest test suite passes all 229 unit tests across 27 test files.
+
+
 ## ⚡ [v0.44.3] - 2026-10-22 (Rerouted Pro Upgrade Triggers from Admin Plan Creation to Pricing Plans Table Modal)
 
 ### 🎯 Upgrade Trigger Modal Rerouting (`components/editor/editor-layout.tsx`)

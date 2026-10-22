@@ -5,6 +5,22 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.44.4] - 2026-10-22 (Compact 2-Column Writing Tools Grid with Hover Tooltips and Tiered Free/Pro Access Gating)
+
+### 🎯 Tampilan Grid 2 Kolom, Hover Tooltip & Gating Free/Pro pada Alat Penulisan
+- **Grid 2 Kolom Kompak (`components/editor/sidebar-writing-tab.tsx`)**:
+  - Mengubah tampilan tombol alat penulisan (writing tools) dari daftar vertikal memanjang menjadi layout grid 2 kolom (`grid grid-cols-2 gap-2`).
+  - Menghemat ruang vertikal lebih dari 50%, sehingga card 'Hasil Perbaikan AI' (Improve result) langsung terlihat di layar tanpa perlu banyak scroll ke bawah.
+- **Hover Tooltips untuk Penjelasan Fitur**:
+  - Memindahkan teks deskripsi panjang menjadi tooltip mengambang (`absolute bottom-full left-1/2 -translate-y-1/2 mb-1.5`) yang muncul saat kursor diarahkan ke atas tombol (hover).
+- **Pembagian Tier Free vs. Pro**:
+  - Fitur Free: **Paraphrase** (Parafrase), **Summarize** (Ringkas), dan **Find Citation** (Cari Sitasi).
+  - Fitur Pro: **Improve Academic Writing** (Tingkatkan Gaya Akademik), **Generate Abstract** (Buat Abstrak), dan **Auto-Suggest Citation (AI)** (Saran Sitasi AI).
+  - Menampilkan badge `PRO` pada fitur berbayar untuk pengguna paket gratis; jika diklik akan langsung memicu modal perbandingan harga (`PricingModal`).
+- **Verifikasi**:
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 229 dari 229 unit test lolos 100%.
+
 ## ⚡ [v0.44.3] - 2026-10-22 (Rerouted Pro Upgrade Triggers from Admin Plan Creation to Pricing Plans Table Modal)
 
 ### 🎯 Perbaikan Routing Modal Upgrade ke List Harga (PricingModal)
