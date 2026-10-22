@@ -30,13 +30,10 @@ export function ParaphraseStudio({
   const isEn = language === 'en';
   const { user, profile, refreshProfile } = useAuth();
   const currentPlan = profile?.subscription_plan || activePlanId || 'free';
+  const isFreePlan = activePlanId === 'free';
   const [selectedSentence, setSelectedSentence] = useState('');
-
-  useEffect(() => {
-    if (externalTargetSentence) {
-      setSelectedSentence(externalTargetSentence);
-    }
-  }, [externalTargetSentence]);
+  const [highlightPulse, setHighlightPulse] = useState(false);
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
   const [variations, setVariations] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -58,8 +55,6 @@ export function ParaphraseStudio({
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [loading]);
-
-  const isFreePlan = activePlanId === 'free';
 
   // Parse sentences to suggest targets
   const [debouncedContent] = useDebounce(content, 1000);
@@ -115,30 +110,68 @@ export function ParaphraseStudio({
         refreshProfile?.();
       }
 
-      // Restore Citations
-      const restoreCitations = (text: string) => {
-        let restored = text;
+      const results = [res1?.improved_text, res2?.improved_text, res3?.improved_text].filter(Boolean) as string[];
+      
+      // Unlock Citations on generated text
+      const restoredResults = results.map(res => {
+        let restored = res;
         citationMatches.forEach((cite, idx) => {
           restored = restored.replace(`[CITE_${idx}]`, cite);
         });
         return restored;
-      };
+      });
 
-      setVariations([
-        restoreCitations(res1.improved_text),
-        restoreCitations(res2.improved_text),
-        restoreCitations(res3.improved_text)
-      ].filter(Boolean));
-    } catch (err: any) {
-      console.error('AI generation failed', err);
-      const msg = err?.message || '';
-      if (msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('kuota')) {
-        setIsPlanModalOpen?.(true);
-      }
+      setVariations(restoredResults.length > 0 ? restoredResults : [isEn ? 'Failed to generate variations.' : 'Gagal membuat variasi.']);
+    } catch (e) {
+      console.error('Failed to generate variations:', e);
+      setVariations([isEn ? 'Error occurred during generation.' : 'Terjadi kesalahan saat membuat variasi.']);
     } finally {
       setLoading(false);
     }
   };
+
+  const applyTargetSentence = React.useCallback((text: string) => {
+    if (!text || !text.trim()) return;
+    const clean = text.trim();
+    setSelectedSentence(clean);
+    setHighlightPulse(true);
+    setTimeout(() => setHighlightPulse(false), 2000);
+
+    // Smoothly scroll into view and focus textarea
+    setTimeout(() => {
+      const studioCard = document.getElementById('paraphrase-studio-card');
+      if (studioCard) {
+        studioCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      textareaRef.current?.focus();
+    }, 50);
+
+    // If user is Pro, immediately trigger variation generation
+    if (!isFreePlan && clean.length > 0) {
+      handleGenerate(clean);
+    }
+  }, [isFreePlan]);
+
+  useEffect(() => {
+    if (externalTargetSentence) {
+      applyTargetSentence(externalTargetSentence);
+    }
+  }, [externalTargetSentence, applyTargetSentence]);
+
+  // Listen for custom event dispatch from Flagged Sentences button
+  useEffect(() => {
+    const handleCustomLoad = (e: any) => {
+      const text = e.detail?.sentence;
+      if (text) {
+        applyTargetSentence(text);
+      }
+    };
+
+    window.addEventListener('scholarflow:load-paraphrase-studio', handleCustomLoad);
+    return () => {
+      window.removeEventListener('scholarflow:load-paraphrase-studio', handleCustomLoad);
+    };
+  }, [applyTargetSentence]);
 
   const handleApply = (newText: string) => {
     if (!selectedSentence || !currentDocument || !editorJsRef?.current || !onContentChange) return;
@@ -196,7 +229,7 @@ export function ParaphraseStudio({
     }
   };
 
-  if (!content || metrics.totalSentences === 0) return null;
+  if (!content && !selectedSentence && !externalTargetSentence) return null;
 
   return (
     <div className="flex flex-col gap-3 mt-3 animate-fade-in">
@@ -244,7 +277,14 @@ export function ParaphraseStudio({
       )}
 
       {/* Paraphrase Studio */}
-      <div className={`rounded-xl border border-line bg-white dark:bg-slate-800 p-3 flex flex-col gap-3 shadow-sm ${isFreePlan ? 'opacity-80 relative' : ''}`}>
+      <div 
+        id="paraphrase-studio-card"
+        className={`rounded-xl border transition-all duration-300 p-3 flex flex-col gap-3 shadow-sm ${
+          highlightPulse
+            ? 'border-indigo-500 ring-2 ring-indigo-500/40 shadow-md bg-indigo-50/20 dark:bg-indigo-950/20'
+            : 'border-line bg-white dark:bg-slate-800'
+        } ${isFreePlan ? 'opacity-80 relative' : ''}`}
+      >
          <div className="flex items-center justify-between">
            <div className="flex items-center gap-2">
              <IconWand className="h-4 w-4 text-indigo-500" />
@@ -270,6 +310,7 @@ export function ParaphraseStudio({
          </div>
          
          <textarea 
+           ref={textareaRef}
            value={selectedSentence}
            onChange={(e) => setSelectedSentence(e.target.value)}
            placeholder={isEn ? "Select a priority sentence or paste text here..." : "Pilih kalimat prioritas atau tempel teks di sini..."}

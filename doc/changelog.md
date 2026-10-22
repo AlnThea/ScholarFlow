@@ -5,6 +5,21 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.44.2] - 2026-10-22 (Flagged Sentences Deep Loading into Paraphrase Studio with Smooth Scroll & Instant Generation)
+
+### 🎯 Perbaikan Integrasi 'Load into Paraphrase Studio' pada Barometer Integritas
+- **Perbaikan Unmount Dini Paraphrase Studio**:
+  - Memperbaiki bug di mana `ParaphraseStudio` menghilang dari DOM (`return null`) saat seleksi kalimat menghasilkan `metrics.totalSentences === 0` selama proses debouncing 1000ms.
+  - Memperbaiki guard condition menjadi `if (!content && !selectedSentence && !externalTargetSentence) return null;`.
+- **Auto-Scroll Mulus, Visual Pulse & Auto-Generate**:
+  - Menghubungkan klik kartu kalimat berisiko ke `#paraphrase-studio-card` dengan auto-scroll halus ke area Paraphrase Studio di sidebar bawah.
+  - Memberikan indikator visual `Dimuat! Membuka Studio...` dengan ikon centang hijau selama 2.5 detik.
+  - Memberikan efek highlight cincin indigo (`ring-2 ring-indigo-500/40`) pada Studio Parafrase dan memfokuskan textarea.
+  - Otomatis memulai pembuatan 3 variasi ilmiah untuk akun Pro atau membuka dialog upgrade untuk akun Free.
+- **Verifikasi**:
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 229 dari 229 unit test lolos 100%.
+
 ## ⚡ [v0.44.1] - 2026-10-22 (Full-Screen Word Backstage Document Hub Modal Upgrade)
 
 ### 🎯 Peningkatan Tampilan Menu File (Full-Screen Word Backstage Hub)

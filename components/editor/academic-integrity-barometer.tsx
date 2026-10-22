@@ -119,6 +119,7 @@ export function AcademicIntegrityBarometer({
   }, [content]);
 
   const [selectedSentenceIndex, setSelectedSentenceIndex] = useState<number | null>(null);
+  const [loadedSentenceIndex, setLoadedSentenceIndex] = useState<number | null>(null);
 
   const hasText = report.metrics.totalWords > 0;
   // Speedometer Needle Angle calculation (-90 deg = 0%, 0 deg = 50%, +90 deg = 100%)
@@ -140,6 +141,10 @@ export function AcademicIntegrityBarometer({
 
   const handleSentenceClick = (sentence: SentenceIntegrity) => {
     setSelectedSentenceIndex(sentence.index);
+    setLoadedSentenceIndex(sentence.index);
+    setTimeout(() => {
+      setLoadedSentenceIndex((prev) => (prev === sentence.index ? null : prev));
+    }, 2500);
 
     // Accurately select and highlight ONLY the specific sentence in the editor DOM
     try {
@@ -179,8 +184,24 @@ export function AcademicIntegrityBarometer({
       console.warn('[IntegrityBarometer] Failed to select sentence in DOM:', err);
     }
 
+    const cleanText = sentence.text.replace(/&nbsp;/gi, ' ').replace(/\u00A0/g, ' ').trim();
     if (onSelectSentenceForParaphrase) {
-      onSelectSentenceForParaphrase(sentence.text.replace(/&nbsp;/gi, ' ').replace(/\u00A0/g, ' ').trim());
+      onSelectSentenceForParaphrase(cleanText);
+    }
+
+    // Trigger instant custom event & smooth scroll sidebar to Paraphrase Studio
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('scholarflow:load-paraphrase-studio', {
+          detail: { sentence: cleanText },
+        })
+      );
+      setTimeout(() => {
+        const studioCard = document.getElementById('paraphrase-studio-card');
+        if (studioCard) {
+          studioCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 60);
     }
   };
 
@@ -436,11 +457,20 @@ export function AcademicIntegrityBarometer({
                 )}
 
                 <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[10px]">
-                  <span className="text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1">
-                    <IconWand className="w-3 h-3" />
-                    <span>{isEn ? 'Load into Paraphrase Studio' : 'Buka di Paraphrase Studio'}</span>
-                  </span>
-                  <IconChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  {loadedSentenceIndex === s.index ? (
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1 animate-in fade-in">
+                      <IconCheck className="w-3.5 h-3.5 text-emerald-500" />
+                      <span>{isEn ? 'Loaded! Opening Studio...' : 'Dimuat! Membuka Studio...'}</span>
+                    </span>
+                  ) : (
+                    <span className="text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1 group-hover:text-indigo-700">
+                      <IconWand className="w-3 h-3" />
+                      <span>{isEn ? 'Load into Paraphrase Studio' : 'Buka di Paraphrase Studio'}</span>
+                    </span>
+                  )}
+                  <IconChevronRight className={`w-3.5 h-3.5 transition-transform ${
+                    loadedSentenceIndex === s.index ? 'text-emerald-500 translate-x-0.5' : 'text-slate-400'
+                  }`} />
                 </div>
               </div>
             ))}

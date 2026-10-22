@@ -1,5 +1,20 @@
 # ScholarFlow Changelog
 
+## v0.44.2 - Flagged Sentences Deep Loading into Paraphrase Studio with Smooth Scroll & Instant Generation
+
+- **Fix Paraphrase Studio Premature Unmount (`components/editor/paraphrase-studio.tsx`)**:
+  - Resolved bug where clicking a flagged sentence caused `ParaphraseStudio` to return `null` and unmount whenever `metrics.totalSentences === 0` during debouncing or single-sentence selection.
+  - Relaxed mounting guard to `if (!content && !selectedSentence && !externalTargetSentence) return null;`, ensuring the studio remains mounted and accessible.
+- **Deep Load, Smooth Scroll & Visual Feedback (`components/editor/academic-integrity-barometer.tsx`, `components/editor/paraphrase-studio.tsx`, `components/editor/sidebar-burstiness-tab.tsx`)**:
+  - Implemented custom event `scholarflow:load-paraphrase-studio` and `requestAnimationFrame` state cycling for 100% reliable re-triggering even when clicking the same sentence multiple times.
+  - Added smooth scroll transition (`studioCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' })`) and automatic textarea focus immediately upon clicking 'Load into Paraphrase Studio'.
+  - Added animated checkmark visual state on the clicked sentence card: `Loaded! Opening Studio...` / `Dimuat! Membuka Studio...` for 2.5s.
+  - Added glowing highlight pulse on `#paraphrase-studio-card` (`ring-2 ring-indigo-500/40 shadow-md bg-indigo-50/20`) when populated.
+  - Auto-triggers variation generation (`handleGenerate(clean)`) for Pro tier accounts or opens upgrade dialog for Free tier.
+- **Verification**:
+  - TypeScript 0 errors (`npx tsc --noEmit`). All 229 Vitest unit tests pass across 27 files.
+
+
 ## v0.44.1 - Full-Screen Word Backstage Document Hub Modal Upgrade
 
 - **Full-Screen Workspace / Backstage Layout (`components/editor/modals/document-hub-modal.tsx`)**:

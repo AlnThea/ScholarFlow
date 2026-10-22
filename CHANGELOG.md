@@ -2,6 +2,22 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.44.2] - 2026-10-22 (Flagged Sentences Deep Loading into Paraphrase Studio with Smooth Scroll & Instant Generation)
+
+### 🎯 Flagged Sentences to Paraphrase Studio Integration Fix (`components/editor/academic-integrity-barometer.tsx`, `components/editor/paraphrase-studio.tsx`, `components/editor/sidebar-burstiness-tab.tsx`)
+- **Fix Component Premature Unmount**:
+  - Resolved root cause where `ParaphraseStudio` silently disappeared from the DOM (`return null`) when single-sentence selections evaluated to `metrics.totalSentences === 0` during debouncing.
+  - Adjusted guard condition to `if (!content && !selectedSentence && !externalTargetSentence) return null;`, keeping the studio rendered and reactive.
+- **Smooth Auto-Scroll & Visual Feedback**:
+  - Bound clicked sentences to `#paraphrase-studio-card` with an automatic smooth scroll transition into the viewport.
+  - Attached animated confirmation feedback to the clicked item (`Loaded! Opening Studio...` / `Dimuat! Membuka Studio...` with `IconCheck`).
+  - Added an indigo pulse ring highlight (`ring-2 ring-indigo-500/40`) to `ParaphraseStudio` and focused its textarea.
+  - Auto-triggers variation generation for Pro tier accounts and prompts the upgrade modal for Free accounts.
+- **Verification**:
+  - TypeScript validation passes with 0 errors (`npx tsc --noEmit`).
+  - All 229 Vitest tests pass across 27 test files.
+
+
 ## ⚡ [v0.44.1] - 2026-10-22 (Full-Screen Word Backstage Document Hub Modal Upgrade)
 
 ### 🎯 Full-Screen Word Backstage Layout (`components/editor/modals/document-hub-modal.tsx`)

@@ -171,7 +171,12 @@ export const SidebarBurstinessTab = (props: any) => {
           language={isEn ? 'en' : 'id'}
           isHeatmapActive={heatmapActive}
           onToggleHeatmap={() => setHeatmapActive(!heatmapActive)}
-          onSelectSentenceForParaphrase={(sent) => setSelectedSentenceForStudio(sent)}
+          onSelectSentenceForParaphrase={(sent) => {
+            setSelectedSentenceForStudio('');
+            requestAnimationFrame(() => {
+              setSelectedSentenceForStudio(sent);
+            });
+          }}
         />
 
         <section className="rounded-lg border border-line dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm">
