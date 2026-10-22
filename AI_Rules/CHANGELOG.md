@@ -1,5 +1,20 @@
 # ScholarFlow Changelog
 
+## v0.45.1 - High-Density Professional Citation List with In-Canvas Text Locating & Foldable Details Drawer
+
+- **High-Density Professional Citation List (`components/editor/sidebar-library-tab.tsx`)**:
+  - Transformed bulky, space-consuming reference cards into a sleek, compact, high-density row list view inspired by Mendeley, Zotero, and Overleaf citation managers.
+  - Reduced vertical height per entry from ~180px down to ~40px, allowing users with 20+ references to navigate without excessive scrolling.
+  - Display index badges (`[1]`, `[2]`), bold author/year headers, folder tags, and truncated titles.
+- **In-Canvas Citation Locating (`components/editor/sidebar-library-tab.tsx`)**:
+  - Implemented `handleScrollToCitation(referenceId, label)`: clicking anywhere on a reference row (or clicking the quick `IconTarget` button) smoothly scrolls the manuscript canvas to the exact in-text citation and highlights it with a warm pulse animation.
+- **Foldable Details Drawer**:
+  - Added expand/collapse chevron toggle (`IconChevronDown` / `IconChevronUp`) on each row to inspect the full formatted bibliography text, locked status (for Free plan), and folder assignments on demand.
+- **Verification**:
+  - TypeScript 0 errors (`npx tsc --noEmit`).
+  - 229 of 229 Vitest unit tests pass across 27 files.
+
+
 ## v0.45.0 - AI Literature Review Dual-Action Synthesis: One-Click Clipboard Copying & In-Text Canvas Insertion
 
 - **Dual Action Controls on AI Literature Review (`components/editor/sidebar-library-tab.tsx`)**:

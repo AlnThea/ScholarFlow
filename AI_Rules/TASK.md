@@ -4,7 +4,7 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.45.0 (AI Literature Review Dual-Action Synthesis: One-Click Clipboard Copying & In-Text Canvas Insertion, 229/229 tests passing, 0 TypeScript errors).
+v0.45.1 (High-Density Professional Citation List with In-Canvas Text Locating & Foldable Details Drawer, 229/229 tests passing, 0 TypeScript errors).
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
@@ -43,6 +43,7 @@ v0.45.0 (AI Literature Review Dual-Action Synthesis: One-Click Clipboard Copying
 - [x] Phase 64: Unified Find Citation Flow: Trigger Floating In-Canvas Citation Search from Sidebar Writing Tools and Removed Tab Switching.
 - [x] Phase 65: Smart Abstract Auto-Insertion at Manuscript Beginning, One-Click Clipboard Copying, and Instant Auto-Cite Best Match Citation Injection.
 - [x] Phase 66: AI Literature Review Dual-Action Synthesis: One-Click Clipboard Copying & In-Text Canvas Insertion.
+- [x] Phase 67: High-Density Professional Citation List with In-Canvas Text Locating & Foldable Details Drawer.
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.

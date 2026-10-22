@@ -5,6 +5,21 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.45.1] - 2026-10-22 (High-Density Professional Citation List with In-Canvas Text Locating & Foldable Details Drawer)
+
+### 🎯 Redesain Daftar Sitasi Kompak & Fitur Tunjukkan Posisi Sitasi di Naskah
+- **Tampilan Daftar Kompak & Profesional (`components/editor/sidebar-library-tab.tsx`)**:
+  - Mengganti tampilan kartu besar yang memakan ruang vertikal menjadi tampilan daftar baris kompak (*high-density list row*) berstandar reference manager profesional (seperti Mendeley / Zotero).
+  - Mengurangi ketinggian per entri dari ~180px menjadi ~40px sehingga daftar berisi lebih dari 20 sitasi dapat ditinjau dengan mudah tanpa perlu *scroll* panjang ke bawah.
+  - Menampilkan nomor indeks referensi (`[1]`, `[2]`), nama penulis & tahun, badge folder ringkas, dan judul yang rapi terpotong (*truncated*).
+- **Deteksi Posisi Sitasi di Naskah (*Interactive In-Canvas Locating*)**:
+  - Mengklik baris sitasi (atau tombol ikon Target) akan secara otomatis menggulirkan (*smooth scroll*) kanvas naskah langsung ke kalimat tempat tanda sitasi tersebut berada, disertai efek sorotan berkedip (*pulsing yellow highlight*).
+- **Laci Detail yang Dapat Dilipat (*Foldable Details Drawer*)**:
+  - Setiap baris memiliki tombol panah untuk membuka/menutup rincian teks sitasi lengkap, status rujukan terkunci (untuk paket Free), dan penggantian folder tanpa mengganggu kerapian daftar utama.
+- **Verifikasi**:
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 229 dari 229 unit test lolos 100%.
+
 ## ⚡ [v0.45.0] - 2026-10-22 (AI Literature Review Dual-Action Synthesis: One-Click Clipboard Copying & In-Text Canvas Insertion)
 
 ### 🎯 Pilihan Aksi Ganda pada AI Literature Review: Salin 1-Klik & Sisipkan ke Naskah

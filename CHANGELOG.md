@@ -2,6 +2,22 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.45.1] - 2026-10-22 (High-Density Professional Citation List with In-Canvas Text Locating & Foldable Details Drawer)
+
+### 🎯 Professional Reference List Redesign & In-Text Locating (`components/editor/sidebar-library-tab.tsx`)
+- **Compact Professional Citation List View**:
+  - Replaced bulky cards with high-density reference rows (cutting height per entry from ~180px down to ~40px).
+  - Displays compact index badges, author/year labels, folder tags, and truncated titles.
+  - Accommodates 20+ citations smoothly without tedious vertical scrolling.
+- **Interactive In-Canvas Text Locating**:
+  - Clicking any reference row or the quick Target icon smoothly scrolls the manuscript canvas directly to the in-text citation and flashes a pulsing highlight.
+- **Foldable Details Drawer**:
+  - Each item features an expand/collapse toggle for full citation text, Free tier lock badges, and folder reassignments.
+- **Verification**:
+  - TypeScript validation passes with 0 errors (`npx tsc --noEmit`).
+  - Vitest test suite passes all 229 unit tests across 27 test files.
+
+
 ## ⚡ [v0.45.0] - 2026-10-22 (AI Literature Review Dual-Action Synthesis: One-Click Clipboard Copying & In-Text Canvas Insertion)
 
 ### 🎯 Literature Review Synthesis UX Expansion (`components/editor/sidebar-library-tab.tsx`)
