@@ -5,6 +5,18 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.44.6] - 2026-10-22 (Return to Dashboard Navigation from File Document Hub Modal)
+
+### 🎯 Penambahan Tombol Kembali ke Dashboard pada Menu File (Document Hub)
+- **Tombol Exit to Dashboard (`components/editor/modals/document-hub-modal.tsx`, `components/editor/editor-layout.tsx`)**:
+  - Menambahkan tombol **'Exit to Dashboard' / 'Kembali ke Dashboard'** yang terletak tepat di bawah tombol `← Back to Manuscript` pada sidebar kiri modal menu File.
+  - Menambahkan tombol cepat **'Dashboard' / 'Dasbor'** pada header bar kanan di samping tombol `Back to Editor`.
+  - Mengarahkan aksi secara mulus ke `/dashboard` melalui callback `onExitToDashboard` dan `onSelectDocument('')`.
+  - Tampilan profesional dengan ikon `IconLayoutDashboard`, dukungan Dark Mode lengkap, dan bilingual otomatis.
+- **Verifikasi**:
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 229 dari 229 unit test lolos 100%.
+
 ## ⚡ [v0.44.5] - 2026-10-22 (Writing Tools Tooltip Alignment & Native Tooltip Clashing Fix)
 
 ### 🎯 Penyesuaian Posisi Tooltip & Pembersihan Tooltip Ganda Bawaan Browser

@@ -2,6 +2,19 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.44.6] - 2026-10-22 (Return to Dashboard Navigation from File Document Hub Modal)
+
+### 🎯 File Modal Navigation Enhancement (`components/editor/modals/document-hub-modal.tsx`, `components/editor/editor-layout.tsx`)
+- **Exit to Dashboard Button**:
+  - Added an intuitive, professional `Exit to Dashboard` / `Kembali ke Dashboard` button located in the left sidebar rail underneath `Back to Manuscript`.
+  - Added a secondary quick-access `Dashboard` button in the top header action toolbar next to `Back to Editor`.
+  - Wired callback to `router.push('/dashboard')` via `onExitToDashboard` and `onSelectDocument('')`.
+  - 100% responsive, dark mode compatible, and bilingual (EN ↔ ID).
+- **Verification**:
+  - TypeScript validation passes with 0 errors (`npx tsc --noEmit`).
+  - Vitest test suite passes all 229 unit tests across 27 test files.
+
+
 ## ⚡ [v0.44.5] - 2026-10-22 (Writing Tools Tooltip Alignment & Native Tooltip Clashing Fix)
 
 ### 🎯 Tooltip Positioning & Clean UX Polishing (`components/editor/sidebar-writing-tab.tsx`)

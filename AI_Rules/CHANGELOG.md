@@ -1,5 +1,18 @@
 # ScholarFlow Changelog
 
+## v0.44.6 - Return to Dashboard Navigation from File Document Hub Modal
+
+- **Return to Dashboard Button in File Document Hub (`components/editor/modals/document-hub-modal.tsx`, `components/editor/editor-layout.tsx`)**:
+  - Added dedicated `Exit to Dashboard` action button positioned right below `← Back to Manuscript` in the left sidebar rail of the File Hub modal.
+  - Styled with clean SaaS aesthetics (`IconLayoutDashboard`, dark mode compatible with `dark:bg-slate-850 dark:border-slate-700/80 dark:text-slate-300`, and subtle hover transition).
+  - Added quick `Dashboard` button in the top header action group next to `Back to Editor`.
+  - Added `onExitToDashboard` callback wired to `onSelectDocument?.('')` which executes `router.push('/dashboard')`, cleanly exiting the editor and returning to the main dashboard workspace.
+  - Bilingual English/Indonesian support (`Exit to Dashboard` / `Kembali ke Dashboard`).
+- **Verification**:
+  - TypeScript 0 errors (`npx tsc --noEmit`).
+  - 229 of 229 Vitest unit tests pass across 27 files.
+
+
 ## v0.44.5 - Writing Tools Tooltip Alignment & Native Tooltip Clashing Fix
 
 - **Column-Aware Tooltip Alignment (`components/editor/sidebar-writing-tab.tsx`)**:

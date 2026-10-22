@@ -3,6 +3,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
 import {
   IconX,
   IconFolder,
@@ -19,7 +20,9 @@ import {
   IconChevronRight,
   IconCloudCheck,
   IconFolders,
-  IconFileText
+  IconFileText,
+  IconArrowLeft,
+  IconLayoutDashboard
 } from '@tabler/icons-react';
 import type { DocumentListItem } from '@/lib/api/documents';
 
@@ -32,6 +35,7 @@ export interface DocumentHubModalProps {
   onSelectDocument?: (id: string) => void;
   onCreateDocument?: () => void;
   onDeleteDocument?: (id: string) => void;
+  onExitToDashboard?: () => void;
 }
 
 export function DocumentHubModal({
@@ -42,8 +46,10 @@ export function DocumentHubModal({
   currentDocumentId,
   onSelectDocument,
   onCreateDocument,
-  onDeleteDocument
+  onDeleteDocument,
+  onExitToDashboard
 }: DocumentHubModalProps) {
+  const router = useRouter();
   const isEn = language === 'en';
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'thesis' | 'independent'>('all');
@@ -141,6 +147,17 @@ export function DocumentHubModal({
     }
   };
 
+  const handleExitToDashboard = () => {
+    onClose();
+    if (onExitToDashboard) {
+      onExitToDashboard();
+    } else if (onSelectDocument) {
+      onSelectDocument('');
+    } else {
+      router.push('/dashboard');
+    }
+  };
+
   const modalContent = (
     <div className="fixed inset-0 z-[100] flex flex-col bg-slate-900/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-200">
       {/* 1. Header Bar: Full-Width Word Backstage / History Style */}
@@ -178,6 +195,16 @@ export function DocumentHubModal({
           >
             <IconFilePlus className="h-4 w-4" />
             <span>{isEn ? '+ New Document' : '+ Dokumen Baru'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleExitToDashboard}
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 transition cursor-pointer dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-750"
+            title={isEn ? 'Exit editor and return to dashboard' : 'Keluar dari editor dan kembali ke dasbor'}
+          >
+            <IconLayoutDashboard className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+            <span>{isEn ? 'Dashboard' : 'Dasbor'}</span>
           </button>
 
           <button
@@ -334,13 +361,25 @@ export function DocumentHubModal({
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer"
-            >
-              ← {isEn ? 'Back to Manuscript' : 'Kembali ke Naskah'}
-            </button>
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition shadow-2xs cursor-pointer"
+              >
+                <IconArrowLeft className="w-4 h-4" />
+                <span>{isEn ? 'Back to Manuscript' : 'Kembali ke Naskah'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleExitToDashboard}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-100 dark:bg-slate-850 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-750 hover:text-slate-900 dark:hover:text-white transition shadow-2xs cursor-pointer"
+              >
+                <IconLayoutDashboard className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                <span>{isEn ? 'Exit to Dashboard' : 'Kembali ke Dashboard'}</span>
+              </button>
+            </div>
           </div>
         </aside>
 

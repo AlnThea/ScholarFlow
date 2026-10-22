@@ -1531,6 +1531,10 @@ export function EditorLayout({
           setIsDocumentHubOpen(false);
         }}
         onDeleteDocument={onDeleteDocument}
+        onExitToDashboard={() => {
+          setIsDocumentHubOpen(false);
+          onSelectDocument?.('');
+        }}
       />
       <AcademicLinterModal
         isOpen={isLinterModalOpen}

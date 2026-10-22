@@ -4,7 +4,7 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.44.5 (Writing Tools Tooltip Alignment & Native Tooltip Clashing Fix, 229/229 tests passing, 0 TypeScript errors).
+v0.44.6 (Added Return to Dashboard Navigation from File Document Hub Modal, 229/229 tests passing, 0 TypeScript errors).
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
@@ -38,6 +38,7 @@ v0.44.5 (Writing Tools Tooltip Alignment & Native Tooltip Clashing Fix, 229/229 
 - [x] Phase 59: Rerouted Pro Upgrade Triggers in Sidebar & Editor Tools to Pricing Modal (Price List & Subscriptions) instead of Admin Plan Creation Modal.
 - [x] Phase 60: Compact 2-Column Writing Tools Grid with Hover Tooltips and Tiered Free/Pro Access Gating.
 - [x] Phase 61: Writing Tools Tooltip Alignment (Left/Right Column-Aware) & Native Browser Tooltip Clashing Resolution.
+- [x] Phase 62: Return to Dashboard Navigation from File Document Hub Modal (Bottom Rail & Header Actions).
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.
