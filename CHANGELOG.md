@@ -2,6 +2,18 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.44.3] - 2026-10-22 (Rerouted Pro Upgrade Triggers from Admin Plan Creation to Pricing Plans Table Modal)
+
+### 🎯 Upgrade Trigger Modal Rerouting (`components/editor/editor-layout.tsx`)
+- **Fix Pro Upgrade Trigger Routing**:
+  - Fixed issue where clicking 'Upgrade to Pro' in `ParaphraseStudio`, 'Upgrade to Pro to Export Report' in `SidebarBurstinessTab`, or Pro checks in `EditorSidebar` and `EditorBubbleMenu` opened the Admin `PlanModal` ("Tambah Paket Baru / Edit Detail Paket Langganan").
+  - Mapped `setIsPlanModalOpen` on `EditorSidebar`, `EditorBubbleMenu`, and `useGhostwriter` to `setIsPricingOpen` in `components/editor/editor-layout.tsx`.
+  - When users encounter Pro-gated features or click upgrade buttons, they are now presented with the public `PricingModal` (Free vs Pro vs Campus price cards, feature breakdown, and checkout gateways).
+- **Verification**:
+  - TypeScript validation passes with 0 errors (`npx tsc --noEmit`).
+  - Vitest test suite passes all 229 unit tests across 27 test files.
+
+
 ## ⚡ [v0.44.2] - 2026-10-22 (Flagged Sentences Deep Loading into Paraphrase Studio with Smooth Scroll & Instant Generation)
 
 ### 🎯 Flagged Sentences to Paraphrase Studio Integration Fix (`components/editor/academic-integrity-barometer.tsx`, `components/editor/paraphrase-studio.tsx`, `components/editor/sidebar-burstiness-tab.tsx`)

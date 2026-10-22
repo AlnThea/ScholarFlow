@@ -1,5 +1,16 @@
 # ScholarFlow Changelog
 
+## v0.44.3 - Rerouted Pro Upgrade Triggers from Admin Plan Creation to Pricing Plans Table Modal
+
+- **Rerouted Upgrade Triggers to `PricingModal` (`components/editor/editor-layout.tsx`)**:
+  - Resolved architectural miswiring where clicking 'Upgrade to Pro' in `ParaphraseStudio`, 'Upgrade to Pro to Export Report' in `SidebarBurstinessTab`, and Pro feature triggers in `SidebarStatsTab`, `EditorBubbleMenu`, and `useGhostwriter` mistakenly opened the admin `PlanModal` ("Tambah Paket Baru / Edit Detail Paket Langganan") rather than the user subscription price list.
+  - Re-routed `setIsPlanModalOpen` on `EditorSidebar`, `EditorBubbleMenu`, and `useGhostwriter` in `components/editor/editor-layout.tsx` to `setIsPricingOpen`.
+  - Clicking any Pro upgrade button now opens the legitimate user-facing `PricingModal` (displaying Free Starter, Pro Writer, and Campus pricing cards, feature comparisons, and payment gateways: Xendit, Stripe, Midtrans).
+- **Verification**:
+  - TypeScript 0 errors (`npx tsc --noEmit`).
+  - 229 of 229 Vitest unit tests pass across 27 files.
+
+
 ## v0.44.2 - Flagged Sentences Deep Loading into Paraphrase Studio with Smooth Scroll & Instant Generation
 
 - **Fix Paraphrase Studio Premature Unmount (`components/editor/paraphrase-studio.tsx`)**:

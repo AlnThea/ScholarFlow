@@ -5,6 +5,17 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.44.3] - 2026-10-22 (Rerouted Pro Upgrade Triggers from Admin Plan Creation to Pricing Plans Table Modal)
+
+### 🎯 Perbaikan Routing Modal Upgrade ke List Harga (PricingModal)
+- **Reroute Pemicu Upgrade Pro**:
+  - Memperbaiki kekeliruan di mana tombol 'Upgrade to Pro' di `ParaphraseStudio`, 'Upgrade to Pro to Export Report' di `SidebarBurstinessTab`, dan fitur-fitur berbayar di `EditorSidebar` membuka modal admin `PlanModal` ("Tambah Paket Baru / Edit Detail Paket").
+  - Menghubungkan `setIsPlanModalOpen` pada `EditorSidebar`, `EditorBubbleMenu`, dan `useGhostwriter` di `components/editor/editor-layout.tsx` langsung ke `setIsPricingOpen`.
+  - Sekarang saat pengguna mengeklik tombol upgrade, yang muncul adalah **Daftar Paket Harga (`PricingModal`)** resmi (Free, Pro Writer, Campus), rincian fitur, dan tombol metode pembayaran (Xendit QRIS / Stripe / Midtrans).
+- **Verifikasi**:
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 229 dari 229 unit test lolos 100%.
+
 ## ⚡ [v0.44.2] - 2026-10-22 (Flagged Sentences Deep Loading into Paraphrase Studio with Smooth Scroll & Instant Generation)
 
 ### 🎯 Perbaikan Integrasi 'Load into Paraphrase Studio' pada Barometer Integritas

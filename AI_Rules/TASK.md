@@ -4,7 +4,7 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.44.2 (Flagged Sentences Deep Loading into Paraphrase Studio with Smooth Scroll & Instant Generation, 229/229 tests passing, 0 TypeScript errors).
+v0.44.3 (Rerouted Pro Upgrade Triggers from Admin Plan Creation to Pricing Plans Table Modal, 229/229 tests passing, 0 TypeScript errors).
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
@@ -35,6 +35,7 @@ v0.44.2 (Flagged Sentences Deep Loading into Paraphrase Studio with Smooth Scrol
 - [x] Phase 56: Reviewer #2 Pro Tier Gating & Visual Badge Indicator.
 - [x] Phase 57: Full-Screen Word Backstage Document Hub Modal Upgrade (Time-Machine/History Style Layout).
 - [x] Phase 58: Flagged Sentences Deep Loading into Paraphrase Studio with Smooth Scroll & Instant Generation.
+- [x] Phase 59: Rerouted Pro Upgrade Triggers in Sidebar & Editor Tools to Pricing Modal (Price List & Subscriptions) instead of Admin Plan Creation Modal.
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.

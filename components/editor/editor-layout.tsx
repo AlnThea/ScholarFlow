@@ -319,7 +319,7 @@ export function EditorLayout({
     documentTitle: currentDocument?.title,
     editorJsRef,
     onContentChange,
-    setIsPlanModalOpen,
+    setIsPlanModalOpen: setIsPricingOpen,
   });
 
   const versionHistory = useVersionHistory({
@@ -945,7 +945,7 @@ export function EditorLayout({
             selectedText={selectedText}
             setBubbleMode={setBubbleMode}
             setExpandedCardId={setExpandedCardId}
-            setIsPlanModalOpen={setIsPlanModalOpen}
+            setIsPlanModalOpen={setIsPricingOpen}
             setIsSuggestionModalOpen={setIsSuggestionModalOpen}
             setNewTextForSuggestion={setNewTextForSuggestion}
             setSelectedAiModel={setSelectedAiModel}
@@ -1123,7 +1123,7 @@ export function EditorLayout({
               {showRightSidebar && (
                 <EditorSidebar
                   activePlanId={activePlanId}
-                  setIsPlanModalOpen={setIsPlanModalOpen}
+                  setIsPlanModalOpen={setIsPricingOpen}
                   currentDocument={currentDocument}
                   editorJsRef={editorJsRef}
                   onContentChange={onContentChange}
