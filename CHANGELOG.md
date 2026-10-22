@@ -2,6 +2,24 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.44.1] - 2026-10-22 (Full-Screen Word Backstage Document Hub Modal Upgrade)
+
+### 🎯 Full-Screen Word Backstage Layout (`components/editor/modals/document-hub-modal.tsx`)
+- **Full-Screen Workspace / Backstage Experience**:
+  - Transformed the Document Hub Modal from a cramped centered popup dialog (`max-w-4xl max-h-[88vh]`) into an expansive, full-screen Backstage view (`fixed inset-0 z-[100] flex flex-col bg-slate-900/60 backdrop-blur-sm`), matching the spacious layout of the Version History (Time Machine) modal.
+  - Implemented top persistent header bar with Word Backstage badge, document metrics, one-click `+ New Document` button, and return to editor button.
+  - Implemented dual-column layout:
+    - **Left Navigation Rail**: Filter categories (All Documents, Thesis Projects, Independent Manuscripts), active project binders, and real-time cloud sync status card.
+    - **Right Main Explorer**: Search input with clear button, sorting selector (`Recently Edited` / `Title A-Z`), and responsive multi-column cards grid (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`).
+- **DOM Portaling & Zero Logic Regression**:
+  - Leveraged `createPortal(..., document.body)` ensuring top z-index isolation (`z-[100]`).
+  - Preserved 100% of underlying operations: `onSelectDocument`, `onCreateDocument`, `onDeleteDocument`, search filters, and delete confirmation modal.
+  - Full bilingual EN ↔ ID support and comprehensive Dark Mode Tailwind classes.
+- **Verification**:
+  - TypeScript validation (`npx tsc --noEmit`) passes with 0 errors.
+  - Vitest test suite passes all 229 unit tests across 27 test files.
+
+
 ## ⚡ [v0.44.0] - 2026-10-21 (Reviewer #2 Pro Tier Gating & Visual Badge Indicator)
 
 ### 🎯 Pro Tier Exclusivity & Upgrade Interception (`components/editor/editor-layout.tsx`, `components/editor/editorjs-toolbar.tsx`)

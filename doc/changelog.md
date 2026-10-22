@@ -5,6 +5,22 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.44.1] - 2026-10-22 (Full-Screen Word Backstage Document Hub Modal Upgrade)
+
+### 🎯 Peningkatan Tampilan Menu File (Full-Screen Word Backstage Hub)
+- **Transformasi Layout Layar Penuh Leluasa (`components/editor/modals/document-hub-modal.tsx`)**:
+  - Mengubah modal dokumen hub dari popup dialog sempit di tengah (`max-w-4xl`) menjadi antarmuka Backstage layar penuh (`fixed inset-0 z-[100] flex flex-col bg-slate-900/60 backdrop-blur-sm`), setara dengan pengalaman modal Riwayat Versi (History / Time Machine).
+  - Header permanen atas dengan indikator jumlah dokumen, tombol `+ Dokumen Baru`, dan tombol kembali ke naskah aktif.
+  - Pembagian 2 kolom lapang:
+    - **Panel Samping Kiri**: Navigasi kategori (Semua Dokumen, Skripsi/Thesis, Dokumen Mandiri), daftar folder proyek bab skripsi, dan kartu status sinkronisasi cloud.
+    - **Area Utama Kanan**: Kolom pencarian instan, filter urutan (Terakhir Diedit vs Judul A-Z), dan grid kartu naskah responsif (1 s/d 4 kolom).
+- **Portaling DOM & Zero Logic Regression**:
+  - Menggunakan `createPortal(..., document.body)` untuk isolasi z-index teratas.
+  - Menjaga 100% logika dan fungsionalitas: pemilihan dokumen, pembuatan naskah baru, penghapusan dokumen dengan konfirmasi modal, dukungan Dark Mode, dan dwibahasa EN/ID.
+- **Verifikasi**:
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 229 dari 229 unit test lolos pada 27 berkas pengujian.
+
 ## ⚡ [v0.44.0] - 2026-10-21 (Reviewer #2 Pro Tier Gating & Visual Badge Indicator)
 
 ### 🎯 Eksklusivitas Akun Pro untuk AI Peer Reviewer (Reviewer #2)

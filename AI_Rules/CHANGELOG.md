@@ -1,5 +1,22 @@
 # ScholarFlow Changelog
 
+## v0.44.1 - Full-Screen Word Backstage Document Hub Modal Upgrade
+
+- **Full-Screen Workspace / Backstage Layout (`components/editor/modals/document-hub-modal.tsx`)**:
+  - Replaced the compact centered popup dialog (`max-w-4xl`) with an expansive, full-screen backstage hub (`fixed inset-0 z-[100] flex flex-col bg-slate-900/60 backdrop-blur-sm`).
+  - Implemented top fixed header bar matching the History (Time Machine) modal, featuring document counts, Word Backstage badge, instant `+ New Document` trigger, and quick return button.
+  - Introduced responsive 2-column layout:
+    - **Left Navigation Rail (Sidebar)**: Category filters (`All Documents`, `Thesis & Research Projects`, `Independent Documents`), active thesis binder folders, cloud sync status indicator, and quick return button.
+    - **Right Document Explorer (Main Area)**: Instant title search input, sorting dropdown (`Recently Edited` vs `Title A-Z`), and responsive multi-column cards grid (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`).
+- **Seamless Modal Portaling & Zero Logic Regression**:
+  - Rendered via `createPortal(..., document.body)` to avoid container clipping or stacking context trap.
+  - Fully retained all callbacks and states: `onSelectDocument`, `onCreateDocument`, `onDeleteDocument`, search query filtering, and chapter project groupings.
+  - 100% Dark Mode compatible (`dark:` classes throughout) and dynamic bilingual EN ↔ ID localization.
+- **Verification**:
+  - Full TypeScript type-checking (`npx tsc --noEmit`) passes with 0 errors.
+  - All 229 Vitest unit tests pass across 27 test files.
+
+
 ## v0.43.18 - Reviewer #2 Pro Tier Gating & Visual Badge Indicator
 
 - **Pro Tier Gating (`components/editor/editor-layout.tsx`, `components/editor/editorjs-toolbar.tsx`)**:
