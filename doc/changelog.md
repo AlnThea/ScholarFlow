@@ -5,6 +5,22 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.44.9] - 2026-10-22 (Smart Abstract Section Insertion, One-Click Clipboard Copying & 1-Click Auto-Cite AI Best Match Injection)
+
+### 🎯 Penyisipan Cerdas Abstrak di Awal Dokumen, Salin Clipboard 1-Klik & Auto-Cite Instan
+- **Penyisipan Aman Abstrak di Awal Dokumen (`lib/editor/methods/block-methods.ts`, `lib/editor/editor-tools.ts`, `hooks/use-editor-ai.ts`, `components/editor/sidebar-writing-tab.tsx`)**:
+  - Menerapkan metode `insertAbstractSection` pada EditorJS yang secara otomatis menempatkan abstrak di bagian paling awal naskah (tepat setelah blok Judul dokumen jika ada, atau memperbarui blok Abstrak yang sudah ada).
+  - Menjamin bahwa penerapan abstrak **tidak akan pernah menimpa, membelah, atau merusak paragraf naskah yang sudah ada**.
+  - Tombol aksi pada kartu hasil sidebar otomatis berganti menjadi **"Insert at Beginning" / "Sisipkan di Awal"** jika hasil yang dibuat adalah abstrak.
+  - Menambahkan catatan tips bilingual yang menenangkan pengguna bahwa teks naskah lain tidak akan terganggu.
+- **Tombol Salin ke Clipboard 1-Klik**:
+  - Menambahkan tombol **Copy / Salin** pada kartu hasil dengan umpan balik visual instan (`IconCopy` → `IconCheck`, teks "Copied" / "Tersalin").
+- **Auto-Cite (AI) 1-Click Auto-Insert**:
+  - Menerapkan `autoInsertBestCitation`: pengguna cukup memblok teks klaim lalu klik "Auto-Cite (AI)", sistem langsung mencari kandidat dengan *match* tertinggi di Semantic Scholar / CrossRef dan langsung menyisipkannya ke naskah + daftar pustaka secara instan tanpa perlu memilih manual dari daftar.
+- **Verifikasi**:
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 229 dari 229 unit test lolos 100%.
+
 ## ⚡ [v0.44.8] - 2026-10-22 (Unified Find Citation Flow: In-Canvas Floating Search Popup & Tab Switching Removal)
 
 ### 🎯 Penyatuan Alur Cari Sitasi: Popup Mengambang di Canvas & Penghapusan Perpindahan Tab

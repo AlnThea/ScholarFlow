@@ -625,5 +625,62 @@ export function buildBlockMethods(props: EditorJsMethodsProps) {
         console.error('Failed to insert blocks into EditorJS:', err);
       }
     },
+    insertAbstractSection: async (abstractText: string, language: 'en' | 'id' = 'en') => {
+      if (!editorRef.current || !editorRef.current.blocks) return;
+      try {
+        const totalBlocks = editorRef.current.blocks.getBlocksCount();
+        let targetIndex = 0;
+
+        // Check if there is already an Abstract block in the first few blocks
+        let existingAbstractIdx = -1;
+        for (let i = 0; i < Math.min(totalBlocks, 5); i++) {
+          const blkHolder = document.querySelectorAll('#' + holderId + ' .ce-block')[i];
+          const text = blkHolder?.textContent?.trim().toLowerCase() || '';
+          if (text === 'abstract' || text === 'abstrak') {
+            existingAbstractIdx = i;
+            break;
+          }
+        }
+
+        if (existingAbstractIdx >= 0 && existingAbstractIdx + 1 < totalBlocks) {
+          // Replace or update existing abstract paragraph right below the Abstract header
+          const nextBlockHolder = document.querySelectorAll('#' + holderId + ' .ce-block')[existingAbstractIdx + 1];
+          const contentEditable = nextBlockHolder?.querySelector('[contenteditable="true"]') as HTMLElement | null;
+          if (contentEditable) {
+            contentEditable.innerText = abstractText;
+          } else {
+            const nextBlock = editorRef.current.blocks.getBlockByIndex(existingAbstractIdx + 1);
+            if (nextBlock?.id) {
+              editorRef.current.blocks.update(nextBlock.id, { text: abstractText });
+            } else {
+              (editorRef.current.blocks as any).update(existingAbstractIdx + 1, { text: abstractText });
+            }
+          }
+        } else {
+          // If block 0 is a Title / Level 1 Header, insert Abstract at index 1 (right after the title)
+          if (totalBlocks > 0) {
+            const firstBlockHolder = document.querySelectorAll('#' + holderId + ' .ce-block')[0];
+            const isFirstHeading = firstBlockHolder?.querySelector('h1, h2, .ce-header');
+            if (isFirstHeading) {
+              targetIndex = 1;
+            }
+          }
+
+          const headerTitle = language === 'en' ? 'Abstract' : 'Abstrak';
+          await editorRef.current.blocks.insert('header', { text: headerTitle, level: 2 }, undefined, targetIndex, true);
+          await editorRef.current.blocks.insert('paragraph', { text: abstractText }, undefined, targetIndex + 1, true);
+        }
+
+        if (editorRef.current.save) {
+          const outputData = await editorRef.current.save();
+          if (onContentChange) {
+            onContentChange(outputData);
+          }
+        }
+        calculateLiveStats();
+      } catch (err) {
+        console.error('Failed to insert abstract section into EditorJS:', err);
+      }
+    },
   };
 }

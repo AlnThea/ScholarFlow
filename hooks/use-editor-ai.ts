@@ -435,10 +435,14 @@ export function useEditorAi(
   const applyImprovedText = useCallback(() => {
     if (!improvedResult) return;
     setContentBeforeApply(currentDocument?.content);
-    editorJsRef.current?.insertText(improvedResult.improved_text);
+    if (improvedResult.tone === 'abstract' && typeof (editorJsRef.current as any)?.insertAbstractSection === 'function') {
+      (editorJsRef.current as any).insertAbstractSection(improvedResult.improved_text, language as 'en' | 'id');
+    } else {
+      editorJsRef.current?.insertText(improvedResult.improved_text);
+    }
     setIsApplied(true);
     setSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-  }, [improvedResult, currentDocument, editorJsRef, setContentBeforeApply, setIsApplied, setSavedAt]);
+  }, [improvedResult, currentDocument, editorJsRef, setContentBeforeApply, setIsApplied, setSavedAt, language]);
 
   const deleteAiHistoryEntry = useCallback((id: string) => {
     setAiHistory((current) => {

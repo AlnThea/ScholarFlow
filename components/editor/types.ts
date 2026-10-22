@@ -31,6 +31,7 @@ export type EditorLayoutProps = {
   onGenerateAbstract: () => void;
   onFindCitation: (query?: string) => void;
   onRepeatCitationSearch: (query: string) => void;
+  onAutoCiteBestMatch?: (query?: string) => Promise<any>;
   onInsertCitation: () => void;
   onInsertBibliography: () => void;
   onInsertImageSample: () => void;

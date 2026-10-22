@@ -274,6 +274,7 @@ export function ScholarEditor() {
     exportCitationJson,
     runCitationSearch,
     repeatCitationSearch,
+    autoInsertBestCitation,
     insertCitationCandidate
   } = useEditorCitation(
     user,
@@ -493,6 +494,7 @@ export function ScholarEditor() {
         onGenerateAbstract={runGenerateAbstract}
         onFindCitation={runCitationSearch}
         onRepeatCitationSearch={repeatCitationSearch}
+        onAutoCiteBestMatch={autoInsertBestCitation}
         onInsertCitation={insertCitation}
         onInsertBibliography={insertBibliography}
         onInsertImageSample={insertSampleImage}

@@ -416,6 +416,60 @@ export function useEditorCitation(
     [user, editorJsRef],
   );
 
+  const autoInsertBestCitation = useCallback(async (customQuery?: string) => {
+    let queryToUse = (typeof customQuery === 'string' && customQuery.trim()) ? customQuery.trim() : (selectedText?.trim() || '');
+    if (!queryToUse && typeof window !== 'undefined') {
+      const windowSel = window.getSelection()?.toString()?.trim();
+      if (windowSel) {
+        queryToUse = windowSel;
+      }
+    }
+    if (!queryToUse) return null;
+
+    setIsSearchingCitations(true);
+    setCitationError(null);
+    setCitationNote(null);
+    setAiError(null);
+
+    try {
+      const response = await searchCitations(queryToUse, 10);
+      let filtered = response.results;
+      if (currentDocument?.settings) {
+        const settings = currentDocument.settings;
+        if (settings.publishYear === '5_years') {
+          const currentYear = new Date().getFullYear();
+          filtered = filtered.filter((c) => c.year !== null && c.year >= currentYear - 5);
+        } else if (settings.publishYear === 'custom') {
+          const start = settings.publishYearStart ?? 0;
+          const end = settings.publishYearEnd ?? new Date().getFullYear();
+          filtered = filtered.filter((c) => c.year !== null && c.year >= start && c.year <= end);
+        }
+        if (settings.impactFactor === '0.25+') filtered = filtered.filter((c) => c.cited_by_count >= 2);
+        else if (settings.impactFactor === '3+') filtered = filtered.filter((c) => c.cited_by_count >= 20);
+        else if (settings.impactFactor === '10+') filtered = filtered.filter((c) => c.cited_by_count >= 100);
+
+        if (settings.limitCollection === 'journals') filtered = filtered.filter((c) => c.journal !== null && c.journal.trim() !== '');
+        else if (settings.limitCollection === 'proceedings') filtered = filtered.filter((c) => c.journal === null || !c.journal.toLowerCase().includes('journal'));
+      }
+
+      setCitationResults(filtered);
+      if (filtered.length > 0) {
+        const bestCandidate = filtered[0];
+        insertCitationCandidate(bestCandidate);
+        setCitationNote(response.note || `Auto-cited: ${bestCandidate.citation_label}`);
+        return bestCandidate;
+      } else {
+        setCitationNote(response.note || 'No citation candidates found for this query.');
+        return null;
+      }
+    } catch (error) {
+      setCitationError(error instanceof Error ? error.message : 'Unable to search citations.');
+      return null;
+    } finally {
+      setIsSearchingCitations(false);
+    }
+  }, [currentDocument, selectedText, insertCitationCandidate, setAiError]);
+
   return {
     citationResults,
     citationLibrary,
@@ -444,6 +498,7 @@ export function useEditorCitation(
     exportCitationJson,
     runCitationSearch,
     repeatCitationSearch,
+    autoInsertBestCitation,
     insertCitationCandidate
   };
 }

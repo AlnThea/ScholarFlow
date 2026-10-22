@@ -243,6 +243,8 @@ export interface EditorJsMethods {
   insertCrossReference?: (targetId: string, type: 'figure' | 'table', index: number, language?: 'en' | 'id', customText?: string) => void;
   scrollToScientificItem?: (targetId: string) => void;
   refreshCrossReferences?: (language?: 'en' | 'id') => Promise<void>;
+  insertBlocks?: (newBlocks: Array<{ type: string; data: any }>) => Promise<void>;
+  insertAbstractSection?: (abstractText: string, language?: 'en' | 'id') => Promise<void>;
 }
 
 export function scrambleHtmlText(html: string): string {

@@ -67,6 +67,7 @@ type SidebarProps = {
   onGenerateAbstract: () => void;
   onFindCitation: () => void;
   onRepeatCitationSearch: (query: string) => void;
+  onAutoCiteBestMatch?: (query?: string) => Promise<any>;
   onInsertCitation: () => void;
   onInsertBibliography: () => void;
   onInsertImageSample: () => void;
@@ -207,6 +208,7 @@ export function EditorSidebar(props: SidebarProps) {
   onGenerateAbstract,
   onFindCitation,
   onRepeatCitationSearch,
+  onAutoCiteBestMatch,
   onInsertCitation,
   onInsertBibliography,
   onInsertImageSample,

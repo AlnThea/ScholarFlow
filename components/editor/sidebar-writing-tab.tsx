@@ -87,6 +87,7 @@ export const SidebarWritingTab = (props: any) => {
     citationCount, bibliographyEntries, improvedText, isImproving, isSearchingCitations,
     aiError, citationError, citationNote, onApplyImprovedText, onImproveWriting,
     onParaphrase, onSummarize, onGenerateAbstract, onFindCitation, onRepeatCitationSearch,
+    onAutoCiteBestMatch,
     setIsHistoryModalOpen, isApplied, t, ActionButton,
     selectedAiModel, setSelectedAiModel, aiModels
   } = props;
@@ -94,6 +95,14 @@ export const SidebarWritingTab = (props: any) => {
   const hasImprovedText = improvedText !== null;
   const isEn = language === 'en';
   const isProUser = activePlanId === 'pro' || activePlanId === 'campus' || activePlanId === 'institution';
+  const [isCopied, setIsCopied] = React.useState(false);
+
+  const handleCopyText = () => {
+    if (!improvedText?.improved_text) return;
+    navigator.clipboard.writeText(improvedText.improved_text);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
 
   const handleProAction = (actionCallback: () => void) => {
     if (!isProUser) {
@@ -232,22 +241,25 @@ export const SidebarWritingTab = (props: any) => {
 
             {/* 6. Auto-Suggest Citation (PRO) */}
             <CompactToolButton
-              label={isEn ? "Auto-Cite (AI)" : "Sitasi Otomatis"}
+              label={isSearchingCitations ? (isEn ? 'Citing...' : 'Menyisipkan...') : (isEn ? "Auto-Cite (AI)" : "Sitasi Otomatis")}
               description={isEn
-                ? "Automated citation suggestions based on your statement claims (Pro)."
-                : "Rekomendasi sitasi otomatis berdasarkan isi klaim kalimat Anda (Pro)."
+                ? "Instantly finds and inserts the highest-match verified citation (Pro)."
+                : "Mencari dan langsung menyisipkan sitasi dengan kecocokan tertinggi (Pro)."
               }
-              icon={IconSparkles}
+              icon={isSearchingCitations ? IconLoader2 : IconSparkles}
               onClick={() => {
                 if (!isProUser) {
                   props.setIsPlanModalOpen?.(true);
+                } else if (onAutoCiteBestMatch) {
+                  onAutoCiteBestMatch(selectedText);
                 } else {
                   onRepeatCitationSearch(selectedText);
                 }
               }}
-              disabled={!selectedText.trim()}
+              disabled={!selectedText.trim() || isSearchingCitations}
               isPro={true}
               isActivePro={isProUser}
+              isLoading={isSearchingCitations}
               align="right"
             />
           </div>
@@ -267,18 +279,40 @@ export const SidebarWritingTab = (props: any) => {
         <section className="rounded-lg border border-line dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h3 className="text-sm font-semibold text-text dark:text-slate-200">
-              {isEn ? 'Improve result' : 'Hasil Perbaikan AI'}
+              {improvedText?.tone === 'abstract'
+                ? (isEn ? 'Generated Abstract' : 'Draf Abstrak AI')
+                : (isEn ? 'Improve result' : 'Hasil Perbaikan AI')}
             </h3>
             {hasImprovedText ? (
-              <button
-                type="button"
-                onClick={onApplyImprovedText}
-                disabled={isApplied}
-                className="inline-flex items-center gap-2 rounded-md border border-line dark:border-slate-600 bg-panel dark:bg-slate-700 px-3 py-1.5 text-xs font-medium text-text dark:text-slate-200 transition hover:border-accent/30 hover:bg-accentSoft/70 dark:hover:bg-indigo-900/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-              >
-                <IconCheck className="h-3.5 w-3.5" />
-                {isApplied ? (isEn ? 'Applied' : 'Diterapkan') : (isEn ? 'Apply' : 'Terapkan')}
-              </button>
+              <div className="flex items-center gap-1.5">
+                {/* Copy Button */}
+                <button
+                  type="button"
+                  onClick={handleCopyText}
+                  title={isEn ? "Copy to clipboard" : "Salin ke clipboard"}
+                  className="inline-flex items-center gap-1 rounded-md border border-line dark:border-slate-600 bg-panel dark:bg-slate-700 px-2 py-1 text-xs font-medium text-text dark:text-slate-200 transition hover:border-accent/30 hover:bg-accentSoft/70 dark:hover:bg-indigo-900/50 cursor-pointer"
+                >
+                  {isCopied ? <IconCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" /> : <IconCopy className="h-3.5 w-3.5" />}
+                  <span>{isCopied ? (isEn ? 'Copied' : 'Tersalin') : (isEn ? 'Copy' : 'Salin')}</span>
+                </button>
+
+                {/* Apply / Insert Button */}
+                <button
+                  type="button"
+                  onClick={onApplyImprovedText}
+                  disabled={isApplied}
+                  className="inline-flex items-center gap-1 rounded-md border border-line dark:border-slate-600 bg-panel dark:bg-slate-700 px-2.5 py-1 text-xs font-medium text-text dark:text-slate-200 transition hover:border-accent/30 hover:bg-accentSoft/70 dark:hover:bg-indigo-900/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <IconCheck className="h-3.5 w-3.5" />
+                  <span>
+                    {isApplied
+                      ? (isEn ? 'Applied' : 'Diterapkan')
+                      : improvedText?.tone === 'abstract'
+                      ? (isEn ? 'Insert at Beginning' : 'Sisipkan di Awal')
+                      : (isEn ? 'Apply' : 'Terapkan')}
+                  </span>
+                </button>
+              </div>
             ) : null}
           </div>
           {aiError ? (
@@ -289,10 +323,21 @@ export const SidebarWritingTab = (props: any) => {
             <div className="space-y-3">
               <div className="rounded-md border border-line dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-3">
                 <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted dark:text-slate-500">
-                  {isEn ? 'Improved Text' : 'Teks Baru'}
+                  {improvedText?.tone === 'abstract'
+                    ? (isEn ? 'Abstract Content' : 'Isi Abstrak')
+                    : (isEn ? 'Improved Text' : 'Teks Baru')}
                 </p>
                 <p className="text-sm leading-6 text-text dark:text-slate-300">{improvedText?.improved_text}</p>
               </div>
+
+              {improvedText?.tone === 'abstract' ? (
+                <div className="rounded-md border border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/70 dark:bg-indigo-950/40 p-2.5 text-[11px] leading-relaxed text-indigo-800 dark:text-indigo-300">
+                  {isEn
+                    ? "Tip: Clicking 'Insert at Beginning' automatically inserts this abstract at the top of your manuscript without disturbing other paragraphs."
+                    : "Tips: Mengklik 'Sisipkan di Awal' akan menaruh abstrak ini di bagian atas naskah secara rapi tanpa mengganggu paragraf lain."}
+                </div>
+              ) : null}
+
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-start gap-2 rounded-md border border-line dark:border-slate-700 bg-panel dark:bg-slate-800 p-2.5 text-xs leading-5 text-muted dark:text-slate-400 flex-1">
                   <IconSparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent dark:text-indigo-400" />

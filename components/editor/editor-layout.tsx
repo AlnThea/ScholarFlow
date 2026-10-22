@@ -101,6 +101,7 @@ export function EditorLayout({
   onExportBibliographyRis,
   onInsertCitationCandidate,
   onRepeatCitationSearch,
+  onAutoCiteBestMatch,
   onInsertCitation,
   onFindCitation,
   onImproveWriting,
@@ -1181,6 +1182,7 @@ export function EditorLayout({
                   onGenerateAbstract={onGenerateAbstract}
                   onFindCitation={handleFindCitationWithPopup}
                   onRepeatCitationSearch={onRepeatCitationSearch}
+                  onAutoCiteBestMatch={onAutoCiteBestMatch}
                   onInsertCitation={onInsertCitation}
                   onInsertBibliography={onInsertBibliography}
                   onInsertImageSample={onInsertImageSample}

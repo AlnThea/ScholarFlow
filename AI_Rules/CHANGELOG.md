@@ -1,5 +1,21 @@
 # ScholarFlow Changelog
 
+## v0.44.9 - Smart Abstract Section Insertion, One-Click Clipboard Copying & 1-Click Auto-Cite AI Best Match Injection
+
+- **Smart Abstract Section Insertion (`lib/editor/methods/block-methods.ts`, `lib/editor/editor-tools.ts`, `hooks/use-editor-ai.ts`)**:
+  - Implemented `insertAbstractSection` method in EditorJS block methods that places the generated abstract safely at the beginning of the manuscript (right after the title block if present, or replaces an existing Abstract block).
+  - Guarantees that applying an abstract will never disrupt, overwrite, or split existing body paragraphs.
+  - Added smart action button in `SidebarWritingTab`: changes dynamically to `"Insert at Beginning" / "Sisipkan di Awal"` when the result is an abstract.
+  - Added bilingual helpful tip note explaining safe abstract placement to authors.
+- **One-Click Clipboard Copying (`components/editor/sidebar-writing-tab.tsx`)**:
+  - Added dedicated `Copy` button to the Improve Result Card with reactive clipboard copying (`navigator.clipboard.writeText`) and visual feedback (`IconCopy` -> `IconCheck`, `"Copied" / "Tersalin"`).
+- **1-Click Auto-Cite (AI) Best Match Injection (`hooks/use-editor-citation.ts`, `components/editor/scholar-editor.tsx`, `components/editor/editor-layout.tsx`, `components/editor/sidebar-writing-tab.tsx`)**:
+  - Implemented `autoInsertBestCitation`: when Pro users select a claim and click "Auto-Cite (AI)", the system queries Semantic Scholar / CrossRef and automatically inserts the highest-relevance verified paper into the manuscript canvas and bibliography in 1 click, without requiring manual browsing.
+- **Verification**:
+  - TypeScript 0 errors (`npx tsc --noEmit`).
+  - 229 of 229 Vitest unit tests pass across 27 files.
+
+
 ## v0.44.8 - Unified Find Citation Flow: In-Canvas Floating Search Popup & Tab Switching Removal
 
 - **Unified In-Canvas Floating Citation Search (`components/editor/editor-layout.tsx`, `components/editor/editor-sidebar.tsx`)**:
