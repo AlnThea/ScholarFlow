@@ -5,6 +5,22 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.45.3] - 2026-10-22 (Real-Time Reactive Token Quota Deductions for PaperChat & Global Quota Event Bus)
+
+### 🎯 Sinkronisasi Kuota Token Real-Time untuk Chat Paper & Global Event Bus
+- **Pengiriman Pemakaian Token Real-Time dari PaperChat (`app/api/v1/ai/paper-chat/route.ts`)**:
+  - Mengembalikan `tokens_used` dan `monthly_quota` langsung di dalam JSON respon endpoint PaperChat.
+  - Memastikan setiap interaksi tanya jawab paper tercatat dan nilainya dikirimkan balik ke komponen antarmuka pengguna.
+- **Global Reactive Token Quota Event Bus (`lib/ai/token-quota.ts`)**:
+  - Memperbarui `saveLocalQuotaState` agar memancarkan custom event `scholarflow:quota-updated` secara global pada window browser.
+  - Mengatasi keterbatasan isolasi state antar komponen yang terpisah hierarki sehingga tidak perlu reload halaman.
+- **Pembaruan Reaktif pada Hook & Modal (`hooks/use-editor-ai.ts`, `components/editor/modals/paper-chat-modal.tsx`)**:
+  - Memasang pendengar (*listener*) event di `useEditorAi` untuk menyegarkan state `tokensUsed` dan `monthlyQuota`.
+  - Memanggil `saveLocalQuotaState` di dalam `PaperChatModal` sesaat setelah balasan AI diterima. Badge kuota token di header dan bilah samping kini langsung berkurang/ter-refresh seketika.
+- **Verifikasi**:
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 229 dari 229 unit test lolos 100%.
+
 ## ⚡ [v0.45.2] - 2026-10-22 (PaperChat Multi-Provider OpenRouter Cascading, Strict Scope Guardrails & Intelligent Language Detection)
 
 ### 🎯 Integrasi Multi-Provider OpenRouter pada PaperChat, Guardrails Keamanan & Deteksi Bahasa

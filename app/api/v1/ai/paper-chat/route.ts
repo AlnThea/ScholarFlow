@@ -510,8 +510,9 @@ export async function POST(request: NextRequest) {
     // 6. Deduct Quota Tokens
     const actualTokens = Math.max(estimateTokens(question + answer), 20);
     let quotaRemaining = quotaCheck.remaining;
+    let quotaRecord: any = null;
     if (userId) {
-      const quotaRecord = await recordPersonalTokenConsumption(userId, actualTokens);
+      quotaRecord = await recordPersonalTokenConsumption(userId, actualTokens);
       quotaRemaining = quotaRecord.remaining;
 
       if (aiGenerationId) {
@@ -573,6 +574,8 @@ export async function POST(request: NextRequest) {
       conversation: updatedConversation,
       tokensConsumed: actualTokens,
       quotaRemaining,
+      tokens_used: quotaRecord ? quotaRecord.used : undefined,
+      monthly_quota: quotaRecord ? quotaRecord.limit : undefined,
     };
 
     // 8. Cache response (5 min TTL)

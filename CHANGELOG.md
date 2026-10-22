@@ -2,6 +2,23 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.45.3] - 2026-10-22 (Real-Time Reactive Token Quota Deductions for PaperChat & Global Quota Event Bus)
+
+### 🎯 PaperChat Real-Time Token Sync & Event Bus (`app/api/v1/ai/paper-chat/route.ts`, `lib/ai/token-quota.ts`, `hooks/use-editor-ai.ts`, `components/editor/modals/paper-chat-modal.tsx`)
+- **Real-Time Token Usage Payload in PaperChat**:
+  - Connected `tokens_used` and `monthly_quota` to the PaperChat response JSON payload.
+  - Ensures accurate accounting for every prompt and response transaction executed inside the paper reader.
+- **Global Reactive Token Quota Event Bus**:
+  - Updated `saveLocalQuotaState` in `lib/ai/token-quota.ts` to broadcast a `scholarflow:quota-updated` event.
+  - Allows all UI token widgets (`TokenQuotaBadge`) to update instantly across the entire application without a page refresh.
+- **Hook & Modal Reactive Wiring**:
+  - Wired `useEditorAi` to listen to `scholarflow:quota-updated` and keep `tokensUsed` and `monthlyQuota` state fresh.
+  - Configured `PaperChatModal` to trigger `saveLocalQuotaState` as soon as a chat message succeeds.
+- **Verification**:
+  - TypeScript validation passes with 0 errors (`npx tsc --noEmit`).
+  - Vitest test suite passes all 229 unit tests across 27 test files.
+
+
 ## ⚡ [v0.45.2] - 2026-10-22 (PaperChat Multi-Provider OpenRouter Cascading, Strict Scope Guardrails & Intelligent Language Detection)
 
 ### 🎯 PaperChat Multi-Provider Architecture & Security Hardening (`app/api/v1/ai/paper-chat/route.ts`, `components/editor/`)

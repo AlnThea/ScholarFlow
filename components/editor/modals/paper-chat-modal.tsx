@@ -25,6 +25,7 @@ import {
   type PaperChatMessage,
   type PaperInsights,
 } from '@/lib/ai/paper-chat';
+import { saveLocalQuotaState } from '@/lib/ai/token-quota';
 
 export interface PaperChatModalProps {
   isOpen: boolean;
@@ -224,6 +225,10 @@ export function PaperChatModal({
 
       if (result.extractedInsights) {
         setLatestInsights(result.extractedInsights);
+      }
+
+      if (typeof result.tokens_used === 'number') {
+        saveLocalQuotaState(result.tokens_used, result.monthly_quota);
       }
 
       // Cache locally

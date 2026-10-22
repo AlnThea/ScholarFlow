@@ -1,5 +1,23 @@
 # ScholarFlow Changelog
 
+## v0.45.3 - Real-Time Reactive Token Quota Deductions for PaperChat & Global Quota Event Bus
+
+- **Real-Time Token Usage Payload in PaperChat (`app/api/v1/ai/paper-chat/route.ts`)**:
+  - Attached `tokens_used` and `monthly_quota` in the API response JSON from `quotaRecord`.
+  - Allowed client components to immediately synchronize user quota balances following paper inquiries.
+- **Global Reactive Token Quota Event Bus (`lib/ai/token-quota.ts`)**:
+  - Enhanced `saveLocalQuotaState` to dispatch `scholarflow:quota-updated` custom DOM window event with detailed payload (`used`, `limit`, `resetAt`).
+  - Enables zero-latency state synchronization across disjoint React component trees without requiring full page reload or hook unmounting.
+- **Dynamic Quota Listener in Editor AI Hook (`hooks/use-editor-ai.ts`)**:
+  - Added a reactive `useEffect` window event listener for `'scholarflow:quota-updated'`.
+  - Automatically updates `tokensUsed` and `monthlyQuota` reactive states in `useEditorAi`, which drives the `TokenQuotaBadge` in both the top editor navbar and sidebar.
+- **Interactive Quota Refresh in PaperChatModal (`components/editor/modals/paper-chat-modal.tsx`)**:
+  - Connected `saveLocalQuotaState` immediately upon receipt of successful AI answers in `handleSendMessage`.
+- **Verification**:
+  - TypeScript 0 errors (`npx tsc --noEmit`).
+  - 229 of 229 Vitest unit tests pass across 27 files.
+
+
 ## v0.45.2 - PaperChat Multi-Provider OpenRouter Cascading, Strict Scope Guardrails & Intelligent Language Detection
 
 - **Connected OpenRouter & Custom Providers to PaperChat (`app/api/v1/ai/paper-chat/route.ts`)**:

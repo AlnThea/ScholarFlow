@@ -88,6 +88,7 @@ export function saveLocalQuotaState(used: number, limit: number, resetAt?: strin
   try {
     const nextReset = resetAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     localStorage.setItem(LOCAL_QUOTA_STORAGE_KEY, JSON.stringify({ used, limit, resetAt: nextReset }));
+    window.dispatchEvent(new CustomEvent('scholarflow:quota-updated', { detail: { used, limit, resetAt: nextReset } }));
   } catch (e) {
     console.warn('[TokenQuota] Failed to save localStorage quota:', e);
   }

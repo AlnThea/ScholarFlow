@@ -36,6 +36,21 @@ export function useEditorAi(
     }
   }, [refreshProfile]);
 
+  // Listen for real-time quota update events across all AI features (e.g. PaperChat)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleQuotaSync = (e: any) => {
+      if (e.detail && typeof e.detail.used === 'number') {
+        setTokensUsed(e.detail.used);
+        if (typeof e.detail.limit === 'number') {
+          setMonthlyQuota(e.detail.limit);
+        }
+      }
+    };
+    window.addEventListener('scholarflow:quota-updated', handleQuotaSync);
+    return () => window.removeEventListener('scholarflow:quota-updated', handleQuotaSync);
+  }, []);
+
   const [internalSelectedText, setInternalSelectedText] = useState('');
   const selectedText = externalSelectedText !== undefined ? externalSelectedText : internalSelectedText;
   const setSelectedText = externalSetSelectedText || setInternalSelectedText;
