@@ -17,6 +17,9 @@ import {
   IconAlertTriangle,
   IconFileText,
   IconExternalLink,
+  IconCrown,
+  IconBolt,
+  IconArrowUpRight,
 } from '@tabler/icons-react';
 import {
   loadPaperChatHistory,
@@ -47,6 +50,7 @@ export interface PaperChatModalProps {
   selectedAiModel?: string;
   onInsertToEditor?: (text: string, referenceId?: string, label?: string) => void;
   onShowToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
+  onUpgradePro?: () => void;
 }
 
 export function PaperChatModal({
@@ -59,11 +63,15 @@ export function PaperChatModal({
   selectedAiModel,
   onInsertToEditor,
   onShowToast,
+  onUpgradePro,
 }: PaperChatModalProps) {
   const isEn = language === 'en';
+  const isProUser = userPlan?.toLowerCase() === 'pro' || userPlan?.toLowerCase() === 'premium';
   const [messages, setMessages] = useState<PaperChatMessage[]>([]);
   const [inputQuery, setInputQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [quotaExceeded, setQuotaExceeded] = useState(false);
+  const [requiresPro, setRequiresPro] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [insertedId, setInsertedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'chat' | 'insights'>('chat');
@@ -216,6 +224,12 @@ export function PaperChatModal({
 
       if (!response.ok) {
         const errorData = await response.json();
+        if (errorData?.quotaExceeded) {
+          setQuotaExceeded(true);
+        }
+        if (errorData?.requiresPro) {
+          setRequiresPro(true);
+        }
         throw new Error(errorData.error || (isEn ? 'Failed to process question' : 'Gagal memproses pertanyaan'));
       }
 
@@ -294,6 +308,31 @@ export function PaperChatModal({
               <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                 [{labelText}]
               </span>
+
+              {isProUser ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60">
+                  <IconCrown className="w-3 h-3 text-amber-500" />
+                  PRO
+                </span>
+              ) : (
+                <div className="inline-flex items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    FREE
+                  </span>
+                  {onUpgradePro && (
+                    <button
+                      type="button"
+                      onClick={onUpgradePro}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-amber-500 to-indigo-600 hover:from-amber-600 hover:to-indigo-700 text-white shadow-xs transition cursor-pointer"
+                      title={isEn ? "Upgrade to Pro for 1,000,000 tokens & Claude 3.5 Sonnet" : "Upgrade ke Pro untuk kuota 1.000.000 token & Claude 3.5 Sonnet"}
+                    >
+                      <IconBolt className="w-2.5 h-2.5" />
+                      <span>{isEn ? 'Upgrade Pro' : 'Upgrade Pro'}</span>
+                    </button>
+                  )}
+                </div>
+              )}
+
               {paper.doi && (
                 <a
                   href={`https://doi.org/${paper.doi}`}
@@ -510,6 +549,41 @@ export function PaperChatModal({
 
               <div ref={messagesEndRef} />
             </div>
+
+            {/* Quota Exceeded or Pro Feature Banner */}
+            {(quotaExceeded || requiresPro) && (
+              <div className="p-3 mx-3 mb-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-center justify-between gap-3 shadow-xs animate-fade-in">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <IconCrown className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-amber-900 dark:text-amber-200">
+                      {requiresPro
+                        ? (isEn ? 'Pro Subscription Required' : 'Memerlukan Paket Pro')
+                        : (isEn ? 'Monthly Token Quota Limit Reached' : 'Batas Kuota Token Bulanan Tercapai')}
+                    </p>
+                    <p className="text-[11px] text-amber-700 dark:text-amber-300/80">
+                      {requiresPro
+                        ? (isEn ? 'This advanced AI model is available on Pro. Upgrade to unlock.' : 'Model AI tingkat lanjut ini khusus untuk pelanggan Pro. Upgrade untuk membuka akses.')
+                        : (isEn
+                          ? 'You have used your 50,000 monthly Free tokens. Upgrade to Pro for 1,000,000 tokens/month.'
+                          : 'Anda telah mencapai batas 50.000 token Free. Upgrade ke Pro untuk 1.000.000 token/bulan.')}
+                    </p>
+                  </div>
+                </div>
+                {onUpgradePro && (
+                  <button
+                    type="button"
+                    onClick={onUpgradePro}
+                    className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shrink-0 transition flex items-center gap-1 shadow-xs cursor-pointer"
+                  >
+                    <span>{isEn ? 'Upgrade Now' : 'Upgrade Sekarang'}</span>
+                    <IconArrowUpRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Input Bar */}
             <form

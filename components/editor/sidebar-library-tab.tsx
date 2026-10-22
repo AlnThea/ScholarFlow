@@ -535,6 +535,10 @@ export const SidebarLibraryTab = (props: any) => {
           userPlan={activePlanId || 'free'}
           selectedAiModel={selectedAiModel}
           onInsertToEditor={onInsertCitationText || onInsertSynthesizedText}
+          onUpgradePro={() => {
+            setIsPaperChatOpen(false);
+            props.setIsPlanModalOpen?.(true);
+          }}
         />
       )}
 

@@ -1,5 +1,19 @@
 # ScholarFlow Changelog
 
+## v0.45.4 - PaperChat Freemium Hybrid Tier Strategy: Free Monthly Token Guard with Pro Model Gating & Reactive In-Modal Upgrade Triggers
+
+- **Freemium Tier Gating on PaperChat (`app/api/v1/ai/paper-chat/route.ts`)**:
+  - Implemented tier verification for model selection: Free tier users can query papers with standard and free models (under their 50,000 monthly token quota), while premium models (e.g., Claude 3.5 Sonnet, GPT-4o) require an active Pro subscription.
+  - Returns friendly status code 403 with `requiresPro: true` when a free user tries to invoke a premium model.
+- **Visual Tier Badges & Reactive Upgrade Prompts (`components/editor/modals/paper-chat-modal.tsx`)**:
+  - Added tier indicator badge in modal header: displays `👑 PRO` for subscribers, and `FREE` with a gradient `"Upgrade Pro"` button for free tier users.
+  - Connected `onUpgradePro` callback to cleanly open the pricing & subscription modal (`props.setIsPlanModalOpen`).
+  - Added dedicated Pro upgrade banner that appears dynamically above the input box whenever a Free user hits their monthly 50k token quota or selects a Pro-gated model.
+- **Verification**:
+  - TypeScript 0 errors (`npx tsc --noEmit`).
+  - 229 of 229 Vitest unit tests pass across 27 files.
+
+
 ## v0.45.3 - Real-Time Reactive Token Quota Deductions for PaperChat & Global Quota Event Bus
 
 - **Real-Time Token Usage Payload in PaperChat (`app/api/v1/ai/paper-chat/route.ts`)**:

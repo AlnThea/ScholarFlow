@@ -5,6 +5,21 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.45.4] - 2026-10-22 (PaperChat Freemium Hybrid Tier Strategy: Free Monthly Token Guard with Pro Model Gating & Reactive In-Modal Upgrade Triggers)
+
+### 🎯 Strategi Tingkatan Freemium Hybrid untuk Chat Paper & Pemicu Upgrade Pro
+- **Gating Model AI Premium pada Chat Paper (`app/api/v1/ai/paper-chat/route.ts`)**:
+  - Menjaga fitur Chat Paper tetap terbuka untuk pengguna Free dengan batasan kuota bulanan 50.000 token.
+  - Mengunci model kelas atas (misal Claude 3.5 Sonnet / GPT-4o) khusus untuk pengguna Pro (`requiresPro: true`).
+- **Badge Indikator Status & Banner Penawaran Upgrade (`components/editor/modals/paper-chat-modal.tsx`)**:
+  - Menambahkan badge status tingkatan (`PRO` emas atau `FREE` abu-abu dengan tombol pemicu *Upgrade Pro* cepat) pada header modal.
+  - Menampilkan kartu banner upgrade berdesain elegan (lengkap dengan Dark Mode & teks dwibahasa EN-ID) tepat di atas kotak chat ketika kuota token Free habis atau saat pengguna memilih model Pro.
+- **Koneksi Modal Harga (`components/editor/sidebar-library-tab.tsx`)**:
+  - Meneruskan prop `onUpgradePro` untuk membuka `PricingModal` secara langsung saat tombol upgrade di dalam modal chat paper ditekan.
+- **Verifikasi**:
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 229 dari 229 unit test lolos 100%.
+
 ## ⚡ [v0.45.3] - 2026-10-22 (Real-Time Reactive Token Quota Deductions for PaperChat & Global Quota Event Bus)
 
 ### 🎯 Sinkronisasi Kuota Token Real-Time untuk Chat Paper & Global Event Bus

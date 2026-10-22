@@ -2,6 +2,20 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.45.4] - 2026-10-22 (PaperChat Freemium Hybrid Tier Strategy: Free Monthly Token Guard with Pro Model Gating & Reactive In-Modal Upgrade Triggers)
+
+### 🎯 PaperChat Freemium Architecture & In-Modal Pro Upgrade Triggers (`app/api/v1/ai/paper-chat/route.ts`, `components/editor/modals/paper-chat-modal.tsx`, `components/editor/sidebar-library-tab.tsx`)
+- **Freemium Tier Model Gating**:
+  - Maintained Free access for paper chat while guarding usage under the 50,000 monthly token quota.
+  - Reserved premium LLM engines (e.g. Claude 3.5 Sonnet, GPT-4o) exclusively for Pro members (`requiresPro: true`).
+- **Interactive Tier Badges & Upgrade Banner**:
+  - Added `👑 PRO` and `FREE` badges inside PaperChatModal header with quick `"Upgrade Pro"` trigger.
+  - Rendered reactive upgrade banner with smooth dark mode styling when token quota is depleted or pro-only features are requested.
+- **Verification**:
+  - TypeScript validation passes with 0 errors (`npx tsc --noEmit`).
+  - Vitest test suite passes all 229 unit tests across 27 test files.
+
+
 ## ⚡ [v0.45.3] - 2026-10-22 (Real-Time Reactive Token Quota Deductions for PaperChat & Global Quota Event Bus)
 
 ### 🎯 PaperChat Real-Time Token Sync & Event Bus (`app/api/v1/ai/paper-chat/route.ts`, `lib/ai/token-quota.ts`, `hooks/use-editor-ai.ts`, `components/editor/modals/paper-chat-modal.tsx`)

@@ -418,6 +418,20 @@ export async function POST(request: NextRequest) {
     };
 
     const chosenModel = modelsList.find(m => m.id === model || m.model_id === model);
+
+    // Gating model premium (Pro Only)
+    if (chosenModel && chosenModel.is_premium && userPlan !== 'pro') {
+      return NextResponse.json(
+        {
+          error: language === 'en'
+            ? `The selected model (${chosenModel.name}) is reserved for Pro subscribers. Please upgrade to Pro or switch to a standard model.`
+            : `Model yang dipilih (${chosenModel.name}) khusus untuk pelanggan Pro. Silakan upgrade ke Pro atau pilih model standar.`,
+          requiresPro: true,
+        },
+        { status: 403 }
+      );
+    }
+
     const attempts: { name: string; run: () => Promise<string> }[] = [];
 
     if (chosenModel && chosenModel.is_enabled) {
