@@ -50,6 +50,7 @@ function buildPrompt(text: string, tone: string, language: string = 'en', styleR
     '- Keep the original meaning and core arguments.\n' +
     '- Do not add external citations, facts, statistics, or unbacked claims.\n' +
     '- Write the rewritten text in the exact same language as the input text (e.g. if the input text is in Indonesian, rewrite the text in Indonesian; if the input text is in English, rewrite in English).\n' +
+    '- Natural Human-Authored Tone: Strictly AVOID typical AI clichés, overblown buzzwords, and robotic transition phrases (e.g., avoid "delve", "tapestry", "pivotal", "foster", "landscape", "seiring berkembangnya zaman", "serves as a testament to", "bukan sekadar... melainkan"). Maintain high cadence variety with natural sentence rhythms.\n' +
     '- Return ONLY the rewritten text. Do NOT wrap it in quotes, markdown block, or write any greeting/explanation.\n\n' +
     `Text to rewrite:\n${text}`;
     

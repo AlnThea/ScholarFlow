@@ -1,5 +1,18 @@
 # ScholarFlow Changelog
 
+## v0.45.6 - Maximized 465+ Bilingual AI Indicators: 145 Words + 100 Phrases per Language
+
+- **Maximized `AI_CLICHE_PHRASES` Lexicon (`lib/editor/burstiness-engine.ts`)**:
+  - Expanded compound multi-word cliché phrases to **100 phrases for English** and **100 phrases for Indonesian** (200 total phrases).
+  - Covers 6 structural tropes: Preamble Openings, Negative Parallelisms, Inflated Significance, Superficial Participles, Weasel Attributions, and Formulaic Conclusions.
+- **Single Words Lexicon (`AI_BUZZWORDS`)**:
+  - Maintained 145 English single words and 120 Indonesian single words (265 total words).
+- **Master Lexicon Documentation (`doc/AI_BUZZWORDS_LEXICON.md`)**:
+  - Published master reference guide documenting all 465 indicators with computational linguistics rationale and human alternatives.
+- **Verification**:
+  - TypeScript 0 errors (`npx tsc --noEmit`).
+  - 230/230 unit tests pass across 27 test files.
+
 ## v0.45.5 - BYOK Architecture for PaperChat: Zero-Quota Deduction, Multi-Tenant Campus & Personal Key Support, Pro Model Access & Active Visual Badge
 
 - **BYOK (Bring Your Own Key) Engine Integration in PaperChat (`app/api/v1/ai/paper-chat/route.ts`)**:

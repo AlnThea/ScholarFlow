@@ -3,7 +3,7 @@
 // Evaluates Burstiness (sentence length variance), Lexical Diversity (TTR),
 // AI Cliché/Buzzword Frequency, and Syntactic Variance to predict AI-likeness and publication readiness.
 
-import { calculateBurstiness, stripBibliographyFromText, AI_BUZZWORDS, type BurstinessMetrics } from '@/lib/editor/burstiness-engine';
+import { calculateBurstiness, stripBibliographyFromText, AI_BUZZWORDS, AI_CLICHE_PHRASES, type BurstinessMetrics } from '@/lib/editor/burstiness-engine';
 
 export type IntegrityRiskLevel = 'low' | 'medium' | 'high';
 
@@ -187,6 +187,12 @@ export function calculateAcademicIntegrity(text: string): AcademicIntegrityRepor
     }
 
     // Clichés in sentence
+    const detectedPhrases = AI_CLICHE_PHRASES.filter((p) => sLower.includes(p.toLowerCase()));
+    if (detectedPhrases.length > 0) {
+      sentenceRiskScore += 35 * detectedPhrases.length;
+      reasons.push(`Mengandung frasa klise AI: "${detectedPhrases.slice(0, 2).join('", "')}"`);
+    }
+
     if (detectedClichés.length >= 2) {
       sentenceRiskScore += 40;
       reasons.push(`Mengandung ${detectedClichés.length} kosakata klise AI: "${detectedClichés.join(', ')}"`);

@@ -147,4 +147,16 @@ describe('Phase 24: Academic Integrity & AI-Likeness Barometer Engine Unit Tests
     expect(report.sentences[0].text).not.toContain('&nbsp;');
     expect(report.sentences[0].text.startsWith('Sistem Informasi Manajemen')).toBe(true);
   });
+
+  it('detects extended 100+ bilingual AI buzzwords and compound clichés (Phase 72)', () => {
+    // English extended lexicon test
+    const englishExtended = 'The groundbreaking research aims to cultivate and bolster an indelible beacon of synergy across the academic nexus.';
+    const enReport = calculateAcademicIntegrity(englishExtended);
+    expect(enReport.metrics.clichéCount).toBeGreaterThanOrEqual(4);
+
+    // Indonesian extended lexicon test
+    const indoExtended = 'Penelitian ini berupaya membedah poros ekosistem dan mengartikulasikan langkah progresif yang saling berkelindan.';
+    const idReport = calculateAcademicIntegrity(indoExtended);
+    expect(idReport.metrics.clichéCount).toBeGreaterThanOrEqual(4);
+  });
 });

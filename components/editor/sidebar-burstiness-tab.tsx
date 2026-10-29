@@ -6,7 +6,7 @@ import { useDebounce } from 'use-debounce';
 import { BurstinessChart } from './burstiness-chart';
 import { ParaphraseStudio } from './paraphrase-studio';
 import { extractTextFromContent, getCaretCharacterOffsetWithin, setCaretCharacterOffsetWithin, isBibliographyHeaderText } from '@/lib/editor/editor-utils';
-import { calculateBurstiness, AI_BUZZWORDS } from '@/lib/editor/burstiness-engine';
+import { calculateBurstiness, AI_BUZZWORDS, AI_CLICHE_PHRASES } from '@/lib/editor/burstiness-engine';
 import { AcademicIntegrityBarometer } from './academic-integrity-barometer';
 import { useLanguage } from '../i18n/language-context';
 
@@ -59,7 +59,10 @@ export const SidebarBurstinessTab = (props: any) => {
         // remove old highlights
         block.innerHTML = block.innerHTML.replace(/<span class="ai-heatmap-highlight[^>]*>(.*?)<\/span>/gi, '$1');
         
-        const regex = new RegExp(`\\b(${AI_BUZZWORDS.join('|')})\\b`, 'gi');
+        // Escape regex special chars and sort longest to shortest so compound phrases match before single words
+        const escapedPhrases = AI_CLICHE_PHRASES.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+        const allTells = [...escapedPhrases, ...AI_BUZZWORDS].sort((a, b) => b.length - a.length);
+        const regex = new RegExp(`\\b(${allTells.join('|')})\\b`, 'gi');
         // Replace text outside of HTML tags to prevent breaking formatting
         block.innerHTML = block.innerHTML.replace(/(>|^)([^<]+)(<|$)/g, (match, p1, p2, p3) => {
           return p1 + p2.replace(regex, '<span class="ai-heatmap-highlight bg-rose-200/80 dark:bg-rose-900/50 text-rose-900 dark:text-rose-200 rounded px-1 border-b-2 border-rose-400">$1</span>') + p3;

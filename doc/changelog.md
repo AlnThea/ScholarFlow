@@ -5,6 +5,20 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.45.6] - 2026-10-29 (Maximized 465+ Bilingual AI Indicators: 145 Words + 100 Phrases per Language)
+
+### 🎯 Integrasi Maksimal Masing-Masing 100+ Kata & 100+ Frasa per Bahasa (Total 465 Indikator)
+- **Ekspansi Frasa Klise Gabungan (`AI_CLICHE_PHRASES`)**:
+  - Memperluas array `AI_CLICHE_PHRASES` di [`lib/editor/burstiness-engine.ts`](file:///c:/web/ScholarFlow/lib/editor/burstiness-engine.ts) sehingga **Bahasa Inggris mencapai 100 frasa unik** dan **Bahasa Indonesia mencapai 100 frasa unik** (total 200 frasa gabungan) tanpa menghapus kode yang sudah ada.
+  - Mencakup 6 kategori pola multi-kata khas LLM: *Preamble & Opening Tropes*, *Negative Parallelisms*, *Inflated Significance & Grandiosity*, *Superficial Participle Endings*, *Weasel Words & Attribution Padding*, serta *Formulaic Conclusions*.
+- **Ekspansi Array Kata Tunggal AI (`AI_BUZZWORDS`)**:
+  - Menjaga 145 kata tunggal Bahasa Inggris dan 120 kata tunggal Bahasa Indonesia (total 265 kata tunggal unik).
+- **Pembaruan Master Lexicon Documentation (`doc/AI_BUZZWORDS_LEXICON.md`)**:
+  - Menerbitkan dokumentasi master leksikon lengkap yang merinci seluruh 465 indikator penanda AI beserta analisis linguistik komputasionalnya.
+- **Verifikasi**:
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 230 dari 230 unit test lolos 100% di 27 berkas pengujian.
+
 ## ⚡ [v0.45.5] - 2026-10-22 (BYOK Architecture for PaperChat: Zero-Quota Deduction, Multi-Tenant Campus & Personal Key Support, Pro Model Access & Active Visual Badge)
 
 ### 🎯 Integrasi BYOK (Bring Your Own Key) & Nol Potongan Kuota Token
