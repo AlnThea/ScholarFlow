@@ -17,6 +17,9 @@ interface CompactToolButtonProps {
   isActivePro?: boolean;
   isLoading?: boolean;
   align?: 'left' | 'right';
+  requiresSelection?: boolean;
+  targetBehavior?: string;
+  isEn?: boolean;
 }
 
 function CompactToolButton({
@@ -28,7 +31,10 @@ function CompactToolButton({
   isPro,
   isActivePro,
   isLoading,
-  align = 'left'
+  align = 'left',
+  requiresSelection = false,
+  targetBehavior,
+  isEn = false
 }: CompactToolButtonProps) {
   return (
     <div className="relative group">
@@ -36,9 +42,9 @@ function CompactToolButton({
         type="button"
         onClick={onClick}
         disabled={disabled || isLoading}
-        className={`w-full p-2.5 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between h-[68px] relative ${
+        className={`w-full p-2.5 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between h-[72px] relative ${
           disabled
-            ? 'opacity-50 cursor-not-allowed bg-slate-50 dark:bg-slate-850 border-slate-200 dark:border-slate-800'
+            ? 'opacity-60 cursor-not-allowed bg-slate-50 dark:bg-slate-850 border-slate-200 dark:border-slate-800'
             : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-xs cursor-pointer'
         }`}
       >
@@ -50,11 +56,18 @@ function CompactToolButton({
           }`}>
             <Icon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </div>
-          {isPro && !isActivePro && (
-            <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60">
-              PRO
-            </span>
-          )}
+          <div className="flex items-center gap-1">
+            {requiresSelection && disabled && (
+              <span className="text-[8px] font-semibold px-1 py-0.5 rounded bg-slate-200 dark:bg-slate-700/80 text-slate-600 dark:text-slate-400">
+                {isEn ? 'Select Text' : 'Blok Teks'}
+              </span>
+            )}
+            {isPro && !isActivePro && (
+              <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60">
+                PRO
+              </span>
+            )}
+          </div>
         </div>
 
         <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate w-full mt-1">
@@ -64,15 +77,38 @@ function CompactToolButton({
 
       {/* Hover Tooltip Popup - Aligned to avoid overflowing sidebar boundaries */}
       <div
-        className={`absolute bottom-full mb-2 hidden group-hover:flex flex-col pointer-events-none z-30 transition-all duration-150 w-48 ${
+        className={`absolute bottom-full mb-2 hidden group-hover:flex flex-col pointer-events-none z-40 transition-all duration-150 w-56 ${
           align === 'right' ? 'right-0 items-end' : 'left-0 items-start'
         }`}
       >
-        <div className="bg-slate-900 dark:bg-slate-800 text-white text-[11px] font-medium rounded-lg py-2 px-2.5 shadow-xl leading-snug border border-slate-700 text-center w-full">
-          {description}
+        <div className="bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-md text-white text-[11px] font-medium rounded-xl p-3 shadow-2xl leading-snug border border-slate-700/80 text-left w-full space-y-2">
+          <div className="flex items-center justify-between gap-1 border-b border-slate-800 dark:border-slate-700/70 pb-1.5">
+            <span className="font-bold text-slate-100 text-[12px]">{label}</span>
+            {targetBehavior && (
+              <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-indigo-900/70 text-indigo-200 border border-indigo-700/50">
+                {targetBehavior}
+              </span>
+            )}
+          </div>
+          <p className="text-[11px] text-slate-300 dark:text-slate-300 leading-relaxed">{description}</p>
+          <div className="pt-1.5 border-t border-slate-800 dark:border-slate-700/70 flex items-center gap-1.5 text-[10px]">
+            {disabled && requiresSelection ? (
+              <span className="text-amber-400 font-semibold flex items-center gap-1">
+                ⚠️ {isEn ? 'Select text in canvas to activate' : 'Blok kalimat di kanvas naskah'}
+              </span>
+            ) : requiresSelection ? (
+              <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                ✓ {isEn ? 'Text selected (Ready)' : 'Teks diblok (Siap proses)'}
+              </span>
+            ) : (
+              <span className="text-indigo-300 font-semibold flex items-center gap-1">
+                ⚡ {isEn ? 'Reads full manuscript' : 'Menganalisis seluruh naskah'}
+              </span>
+            )}
+          </div>
         </div>
         <div
-          className={`w-2.5 h-2.5 bg-slate-900 dark:bg-slate-800 rotate-45 -mt-1 border-r border-b border-slate-700 ${
+          className={`w-2.5 h-2.5 bg-slate-900/95 dark:bg-slate-800/95 rotate-45 -mt-1 border-r border-b border-slate-700 ${
             align === 'right' ? 'mr-14' : 'ml-14'
           }`}
         />
@@ -185,6 +221,9 @@ export const SidebarWritingTab = (props: any) => {
               isActivePro={isProUser}
               isLoading={isImproving}
               align="left"
+              requiresSelection={true}
+              targetBehavior={isEn ? 'Replaces selected text' : 'Ganti teks diblok'}
+              isEn={isEn}
             />
 
             {/* 2. Paraphrase (FREE) */}
@@ -198,6 +237,9 @@ export const SidebarWritingTab = (props: any) => {
               isActivePro={isProUser}
               isLoading={isImproving}
               align="right"
+              requiresSelection={true}
+              targetBehavior={isEn ? 'Replaces selected text' : 'Ganti teks diblok'}
+              isEn={isEn}
             />
 
             {/* 3. Summarize (FREE) */}
@@ -211,6 +253,9 @@ export const SidebarWritingTab = (props: any) => {
               isActivePro={isProUser}
               isLoading={isImproving}
               align="left"
+              requiresSelection={true}
+              targetBehavior={isEn ? 'Replaces selected text' : 'Ganti teks diblok'}
+              isEn={isEn}
             />
 
             {/* 4. Generate Abstract (PRO) */}
@@ -224,6 +269,9 @@ export const SidebarWritingTab = (props: any) => {
               isActivePro={isProUser}
               isLoading={isImproving}
               align="right"
+              requiresSelection={false}
+              targetBehavior={isEn ? 'Inserts at top' : 'Sisip di awal naskah'}
+              isEn={isEn}
             />
 
             {/* 5. Find Citation (FREE) */}
@@ -237,6 +285,9 @@ export const SidebarWritingTab = (props: any) => {
               isActivePro={isProUser}
               isLoading={isSearchingCitations}
               align="left"
+              requiresSelection={true}
+              targetBehavior={isEn ? 'Appends citation' : 'Sematkan sitasi'}
+              isEn={isEn}
             />
 
             {/* 6. Auto-Suggest Citation (PRO) */}
@@ -261,6 +312,9 @@ export const SidebarWritingTab = (props: any) => {
               isActivePro={isProUser}
               isLoading={isSearchingCitations}
               align="right"
+              requiresSelection={true}
+              targetBehavior={isEn ? 'Appends citation' : 'Sematkan sitasi'}
+              isEn={isEn}
             />
           </div>
 
@@ -309,7 +363,7 @@ export const SidebarWritingTab = (props: any) => {
                       ? (isEn ? 'Applied' : 'Diterapkan')
                       : improvedText?.tone === 'abstract'
                       ? (isEn ? 'Insert at Beginning' : 'Sisipkan di Awal')
-                      : (isEn ? 'Apply' : 'Terapkan')}
+                      : (isEn ? 'Replace Selected Text' : 'Ganti Teks Diblok')}
                   </span>
                 </button>
               </div>
@@ -336,7 +390,16 @@ export const SidebarWritingTab = (props: any) => {
                     ? "Tip: Clicking 'Insert at Beginning' automatically inserts this abstract at the top of your manuscript without disturbing other paragraphs."
                     : "Tips: Mengklik 'Sisipkan di Awal' akan menaruh abstrak ini di bagian atas naskah secara rapi tanpa mengganggu paragraf lain."}
                 </div>
-              ) : null}
+              ) : (
+                <div className="rounded-md border border-indigo-200/60 dark:border-indigo-800/50 bg-indigo-50/50 dark:bg-indigo-950/30 p-2.5 text-[11px] leading-relaxed text-indigo-750 dark:text-indigo-300 flex items-center gap-1.5">
+                  <span className="shrink-0">🎯</span>
+                  <span>
+                    {isEn
+                      ? "Tip: Clicking 'Replace Selected Text' replaces your highlighted text in the canvas in-place."
+                      : "Tips: Mengklik 'Ganti Teks Diblok' akan langsung menggantikan kalimat yang Anda sorot di kanvas naskah."}
+                  </span>
+                </div>
+              )}
 
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-start gap-2 rounded-md border border-line dark:border-slate-700 bg-panel dark:bg-slate-800 p-2.5 text-xs leading-5 text-muted dark:text-slate-400 flex-1">

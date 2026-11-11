@@ -28,6 +28,7 @@ import { LatexExportModal } from './modals/latex-export-modal';
 import { ReferenceImportModal } from './modals/reference-import-modal';
 import { ReferenceDropzone } from './reference-dropzone';
 import { parseReferenceFile } from '@/lib/editor/reference-importer';
+import { FEATURE_FLAGS } from '@/lib/config/feature-flags';
 import { SuggestingChips } from './suggesting-chips';
 import { CrossReferenceModal } from './modals/cross-reference-modal';
 import { AcademicScaffoldModal } from './modals/academic-scaffold-modal';
@@ -546,28 +547,28 @@ export function EditorLayout({
       }
 
       // Ctrl + Shift + T -> Literature Synthesis Matrix & Grid
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 't') {
+      if (FEATURE_FLAGS.ENABLE_LITERATURE_MATRIX && (e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 't') {
         e.preventDefault();
         setIsLiteratureMatrixModalOpen(true);
         return;
       }
 
       // Ctrl + Shift + J -> Journal Formatting & Publishing Presets
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'j') {
+      if (FEATURE_FLAGS.ENABLE_JOURNAL_PRESETS && (e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'j') {
         e.preventDefault();
         setIsJournalPresetsModalOpen(true);
         return;
       }
 
       // Ctrl + Shift + N -> Cross-Paper Concept Map & Citation Network
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'n') {
+      if (FEATURE_FLAGS.ENABLE_CONCEPT_MAP && (e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'n') {
         e.preventDefault();
         setIsConceptMapModalOpen(true);
         return;
       }
 
       // Ctrl + Shift + Y -> Journal Submission Package Builder & Cover Letter AI
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'y') {
+      if (FEATURE_FLAGS.ENABLE_SUBMISSION_PACKAGE && (e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'y') {
         e.preventDefault();
         setIsSubmissionPackageModalOpen(true);
         return;
@@ -658,16 +659,16 @@ export function EditorLayout({
         setIsSlideDeckModalOpen(true);
         break;
       case 'open_literature_matrix':
-        setIsLiteratureMatrixModalOpen(true);
+        if (FEATURE_FLAGS.ENABLE_LITERATURE_MATRIX) setIsLiteratureMatrixModalOpen(true);
         break;
       case 'open_journal_presets':
-        setIsJournalPresetsModalOpen(true);
+        if (FEATURE_FLAGS.ENABLE_JOURNAL_PRESETS) setIsJournalPresetsModalOpen(true);
         break;
       case 'open_concept_map':
-        setIsConceptMapModalOpen(true);
+        if (FEATURE_FLAGS.ENABLE_CONCEPT_MAP) setIsConceptMapModalOpen(true);
         break;
       case 'open_submission_package':
-        setIsSubmissionPackageModalOpen(true);
+        if (FEATURE_FLAGS.ENABLE_SUBMISSION_PACKAGE) setIsSubmissionPackageModalOpen(true);
         break;
       case 'open_version_history':
         versionHistory.openVersionHistory?.();

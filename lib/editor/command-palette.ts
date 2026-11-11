@@ -1,6 +1,8 @@
 // lib/editor/command-palette.ts
 // Academic Command Palette & Global Shortcut Hub Engine (Phase 26)
 
+import { FEATURE_FLAGS } from '@/lib/config/feature-flags';
+
 export type CommandCategory = 
   | 'ai'
   | 'citations'
@@ -135,32 +137,32 @@ export function getAvailableCommands(language: 'en' | 'id'): CommandItem[] {
       actionId: 'open_paper_chat',
       badge: 'Library',
     },
-    {
+    ...(FEATURE_FLAGS.ENABLE_LITERATURE_MATRIX ? [{
       id: 'cmd_literature_matrix',
       title: isEn ? 'Literature Synthesis Matrix & Grid' : 'Matriks Sintesis Literatur & Riset Terdahulu',
       description: isEn ? 'Compare methodology, sample size, findings & gaps across studies' : 'Bandingkan metodologi, sampel, temuan kunci & batasan lintas studi',
       tooltip: isEn
         ? 'Extracts and tabulates all reference papers into an editable literature synthesis matrix for Chapter 2 / SLR with 1-click Markdown table, CSV, and Canvas insertion.'
         : 'Mengekstrak dan menyusun seluruh paper referensi ke dalam tabel matriks sintesis tinjauan pustaka Bab 2 dengan ekspor Markdown, CSV, dan sisip ke kanvas.',
-      category: 'citations',
+      category: 'citations' as const,
       shortcut: 'Ctrl + Shift + T',
       keywords: ['matrix', 'sintesis', 'tinjauan pustaka', 'literature review', 'table', 'tabel', 'slr', 'prisma'],
       actionId: 'open_literature_matrix',
       badge: 'Matrix Grid',
-    },
-    {
+    }] : []),
+    ...(FEATURE_FLAGS.ENABLE_CONCEPT_MAP ? [{
       id: 'cmd_concept_map',
       title: isEn ? 'Cross-Paper Concept Map & Citation Network' : 'Peta Konsep & Jaringan Sitasi Antar-Paper',
       description: isEn ? 'Visualize thematic clusters, shared nodes & literature centrality' : 'Visualisasi graf klaster tematik, simpul bersama & sentralitas paper',
       tooltip: isEn
         ? 'Generates an interactive SVG network graph visualizing thematic paper clusters, concept overlaps, and literature centrality with Mermaid diagram export.'
         : 'Menghasilkan grafik jejaring SVG interaktif yang memetakan klaster topik riset, irisan konsep antar-paper, dan sentralitas literatur dengan ekspor Mermaid.',
-      category: 'citations',
+      category: 'citations' as const,
       shortcut: 'Ctrl + Shift + N',
       keywords: ['concept', 'map', 'network', 'graph', 'vosviewer', 'connected papers', 'jejaring', 'sitasi'],
       actionId: 'open_concept_map',
       badge: 'Visual Network',
-    },
+    }] : []),
 
     // --- AI ASSISTANT ---
     {
@@ -235,32 +237,32 @@ export function getAvailableCommands(language: 'en' | 'id'): CommandItem[] {
       keywords: ['cite', 'citation', 'sitasi', 'referensi', 'crossref', 'openalex', 'doi'],
       actionId: 'search_citation',
     },
-    {
+    ...(FEATURE_FLAGS.ENABLE_JOURNAL_PRESETS ? [{
       id: 'cmd_journal_presets',
       title: isEn ? 'Journal Formatting & Publishing Presets' : 'Preset Format Publikasi & Pedoman Jurnal',
       description: isEn ? 'Audit word limits, abstract length & reference recency for IEEE, Elsevier, SINTA' : 'Audit batas kata, panjang abstrak & kemutakhiran rujukan untuk IEEE, Elsevier, SINTA',
       tooltip: isEn
         ? 'Checks manuscript compliance against IEEE, Elsevier, Springer, and SINTA guidelines with 1-click citation style application.'
         : 'Memeriksa kepatuhan naskah terhadap panduan IEEE, Elsevier, Springer, dan SINTA lengkap dengan penerapan gaya sitasi 1-klik.',
-      category: 'formatting',
+      category: 'formatting' as const,
       shortcut: 'Ctrl + Shift + J',
       keywords: ['journal', 'preset', 'format', 'pedoman', 'ieee', 'elsevier', 'sinta', 'springer', 'publisher'],
       actionId: 'open_journal_presets',
       badge: 'Publisher Audit',
-    },
-    {
+    }] : []),
+    ...(FEATURE_FLAGS.ENABLE_SUBMISSION_PACKAGE ? [{
       id: 'cmd_submission_package',
       title: isEn ? 'Journal Submission Package & Cover Letter' : 'Penyusun Paket Pengajuan Jurnal & Cover Letter',
       description: isEn ? 'Generate cover letter, highlights, ethical statements & suggested reviewers' : 'Buat cover letter, poin kebaruan, deklarasi etika & rekomendasi reviewer',
       tooltip: isEn
         ? 'Generates submission-ready academic cover letters addressed to the Editor-in-Chief, research highlights, conflict of interest declarations, and reviewer suggestions.'
         : 'Menyusun surat pengantar resmi ke Dewan Redaksi, poin kebaruan riset (highlights), deklarasi bebas konflik kepentingan, dan rekomendasi mitra bestari.',
-      category: 'formatting',
+      category: 'formatting' as const,
       shortcut: 'Ctrl + Shift + Y',
       keywords: ['submission', 'cover letter', 'journal', 'editor', 'highlights', 'reviewers', 'pengajuan', 'surat pengantar'],
       actionId: 'open_submission_package',
       badge: 'Submission',
-    },
+    }] : []),
     {
       id: 'cmd_style_apa',
       title: 'APA 7th Edition (Author, Year)',

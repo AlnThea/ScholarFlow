@@ -676,3 +676,29 @@ Target: Merelaksasi waktu tunggu penyimpanan otomatis ke cloud dari 1,5 detik me
 - [x] **3. Automated Test Verification**:
   - `npx tsc --noEmit` lolos dengan 0 error dan seluruh 218 test lulus di 27 file.
 
+### Phase 46: Pre-Publish Modular Feature Flags System (v0.45.7)
+Target: Menyembunyikan sementara 5 modul lanjutan yang belum diaudit satu per satu (SPSS Interpreter, Matriks Sintesis Literatur, Format Target Jurnal, Peta Konsep & Jaringan Sitasi, Paket Pengajuan Publikasi) menggunakan konfigurasi Feature Flags terpusat tanpa menghapus kode yang ada.
+
+- [x] **1. Centralized Feature Flags Module (`lib/config/feature-flags.ts`)**:
+  - Membuat modul `FEATURE_FLAGS` terpusat dengan boolean toggle untuk setiap modul.
+- [x] **2. Sidebar Tab & Card Guarding (`components/editor/editor-sidebar.tsx`, `components/editor/sidebar-document-tab.tsx`)**:
+  - Menyembunyikan tab `[Data SPSS]` dan 4 kartu modul di tab Statistik Dokumen saat flag bernilai `false`.
+- [x] **3. Interaction & Keyboard Shortcut Guarding (`components/editor/editor-layout.tsx`, `lib/editor/command-palette.ts`)**:
+  - Menjaga pintasan keyboard (`Ctrl+Shift+T/J/N/Y`) dan menyaring perintah command palette terkait.
+- [x] **4. Automated Verification**:
+  - `npx tsc --noEmit` lolos dengan **0 compile error** dan `npx vitest run` lolos **230/230 unit tests di 27 berkas**.
+
+### Phase 47: Interactive AI Writing & Document Tab Guidance System (v0.45.8)
+Target: Memberikan kejelasan interaktif dan tooltip informatif pada seluruh tombol AI Penulisan dan Tab Dokumen mengenai syarat seleksi teks dan dampaknya pada kanvas naskah.
+
+- [x] **1. Writing Tools Selection Guard & Interactive Badges (`components/editor/sidebar-writing-tab.tsx`)**:
+  - Menambahkan badge status mini `[Blok Teks]` saat tombol nonaktif dan memperluas tooltip hover dengan keterangan target serta status kalimat naskah.
+  - Memperjelas tombol aksi hasil perbaikan AI menjadi `Ganti Teks Diblok` / `Sisipkan di Awal` dengan kotak petunjuk kontekstual.
+- [x] **2. Document Tab Modular Guidance (`components/editor/sidebar-document-tab.tsx`, `components/editor/editorjs-toolbar.tsx`)**:
+  - Menyematkan `ToolActionTooltip` untuk Linter Gaya Akademis, Slide Sidang & Konferensi, Pendeteksi Plagiarisme, Simulasi Reviewer #2, dan Binder Naskah Skripsi.
+  - Memastikan dukungan penuh bilingual (EN/ID) dan Dark Mode.
+- [x] **3. Automated Verification**:
+  - `npx tsc --noEmit` lolos dengan **0 compile error** dan `npx vitest run` lolos **230/230 unit tests di 27 berkas**.
+
+
+

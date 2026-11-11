@@ -1,4 +1,5 @@
 import React from 'react';
+import { FEATURE_FLAGS } from '@/lib/config/feature-flags';
 import {
   IconBook, IconCheck, IconDownload, IconExternalLink, IconFileText,
   IconFilter, IconFolderOpen, IconLoader2, IconCirclePlus, IconQuote,
@@ -8,6 +9,39 @@ import {
 } from '@tabler/icons-react';
 
 
+
+interface ToolActionTooltipProps {
+  label: string;
+  badge: string;
+  description: string;
+  requirement: string;
+  impact: string;
+}
+
+function ToolActionTooltip({ label, badge, description, requirement, impact }: ToolActionTooltipProps) {
+  return (
+    <div className="absolute bottom-full mb-2 left-0 right-0 hidden group-hover:flex flex-col pointer-events-none z-40 transition-all duration-150">
+      <div className="bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-md text-white text-[11px] font-medium rounded-xl p-3 shadow-2xl leading-snug border border-slate-700/80 text-left w-full space-y-2">
+        <div className="flex items-center justify-between gap-1 border-b border-slate-800 dark:border-slate-700/70 pb-1.5">
+          <span className="font-bold text-slate-100 text-[12px]">{label}</span>
+          <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-indigo-900/70 text-indigo-200 border border-indigo-700/50">
+            {badge}
+          </span>
+        </div>
+        <p className="text-[11px] text-slate-300 dark:text-slate-300 leading-relaxed">{description}</p>
+        <div className="pt-1.5 border-t border-slate-800 dark:border-slate-700/70 flex flex-col gap-1 text-[10px]">
+          <span className="text-emerald-400 font-semibold flex items-center gap-1">
+            ✓ {requirement}
+          </span>
+          <span className="text-indigo-300 font-medium flex items-center gap-1">
+            🎯 {impact}
+          </span>
+        </div>
+      </div>
+      <div className="w-2.5 h-2.5 bg-slate-900/95 dark:bg-slate-800/95 rotate-45 -mt-1 border-r border-b border-slate-700 ml-8" />
+    </div>
+  );
+}
 
 export const SidebarDocumentTab = (props: any) => {
   const {
@@ -72,14 +106,25 @@ export const SidebarDocumentTab = (props: any) => {
                   ? 'Organize multi-chapter research, continuous numbering, and unified references.'
                   : 'Kelola penelitian multi-bab, penomoran berkesinambungan, dan daftar pustaka terpadu.')}
           </p>
-          <button
-            type="button"
-            onClick={() => onOpenProjectBinder?.()}
-            className="w-full py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-          >
-            <IconLayersLinked className="h-3.5 w-3.5" />
-            <span>{isEn ? 'Open Project Binder' : 'Buka Pengikat Skripsi'}</span>
-          </button>
+          <div className="relative group">
+            <button
+              type="button"
+              onClick={() => onOpenProjectBinder?.()}
+              className="w-full py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <IconLayersLinked className="h-3.5 w-3.5" />
+              <span>{isEn ? 'Open Project Binder' : 'Buka Pengikat Skripsi'}</span>
+            </button>
+            <ToolActionTooltip
+              label={isEn ? 'Thesis Project Binder' : 'Binder Naskah Skripsi'}
+              badge={isEn ? 'Multi-Chapter Hub' : 'Hub Multi-Bab'}
+              description={isEn
+                ? 'Consolidates multi-chapter research (Bab 1-5), cross-chapter numbering, figures, and unified references.'
+                : 'Menghubungkan naskah skripsi multi-bab (Bab 1-5), penomoran tabel/gambar terpadu, dan daftar pustaka induk.'}
+              requirement={isEn ? 'No text selection needed' : 'Tidak perlu blok teks'}
+              impact={isEn ? 'Opens multi-chapter manager modal without modifying document' : 'Membuka modal pengikat bab tanpa mengubah isi dokumen'}
+            />
+          </div>
         </section>
 
                 <section className="rounded-lg border border-line dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm">
@@ -188,14 +233,25 @@ export const SidebarDocumentTab = (props: any) => {
                       ? 'Scan paper for informal words, contractions, vague claims, and first-person bias.'
                       : 'Pindai naskah untuk mendeteksi kata non-formal, singkatan, klaim tanpa data, dan bias persona.'}
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => onOpenLinter?.()}
-                    className="w-full py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <IconTextSpellcheck className="h-3.5 w-3.5" />
-                    <span>{isEn ? 'Launch Style Audit' : 'Audit Gaya Bahasa'}</span>
-                  </button>
+                  <div className="relative group">
+                    <button
+                      type="button"
+                      onClick={() => onOpenLinter?.()}
+                      className="w-full py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <IconTextSpellcheck className="h-3.5 w-3.5" />
+                      <span>{isEn ? 'Launch Style Audit' : 'Audit Gaya Bahasa'}</span>
+                    </button>
+                    <ToolActionTooltip
+                      label={isEn ? 'Academic Style Linter' : 'Linter Gaya Akademis'}
+                      badge={isEn ? 'Grammar & Tone' : 'Tata Bahasa & Formal'}
+                      description={isEn
+                        ? 'Scans manuscript for informal words, abbreviations, unsupported claims, and personal bias.'
+                        : 'Memindai naskah untuk menemukan kata non-formal, singkatan, klaim tanpa rujukan, dan bias persona.'}
+                      requirement={isEn ? 'No text selection needed (Scans entire manuscript)' : 'Tidak perlu blok teks (Memindai seluruh naskah)'}
+                      impact={isEn ? 'Replaces specific informal words in-place when you click Apply' : 'Hanya menggantikan kata/singkatan spesifik di kanvas saat klik Terapkan'}
+                    />
+                  </div>
                 </section>
 
                 {/* Conference & Defense Slide Deck Generator Section */}
@@ -218,135 +274,154 @@ export const SidebarDocumentTab = (props: any) => {
                       ? 'Auto-synthesize your manuscript into a conference or defense slide deck with speaker notes.'
                       : 'Sintesis naskah skripsi secara otomatis menjadi slide presentasi sidang dengan catatan pembicara.'}
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => onOpenSlideDeck?.()}
-                    className="w-full py-1.5 px-3 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <IconPresentation className="h-3.5 w-3.5" />
-                    <span>{isEn ? 'Open Slide Generator' : 'Buka Generator Slide'}</span>
-                  </button>
+                  <div className="relative group">
+                    <button
+                      type="button"
+                      onClick={() => onOpenSlideDeck?.()}
+                      className="w-full py-1.5 px-3 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <IconPresentation className="h-3.5 w-3.5" />
+                      <span>{isEn ? 'Open Slide Generator' : 'Buka Generator Slide'}</span>
+                    </button>
+                    <ToolActionTooltip
+                      label={isEn ? 'Defense Slide Deck' : 'Slide Sidang & Konferensi'}
+                      badge={isEn ? '16:9 Presentation' : 'Presentasi 16:9'}
+                      description={isEn
+                        ? 'Synthesizes your manuscript into defense presentation slides complete with presenter speaker notes.'
+                        : 'Menyintesis naskah skripsi otomatis menjadi slide presentasi sidang lengkap dengan catatan pembicara.'}
+                      requirement={isEn ? 'No text selection needed (Reads entire manuscript)' : 'Tidak perlu blok teks (Membaca konteks naskah)'}
+                      impact={isEn ? 'Opens slide deck generator modal ready to present or export' : 'Membuka modal generator presentasi tanpa mengubah isi naskah'}
+                    />
+                  </div>
                 </section>
 
                 {/* Literature Synthesis Matrix & Grid Section */}
-                <section className="rounded-lg border border-teal-200/70 dark:border-teal-900/40 bg-gradient-to-b from-teal-50/30 via-white to-white dark:from-teal-950/20 dark:via-slate-800 dark:to-slate-800 p-3 shadow-xs flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1 rounded-md bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300">
-                        <IconTable className="h-3.5 w-3.5" />
+                {FEATURE_FLAGS.ENABLE_LITERATURE_MATRIX && (
+                  <section className="rounded-lg border border-teal-200/70 dark:border-teal-900/40 bg-gradient-to-b from-teal-50/30 via-white to-white dark:from-teal-950/20 dark:via-slate-800 dark:to-slate-800 p-3 shadow-xs flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1 rounded-md bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300">
+                          <IconTable className="h-3.5 w-3.5" />
+                        </div>
+                        <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                          {isEn ? 'Literature Synthesis Matrix' : 'Matriks Sintesis Literatur'}
+                        </h3>
                       </div>
-                      <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                        {isEn ? 'Literature Synthesis Matrix' : 'Matriks Sintesis Literatur'}
-                      </h3>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+                        Chapter 2 / SLR
+                      </span>
                     </div>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
-                      Chapter 2 / SLR
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-350 leading-relaxed">
-                    {isEn
-                      ? 'Cross-examine methodology, sample sizes, and empirical findings across all reference papers.'
-                      : 'Bandingkan metodologi, sampel data, dan temuan empiris seluruh paper referensi secara terstruktur.'}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => onOpenLiteratureMatrix?.()}
-                    className="w-full py-1.5 px-3 bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <IconTable className="h-3.5 w-3.5" />
-                    <span>{isEn ? 'Open Synthesis Matrix' : 'Buka Matriks Sintesis'}</span>
-                  </button>
-                </section>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-350 leading-relaxed">
+                      {isEn
+                        ? 'Cross-examine methodology, sample sizes, and empirical findings across all reference papers.'
+                        : 'Bandingkan metodologi, sampel data, dan temuan empiris seluruh paper referensi secara terstruktur.'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => onOpenLiteratureMatrix?.()}
+                      className="w-full py-1.5 px-3 bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <IconTable className="h-3.5 w-3.5" />
+                      <span>{isEn ? 'Open Synthesis Matrix' : 'Buka Matriks Sintesis'}</span>
+                    </button>
+                  </section>
+                )}
 
                 {/* Journal Formatting & Publishing Presets Section */}
-                <section className="rounded-lg border border-blue-200/70 dark:border-blue-900/40 bg-gradient-to-b from-blue-50/30 via-white to-white dark:from-blue-950/20 dark:via-slate-800 dark:to-slate-800 p-3 shadow-xs flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-                        <IconFileCertificate className="h-3.5 w-3.5" />
+                {FEATURE_FLAGS.ENABLE_JOURNAL_PRESETS && (
+                  <section className="rounded-lg border border-blue-200/70 dark:border-blue-900/40 bg-gradient-to-b from-blue-50/30 via-white to-white dark:from-blue-950/20 dark:via-slate-800 dark:to-slate-800 p-3 shadow-xs flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                          <IconFileCertificate className="h-3.5 w-3.5" />
+                        </div>
+                        <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                          {isEn ? 'Journal Target Presets' : 'Format Target Jurnal'}
+                        </h3>
                       </div>
-                      <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                        {isEn ? 'Journal Target Presets' : 'Format Target Jurnal'}
-                      </h3>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        Author Guidelines
+                      </span>
                     </div>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                      Author Guidelines
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-350 leading-relaxed">
-                    {isEn
-                      ? 'Audit word limits, abstract length & reference recency against IEEE, Elsevier, or SINTA.'
-                      : 'Audit batas kata, panjang abstrak & kemutakhiran rujukan untuk IEEE, Elsevier, atau SINTA.'}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => onOpenJournalPresets?.()}
-                    className="w-full py-1.5 px-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <IconFileCertificate className="h-3.5 w-3.5" />
-                    <span>{isEn ? 'Audit Journal Guidelines' : 'Audit Pedoman Jurnal'}</span>
-                  </button>
-                </section>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-350 leading-relaxed">
+                      {isEn
+                        ? 'Audit word limits, abstract length & reference recency against IEEE, Elsevier, or SINTA.'
+                        : 'Audit batas kata, panjang abstrak & kemutakhiran rujukan untuk IEEE, Elsevier, atau SINTA.'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => onOpenJournalPresets?.()}
+                      className="w-full py-1.5 px-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <IconFileCertificate className="h-3.5 w-3.5" />
+                      <span>{isEn ? 'Audit Journal Guidelines' : 'Audit Pedoman Jurnal'}</span>
+                    </button>
+                  </section>
+                )}
 
                 {/* Cross-Paper Concept Map & Citation Network Section */}
-                <section className="rounded-lg border border-violet-200/70 dark:border-violet-900/40 bg-gradient-to-b from-violet-50/30 via-white to-white dark:from-violet-950/20 dark:via-slate-800 dark:to-slate-800 p-3 shadow-xs flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1 rounded-md bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300">
-                        <IconShare className="h-3.5 w-3.5" />
+                {FEATURE_FLAGS.ENABLE_CONCEPT_MAP && (
+                  <section className="rounded-lg border border-violet-200/70 dark:border-violet-900/40 bg-gradient-to-b from-violet-50/30 via-white to-white dark:from-violet-950/20 dark:via-slate-800 dark:to-slate-800 p-3 shadow-xs flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1 rounded-md bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300">
+                          <IconShare className="h-3.5 w-3.5" />
+                        </div>
+                        <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                          {isEn ? 'Cross-Paper Concept Map' : 'Peta Konsep & Jaringan Sitasi'}
+                        </h3>
                       </div>
-                      <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                        {isEn ? 'Cross-Paper Concept Map' : 'Peta Konsep & Jaringan Sitasi'}
-                      </h3>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border border-violet-200 dark:border-violet-800">
+                        Graph Visualizer
+                      </span>
                     </div>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-50 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border border-violet-200 dark:border-violet-800">
-                      Graph Visualizer
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-350 leading-relaxed">
-                    {isEn
-                      ? 'Visualize thematic clusters, shared nodes & literature centrality across all library references.'
-                      : 'Visualisasi graf klaster tematik, simpul bersama & sentralitas paper pada pustaka naskah.'}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => onOpenConceptMap?.()}
-                    className="w-full py-1.5 px-3 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <IconShare className="h-3.5 w-3.5" />
-                    <span>{isEn ? 'Explore Concept Network' : 'Jelajahi Jaringan Konsep'}</span>
-                  </button>
-                </section>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-350 leading-relaxed">
+                      {isEn
+                        ? 'Visualize thematic clusters, shared nodes & literature centrality across all library references.'
+                        : 'Visualisasi graf klaster tematik, simpul bersama & sentralitas paper pada pustaka naskah.'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => onOpenConceptMap?.()}
+                      className="w-full py-1.5 px-3 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <IconShare className="h-3.5 w-3.5" />
+                      <span>{isEn ? 'Explore Concept Network' : 'Jelajahi Jaringan Konsep'}</span>
+                    </button>
+                  </section>
+                )}
 
                 {/* Journal Submission Package Builder Section */}
-                <section className="rounded-lg border border-amber-200/70 dark:border-amber-900/40 bg-gradient-to-b from-amber-50/30 via-white to-white dark:from-amber-950/20 dark:via-slate-800 dark:to-slate-800 p-3 shadow-xs flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
-                        <IconPackage className="h-3.5 w-3.5" />
+                {FEATURE_FLAGS.ENABLE_SUBMISSION_PACKAGE && (
+                  <section className="rounded-lg border border-amber-200/70 dark:border-amber-900/40 bg-gradient-to-b from-amber-50/30 via-white to-white dark:from-amber-950/20 dark:via-slate-800 dark:to-slate-800 p-3 shadow-xs flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+                          <IconPackage className="h-3.5 w-3.5" />
+                        </div>
+                        <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                          {isEn ? 'Journal Submission Package' : 'Paket Pengajuan Publikasi'}
+                        </h3>
                       </div>
-                      <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                        {isEn ? 'Journal Submission Package' : 'Paket Pengajuan Publikasi'}
-                      </h3>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                        AI Cover Letter
+                      </span>
                     </div>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                      AI Cover Letter
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-350 leading-relaxed">
-                    {isEn
-                      ? 'Generate submission-ready cover letter, highlights, ethical statements, and reviewer suggestions.'
-                      : 'Susun cover letter ke dewan redaksi, poin kebaruan, etika COI, dan rekomendasi reviewer.'}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => onOpenSubmissionPackage?.()}
-                    className="w-full py-1.5 px-3 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <IconPackage className="h-3.5 w-3.5" />
-                    <span>{isEn ? 'Build Submission Package' : 'Buka Penyusun Paket'}</span>
-                  </button>
-                </section>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-350 leading-relaxed">
+                      {isEn
+                        ? 'Generate submission-ready cover letter, highlights, ethical statements, and reviewer suggestions.'
+                        : 'Susun cover letter ke dewan redaksi, poin kebaruan, etika COI, dan rekomendasi reviewer.'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => onOpenSubmissionPackage?.()}
+                      className="w-full py-1.5 px-3 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <IconPackage className="h-3.5 w-3.5" />
+                      <span>{isEn ? 'Build Submission Package' : 'Buka Penyusun Paket'}</span>
+                    </button>
+                  </section>
+                )}
 
                 {/* Plagiarism Checker Section */}
                 <section className="rounded-lg border border-line dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm">
@@ -372,13 +447,24 @@ export const SidebarDocumentTab = (props: any) => {
                       <p className="text-[11px] text-muted dark:text-slate-400 leading-relaxed">
                         {isEn ? 'Scan your manuscript to detect similarity with global scientific journal databases.' : 'Pindai manuskrip Anda untuk mendeteksi kesamaan kata dengan database jurnal ilmiah global.'}
                       </p>
-                      <button
-                        type="button"
-                        onClick={handleStartScan}
-                        className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-sm transition cursor-pointer"
-                      >
-                        {isEn ? 'Start Plagiarism Scan' : 'Mulai Pindai Plagiarisme'}
-                      </button>
+                      <div className="relative group">
+                        <button
+                          type="button"
+                          onClick={handleStartScan}
+                          className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-sm transition cursor-pointer"
+                        >
+                          {isEn ? 'Start Plagiarism Scan' : 'Mulai Pindai Plagiarisme'}
+                        </button>
+                        <ToolActionTooltip
+                          label={isEn ? 'Plagiarism Checker' : 'Pendeteksi Plagiarisme'}
+                          badge={isEn ? 'Crossref & Scholar DB' : 'Database Jurnal Global'}
+                          description={isEn
+                            ? 'Detects sentence similarity and phrase overlap against indexed global research publications.'
+                            : 'Mendeteksi kesamaan kalimat dan klaim naskah dengan jutaan artikel jurnal ilmiah terindeks.'}
+                          requirement={isEn ? 'No text selection needed (Scans entire manuscript)' : 'Tidak perlu blok teks (Memindai seluruh naskah)'}
+                          impact={isEn ? 'Highlights risky sentences with one-click Auto-Paraphrase' : 'Menampilkan daftar kalimat berisiko dengan tombol Parafrase otomatis'}
+                        />
+                      </div>
                     </div>
                   )}
 
@@ -487,48 +573,62 @@ export const SidebarDocumentTab = (props: any) => {
                       : 'Simulasi peer review buta yang ketat & kritis untuk menguji kelemahan metodologi, celah kebaruan (novelty), dan sitasi sebelum submit ke jurnal target.'}
                   </p>
 
-                  <button
-                    type="button"
-                    onClick={() => onOpenPeerReview?.()}
-                    className="w-full py-2 px-3 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <IconMicroscope className="h-3.5 w-3.5" />
-                    <span>{isEn ? 'Launch Reviewer #2 Audit' : 'Buka Audit Reviewer #2'}</span>
-                  </button>
+                  <div className="relative group">
+                    <button
+                      type="button"
+                      onClick={() => onOpenPeerReview?.()}
+                      className="w-full py-2 px-3 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <IconMicroscope className="h-3.5 w-3.5" />
+                      <span>{isEn ? 'Launch Reviewer #2 Audit' : 'Buka Audit Reviewer #2'}</span>
+                    </button>
+                    <ToolActionTooltip
+                      label={isEn ? 'Reviewer #2 Simulator' : 'Simulasi Reviewer #2'}
+                      badge={isEn ? 'Scopus / SINTA' : 'Reviewer Kritis'}
+                      description={isEn
+                        ? 'Simulates a hyper-critical peer review to audit methodology flaws, novelty gaps, and defense questions.'
+                        : 'Simulasi peer review buta yang ketat & kritis untuk menguji kelemahan metodologi, celah kebaruan, dan pertanyaan sidang.'}
+                      requirement={isEn ? 'No text selection needed (Audits entire document)' : 'Tidak perlu blok teks (Audit naskah menyeluruh)'}
+                      impact={isEn ? 'Generates critical defense questions and readiness audit report' : 'Menghasilkan ringkasan audit metodologi & pertanyaan kritis penguji'}
+                    />
+                  </div>
                 </section>
 
-                <section className="rounded-lg border border-line dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm">
-                  <div className="mb-3 flex items-center gap-2">
-                    <IconFileText className="h-4 w-4 text-accent dark:text-indigo-400" />
-                    <h3 className="text-sm font-semibold text-text dark:text-slate-200">{isEn ? 'Insert tools' : 'Alat Sisip'}</h3>
-                  </div>
-                  <div className="grid gap-2">
-                    <button
-                      type="button"
-                      onClick={onInsertCitation}
-                      className="inline-flex items-center gap-2 rounded-md border border-line dark:border-slate-700 bg-panel dark:bg-slate-700 px-3 py-2 text-xs font-medium text-text dark:text-slate-200 transition hover:border-accent/30 hover:bg-accentSoft/70 dark:hover:bg-indigo-900/50"
-                    >
-                      <IconQuote className="h-3.5 w-3.5 text-accent dark:text-indigo-400" />
-                      {isEn ? 'Insert citation' : 'Sisipkan Sitasi'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={onInsertBibliography}
-                      className="inline-flex items-center gap-2 rounded-md border border-line dark:border-slate-700 bg-panel dark:bg-slate-700 px-3 py-2 text-xs font-medium text-text dark:text-slate-200 transition hover:border-accent/30 hover:bg-accentSoft/70 dark:hover:bg-indigo-900/50"
-                    >
-                      <IconFileText className="h-3.5 w-3.5 text-accent dark:text-indigo-400" />
-                      {isEn ? 'Bibliography' : 'Daftar Pustaka'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={onInsertImageSample}
-                      className="inline-flex items-center gap-2 rounded-md border border-line dark:border-slate-700 bg-panel dark:bg-slate-700 px-3 py-2 text-xs font-medium text-text dark:text-slate-200 transition hover:border-accent/30 hover:bg-accentSoft/70 dark:hover:bg-indigo-900/50"
-                    >
-                      <IconCirclePlus className="h-3.5 w-3.5 text-accent dark:text-indigo-400" />
-                      {isEn ? 'Sample image' : 'Contoh Gambar'}
-                    </button>
-                  </div>
-                </section>
+                {/* Alat Sisip: dinonaktifkan/disembunyikan sesuai permintaan pengguna (fungsi sisip sudah ada di Ribbon Toolbar) */}
+                {false && (
+                  <section className="rounded-lg border border-line dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm">
+                    <div className="mb-3 flex items-center gap-2">
+                      <IconFileText className="h-4 w-4 text-accent dark:text-indigo-400" />
+                      <h3 className="text-sm font-semibold text-text dark:text-slate-200">{isEn ? 'Insert tools' : 'Alat Sisip'}</h3>
+                    </div>
+                    <div className="grid gap-2">
+                      <button
+                        type="button"
+                        onClick={onInsertCitation}
+                        className="inline-flex items-center gap-2 rounded-md border border-line dark:border-slate-700 bg-panel dark:bg-slate-700 px-3 py-2 text-xs font-medium text-text dark:text-slate-200 transition hover:border-accent/30 hover:bg-accentSoft/70 dark:hover:bg-indigo-900/50"
+                      >
+                        <IconQuote className="h-3.5 w-3.5 text-accent dark:text-indigo-400" />
+                        {isEn ? 'Insert citation' : 'Sisipkan Sitasi'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={onInsertBibliography}
+                        className="inline-flex items-center gap-2 rounded-md border border-line dark:border-slate-700 bg-panel dark:bg-slate-700 px-3 py-2 text-xs font-medium text-text dark:text-slate-200 transition hover:border-accent/30 hover:bg-accentSoft/70 dark:hover:bg-indigo-900/50"
+                      >
+                        <IconFileText className="h-3.5 w-3.5 text-accent dark:text-indigo-400" />
+                        {isEn ? 'Bibliography' : 'Daftar Pustaka'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={onInsertImageSample}
+                        className="inline-flex items-center gap-2 rounded-md border border-line dark:border-slate-700 bg-panel dark:bg-slate-700 px-3 py-2 text-xs font-medium text-text dark:text-slate-200 transition hover:border-accent/30 hover:bg-accentSoft/70 dark:hover:bg-indigo-900/50"
+                      >
+                        <IconCirclePlus className="h-3.5 w-3.5 text-accent dark:text-indigo-400" />
+                        {isEn ? 'Sample image' : 'Contoh Gambar'}
+                      </button>
+                    </div>
+                  </section>
+                )}
               </div>
     </>
   );

@@ -4,7 +4,7 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.45.5 (BYOK Architecture for PaperChat: Zero-Quota Deduction, Multi-Tenant Campus & Personal Key Support, Pro Model Access & Active Visual Badge, 229/229 tests passing, 0 TypeScript errors).
+v0.45.8 (Interactive AI Writing & Document Tab Guidance: Contextual Tooltips, Canvas Behavior Indicators & Action Explanations, 230/230 tests passing, 0 TypeScript errors).
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
@@ -49,6 +49,7 @@ v0.45.5 (BYOK Architecture for PaperChat: Zero-Quota Deduction, Multi-Tenant Cam
 - [x] Phase 70: PaperChat Freemium Hybrid Tier Strategy: Free Monthly Token Guard with Pro Model Gating & Reactive In-Modal Upgrade Triggers.
 - [x] Phase 71: BYOK Architecture for PaperChat: Zero-Quota Deduction, Multi-Tenant Campus & Personal Key Support, Pro Model Access & Active Visual Badge.
 - [x] Phase 72: Maximized 465+ Bilingual AI Indicators Lexicon Integration (145 Words + 100 Phrases per Language, Wikipedia WP:AISIGNS Taxonomy, Precision Cliché Density & Heatmap Sensitivity).
+- [x] Phase 73: Pre-Publish Modular Feature Flags System (Safely guarded SPSS, Literature Matrix, Journal Presets, Concept Map & Submission Package without code deletion, 230/230 unit tests passing, 0 TypeScript errors).
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.

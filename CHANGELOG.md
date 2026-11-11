@@ -2,6 +2,35 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.45.8] - 2026-11-11 (Interactive AI Writing & Document Tab Guidance: Contextual Tooltips, Canvas Behavior Indicators & Action Explanations)
+
+### 🎯 Interactive Guidance & Rich Action Tooltips (`components/editor/sidebar-writing-tab.tsx`, `components/editor/sidebar-document-tab.tsx`, `components/editor/editorjs-toolbar.tsx`)
+- **Writing Tab Interactive Tooltips & Guidance**:
+  - Added dynamic status badges (`[Blok Teks]` / `[Select Text]`) on writing tools when disabled due to no active selection in canvas.
+  - Upgraded hover tooltips with explicit action behaviors (`Replaces selected text`, `Inserts at top`, `Appends citation`) and real-time status indicators (`⚠️ Select text in canvas to activate` vs `✓ Text selected (Ready)` vs `⚡ Reads full manuscript`).
+  - Replaced generic "Apply" button with explicit "Replace Selected Text" / "Insert at Beginning" buttons with explanatory contextual tips.
+- **Document Tab Module Guidance**:
+  - Implemented `ToolActionTooltip` for Academic Style Linter, Defense Slide Deck, Plagiarism Checker, Reviewer #2 Simulator, and Thesis Project Binder.
+  - Clarified selection requirements (none needed) and exact canvas impact (in-place word replacement, modal deck synthesis, similarity reports, and peer review simulation).
+  - Ensured full dark mode and bilingual (EN/ID) compatibility.
+- **Verification**:
+  - `npx tsc --noEmit` passed with 0 errors.
+  - `npx vitest run` passed with 230/230 unit tests across 27 files.
+
+## ⚡ [v0.45.7] - 2026-11-11 (Pre-Publish Modular Feature Flags: Safe Temporary Hiding of Advanced Academic & Publishing Modules)
+
+### 🎯 Enterprise Feature Flags System (`lib/config/feature-flags.ts`, `components/editor/editor-sidebar.tsx`, `components/editor/sidebar-document-tab.tsx`, `components/editor/editor-layout.tsx`, `lib/editor/command-palette.ts`)
+- **Centralized Feature Flags Configuration**:
+  - Implemented `FEATURE_FLAGS` configuration in `lib/config/feature-flags.ts` with toggles for `ENABLE_SPSS_INTERPRETER`, `ENABLE_LITERATURE_MATRIX`, `ENABLE_JOURNAL_PRESETS`, `ENABLE_CONCEPT_MAP`, and `ENABLE_SUBMISSION_PACKAGE`.
+  - Zero code deletion: 100% of the underlying business logic, models, and modal wrappers remain intact.
+- **UI & Interaction Guarding**:
+  - Safely hides the SPSS / Stats tab from the right sidebar.
+  - Safely hides the four advanced module cards from the Document Stats sidebar tab.
+  - Temporarily guards shortcuts (`Ctrl+Shift+T`, `Ctrl+Shift+J`, `Ctrl+Shift+N`, `Ctrl+Shift+Y`) and command palette actions.
+- **Verification**:
+  - `npx tsc --noEmit` passes with 0 errors.
+  - `npx vitest run` passes all 230 unit tests across 27 test files.
+
 ## ⚡ [v0.45.5] - 2026-10-22 (BYOK Architecture for PaperChat: Zero-Quota Deduction, Multi-Tenant Campus & Personal Key Support, Pro Model Access & Active Visual Badge)
 
 ### 🎯 BYOK Architecture & Zero-Quota Deduction (`app/api/v1/ai/paper-chat/route.ts`, `components/editor/modals/paper-chat-modal.tsx`, `components/editor/sidebar-library-tab.tsx`)

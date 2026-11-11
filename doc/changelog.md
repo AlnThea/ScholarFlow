@@ -5,6 +5,37 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.45.8] - 2026-11-11 (Interactive AI Writing & Document Tab Guidance: Contextual Tooltips, Canvas Behavior Indicators & Action Explanations)
+
+### 🎯 Penambahan Panduan Interaktif & Tooltip Kontekstual di Antarmuka Editor
+- **Penyempurnaan Tooltip Tombol Penulisan (`components/editor/sidebar-writing-tab.tsx`)**:
+  - Menambahkan lencana status dinamis `[Blok Teks]` / `[Select Text]` saat tombol nonaktif karena belum ada kalimat yang disorot di kanvas.
+  - Memperluas hover tooltip dengan label target aksi yang jelas (`Ganti teks diblok`, `Sisip di awal naskah`, `Sematkan sitasi`) dan status kesiapan proses (`⚠️ Blok kalimat di kanvas naskah` vs `✓ Teks diblok (Siap proses)` vs `⚡ Menganalisis seluruh naskah`).
+  - Mengubah tombol hasil AI dari label generik *Terapkan* menjadi label eksplisit *Ganti Teks Diblok* / *Sisipkan di Awal*, lengkap dengan tips penjelas di bawahnya.
+- **Penyempurnaan Tooltip Modul Dokumen (`components/editor/sidebar-document-tab.tsx` & `editorjs-toolbar.tsx`)**:
+  - Menambahkan komponen pembungkus `ToolActionTooltip` untuk **Linter Gaya Akademis**, **Slide Sidang & Konferensi**, **Pendeteksi Plagiarisme**, **Simulasi Reviewer #2**, dan **Binder Naskah Skripsi**.
+  - Merinci lencana kategori, penjelasan fungsi, syarat teks (tanpa perlu blok teks), serta dampak perubahan presisi ke kanvas editor.
+  - Menambahkan penjelasan pada ribbon toolbar untuk simulasi Reviewer #2.
+  - Memastikan seluruh teks mendukung bilingual (EN/ID) dan kompatibel penuh dengan Light & Dark Mode.
+- **Verifikasi**:
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 230 dari 230 unit test lolos 100% di 27 berkas pengujian.
+
+## ⚡ [v0.45.7] - 2026-11-11 (Pre-Publish Modular Feature Flags: Safe Temporary Hiding of Advanced Academic & Publishing Modules)
+
+### 🎯 Implementasi Feature Flags Terpusat untuk Kesiapan Rilis Publik
+- **Modul Konfigurasi Feature Flags (`lib/config/feature-flags.ts`)**:
+  - Menyediakan konfigurasi `FEATURE_FLAGS` terpusat (`ENABLE_SPSS_INTERPRETER`, `ENABLE_LITERATURE_MATRIX`, `ENABLE_JOURNAL_PRESETS`, `ENABLE_CONCEPT_MAP`, `ENABLE_SUBMISSION_PACKAGE`).
+  - Menjamin **tidak ada satu baris pun kode yang dihapus** sesuai aturan arsitektur.
+- **Penyembunyian Aman di Antarmuka Editor (`components/editor/`)**:
+  - `editor-sidebar.tsx`: Tab `[Data SPSS]` disembunyikan dari baris tab bilah samping.
+  - `sidebar-document-tab.tsx`: Empat kartu modul lanjutan (Matriks Sintesis Literatur, Format Target Jurnal, Peta Konsep & Jaringan Sitasi, dan Paket Pengajuan Publikasi) disembunyikan dari tab Statistik Dokumen.
+  - `editor-layout.tsx`: Pintasan keyboard (`Ctrl+Shift+T`, `Ctrl+Shift+J`, `Ctrl+Shift+N`, `Ctrl+Shift+Y`) dan eksekusi perintah dinonaktifkan sementara.
+  - `command-palette.ts`: Perintah yang berhubungan difilter dari spotlight palette saat flag bernilai `false`.
+- **Verifikasi**:
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 230 dari 230 unit test lolos 100% di 27 berkas pengujian.
+
 ## ⚡ [v0.45.6] - 2026-10-29 (Maximized 465+ Bilingual AI Indicators: 145 Words + 100 Phrases per Language)
 
 ### 🎯 Integrasi Maksimal Masing-Masing 100+ Kata & 100+ Frasa per Bahasa (Total 465 Indikator)

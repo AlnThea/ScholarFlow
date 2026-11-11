@@ -227,7 +227,9 @@ export const EditorJsToolbar = ({
                 type="button"
                 onClick={onOpenPeerReview}
                 className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 hover:text-rose-800 transition cursor-pointer dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-900/60 border border-rose-200/80 dark:border-rose-800/80 shadow-2xs"
-                title={language === 'en' ? 'Reviewer #2 Simulator & Journal Readiness Audit' : 'Simulasi Reviewer #2 & Audit Kesiapan Jurnal'}
+                title={language === 'en'
+                  ? 'Reviewer #2 Simulator: Hyper-critical blind peer review (Audits entire manuscript, no text selection needed).'
+                  : 'Simulasi Reviewer #2: Audit peer review buta yang ketat & kritis (Memindai seluruh naskah, tidak perlu blok teks).'}
               >
                 <IconMicroscope className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" />
                 <span className="hidden sm:inline">{language === 'en' ? 'Reviewer #2' : 'Reviewer #2'}</span>

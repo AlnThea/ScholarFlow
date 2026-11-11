@@ -26,6 +26,7 @@ import {
   IconHistory, IconChartBar, IconCalculator,
 } from '@tabler/icons-react';
 import { type ImproveWritingResponse, synthesizeLiteratureReview } from '@/lib/api/ai';
+import { FEATURE_FLAGS } from '@/lib/config/feature-flags';
 import type { CitationCandidate } from '@/lib/api/citations';
 import type { BibliographyEntry } from '@/lib/editor/bibliography';
 import type { CitationHistoryEntry } from '@/lib/editor/citation-history';
@@ -458,7 +459,7 @@ export function EditorSidebar(props: SidebarProps) {
                 language={language} activePlanId={activePlanId} user={user} t={t} getSourceLabel={getSourceLabel} formatHistoryLabel={formatHistoryLabel}
                 ActionButton={ActionButton} PanelRow={PanelRow} />
             </div>
-          ) : workspaceTab === 'stats' ? (
+          ) : workspaceTab === 'stats' && FEATURE_FLAGS.ENABLE_SPSS_INTERPRETER ? (
             <div className="flex-1 overflow-y-auto p-4 thin-scroll">
               <SidebarStatsTab
                 {...props}
@@ -506,12 +507,12 @@ export function EditorSidebar(props: SidebarProps) {
                 tooltip: language === 'en' ? 'Citation Search & Library' : 'Pencarian Sitasi & Referensi',
                 icon: <IconBook className="h-4 w-4" /> 
               },
-              { 
+              ...(FEATURE_FLAGS.ENABLE_SPSS_INTERPRETER ? [{ 
                 id: 'stats', 
                 label: language === 'en' ? 'SPSS / Stats' : 'Data SPSS', 
                 tooltip: language === 'en' ? 'SPSS & Stats Output Interpreter (Phase 11)' : 'Interpretasi Output SPSS / PSPP (Phase 11)',
                 icon: <IconCalculator className="h-4 w-4" /> 
-              },
+              }] : []),
               { 
                 id: 'document', 
                 label: language === 'en' ? 'Doc Stats' : 'Statistik', 
