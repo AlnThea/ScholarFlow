@@ -25,10 +25,20 @@ All notable changes, architectural milestones, and UI improvements to the Schola
   - Mengimplementasikan `calculateManuscriptRelevanceScore`: menghitung persentase kecocokan semantik (50% - 99%) antara naskah aktif dengan judul, abstrak, kata kunci, keterkinian tahun, dan DOI paper.
   - Menampilkan lencana kecocokan `🟢 X% Cocok` / `🟢 X% Match` pada setiap kartu paper di modal impor berkas, identik dengan tampilan pencarian sitasi satuan.
   - Menambahkan tombol pengurutan dinamis `[Urutkan: Match Tertinggi ▾]` / `[Urutkan: Urutan Berkas ▾]` di bilah atas modal agar paper yang paling relevan dengan naskah langsung berada di urutan teratas.
+- **Proteksi Akses Eksklusif Paket Pro & Institusi (Pro-Tier Gating & Modal Upgrade)**:
+  - Mengunci fitur Auto-Sitasi naskah otomatis khusus untuk pengguna **Pro**, **Institution / Campus**, dan pengguna dengan kunci pribadi **BYOK**.
+  - Menampilkan lencana emas **`PRO`** pada tombol `⚡ Auto-Cite ke Naskah` di modal impor dan `⚡ Auto-Cite dari Pustaka` di bilah samping untuk pengguna akun Free.
+  - Jika pengguna Free mengklik tombol tersebut, sistem secara cerdas membuka modal paket harga (`PricingModal` / `PlanModal`) untuk melakukan upgrade ke Pro.
+  - Endpoint backend (`app/api/v1/ai/auto-cite-match/route.ts`) memvalidasi status tier pengguna dan mengembalikan status 403 Forbidden dengan payload `{ proRequired: true }` jika akun Free mencoba memanggil API.
+- **Layar Pemuatan Profesional & Penghitung Real-Time (`AutoCiteProgressModal`)**:
+  - Menggantikan notifikasi statis dengan dialog modal animasi modern dengan efek latar buram (*backdrop-blur*).
+  - Dilengkapi indikator counter numerik live: `[ 119 / 119 Paper ]` dengan rincian progres analisis per referensi.
+  - Pelacak 3 tahap berprogres dinamis (*Ekstraksi Kalimat Naskah*, *Pencocokan Semantik*, *Sintesis Atribusi & Skor Relevansi*).
+  - Rotasi tips akademik kontekstual secara berkala (*ticker tip*) selama proses AI berlangsung.
 - **Pengujian & Verifikasi**:
-  - Membuat berkas tes unit baru `__tests__/utils/auto-cite.test.ts` (7 pengujian lulus 100%).
+  - Membuat berkas tes unit baru `__tests__/utils/auto-cite.test.ts` (8 pengujian lulus 100%, termasuk tes gating Pro).
   - TypeScript: 0 error (`npx tsc --noEmit`).
-  - Vitest: 249 dari 249 pengujian lulus 100% di 29 berkas tes.
+  - Vitest: 250 dari 250 pengujian lulus 100% di 29 berkas tes.
 
 ## ⚡ [v0.45.8] - 2026-11-11 (Interactive AI Writing & Document Tab Guidance: Contextual Tooltips, Canvas Behavior Indicators & Action Explanations)
 

@@ -720,5 +720,35 @@ Target: Menambahkan dukungan mata uang USD ($) berdampingan dengan Rupiah (IDR),
 - [x] **6. Automated Verification**:
   - `npx tsc --noEmit` lolos dengan **0 compile error** dan `npx vitest run` lolos **242/242 unit tests di 28 berkas pengujian** (12 unit test baru di `__tests__/utils/currency.test.ts`).
 
+### Phase 49: AI Auto-Citation Attribution & Matchmaker Engine (v0.46.0)
+Target: Mengimplementasikan sistem atribusi sitasi otomatis berbasis AI (*Closed-World Strict Grounding*) dari berkas referensi terimpor (.ris, .bib, .pdf) langsung ke naskah aktif, dengan skor relevansi dinamis (% Match), layar pemuatan progresif dengan penghitung real-time, proteksi tier Pro, dan failover multi-provider.
+
+- [x] **1. Semantic Matchmaker API & Prompt Tertutup (`app/api/v1/ai/auto-cite-match/route.ts`, `lib/api/auto-cite.ts`)**:
+  - Menyusun prompt tertutup (*Closed-World*) bebas halusinasi yang memetakan kalimat naskah secara presisi ke referensi terimpor.
+  - Membaca kunci API cadangan secara dinamis dari tabel database Supabase `ai_providers` dan `ai_models` ketika file `.env` kosong.
+  - Menghubungkan pelindung kuota token pengguna, pencatatan log AI server, dan bypass kunci kampus BYOK (0 pengurangan kuota).
+- [x] **2. Skor Relevansi Naskah (% Match) & Pengurutan Cerdas (`lib/editor/reference-importer.ts`, `components/editor/modals/reference-import-modal.tsx`)**:
+  - Mengimplementasikan `calculateManuscriptRelevanceScore`: menghitung kecocokan semantik (50% - 99%) berdasarkan judul, abstrak, dan kata kunci naskah.
+  - Menampilkan lencana persentase `🟢 X% Cocok` / `🟢 X% Match` pada setiap kartu paper rujukan di modal impor.
+  - Menambahkan tombol toggle pengurutan dinamis `[Urutkan: Match Tertinggi ▾]` agar paper paling relevan berada di posisi paling atas.
+- [x] **3. Layar Pemuatan Animatif & Penghitung Real-Time (`components/editor/modals/auto-cite-progress-modal.tsx`)**:
+  - Menggantikan dialog statis dengan modal animasi berlatar buram (*frosted glass*), ambient glow, dan ikon pulsasi AI.
+  - Menampilkan pelacak 3 tahap berprogres dinamis dilengkapi counter live numerik: `[ 119 / 119 Paper ]` dengan rincian status peninjauan per makalah.
+  - Rotasi berkala tips metodologi ilmiah dan integritas sitasi akademik.
+- [x] **4. Modal Pratinjau & Injeksi In-Text Non-Destruktif (`auto-cite-preview-modal.tsx`, `editor-layout.tsx`)**:
+  - Modal pratinjau dwibahasa dengan fitur Fast-Track `[✓ Terapkan Semua (Apply All)]` dan seleksi individual.
+  - Menyematkan elemen `<cite data-citation="true" data-ref-id="...">` ke DOM contenteditable Editor.js tanpa merusak teks, memicu event input dan menyinkronkan Daftar Pustaka otomatis.
+- [x] **5. Proteksi Khusus Tier Pro & Institusi (Pro-Tier Gating)**:
+  - Menyematkan lencana emas `PRO` pada tombol Auto-Cite di modal impor dan bilah samping untuk pengguna akun Free.
+  - Mengarahkan akun Free langsung ke modal harga (`PricingModal` / `PlanModal`) saat tombol diklik.
+  - Enforce status HTTP 403 Forbidden `{ proRequired: true }` di endpoint backend jika dipanggil akun Free tanpa BYOK.
+- [x] **6. Smart Multi-Model Failover (Gemini & OpenRouter Fallback)**:
+  - Menangani error 404 pada model-model yang dihentikan (seperti Claude 3.5 Sonnet lama di OpenRouter) dengan otomatis mencoba model alternatif (`gemini-2.0-flash-exp:free`, `llama-3.3-70b-instruct:free`, `claude-3.5-sonnet-20241022`, dsb.).
+  - Mendukung alias model terbaru Gemini (`gemini-1.5-flash-latest`, `gemini-2.5-flash`, serta endpoint `/v1` & `/v1beta`).
+- [x] **7. Automated Verification**:
+  - `npx tsc --noEmit` lolos dengan **0 compile error**.
+  - `npx vitest run` lolos **250/250 unit tests di 29 berkas pengujian** (8 unit test baru di `__tests__/utils/auto-cite.test.ts`).
+
+
 
 

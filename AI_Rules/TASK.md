@@ -4,7 +4,7 @@
 Phase 31 & Next-Gen Academic Research Co-Pilot: Smart Academic Scaffolding, Fast In-Text Mentions, and Multi-Chapter Thesis Integration.
 
 ## Current Task
-v0.45.8 (Interactive AI Writing & Document Tab Guidance: Contextual Tooltips, Canvas Behavior Indicators & Action Explanations, 230/230 tests passing, 0 TypeScript errors).
+v0.46.0 (AI Auto-Citation Attribution & Matchmaker Engine: Fast-Track Semantic Attribution from Imported .ris / .bib / .pdf, Progress Modal with Live Counters, Pro-Tier Gating & Multi-Provider Failover, 250/250 tests passing, 0 TypeScript errors).
 
 ## Next Tasks (Master Roadmap - `doc/PRODUCTION_TASKS.md`)
 - [x] Phase 31: Interactive Academic Thesis/Paper Outline & Structure Generator (IMRaD & Standar Skripsi Dikti).
@@ -50,7 +50,10 @@ v0.45.8 (Interactive AI Writing & Document Tab Guidance: Contextual Tooltips, Ca
 - [x] Phase 71: BYOK Architecture for PaperChat: Zero-Quota Deduction, Multi-Tenant Campus & Personal Key Support, Pro Model Access & Active Visual Badge.
 - [x] Phase 72: Maximized 465+ Bilingual AI Indicators Lexicon Integration (145 Words + 100 Phrases per Language, Wikipedia WP:AISIGNS Taxonomy, Precision Cliché Density & Heatmap Sensitivity).
 - [x] Phase 73: Pre-Publish Modular Feature Flags System (Safely guarded SPSS, Literature Matrix, Journal Presets, Concept Map & Submission Package without code deletion, 230/230 unit tests passing, 0 TypeScript errors).
-- [x] Phase 74: AI Auto-Citation Attribution & Matchmaker Engine (Closed-World Semantic Matching from Imported .ris / .bib / .pdf, Fast-Track Review Modal with 'Apply All', In-Text Non-Destructive DOM Injection, Dynamic % Match Badges, and Reactive Bibliography Sync, 249/249 tests passing, 0 TypeScript errors).
+- [x] Phase 74: AI Auto-Citation Attribution & Matchmaker Engine (Closed-World Semantic Matching from Imported .ris / .bib / .pdf, Fast-Track Review Modal with 'Apply All', In-Text Non-Destructive DOM Injection, Dynamic % Match Badges, and Reactive Bibliography Sync, 250/250 tests passing, 0 TypeScript errors).
+- [x] Phase 75: Tier-Aware AI Model Routing & Admin Database Key Fallback (Google Gemini, OpenRouter, Custom OpenAI cascading).
+- [x] Phase 76: Interactive Animated Progress Modal (`AutoCiteProgressModal`) with Multi-Step Pipeline, Live Item Counters (`[119/119 Paper]`), and Dynamic Academic Insight Rotator.
+- [x] Phase 77: Strict Pro-Tier Gating & Modal Upgrade (`PricingModal` / `PlanModal` trigger on Free tier with Golden `PRO` badge).
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.
