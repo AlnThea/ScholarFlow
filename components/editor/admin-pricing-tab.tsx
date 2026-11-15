@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { IconLoader, IconGripVertical, IconArrowUp, IconArrowDown } from '@tabler/icons-react';
 import { reorderPricingPlans } from '@/lib/api/pricing';
+import { useCurrency, formatPriceWithCurrency, formatPricePeriod } from '@/lib/config/currency';
+import { Switch } from './editor-switch';
 
 interface AdminPricingTabProps {
   handleOpenCreateModal: () => void;
@@ -17,6 +19,7 @@ export function AdminPricingTab({
   handleOpenEditModal,
   handleDeletePlan
 }: AdminPricingTabProps) {
+  const { currency, setCurrency, isUsd } = useCurrency();
   const [plans, setPlans] = useState<any[]>(adminPlans);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isReordering, setIsReordering] = useState(false);
@@ -102,38 +105,63 @@ export function AdminPricingTab({
             Atur harga paket langganan secara dinamis, berikan teks promosi musiman, ubah daftar fitur unggulan, dan geser (drag & drop) untuk mengatur urutan tampilan paket.
           </p>
         </div>
-        <button
-          onClick={handleOpenCreateModal}
-          className="relative z-10 flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black rounded-xl shadow-lg transition-all duration-200 cursor-pointer self-start md:self-auto"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          Tambah Paket Baru
-        </button>
+        
+        <div className="relative z-10 flex flex-wrap items-center gap-3 self-start md:self-auto">
+          {/* Switch Mata Uang Aktif (IDR ↔ USD) */}
+          <div className="flex items-center gap-2.5 bg-slate-800/90 border border-slate-700/80 px-3 py-2 rounded-xl text-white shadow-sm">
+            <div className="flex flex-col">
+              <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">
+                Mata Uang Aktif
+              </span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className={`text-[10px] font-bold ${!isUsd ? 'text-indigo-400' : 'text-slate-400'}`}>IDR (Rp)</span>
+                <Switch
+                  checked={isUsd}
+                  onChange={() => {
+                    setCurrency(isUsd ? 'IDR' : 'USD');
+                  }}
+                />
+                <span className={`text-[10px] font-bold ${isUsd ? 'text-emerald-400' : 'text-slate-400'}`}>USD ($)</span>
+              </div>
+            </div>
+            <span className="text-xs px-2 py-0.5 rounded font-mono font-bold bg-slate-900/90 border border-slate-700 text-slate-200">
+              {isUsd ? '$ USD' : 'Rp IDR'}
+            </span>
+          </div>
+
+          <button
+            onClick={handleOpenCreateModal}
+            className="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black rounded-xl shadow-lg transition-all duration-200 cursor-pointer"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Tambah Paket Baru
+          </button>
+        </div>
       </div>
 
       {loadingAdminPlans ? (
-        <div className="py-20 flex flex-col items-center justify-center gap-3 bg-white border border-slate-200/90 rounded-xl shadow-sm">
+        <div className="py-20 flex flex-col items-center justify-center gap-3 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-sm">
           <IconLoader className="h-8 w-8 text-indigo-600 animate-spin" />
           <span className="text-xs text-slate-400 font-semibold">Memuat data paket pricing...</span>
         </div>
       ) : (
-        <div className="bg-white border border-slate-200/90 rounded-xl overflow-hidden shadow-sm flex flex-col">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm flex flex-col">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-slate-200/70 bg-slate-50/70 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                <tr className="border-b border-slate-200/70 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/60 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   <th className="px-3 py-3 font-semibold text-center w-[60px]" title="Drag handle untuk memindahkan posisi">Urutan</th>
                   <th className="px-5 py-3 font-semibold min-w-[130px]">ID Paket</th>
                   <th className="px-5 py-3 font-semibold min-w-[190px]">Nama Paket</th>
-                  <th className="px-5 py-3 font-semibold min-w-[150px]">Harga (Rp)</th>
+                  <th className="px-5 py-3 font-semibold min-w-[150px]">{isUsd ? 'Harga (USD / $)' : 'Harga (IDR / Rp)'}</th>
                   <th className="px-5 py-3 font-semibold min-w-[110px]">Periode</th>
                   <th className="px-5 py-3 font-semibold min-w-[180px]">Promo Tagline</th>
                   <th className="px-5 py-3 font-semibold text-center w-[140px]">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-xs">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
                 {plans.map((plan, index) => {
                   return (
                     <tr 
@@ -181,16 +209,16 @@ export function AdminPricingTab({
                       </td>
 
                       {/* ID Paket */}
-                      <td className="px-5 py-4 align-middle font-mono font-bold text-slate-800">
+                      <td className="px-5 py-4 align-middle font-mono font-bold text-slate-800 dark:text-slate-200">
                         {plan.id}
                       </td>
 
                       {/* Nama Paket */}
-                      <td className="px-5 py-4 align-middle font-bold text-slate-900">
+                      <td className="px-5 py-4 align-middle font-bold text-slate-900 dark:text-slate-100">
                         <div className="flex items-center gap-2">
                           {plan.name}
                           {plan.is_popular && (
-                            <span className="text-[9px] font-bold text-amber-700 uppercase bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60">
+                            <span className="text-[9px] font-bold text-amber-700 dark:text-amber-400 uppercase bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded border border-amber-200/60 dark:border-amber-800/60">
                               Terpopuler
                             </span>
                           )}
@@ -200,27 +228,29 @@ export function AdminPricingTab({
                       {/* Harga */}
                       <td className="px-5 py-4 align-middle">
                         {plan.price === 0 ? (
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-mono text-[11px] font-bold border border-emerald-200/60">
-                            Gratis
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-mono text-[11px] font-bold border border-emerald-200/60 dark:border-emerald-800/60">
+                            {isUsd ? 'Free ($0)' : 'Gratis (Rp 0)'}
                           </span>
                         ) : plan.price < 0 ? (
-                          <span className="text-slate-500 font-medium">Custom (Hubungi Kami)</span>
+                          <span className="text-slate-500 dark:text-slate-400 font-medium">Custom (Hubungi Kami)</span>
                         ) : (
-                          <span className="font-mono text-slate-700 font-medium text-[11px]">Rp {plan.price.toLocaleString('id-ID')}</span>
+                          <span className="font-mono text-slate-700 dark:text-slate-200 font-medium text-[11px]">
+                            {formatPriceWithCurrency(plan.price, currency, plan.price_usd)}
+                          </span>
                         )}
                       </td>
 
                       {/* Periode */}
-                      <td className="px-5 py-4 align-middle text-slate-600 capitalize">
-                        {plan.price < 0 ? '-' : `/${plan.price_period}`}
+                      <td className="px-5 py-4 align-middle text-slate-600 dark:text-slate-400 capitalize">
+                        {plan.price < 0 ? '-' : formatPricePeriod(plan.price_period, currency)}
                       </td>
 
                       {/* Promo Tagline */}
                       <td className="px-5 py-4 align-middle">
                         {plan.promo_text ? (
-                          <span className="text-slate-600">{plan.promo_text}</span>
+                          <span className="text-slate-600 dark:text-slate-300">{plan.promo_text}</span>
                         ) : (
-                          <span className="text-slate-300 italic text-[11px]">- Kosong -</span>
+                          <span className="text-slate-300 dark:text-slate-600 italic text-[11px]">- Kosong -</span>
                         )}
                       </td>
 

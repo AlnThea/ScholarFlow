@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   IconFileImport,
   IconCheck,
@@ -12,8 +12,10 @@ import {
   IconCalendar,
   IconInfoCircle,
   IconSparkles,
+  IconArrowsSort,
 } from '@tabler/icons-react';
 import type { CitationCandidate } from '@/lib/api/citations';
+import { calculateManuscriptRelevanceScore } from '@/lib/editor/reference-importer';
 
 interface ReferenceImportModalProps {
   isOpen: boolean;
@@ -21,7 +23,11 @@ interface ReferenceImportModalProps {
   candidates: CitationCandidate[];
   fileName?: string;
   language: string;
+  manuscriptText?: string;
+  activePlanId?: string;
+  onUpgrade?: () => void;
   onImport: (selected: CitationCandidate[]) => void;
+  onAutoCite?: (selected: CitationCandidate[]) => void;
 }
 
 export const ReferenceImportModal: React.FC<ReferenceImportModalProps> = ({
@@ -30,10 +36,28 @@ export const ReferenceImportModal: React.FC<ReferenceImportModalProps> = ({
   candidates,
   fileName,
   language,
+  manuscriptText = '',
+  activePlanId = 'free',
+  onUpgrade,
   onImport,
+  onAutoCite,
 }) => {
   const isEn = language === 'en';
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState<'match' | 'original'>('match');
+
+  // Compute manuscript relevance score for each candidate
+  const scoredCandidates = useMemo(() => {
+    const list = (candidates || []).map((cand) => {
+      const score = calculateManuscriptRelevanceScore(cand, manuscriptText);
+      return { ...cand, ranking_score: score };
+    });
+
+    if (sortBy === 'match') {
+      return [...list].sort((a, b) => (b.ranking_score || 0) - (a.ranking_score || 0));
+    }
+    return list;
+  }, [candidates, manuscriptText, sortBy]);
 
   // Initialize selection when candidates change
   useEffect(() => {
@@ -144,7 +168,25 @@ export const ReferenceImportModal: React.FC<ReferenceImportModalProps> = ({
             </span>
           </label>
 
-          <div className="flex items-center gap-1.5 font-semibold text-slate-600 dark:text-slate-300">
+          <div className="flex items-center gap-2 font-semibold text-slate-600 dark:text-slate-300">
+            <button
+              type="button"
+              onClick={() => setSortBy(sortBy === 'match' ? 'original' : 'match')}
+              className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:border-indigo-300 dark:hover:border-indigo-600 transition cursor-pointer flex items-center gap-1.5 shadow-xs"
+              title={
+                isEn
+                  ? "Toggle sorting between highest relevance match score or file appearance order"
+                  : "Ganti urutan antara skor kecocokan tertinggi atau urutan bawaan berkas"
+              }
+            >
+              <IconArrowsSort className="w-3.5 h-3.5 text-indigo-500" />
+              <span>
+                {sortBy === 'match'
+                  ? (isEn ? 'Sort: Highest Match ▾' : 'Urutkan: Match Tertinggi ▾')
+                  : (isEn ? 'Sort: File Order ▾' : 'Urutkan: Urutan Berkas ▾')}
+              </span>
+            </button>
+
             <span
               className="px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800"
               title={isEn ? "Number of references chosen to be imported" : "Jumlah referensi yang dipilih untuk diimpor"}
@@ -156,7 +198,7 @@ export const ReferenceImportModal: React.FC<ReferenceImportModalProps> = ({
 
         {/* Paper Candidates List */}
         <div className="flex-1 overflow-y-auto p-6 space-y-3.5 thin-scroll">
-          {candidates.length === 0 ? (
+          {scoredCandidates.length === 0 ? (
             <div className="text-center py-12 text-slate-400 dark:text-slate-500">
               <IconBook className="w-12 h-12 mx-auto mb-3 opacity-40" />
               <p className="text-sm font-medium">
@@ -164,7 +206,7 @@ export const ReferenceImportModal: React.FC<ReferenceImportModalProps> = ({
               </p>
             </div>
           ) : (
-            candidates.map((candidate, idx) => {
+            scoredCandidates.map((candidate, idx) => {
               const isSelected = selectedIds.has(candidate.reference_id);
               return (
                 <div
@@ -199,6 +241,24 @@ export const ReferenceImportModal: React.FC<ReferenceImportModalProps> = ({
                           title={isEn ? "In-text citation label used in manuscript" : "Label sitasi yang digunakan pada naskah"}
                         >
                           {candidate.citation_label}
+                        </span>
+
+                        {/* Match Percentage Badge */}
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 shadow-xs ${
+                            (candidate.ranking_score || 80) >= 85
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800'
+                              : (candidate.ranking_score || 80) >= 70
+                              ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800'
+                              : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
+                          }`}
+                          title={
+                            isEn
+                              ? `Topical relevance to your active manuscript: ${candidate.ranking_score}%`
+                              : `Tingkat kecocokan dengan topik naskah aktif: ${candidate.ranking_score}%`
+                          }
+                        >
+                          <span>🟢 {candidate.ranking_score}% {isEn ? 'Match' : 'Cocok'}</span>
                         </span>
 
                         {candidate.year && (
@@ -288,6 +348,37 @@ export const ReferenceImportModal: React.FC<ReferenceImportModalProps> = ({
             >
               {isEn ? 'Cancel' : 'Batal'}
             </button>
+
+            {onAutoCite && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (activePlanId === 'free' && onUpgrade) {
+                    onUpgrade();
+                    return;
+                  }
+                  const selected = candidates.filter((c) => selectedIds.has(c.reference_id));
+                  if (selected.length === 0) return;
+                  onAutoCite(selected);
+                  onClose();
+                }}
+                disabled={selectedIds.size === 0}
+                className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 disabled:opacity-50 text-white shadow-md shadow-indigo-500/20 transition cursor-pointer"
+                title={
+                  isEn
+                    ? "Analyze active manuscript and automatically attribute citations to relevant sentences (Pro Feature)"
+                    : "Analisis naskah aktif dan sematkan sitasi otomatis ke kalimat-kalimat yang relevan (Fitur Pro)"
+                }
+              >
+                <IconSparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+                <span>{isEn ? '⚡ Auto-Cite to Manuscript' : '⚡ Auto-Cite ke Naskah'}</span>
+                {activePlanId === 'free' && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded font-black bg-amber-400 text-amber-950 uppercase tracking-wider ml-1 shadow-xs">
+                    PRO
+                  </span>
+                )}
+              </button>
+            )}
 
             <button
               type="button"

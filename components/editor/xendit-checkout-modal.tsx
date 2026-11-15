@@ -7,6 +7,7 @@ import {
 } from '@tabler/icons-react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useLanguage } from '@/components/i18n/language-context';
+import { useCurrency } from '@/lib/config/currency';
 
 interface XenditCheckoutModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export function XenditCheckoutModal({
 }: XenditCheckoutModalProps) {
   const { language } = useLanguage();
   const isEn = language === 'en';
+  const { isUsd, formatPrice } = useCurrency();
   const { user, refreshProfile } = useAuth();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -189,7 +191,7 @@ export function XenditCheckoutModal({
                 <div className="text-right">
                   <span className="text-[10px] text-slate-400 uppercase font-bold">{isEn ? 'Total' : 'Total Tagihan'}</span>
                   <div className="font-mono font-black text-indigo-600 dark:text-indigo-400 text-base">
-                    Rp {planPrice.toLocaleString('id-ID')}
+                    {isUsd ? `${formatPrice(planPrice)} (≈ Rp ${planPrice.toLocaleString('id-ID')})` : `Rp ${planPrice.toLocaleString('id-ID')}`}
                   </div>
                 </div>
               </div>

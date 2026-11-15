@@ -5,6 +5,75 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.46.0] - 2026-11-15 (AI Auto-Citation Attribution & Matchmaker Engine: Fast-Track Semantic Attribution from Imported .ris / .bib / .pdf)
+
+### 🎯 Mesin Atribusi Sitasi Otomatis Berbasis AI (*Closed-World Semantic Matching*)
+- **Endpoint API Atribusi Sitasi AI (`app/api/v1/ai/auto-cite-match/route.ts`)**:
+  - Menerima blok paragraf naskah kanvas dan daftar calon rujukan hasil impor (.ris, .bib, .pdf).
+  - Mengimplementasikan prompt tertutup (*Closed-World Strict Grounding*): AI hanya diizinkan mencocokkan klaim naskah ke paper yang ada di dalam berkas impor pengguna, 100% bebas dari referensi atau DOI fiktif/halusinasi.
+  - Mengembalikan struktur JSON pemetaan kalimat persis (`sentenceText`), ID referensi (`referenceId`), label sitasi (`citationLabel`), skor keyakinan (*confidence score*), dan alasan ilmiah (*rationale*).
+  - Terintegrasi penuh dengan pelindung kuota token pengguna (`checkPersonalQuota`, `recordPersonalTokenConsumption`, estimasi token NLP), isolasi kunci kampus BYOK (0 potongan kuota token), dan pencatatan riwayat server-side.
+- **Klien API Atribusi Sitasi (`lib/api/auto-cite.ts`)**:
+  - Menyediakan contract interface `AutoCiteMatch`, `AutoCiteRequest`, `AutoCiteResponse`, dan helper pemanggilan `matchAutoCitations()`.
+- **Modal Pratinjau Interaktif dengan Fast-Track (`components/editor/modals/auto-cite-preview-modal.tsx`)**:
+  - Menampilkan daftar kalimat yang teridentifikasi beserta kutipan kalimat naskah, lencana tingkat kecocokan (*match confidence pill*), rujukan target, dan alasan AI.
+  - Menyediakan tombol cepat **`[✓ Terapkan Semua (Apply All)]`** untuk pengalaman sekali klik, serta tombol seleksi bertahap **`[Terapkan Terpilih]`**.
+  - Kompatibel penuh dengan Dark Mode dan dwibahasa (EN/ID), ukuran berkas di bawah 300 baris.
+- **Pemicu Integrasi pada Modal Impor & Bilah Samping (`reference-import-modal.tsx` & `sidebar-library-tab.tsx`)**:
+  - Menambahkan tombol aksi glowing **`⚡ Auto-Cite ke Naskah (AI)`** pada footer modal impor berkas referensi.
+  - Menambahkan tombol aksi **`⚡ Auto-Cite dari Pustaka`** pada tab pustaka bilah samping ketika terdapat daftar pustaka aktif di dokumen.
+- **Injeksi Non-Destruktif ke Kanvas Editor (`components/editor/editor-layout.tsx`)**:
+  - Handler `handleApplyAutoCite`: Menambahkan referensi terpilih ke `citationLibrary`, menyematkan tag `<cite data-citation="true" data-ref-id="...">` tepat setelah kalimat yang cocok di DOM contenteditable Editor.js, memicu event `input`, dan menyimpan konten secara persisten serta menyinkronkan Daftar Pustaka otomatis.
+- **Lencana Skor Kecocokan (% Match) & Pengurutan Relevansi Naskah (`reference-import-modal.tsx` & `reference-importer.ts`)**:
+  - Mengimplementasikan `calculateManuscriptRelevanceScore`: menghitung persentase kecocokan semantik (50% - 99%) antara naskah aktif dengan judul, abstrak, kata kunci, keterkinian tahun, dan DOI paper.
+  - Menampilkan lencana kecocokan `🟢 X% Cocok` / `🟢 X% Match` pada setiap kartu paper di modal impor berkas, identik dengan tampilan pencarian sitasi satuan.
+  - Menambahkan tombol pengurutan dinamis `[Urutkan: Match Tertinggi ▾]` / `[Urutkan: Urutan Berkas ▾]` di bilah atas modal agar paper yang paling relevan dengan naskah langsung berada di urutan teratas.
+- **Pemilihan Model AI Berdasarkan Akun (Tier-Aware AI Model Routing) & Admin Database Fallback (`app/api/v1/ai/auto-cite-match/route.ts`)**:
+  - Menyelaraskan pemilihan model AI secara cerdas dengan paket akun pengguna (`free`, `pro`, `institution`) serta kunci BYOK institusi/kampus.
+  - Pengguna akun Pro / Institusi mendapatkan prioritas model berkinerja tinggi (seperti `gemini-2.0-flash`, `google-gemini-pro`, Claude, atau endpoint kustom pro yang dikonfigurasi admin di tabel `ai_providers` dan `ai_models`).
+  - Pengguna akun Free diarahkan ke model efisien bebas biaya (seperti `gemini-1.5-flash`, `agnes-2.5-flash`, atau OpenRouter free) dengan pengamanan ketat agar model berbayar/pro tidak tertelan tanpa izin.
+  - Fallback otomatis membaca API Key dari database Supabase (`ai_providers`) jika konfigurasi `.env` kosong.
+- **Layar Pemuatan Profesional & Interaktif (*Animated Academic Progress Modal*) (`components/editor/modals/auto-cite-progress-modal.tsx`)**:
+  - Menggantikan notifikasi statis dengan dialog modal animasi modern dengan efek latar buram (*backdrop-blur*).
+  - Dilengkapi ikon AI berpendar (*glowing pulse*), indikator persentase dinamis (15% ➔ 55% ➔ 88%), dan pelacak 3 tahap progresif (*Ekstraksi Kalimat Naskah*, *Pencocokan Semantik*, *Sintesis Atribusi & Skor Relevansi*).
+  - Menyajikan rotasi tips akademik kontekstual secara berkala (*ticker tip*) selama proses AI berlangsung.
+  - Mendukung penuh Dark Mode dan dwibahasa (EN/ID), ukuran berkas di bawah 300 baris.
+- **Proteksi Akses Eksklusif Paket Pro & Institusi (Pro-Tier Gating & Modal Upgrade)**:
+  - Mengunci fitur Auto-Sitasi naskah otomatis khusus untuk pengguna **Pro**, **Institution / Campus**, dan pengguna dengan kunci pribadi **BYOK**.
+  - Menampilkan lencana emas **`PRO`** pada tombol `⚡ Auto-Cite ke Naskah` di modal impor dan `⚡ Auto-Cite dari Pustaka` di bilah samping untuk pengguna akun Free.
+  - Jika pengguna Free mengklik tombol tersebut, sistem secara cerdas membuka modal paket harga (`PricingModal` / `PlanModal`) untuk melakukan upgrade ke Pro.
+  - Endpoint backend (`app/api/v1/ai/auto-cite-match/route.ts`) memvalidasi status tier pengguna dan mengembalikan status 403 Forbidden dengan payload `{ proRequired: true }` jika akun Free mencoba memanggil API.
+- **Pengujian & Verifikasi**:
+  - Membuat berkas tes unit baru `__tests__/utils/auto-cite.test.ts` (8 pengujian lulus 100%, termasuk tes gating Pro).
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 250 dari 250 pengujian lulus 100% di 29 berkas tes.
+
+## ⚡ [v0.45.9] - 2026-11-12 (Multi-Currency Architecture: Admin IDR ↔ USD Switch, Dynamic Plan Pricing & Real-Time Currency Formatting)
+
+### 🎯 Penambahan Dukungan Mata Uang USD & Sakelar Switch Mata Uang Admin
+- **Modul Konfigurasi Mata Uang Sistem (`lib/config/currency.ts`)**:
+  - Menyediakan konfigurasi `CURRENCY_CONFIGS` untuk Rupiah (`IDR / Rp`) dan Dolar AS (`USD / $`).
+  - Mengimplementasikan dual-persistence (`localStorage` + event bus `scholarflow:currency-updated` + fallback Supabase) sehingga perubahan mata uang oleh admin langsung tercermin secara instan di seluruh komponen tanpa perlu reload halaman.
+  - Menyediakan helper konversi kurs (`convertIdrToUsd`), pemformatan harga dinamis (`formatPriceWithCurrency`), dan pemformatan periode dwibahasa (`formatPricePeriod`).
+  - Menyediakan custom hook `useCurrency()` untuk langganan state reaktif di seluruh komponen antarmuka.
+- **Sakelar Switch Mata Uang di Panel Kontrol Admin (`components/editor/admin-pricing-tab.tsx`)**:
+  - Menambahkan switch toggle `IDR (Rp) ↔ USD ($)` di header banner panel kontrol harga admin.
+  - Menyelaraskan header kolom tabel secara dinamis (`Harga (USD / $)` vs `Harga (IDR / Rp)`) serta memformat baris nilai paket secara reaktif.
+- **Dukungan Input Harga USD pada Modal Paket (`components/editor/modals/plan-modal.tsx` & `hooks/use-admin-modals.ts`)**:
+  - Menambahkan kolom input `Harga (USD / $)` berdampingan dengan `Harga (IDR / Rp)`.
+  - Memberikan auto-suggestion nilai USD saat nilai IDR diketikkan (menggunakan kurs acuan 1 USD = Rp 16.000).
+  - Memperbarui interface `PricingPlan` di `lib/api/pricing.ts` dengan kolom opsional `price_usd`.
+- **Selector Pill Mata Uang pada Modal Harga (`components/editor/pricing-modal.tsx`)**:
+  - Mengintegrasikan `useCurrency()` dengan tombol pemilih pill `IDR (Rp) / USD ($)` di header modal harga pengguna.
+  - Memperbarui format kartu harga dan rincian periode sesuai mata uang aktif, dengan dukungan penuh Dark Mode dan teks dwibahasa (EN/ID).
+- **Penyelarasan Format pada Modal Checkout (`stripe-checkout-modal.tsx`, `xendit-checkout-modal.tsx`, `midtrans-checkout-modal.tsx`)**:
+  - Menampilkan format USD pada Stripe dan menampilkan nilai ekuivalen USD + QRIS Rupiah pada modal pembayaran lokal.
+- **Unit Testing Komprehensif**:
+  - Membuat berkas pengujian baru `__tests__/utils/currency.test.ts` (12 unit test lulus 100%).
+- **Verifikasi**:
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 242 dari 242 unit test lolos 100% di 28 berkas pengujian.
+
 ## ⚡ [v0.45.8] - 2026-11-11 (Interactive AI Writing & Document Tab Guidance: Contextual Tooltips, Canvas Behavior Indicators & Action Explanations)
 
 ### 🎯 Penambahan Panduan Interaktif & Tooltip Kontekstual di Antarmuka Editor

@@ -2,6 +2,34 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.46.0] - 2026-11-15 (AI Auto-Citation Attribution & Matchmaker Engine: Fast-Track Semantic Attribution from Imported .ris / .bib / .pdf)
+
+### 🎯 Mesin Atribusi Sitasi Otomatis Berbasis AI (*Closed-World Semantic Matching*)
+- **Endpoint API Atribusi Sitasi AI (`app/api/v1/ai/auto-cite-match/route.ts`)**:
+  - Menerima blok paragraf naskah kanvas dan daftar calon rujukan hasil impor (.ris, .bib, .pdf).
+  - Mengimplementasikan prompt tertutup (*Closed-World Strict Grounding*): AI hanya diizinkan mencocokkan klaim naskah ke paper yang ada di dalam berkas impor pengguna, 100% bebas dari referensi atau DOI fiktif/halusinasi.
+  - Mengembalikan struktur JSON pemetaan kalimat persis (`sentenceText`), ID referensi (`referenceId`), label sitasi (`citationLabel`), skor keyakinan (*confidence score*), dan alasan ilmiah (*rationale*).
+  - Terintegrasi penuh dengan pelindung kuota token pengguna (`checkPersonalQuota`, `recordPersonalTokenConsumption`, estimasi token NLP), isolasi kunci kampus BYOK (0 potongan kuota token), dan pencatatan riwayat server-side.
+- **Klien API Atribusi Sitasi (`lib/api/auto-cite.ts`)**:
+  - Menyediakan contract interface `AutoCiteMatch`, `AutoCiteRequest`, `AutoCiteResponse`, dan helper pemanggilan `matchAutoCitations()`.
+- **Modal Pratinjau Interaktif dengan Fast-Track (`components/editor/modals/auto-cite-preview-modal.tsx`)**:
+  - Menampilkan daftar kalimat yang teridentifikasi beserta kutipan kalimat naskah, lencana tingkat kecocokan (*match confidence pill*), rujukan target, dan alasan AI.
+  - Menyediakan tombol cepat **`[✓ Terapkan Semua (Apply All)]`** untuk pengalaman sekali klik, serta tombol seleksi bertahap **`[Terapkan Terpilih]`**.
+  - Kompatibel penuh dengan Dark Mode dan dwibahasa (EN/ID), ukuran berkas di bawah 300 baris.
+- **Pemicu Integrasi pada Modal Impor & Bilah Samping (`reference-import-modal.tsx` & `sidebar-library-tab.tsx`)**:
+  - Menambahkan tombol aksi glowing **`⚡ Auto-Cite ke Naskah (AI)`** pada footer modal impor berkas referensi.
+  - Menambahkan tombol aksi **`⚡ Auto-Cite dari Pustaka`** pada tab pustaka bilah samping ketika terdapat daftar pustaka aktif di dokumen.
+- **Injeksi Non-Destruktif ke Kanvas Editor (`components/editor/editor-layout.tsx`)**:
+  - Handler `handleApplyAutoCite`: Menambahkan referensi terpilih ke `citationLibrary`, menyematkan tag `<cite data-citation="true" data-ref-id="...">` tepat setelah kalimat yang cocok di DOM contenteditable Editor.js, memicu event `input`, dan menyimpan konten secara persisten serta menyinkronkan Daftar Pustaka otomatis.
+- **Lencana Skor Kecocokan (% Match) & Pengurutan Relevansi Naskah (`reference-import-modal.tsx` & `reference-importer.ts`)**:
+  - Mengimplementasikan `calculateManuscriptRelevanceScore`: menghitung persentase kecocokan semantik (50% - 99%) antara naskah aktif dengan judul, abstrak, kata kunci, keterkinian tahun, dan DOI paper.
+  - Menampilkan lencana kecocokan `🟢 X% Cocok` / `🟢 X% Match` pada setiap kartu paper di modal impor berkas, identik dengan tampilan pencarian sitasi satuan.
+  - Menambahkan tombol pengurutan dinamis `[Urutkan: Match Tertinggi ▾]` / `[Urutkan: Urutan Berkas ▾]` di bilah atas modal agar paper yang paling relevan dengan naskah langsung berada di urutan teratas.
+- **Pengujian & Verifikasi**:
+  - Membuat berkas tes unit baru `__tests__/utils/auto-cite.test.ts` (7 pengujian lulus 100%).
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+  - Vitest: 249 dari 249 pengujian lulus 100% di 29 berkas tes.
+
 ## ⚡ [v0.45.8] - 2026-11-11 (Interactive AI Writing & Document Tab Guidance: Contextual Tooltips, Canvas Behavior Indicators & Action Explanations)
 
 ### 🎯 Interactive Guidance & Rich Action Tooltips (`components/editor/sidebar-writing-tab.tsx`, `components/editor/sidebar-document-tab.tsx`, `components/editor/editorjs-toolbar.tsx`)

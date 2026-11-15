@@ -13,6 +13,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useLanguage } from '../i18n/language-context';
+import { useCurrency, formatPriceWithCurrency, formatPricePeriod } from '@/lib/config/currency';
 
 interface StripeCheckoutModalProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ export function StripeCheckoutModal({
   onSuccess
 }: StripeCheckoutModalProps) {
   const { language } = useLanguage();
+  const { currency, formatPrice: formatCurrencyPrice, formatPeriod } = useCurrency();
   const { user, refreshProfile } = useAuth();
   const [email, setEmail] = useState(user?.email || '');
   const [cardNumber, setCardNumber] = useState('');
@@ -118,8 +120,7 @@ export function StripeCheckoutModal({
   };
 
   const formatPrice = (price: number) => {
-    if (price === 0) return 'Rp 0';
-    return `Rp ${new Intl.NumberFormat('id-ID').format(price)}`;
+    return formatCurrencyPrice(price, null, language);
   };
 
   return (
@@ -159,7 +160,7 @@ export function StripeCheckoutModal({
               </div>
               <div className="flex items-center justify-between text-xs text-indigo-200">
                 <span>{language === 'en' ? 'Tax & Admin Fee' : 'Pajak & Biaya Admin'}</span>
-                <span>Rp 0</span>
+                <span>{currency === 'USD' ? '$0' : 'Rp 0'}</span>
               </div>
               <div className="flex items-center justify-between text-sm font-bold border-t border-white/10 pt-3">
                 <span>{language === 'en' ? 'Total Today' : 'Total Hari Ini'}</span>

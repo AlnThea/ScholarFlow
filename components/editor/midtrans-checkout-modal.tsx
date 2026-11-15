@@ -15,6 +15,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useLanguage } from '../i18n/language-context';
+import { useCurrency } from '@/lib/config/currency';
 
 interface MidtransCheckoutModalProps {
   isOpen: boolean;
@@ -38,6 +39,7 @@ export function MidtransCheckoutModal({
   onSuccess
 }: MidtransCheckoutModalProps) {
   const { language } = useLanguage();
+  const { currency, isUsd, formatPrice: formatCurrencyPrice } = useCurrency();
   const { user, refreshProfile } = useAuth();
   
   const [activeMethod, setActiveMethod] = useState<PaymentMethodType>('qris');
@@ -109,8 +111,9 @@ export function MidtransCheckoutModal({
   };
 
   const formatPrice = (price: number) => {
-    if (price === 0) return 'Rp 0';
-    return `Rp ${new Intl.NumberFormat('id-ID').format(price)}`;
+    return isUsd
+      ? `${formatCurrencyPrice(price, null, language)} (≈ Rp ${price.toLocaleString('id-ID')})`
+      : `Rp ${new Intl.NumberFormat('id-ID').format(price)}`;
   };
 
   return (

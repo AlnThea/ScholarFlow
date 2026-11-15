@@ -50,6 +50,7 @@ v0.45.8 (Interactive AI Writing & Document Tab Guidance: Contextual Tooltips, Ca
 - [x] Phase 71: BYOK Architecture for PaperChat: Zero-Quota Deduction, Multi-Tenant Campus & Personal Key Support, Pro Model Access & Active Visual Badge.
 - [x] Phase 72: Maximized 465+ Bilingual AI Indicators Lexicon Integration (145 Words + 100 Phrases per Language, Wikipedia WP:AISIGNS Taxonomy, Precision Cliché Density & Heatmap Sensitivity).
 - [x] Phase 73: Pre-Publish Modular Feature Flags System (Safely guarded SPSS, Literature Matrix, Journal Presets, Concept Map & Submission Package without code deletion, 230/230 unit tests passing, 0 TypeScript errors).
+- [x] Phase 74: AI Auto-Citation Attribution & Matchmaker Engine (Closed-World Semantic Matching from Imported .ris / .bib / .pdf, Fast-Track Review Modal with 'Apply All', In-Text Non-Destructive DOM Injection, Dynamic % Match Badges, and Reactive Bibliography Sync, 249/249 tests passing, 0 TypeScript errors).
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.

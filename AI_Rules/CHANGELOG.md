@@ -1,5 +1,42 @@
 # ScholarFlow Changelog
 
+## v0.46.0 - AI Auto-Citation Attribution & Matchmaker Engine (Fast-Track Semantic Attribution from Imported .ris / .bib / .pdf)
+
+- **AI Auto-Citation Matchmaker Endpoint (`app/api/v1/ai/auto-cite-match/route.ts`)**:
+  - Implements Closed-World Strict Grounding prompt: matches manuscript claims only with candidate papers provided in the imported .ris / .bib / .pdf files.
+  - Zero hallucination guarantee: never invents external DOIs or fictitious papers.
+  - Integrates token quota guard, BYOK zero-deduction bypass, idempotency caching, and server-side logging.
+- **Tier-Aware Model Selection & Admin Database Key Fallback (`app/api/v1/ai/auto-cite-match/route.ts`)**:
+  - Dynamically aligns model selection with user account tier (`free`, `pro`, `institution`) and database configurations in `ai_providers` & `ai_models`.
+  - Pro / Institution users get high-performance models (`gemini-2.0-flash`, `google-gemini-pro`, Claude, or custom Pro endpoints).
+  - Free users are protected with zero-cost models (`gemini-1.5-flash`, `agnes-2.5-flash`, OpenRouter free) with strict premium model gating.
+  - Automatically queries Supabase `ai_providers` as fallback when `.env` is empty.
+- **Auto-Citation API Client Helper (`lib/api/auto-cite.ts`)**:
+  - Typed payload and response interfaces with robust error handling.
+- **Professional Animated Progress Modal (`components/editor/modals/auto-cite-progress-modal.tsx`)**:
+  - High-fidelity frosted glass modal with pulsating AI aura, dynamic percentage bar (15% -> 55% -> 88%), and a 3-step live pipeline tracker.
+  - Contextual academic insight rotator displaying live scientific citation tips during processing.
+  - Fully bilingual (EN/ID) and Dark Mode compliant, under 300 lines of code.
+- **Interactive Auto-Cite Preview Modal (`components/editor/modals/auto-cite-preview-modal.tsx`)**:
+  - Highlights matched sentences, match confidence score badge, target reference metadata, and AI rationale.
+  - Offers **`[✓ Terapkan Semua (Apply All)]`** fast-track button alongside granular checkbox selection.
+  - Full Dark Mode and bilingual (EN/ID) support, under 300 lines of code.
+- **Relevance Scoring (% Match) & Top Match Sorting (`reference-import-modal.tsx` & `reference-importer.ts`)**:
+  - `calculateManuscriptRelevanceScore`: computes 50%-99% topical alignment between paper and active canvas text.
+  - Shows dynamic `🟢 X% Match / Cocok` badge on candidate cards with a sorting toggle `[Urutkan: Match Tertinggi ▾]`.
+- **Import Modal & Library Integration (`reference-import-modal.tsx` & `sidebar-library-tab.tsx`)**:
+  - Added **`⚡ Auto-Cite ke Naskah (AI)`** trigger button in Reference Import modal footer and active Library tab.
+- **Non-Destructive In-Text DOM Injection (`editor-layout.tsx`)**:
+  - Appends `<cite data-citation="true" data-ref-id="...">[Author, Year]</cite>` directly to matching sentences, dispatches DOM input event, persists changes, and auto-updates the bottom bibliography list.
+- **Pro-Tier Gating & Modal Upgrade (`route.ts`, `editor-layout.tsx`, `reference-import-modal.tsx`)**:
+  - Auto-Citation is strictly designated as an exclusive Pro/Institution/BYOK feature.
+  - Displays golden `PRO` badge on the Auto-Cite buttons for Free users.
+  - Clicking Auto-Cite on Free plan triggers the Pricing / Upgrade modal (`setIsPricingOpen(true)`).
+  - Server route enforces HTTP 403 Forbidden with `{ proRequired: true }` if called by unauthenticated or Free users without BYOK.
+- **Verification**:
+  - TypeScript: 0 errors (`npx tsc --noEmit`).
+  - Vitest: 250/250 tests passing across 29 test files.
+
 ## v0.45.6 - Maximized 465+ Bilingual AI Indicators: 145 Words + 100 Phrases per Language
 
 - **Maximized `AI_CLICHE_PHRASES` Lexicon (`lib/editor/burstiness-engine.ts`)**:

@@ -127,6 +127,7 @@ type SidebarProps = {
   onOpenJournalPresets?: () => void;
   onOpenConceptMap?: () => void;
   onOpenSubmissionPackage?: () => void;
+  onTriggerAutoCite?: (candidates: CitationCandidate[], fileName?: string) => void;
 };
 
 function PanelRow({

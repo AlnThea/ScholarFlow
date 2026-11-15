@@ -26,6 +26,9 @@ import { CommandPaletteModal } from './modals/command-palette-modal';
 import { ShortcutsModal } from './modals/shortcuts-modal';
 import { LatexExportModal } from './modals/latex-export-modal';
 import { ReferenceImportModal } from './modals/reference-import-modal';
+import { AutoCitePreviewModal } from './modals/auto-cite-preview-modal';
+import { AutoCiteProgressModal } from './modals/auto-cite-progress-modal';
+import { matchAutoCitations, type AutoCiteMatch } from '@/lib/api/auto-cite';
 import { ReferenceDropzone } from './reference-dropzone';
 import { parseReferenceFile } from '@/lib/editor/reference-importer';
 import { FEATURE_FLAGS } from '@/lib/config/feature-flags';
@@ -387,6 +390,160 @@ export function EditorLayout({
       language === 'en'
         ? `Successfully imported ${selected.length} citation reference(s) into your library.`
         : `Berhasil mengimpor ${selected.length} referensi kepustakaan ke perpustakaan naskah Anda.`,
+      'info'
+    );
+  };
+
+  // Phase 74: AI Auto-Citation Matchmaker & Fast-Track Injector
+  const [isAutoCiteModalOpen, setIsAutoCiteModalOpen] = useState(false);
+  const [autoCiteMatches, setAutoCiteMatches] = useState<AutoCiteMatch[]>([]);
+  const [autoCiteFileName, setAutoCiteFileName] = useState('');
+  const [autoCiteCandidateCount, setAutoCiteCandidateCount] = useState(0);
+  const [isMatchingAutoCite, setIsMatchingAutoCite] = useState(false);
+
+  const handleTriggerAutoCite = async (candidates: CitationCandidate[], fileName?: string) => {
+    if (!candidates || candidates.length === 0) return;
+
+    const blocks = (currentDocument?.content as any)?.blocks || [];
+    const paragraphs = blocks
+      .filter((b: any) => b.type === 'paragraph' || b.type === 'header')
+      .map((b: any, index: number) => ({
+        id: b.id || `b_${index}`,
+        text: (b.data?.text || '').replace(/<[^>]*>/g, '').trim(),
+      }))
+      .filter((p: any) => p.text.length > 10);
+
+    if (paragraphs.length === 0) {
+      showAlertModal(
+        language === 'en' ? 'Manuscript is Empty' : 'Naskah Masih Kosong',
+        language === 'en'
+          ? 'Please write or paste paragraphs into the editor canvas before running Auto-Cite.'
+          : 'Silakan tulis atau masukkan paragraf ke kanvas editor terlebih dahulu sebelum menjalankan Auto-Sitasi.',
+        'warning'
+      );
+      return;
+    }
+
+    const isProOrHigher =
+      activePlanId !== 'free' ||
+      role === 'admin' ||
+      profile?.subscription_plan !== 'free';
+
+    if (!isProOrHigher) {
+      setIsPricingOpen(true);
+      return;
+    }
+
+    setAutoCiteCandidateCount(candidates.length);
+    setAutoCiteFileName(fileName || (language === 'en' ? 'Imported References' : 'Referensi Terimpor'));
+    setIsMatchingAutoCite(true);
+    try {
+      const res = await matchAutoCitations({
+        blocks: paragraphs,
+        candidates,
+        language: language === 'en' ? 'en' : 'id',
+        userId: user?.id,
+        userPlan: activePlanId || 'free',
+        documentId: currentDocument?.id,
+      });
+
+      // Synchronize token quota reactively across all UI headers & sidebars
+      if (typeof window !== 'undefined' && typeof res.tokensConsumed === 'number' && res.tokensConsumed > 0) {
+        const quotaTotal = res.monthlyQuota || monthlyQuota || 50000;
+        const currentRemaining = typeof res.tokensRemaining === 'number' ? res.tokensRemaining : quotaTotal;
+        const usedTotal = Math.max(0, quotaTotal - currentRemaining);
+
+        window.dispatchEvent(
+          new CustomEvent('scholarflow:tokens-updated', {
+            detail: {
+              tokensUsed: usedTotal,
+              monthlyQuota: quotaTotal,
+            },
+          })
+        );
+        window.dispatchEvent(
+          new CustomEvent('scholarflow:quota-updated', {
+            detail: {
+              used: usedTotal,
+              limit: quotaTotal,
+            },
+          })
+        );
+      }
+
+      if (!res.matches || res.matches.length === 0) {
+        showAlertModal(
+          language === 'en' ? 'No Direct Matches Found' : 'Tidak Ditemukan Kecocokan Langsung',
+          language === 'en'
+            ? 'AI reviewed your text against the references, but did not find sentences that specifically require citations from this imported file.'
+            : 'AI telah menganalisis naskah Anda, namun tidak menemukan kalimat yang secara spesifik membutuhkan sitasi dari berkas ini.',
+          'info'
+        );
+        return;
+      }
+
+      setAutoCiteMatches(res.matches);
+      setAutoCiteFileName(fileName || (language === 'en' ? 'Imported File' : 'Berkas Terimpor'));
+      setIsAutoCiteModalOpen(true);
+    } catch (err: any) {
+      console.error('[AutoCite] Match error:', err);
+      showAlertModal(
+        language === 'en' ? 'Auto-Cite Error' : 'Kesalahan Auto-Sitasi',
+        err.message || (language === 'en' ? 'Failed to process AI auto-citation.' : 'Gagal memproses auto-sitasi AI.'),
+        'error'
+      );
+    } finally {
+      setIsMatchingAutoCite(false);
+    }
+  };
+
+  const handleApplyAutoCite = (selectedMatches: AutoCiteMatch[]) => {
+    if (!selectedMatches || selectedMatches.length === 0) return;
+
+    // 1. Add all referenced candidates to library
+    const candidateMap = new Map<string, CitationCandidate>();
+    importedCandidates.forEach((c) => candidateMap.set(c.reference_id, c));
+    selectedMatches.forEach((m) => {
+      const cand = candidateMap.get(m.referenceId);
+      if (cand) {
+        onInsertCitationCandidate?.(cand, true);
+      }
+    });
+
+    // 2. In-text non-destructive injection into DOM
+    const holder = document.getElementById('editorjs-holder') || document.querySelector('.codex-editor');
+    let injectedCount = 0;
+
+    if (holder) {
+      const editables = holder.querySelectorAll('[contenteditable="true"]');
+      selectedMatches.forEach((match) => {
+        let placed = false;
+        editables.forEach((el) => {
+          if (!placed && el.innerHTML.includes(match.sentenceText)) {
+            if (!el.innerHTML.includes(`data-ref-id="${match.referenceId}"`)) {
+              const cleanLabel = match.citationLabel.replace(/^\[|\]$/g, '');
+              const citeTag = ` <cite data-citation="true" data-ref-id="${match.referenceId}" class="text-indigo-600 font-semibold not-italic cursor-pointer hover:underline">[${cleanLabel}]</cite>`;
+              el.innerHTML = el.innerHTML.replace(match.sentenceText, `${match.sentenceText}${citeTag}`);
+              el.dispatchEvent(new Event('input', { bubbles: true }));
+              placed = true;
+              injectedCount++;
+            }
+          }
+        });
+      });
+
+      if (injectedCount > 0 && (editorJsRef.current as any)?.saveCleanContent && onContentChange) {
+        (editorJsRef.current as any).saveCleanContent().then((content: any) => {
+          if (content) onContentChange(content);
+        });
+      }
+    }
+
+    showAlertModal(
+      language === 'en' ? 'Auto-Citations Injected' : 'Auto-Sitasi Berhasil Diterapkan',
+      language === 'en'
+        ? `Successfully attributed and injected ${injectedCount} citation(s) into your manuscript.`
+        : `Berhasil menyematkan ${injectedCount} sitasi ilmiah ke dalam naskah Anda.`,
       'info'
     );
   };
@@ -1235,6 +1392,7 @@ export function EditorLayout({
                   onOpenJournalPresets={() => setIsJournalPresetsModalOpen(true)}
                   onOpenConceptMap={() => setIsConceptMapModalOpen(true)}
                   onOpenSubmissionPackage={() => setIsSubmissionPackageModalOpen(true)}
+                  onTriggerAutoCite={handleTriggerAutoCite}
                 />
               )}
             </div>
@@ -1503,7 +1661,25 @@ export function EditorLayout({
         candidates={importedCandidates}
         fileName={importedFileName}
         language={language}
+        activePlanId={activePlanId}
+        onUpgrade={() => setIsPricingOpen(true)}
+        manuscriptText={activeDocumentText}
         onImport={handleConfirmBatchImport}
+        onAutoCite={(selected) => handleTriggerAutoCite(selected, importedFileName)}
+      />
+      <AutoCiteProgressModal
+        isOpen={isMatchingAutoCite}
+        candidateCount={autoCiteCandidateCount}
+        fileName={autoCiteFileName}
+        language={language}
+      />
+      <AutoCitePreviewModal
+        isOpen={isAutoCiteModalOpen}
+        onClose={() => setIsAutoCiteModalOpen(false)}
+        matches={autoCiteMatches}
+        language={language}
+        fileName={autoCiteFileName}
+        onApplyMatches={handleApplyAutoCite}
       />
       <CrossReferenceModal
         isOpen={isCrossReferenceModalOpen}

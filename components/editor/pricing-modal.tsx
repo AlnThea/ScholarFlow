@@ -10,6 +10,7 @@ import { StripeCheckoutModal } from './stripe-checkout-modal';
 import { MidtransCheckoutModal } from './midtrans-checkout-modal';
 import { XenditCheckoutModal } from './xendit-checkout-modal';
 import { GatewaySelectorModal } from './gateway-selector-modal';
+import { useCurrency, formatPriceWithCurrency, formatPricePeriod } from '@/lib/config/currency';
 
 
 interface PricingModalProps {
@@ -19,6 +20,7 @@ interface PricingModalProps {
 
 export function PricingModal({ isOpen, onClose }: PricingModalProps) {
   const { language, t } = useLanguage();
+  const { currency, setCurrency, isUsd, formatPrice: formatCurrencyPrice, formatPeriod } = useCurrency();
   const { profile } = useAuth();
   const activePlanId = profile?.subscription_plan || 'free';
   const planPeriodEnd = profile?.subscription_end;
@@ -49,9 +51,8 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
     }
   }, [isOpen]);
 
-  const formatPrice = (price: number) => {
-    if (price === 0) return 'Rp 0';
-    return `Rp ${new Intl.NumberFormat('id-ID').format(price)}`;
+  const formatPrice = (price: number, customUsdPrice?: number | null) => {
+    return formatCurrencyPrice(price, customUsdPrice, language);
   };
 
   const getPlanIcon = (planId: string) => {
@@ -153,20 +154,51 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 transition-all animate-fade-in font-sans">
-        <div className="bg-white border border-slate-200 rounded-3xl shadow-2xl flex flex-col w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl flex flex-col w-full max-w-4xl max-h-[90vh] overflow-y-auto">
           
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-5">
             <div className="flex flex-col gap-0.5">
-              <h2 className="text-base font-bold text-slate-800">{t('pricing.title')}</h2>
+              <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">{t('pricing.title')}</h2>
               <p className="text-xs text-slate-400">{t('pricing.subtitle')}</p>
             </div>
-            <button 
-              onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition"
-            >
-              <IconX className="h-5 w-5" />
-            </button>
+            
+            <div className="flex items-center gap-3">
+              {/* Currency Selector Pill */}
+              <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => setCurrency('IDR')}
+                  className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all ${
+                    !isUsd
+                      ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                  }`}
+                  title="Tampilkan dalam Rupiah"
+                >
+                  IDR (Rp)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrency('USD')}
+                  className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all ${
+                    isUsd
+                      ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                  }`}
+                  title="Display in US Dollar"
+                >
+                  USD ($)
+                </button>
+              </div>
+
+              <button 
+                onClick={onClose}
+                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition"
+              >
+                <IconX className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
           {/* Loading Spinner */}
@@ -190,8 +222,8 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
                     key={plan.id}
                     className={`border rounded-2xl p-6 flex flex-col justify-between hover:shadow-md transition relative ${
                       isPro 
-                        ? 'border-2 border-indigo-500 bg-white shadow-lg transform hover:scale-[1.02]' 
-                        : 'border-slate-200 bg-slate-50/30'
+                        ? 'border-2 border-indigo-500 bg-white dark:bg-slate-900 shadow-lg transform hover:scale-[1.02]' 
+                        : 'border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-850/40'
                     }`}
                   >
                     {/* Promo Badge */}
@@ -224,24 +256,24 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
                       <div className="mb-4">
                         {plan.id === 'institution' ? (
                           <>
-                            <span className="text-2xl font-bold text-slate-800">
+                            <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
                               {language === 'en' ? 'Contact Us' : 'Hubungi Kami'}
                             </span>
                             <span className="text-xs text-slate-400"> {language === 'en' ? '(Custom)' : '(Kustom)'}</span>
                           </>
                         ) : plan.id === 'free' || plan.price === 0 ? (
                           <>
-                            <span className="text-2xl font-bold text-slate-800">
+                            <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
                               {language === 'en' ? 'Free' : 'Gratis'}
                             </span>
-                            <span className="text-xs text-slate-400"> / {language === 'en' ? 'forever' : 'selamanya'}</span>
+                            <span className="text-xs text-slate-400"> {formatPeriod(plan.price_period, language)}</span>
                           </>
                         ) : (
                           <>
-                            <span className="text-2xl font-bold text-slate-800">
-                              {formatPrice(plan.price)}
+                            <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                              {formatPrice(plan.price, plan.price_usd)}
                             </span>
-                            <span className="text-xs text-slate-400"> / {plan.price_period}</span>
+                            <span className="text-xs text-slate-400"> {formatPeriod(plan.price_period, language)}</span>
                           </>
                         )}
                       </div>

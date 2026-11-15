@@ -26,14 +26,14 @@ export const PlanModal = ({
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-2xl w-full max-w-lg flex flex-col gap-5 animate-scale-in text-slate-800">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h3 className="text-sm font-extrabold text-slate-800">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-2xl w-full max-w-lg flex flex-col gap-5 animate-scale-in text-slate-800 dark:text-slate-100">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+          <h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-100">
             {selectedPlanForModal ? 'Edit Detail Paket Langganan' : 'Tambah Paket Baru'}
           </h3>
           <button
             onClick={onClose}
-            className="p-1 rounded-md text-slate-400 hover:bg-slate-100/80 hover:text-slate-650 transition cursor-pointer"
+            className="p-1 rounded-md text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:text-slate-650 transition cursor-pointer"
           >
             <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -68,27 +68,54 @@ export const PlanModal = ({
           </div>
 
           {/* Harga & Periode */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Harga (Rp)</label>
+              <label className="text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Harga (IDR / Rp)</label>
               <div className="relative">
-                <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400">Rp</span>
+                <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400 dark:text-slate-500">Rp</span>
                 <input
                   type="number"
                   value={modalPlanState.price}
-                  onChange={(e) => setModalPlanState((prev: any) => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
-                  className="w-full border border-slate-200 rounded-xl pl-8 pr-3.5 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-slate-50/10"
+                  onChange={(e) => {
+                    const idrVal = parseInt(e.target.value) || 0;
+                    setModalPlanState((prev: any) => ({
+                      ...prev,
+                      price: idrVal,
+                      // Otomatis sarankan harga USD jika belum diisi khusus
+                      price_usd: prev.price_usd ? prev.price_usd : (idrVal > 0 ? Number((idrVal / 16000).toFixed(2)) : null)
+                    }));
+                  }}
+                  className="w-full border border-slate-200 dark:border-slate-700 dark:bg-slate-800/80 rounded-xl pl-9 pr-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-slate-50/10"
                 />
               </div>
             </div>
+
             <div className="flex flex-col gap-1.5">
-              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Periode</label>
+              <label className="text-[9px] font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider">Harga (USD / $)</label>
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 text-xs font-bold text-indigo-400 dark:text-indigo-500">$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="e.g. 9.99"
+                  value={modalPlanState.price_usd ?? ''}
+                  onChange={(e) => {
+                    const val = e.target.value === '' ? null : parseFloat(e.target.value);
+                    setModalPlanState((prev: any) => ({ ...prev, price_usd: val }));
+                  }}
+                  className="w-full border border-indigo-200 dark:border-indigo-800/70 dark:bg-slate-800/80 rounded-xl pl-7 pr-3 py-2 text-xs font-bold text-indigo-700 dark:text-indigo-300 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-indigo-50/20"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Periode</label>
               <input
                 type="text"
                 placeholder="Contoh: /bulan, /tahun"
                 value={modalPlanState.price_period}
                 onChange={(e) => setModalPlanState((prev: any) => ({ ...prev, price_period: e.target.value }))}
-                className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-slate-50/10"
+                className="w-full border border-slate-200 dark:border-slate-700 dark:bg-slate-800/80 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/25 transition bg-slate-50/10"
               />
             </div>
           </div>

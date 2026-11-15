@@ -118,10 +118,35 @@ class GeminiKeyPoolManager {
     customKeyStr?: string,
     category?: 'text' | 'vision' | 'pro' | 'institution' | 'pro_text' | 'pro_vision' | 'institution_text' | 'institution_vision'
   ): Promise<{ result: T; usedKey: string; keyIndex: number }> {
-    const allKeys = this.parseKeys(customKeyStr, category);
+    let allKeys = this.parseKeys(customKeyStr, category);
+
+    // Fallback: If no keys in env, dynamically query Gemini keys from Supabase ai_providers
+    if (allKeys.length === 0) {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { supabaseAdmin } = await import('@/lib/supabase-admin');
+        const client = supabaseAdmin || supabase;
+        const { data: dbProviders } = await client
+          .from('ai_providers')
+          .select('api_key, type')
+          .eq('type', 'gemini');
+
+        if (dbProviders && dbProviders.length > 0) {
+          const dbKeys = dbProviders
+            .map((p: any) => p.api_key)
+            .filter((k: any): k is string => Boolean(k && typeof k === 'string' && k.trim().length > 5));
+
+          if (dbKeys.length > 0) {
+            allKeys = dbKeys;
+          }
+        }
+      } catch (err) {
+        console.warn('[GeminiKeyPool] Could not load database gemini keys:', err);
+      }
+    }
 
     if (allKeys.length === 0) {
-      throw new Error('No Gemini API Keys configured. Please set GEMINI_API_KEY in .env');
+      throw new Error('No Gemini API Keys configured. Please set GEMINI_API_KEY in .env or configure in Admin AI Models.');
     }
 
     const activeKeys = this.getOrderedActiveKeys(allKeys);

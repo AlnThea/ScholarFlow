@@ -225,6 +225,50 @@ export const SidebarLibraryTab = (props: any) => {
                   </button>
                 </div>
 
+                {/* Auto-Cite from Active Library button */}
+                {bibliographyEntries.length > 0 && props.onTriggerAutoCite && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (activePlanId === 'free' && props.setIsPlanModalOpen) {
+                        props.setIsPlanModalOpen(true);
+                        return;
+                      }
+                      const cands: CitationCandidate[] = bibliographyEntries.map((b: any) => ({
+                        reference_id: b.referenceId,
+                        citation_label: b.label,
+                        title: b.title || b.label,
+                        authors: b.authors || [],
+                        year: b.year || null,
+                        abstract: b.abstract || null,
+                        source: 'Library',
+                        doi: b.doi || null,
+                        url: b.url || null,
+                        ranking_score: 1.0,
+                        ranking_reason: [],
+                        journal: null,
+                        cited_by_count: 0,
+                        pdf_url: null,
+                      }));
+                      props.onTriggerAutoCite(cands, isEn ? 'Library References' : 'Pustaka Referensi');
+                    }}
+                    className="w-full py-1.5 px-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-xs font-bold rounded-lg shadow-sm transition cursor-pointer flex items-center justify-center gap-1.5"
+                    title={
+                      isEn
+                        ? "Analyze manuscript and automatically match sentences with active library references (Pro Feature)"
+                        : "Analisis naskah dan cocokkan kalimat otomatis dengan paper di perpustakaan aktif (Fitur Pro)"
+                    }
+                  >
+                    <IconSparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+                    <span>{isEn ? '⚡ Auto-Cite from Library' : '⚡ Auto-Cite dari Pustaka'}</span>
+                    {activePlanId === 'free' && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-amber-400 text-amber-950 uppercase tracking-wider ml-1 shadow-xs">
+                        PRO
+                      </span>
+                    )}
+                  </button>
+                )}
+
                 <div className="space-y-3">
                   {/* AI Literature Review Synthesizer Card */}
                   {bibliographyEntries.length > 0 && (
@@ -550,7 +594,13 @@ export const SidebarLibraryTab = (props: any) => {
           candidates={importCandidates}
           fileName={importFileName}
           language={language}
+          manuscriptText={
+            props.currentDocument?.content?.blocks
+              ? props.currentDocument.content.blocks.map((b: any) => b.data?.text || '').join(' ')
+              : (selectedText || '')
+          }
           onImport={handleImportSelected}
+          onAutoCite={props.onTriggerAutoCite ? (selected) => props.onTriggerAutoCite(selected, importFileName) : undefined}
         />
       )}
     </>

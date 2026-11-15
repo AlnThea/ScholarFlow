@@ -6,6 +6,7 @@ export type PricingPlan = {
   id: string;
   name: string;
   price: number;
+  price_usd?: number | null;
   price_period: string;
   description: string | null;
   features: string[];

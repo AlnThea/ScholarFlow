@@ -700,5 +700,25 @@ Target: Memberikan kejelasan interaktif dan tooltip informatif pada seluruh tomb
 - [x] **3. Automated Verification**:
   - `npx tsc --noEmit` lolos dengan **0 compile error** dan `npx vitest run` lolos **230/230 unit tests di 27 berkas**.
 
+### Phase 48: Multi-Currency Support (IDR ↔ USD Switch for Admin & Dynamic Pricing) (v0.45.9)
+Target: Menambahkan dukungan mata uang USD ($) berdampingan dengan Rupiah (IDR), sakelar switch toggle mata uang untuk admin, input harga USD khusus pada form paket, dan pemformatan harga reaktif di seluruh antarmuka checkout dan pricing.
+
+- [x] **1. Currency Configuration & Reactive Hook (`lib/config/currency.ts`)**:
+  - Menyediakan konfigurasi `CURRENCY_CONFIGS` (IDR & USD), formula konversi kurs (`convertIdrToUsd`), dan dual-persistence (`localStorage` + event bus `scholarflow:currency-updated`).
+  - Menyediakan hook `useCurrency()` dengan helper pemformatan `formatPriceWithCurrency` dan `formatPricePeriod`.
+- [x] **2. Admin Currency Switch Control (`components/editor/admin-pricing-tab.tsx`)**:
+  - Menambahkan switch toggle `IDR (Rp) ↔ USD ($)` di header banner panel kontrol harga admin.
+  - Menyesuaikan header kolom tabel (`Harga (USD / $)` vs `Harga (IDR / Rp)`) dan format nilai baris secara reaktif.
+- [x] **3. Plan Modal USD Pricing Support (`components/editor/modals/plan-modal.tsx`, `hooks/use-admin-modals.ts`)**:
+  - Menambahkan kolom input `Harga (USD / $)` dengan prefix `$` dan auto-suggestion nilai USD dari IDR.
+  - Mendukung `price_usd` di `PricingPlan` type (`lib/api/pricing.ts`) dan update handler database.
+- [x] **4. User-Facing Pricing Modal Currency Pill (`components/editor/pricing-modal.tsx`)**:
+  - Mengintegrasikan `useCurrency()` dan menambahkan selector pill `IDR (Rp) / USD ($)` di header modal harga.
+  - Menyelaraskan kartu harga, rincian periode, dan dukungan penuh Dark Mode.
+- [x] **5. Checkout Modals Multi-Currency Formatting (`stripe-checkout-modal.tsx`, `xendit-checkout-modal.tsx`, `midtrans-checkout-modal.tsx`)**:
+  - Menampilkan format USD pada Stripe dan menampilkan nilai ekuivalen USD + QRIS Rupiah pada Xendit dan Midtrans.
+- [x] **6. Automated Verification**:
+  - `npx tsc --noEmit` lolos dengan **0 compile error** dan `npx vitest run` lolos **242/242 unit tests di 28 berkas pengujian** (12 unit test baru di `__tests__/utils/currency.test.ts`).
+
 
 
