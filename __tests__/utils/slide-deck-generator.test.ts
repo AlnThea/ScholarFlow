@@ -196,4 +196,34 @@ describe('Phase 35: Conference & Thesis Defense Slide Deck Generator Unit Tests'
     expect(normalized.slides.length).toBe(1);
     expect(normalized.slides[0].bulletPoints[0]).toBe('Peneliti: Budi Santoso');
   });
+
+  it('normalizeSlideDeckProject: enriches single-word sparse bullets on content slides', () => {
+    const fallback = generateAcademicSlideDeck([], 'Sample Title', { language: 'id' });
+    const rawAiOutputWithSparseBullet = {
+      title: 'Sample Defense',
+      presenter: 'Author',
+      slides: [
+        {
+          id: 'slide-1',
+          slideNumber: 1,
+          title: 'Title Slide',
+          category: 'title',
+          bulletPoints: ['Author: Test', 'University'],
+        },
+        {
+          id: 'slide-2',
+          slideNumber: 2,
+          title: 'Latar Belakang',
+          category: 'problem',
+          bulletPoints: ['Abstract'], // Single-word sparse bullet from draft canvas
+        },
+      ],
+    };
+
+    const normalized = normalizeSlideDeckProject(rawAiOutputWithSparseBullet, fallback);
+    const problemSlide = normalized.slides[1];
+    expect(problemSlide.bulletPoints.length).toBeGreaterThanOrEqual(2);
+    // Verified that it enriched beyond just a single word "Abstract"
+    expect(problemSlide.bulletPoints.some((b) => b.length > 15)).toBe(true);
+  });
 });

@@ -15,7 +15,7 @@ import {
 
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
-export function buildSlideDeckPrompt(params: {
+function buildSlideDeckPrompt(params: {
   documentTitle: string;
   manuscriptText: string;
   authorName?: string;
@@ -55,7 +55,11 @@ export function buildSlideDeckPrompt(params: {
       `   - Slide 7 (discussion): Theoretical & Practical Implications, Novelty vs Prior Art.\n` +
       `   - Slide 8 (conclusion): Core Takeaways, Research Limitations, and Prospective Future Studies.\n` +
       `   - Slide 9 (references): Selected Primary Citations, Supervisor Acknowledgments, and formal Q&A opening.\n` +
-      `2. For each slide, write concise, high-impact bulletPoints (3 to 4 points max, <= 25 words each).\n` +
+      `2. CRITICAL RULES FOR BULLET POINTS:\n` +
+      `   - Every slide (Slides 2 to 8) MUST have 3 to 4 comprehensive, informative academic bullet points.\n` +
+      `   - NEVER output a single-word bullet like "Abstract" or leave bullets sparse/empty.\n` +
+      `   - If the canvas text is in early draft, outline form, or only contains brief section titles (such as the word "Abstract" or "Introduction"), you MUST proactively synthesize realistic, substantive research points appropriate for this paper's title and academic domain.\n` +
+      `   - Every bullet point must be a meaningful, substantive scholarly sentence or phrase (10 to 25 words).\n` +
       `3. For each slide, formulate realistic speakerNotes (2-3 spoken sentences that the presenter can read aloud to the examiners).\n` +
       `4. Return ONLY a valid JSON object matching the schema below without markdown backticks or commentary.\n\n` +
       `JSON SCHEMA:\n` +
@@ -103,7 +107,11 @@ export function buildSlideDeckPrompt(params: {
     `   - Slide 7 (discussion): Pembahasan Hasil, Kebaruan (Novelty), dan Perbandingan dengan Teori Acuan.\n` +
     `   - Slide 8 (conclusion): Kesimpulan Menjawab Rumusan Masalah, Implikasi Praktis, dan Saran Riset Masa Depan.\n` +
     `   - Slide 9 (references): Rujukan Utama, Ucapan Terima Kasih kepada Pembimbing/Penguji, dan Pembuka Sesi Tanya Jawab.\n` +
-    `2. Untuk setiap slide, berikan bulletPoints yang padat, jelas, dan berbobot (3-4 poin per slide, maks 25 kata per poin).\n` +
+    `2. ATURAN WAJIB UNTUK POIN PELURU SLIDE:\n` +
+    `   - Setiap slide (dari Slide 2 sampai Slide 8) WAJIB memiliki 3 hingga 4 poin peluru yang matang, komprehensif, dan berbobot ilmiah tinggi.\n` +
+    `   - JANGAN PERNAH mengembalikan poin 1 kata seperti "Abstract" atau membiarkan slide hanya berisi 1 poin pendek.\n` +
+    `   - Meskipun naskah yang dikirimkan masih ringkas, draf awal, atau hanya berupa judul bab/kata kunci (seperti hanya terdapat kata "Abstract" atau judul bab), Anda WAJIB bertindak sebagai pembimbing akademik senior dan secara proaktif menyintesis poin-poin penelitian yang realistis, berbobot, dan relevan dengan topik riset tersebut.\n` +
+    `   - Setiap poin peluru harus berupa kalimat ilmiah yang utuh dan bermakna (10 sampai 25 kata).\n` +
     `3. Untuk setiap slide, sertakan speakerNotes (2-3 kalimat narasi lisan yang santun dan siap dibacakan mahasiswa di hadapan dewan penguji).\n` +
     `4. Berikan HANYA format JSON valid tanpa tanda kutip markdown (\`\`\`json), tanpa pengantar atau penutup obrolan.\n\n` +
     `SKEMA JSON:\n` +
@@ -183,7 +191,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Multi-Tenant Campus Dedicated Key Resolver
+    const isProOrHigher =
+      userPlan === 'pro' ||
+      userPlan === 'institution' ||
+      userPlan === 'premium' ||
+      userPlan === 'enterprise' ||
+      userPlan === 'ultra';
+
+    const activeModel = isProOrHigher
+      ? (process.env.GEMINI_PRO_MODEL || 'gemini-2.0-flash')
+      : (process.env.GEMINI_MODEL || model || 'gemini-1.5-flash');
+
+    // 3. Multi-Tenant Campus Dedicated Key Resolver based on user account type
     const tenantKey = await resolveTenantKey({
       userId,
       userPlan,
@@ -193,7 +212,7 @@ export async function POST(request: NextRequest) {
     // 4. Server AI Logger (Pending)
     const pendingGenId = await createPendingAiGeneration({
       userId: userId || 'anonymous',
-      model: process.env.GEMINI_MODEL || model || 'gemini-1.5-flash',
+      model: activeModel,
       originalText: `SlideDeck: ${trimmedTitle}`,
       documentId: body.documentId,
       tone: 'academic_defense',
@@ -219,7 +238,6 @@ export async function POST(request: NextRequest) {
     });
 
     let rawText = '';
-    const activeModel = process.env.GEMINI_MODEL || model || 'gemini-1.5-flash';
 
     try {
       const execution = await geminiKeyPool.execute(

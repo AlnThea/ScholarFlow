@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   IconX,
   IconPresentation,
@@ -63,9 +63,9 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
   // AI Generation States
   const [aiDeck, setAiDeck] = useState<SlideDeckProject | null>(null);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
-  const [activeSource, setActiveSource] = useState<'standard' | 'ai'>('standard');
+  const hasAutoTriggeredRef = useRef(false);
 
-  // Generate standard slide deck project from AST blocks
+  // Generate standard slide deck project from AST blocks (instant baseline)
   const standardDeck: SlideDeckProject = useMemo(() => {
     return generateAcademicSlideDeck(editorBlocks, documentTitle, {
       authorName,
@@ -75,20 +75,20 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
     });
   }, [editorBlocks, documentTitle, authorName, institutionName, language, activeTheme]);
 
-  // Current active presentation deck (AI vs Standard)
+  // Current active presentation deck (AI if generated, otherwise seamless fallback)
   const currentDeck: SlideDeckProject = useMemo(() => {
-    if (activeSource === 'ai' && aiDeck) {
+    if (aiDeck) {
       return {
         ...aiDeck,
         templateTheme: activeTheme,
       };
     }
     return standardDeck;
-  }, [activeSource, aiDeck, standardDeck, activeTheme]);
+  }, [aiDeck, standardDeck, activeTheme]);
 
   const activeSlide: SlideItem | undefined = currentDeck.slides[currentSlideIndex] || currentDeck.slides[0];
 
-  // Handler: Synthesize Deck with Gemini AI from Canvas Text
+  // Handler: Synthesize Deck with AI from Canvas Text
   const handleGenerateAiDeck = async () => {
     if (isGeneratingAi) return;
     setIsGeneratingAi(true);
@@ -117,7 +117,6 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
       const resData = await res.json();
       if (resData.success && resData.data) {
         setAiDeck(resData.data);
-        setActiveSource('ai');
         setCurrentSlideIndex(0);
 
         if (typeof resData.tokens_consumed === 'number') {
@@ -132,7 +131,7 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
         }
 
         onShowToast?.(
-          isEn ? '✨ Defense slide deck synthesized from canvas by AI!' : '✨ Slide sidang berhasil disintesis AI dari naskah kanvas!',
+          isEn ? 'Defense slide deck updated from canvas!' : 'Slide sidang berhasil diperbarui dari kanvas!',
           'success'
         );
       } else {
@@ -140,17 +139,28 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
       }
     } catch (err: any) {
       console.warn('[SlideDeckModal] AI synthesis fallback:', err.message);
-      setActiveSource('standard');
       onShowToast?.(
         isEn
-          ? 'Notice: Standard AST deck loaded (AI service unavailable).'
-          : 'Catatan: Menampilkan slide mode standar AST lokal.',
+          ? 'Standard defense deck loaded.'
+          : 'Menampilkan susunan slide sidang standar.',
         'info'
       );
     } finally {
       setIsGeneratingAi(false);
     }
   };
+
+  // Auto-generate AI deck on first modal open
+  useEffect(() => {
+    if (!isOpen) {
+      hasAutoTriggeredRef.current = false;
+      return;
+    }
+    if (!hasAutoTriggeredRef.current && !aiDeck) {
+      hasAutoTriggeredRef.current = true;
+      handleGenerateAiDeck();
+    }
+  }, [isOpen, aiDeck]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -248,56 +258,19 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Mode Switcher (Standard vs AI) */}
-            {aiDeck && (
-              <div className="hidden sm:flex items-center bg-slate-200/60 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-300/50 dark:border-slate-700">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveSource('standard');
-                    setCurrentSlideIndex(0);
-                  }}
-                  className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-colors cursor-pointer ${
-                    activeSource === 'standard'
-                      ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
-                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                  }`}
-                >
-                  ⚡ {isEn ? 'Standard' : 'Standar'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveSource('ai');
-                    setCurrentSlideIndex(0);
-                  }}
-                  className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-colors cursor-pointer flex items-center gap-1 ${
-                    activeSource === 'ai'
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'text-indigo-600 dark:text-indigo-400 hover:text-indigo-700'
-                  }`}
-                >
-                  <IconSparkles className="w-3 h-3 text-amber-300" />
-                  <span>AI Gemini</span>
-                </button>
-              </div>
-            )}
-
-            {/* AI Synthesizer Action Button */}
+            {/* Update / Regenerate Slides Action Button */}
             <button
               type="button"
               onClick={handleGenerateAiDeck}
               disabled={isGeneratingAi}
-              className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 active:from-violet-800 active:to-indigo-800 text-white text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              title={isEn ? 'Synthesize full manuscript into slides using Gemini AI' : 'Sintesis naskah kanvas menjadi slide sidang menggunakan Gemini AI'}
+              className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-semibold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              title={isEn ? 'Update slides from canvas' : 'Perbarui slide dari naskah kanvas'}
             >
               <IconSparkles className={`w-3.5 h-3.5 ${isGeneratingAi ? 'animate-spin' : 'text-amber-300'}`} />
               <span>
                 {isGeneratingAi
-                  ? (isEn ? 'Synthesizing...' : 'Menyintesis...')
-                  : aiDeck
-                  ? (isEn ? 'Regenerate AI' : 'Regenerasi AI')
-                  : (isEn ? '✨ Synthesize with AI' : '✨ Sintesis AI dari Kanvas')}
+                  ? (isEn ? 'Updating...' : 'Menyintesis...')
+                  : (isEn ? 'Update Slides' : 'Perbarui Slide')}
               </span>
             </button>
 
@@ -354,16 +327,7 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
           {/* Left Thumbnails Column */}
           <div className="w-64 border-r border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 p-3 overflow-y-auto hidden md:flex flex-col gap-2">
             <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-2 py-1 flex items-center justify-between">
-              <span className="flex items-center gap-1.5">
-                {activeSource === 'ai' ? (
-                  <span className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-bold">
-                    <IconSparkles className="w-3 h-3 text-amber-400" />
-                    AI Deck
-                  </span>
-                ) : (
-                  <span>{isEn ? 'Slides Overview' : 'Daftar Slide'}</span>
-                )}
-              </span>
+              <span>{isEn ? 'Slides Overview' : 'Daftar Slide'}</span>
               <span>{currentDeck.slides.length}</span>
             </div>
 
@@ -468,8 +432,8 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
                       <span className="truncate max-w-[70%]">
                         {currentDeck.presenter} {currentDeck.institution ? `• ${currentDeck.institution}` : ''}
                       </span>
-                      <span className="flex items-center gap-1 font-medium">
-                        {activeSource === 'ai' ? '✨ Gemini AI Deck' : 'ScholarFlow Deck'}
+                      <span className="font-medium">
+                        ScholarFlow Deck
                       </span>
                     </div>
                   </div>

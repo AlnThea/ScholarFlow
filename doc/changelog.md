@@ -17,16 +17,16 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
   - Merangkum naskah utuh dari kanvas menjadi 9 slide sidang komprehensif berbobot akademik tinggi (Judul, Latar Belakang & Masalah, Tujuan & Batasan, Landasan Teori, Metodologi, Temuan Kunci, Pembahasan, Kesimpulan, serta Rujukan & Tanya Jawab).
   - Menghasilkan catatan narasi pembicara lisan (`speakerNotes`) berbahasa santun dan akademis yang siap dibacakan saat ujian sidang skripsi atau sesi konferensi.
   - Proteksi kuota token pengguna (`checkPersonalQuota`), cache idempoten (TTL 5 menit), dan pencatatan audit generasi AI di sisi server.
-- **Mode Ganda Interaktif (Standar AST vs AI Gemini) (`components/editor/modals/slide-deck-modal.tsx`)**:
-  - Menambahkan tombol aksi **`[✨ Sintesis AI dari Kanvas]`** / **`[✨ Synthesize with AI]`** dengan animasi gradien lembut.
-  - Tombol pengalih mode (`[ ⚡ Standar (AST) ]` vs `[ ✨ AI Gemini ]`), memungkinkan pengguna berpindah fleksibel antara ekstraksi lokal instan dan sintesis cerdas kontekstual AI.
-  - Kartu pemuatan (*loading card*) elegan dengan animasi indikator progres selama AI menganalisis naskah.
-  - Seluruh fitur ekspor (salin Marp Markdown, unduh presentasi HTML mandiri offline, dan pengalih tema visual) bekerja mulus dengan slide hasil sintesis AI.
-- **Penyempurnaan Ekstraksi Paragraf Tanpa Heading (`lib/editor/slide-deck-generator.ts`)**:
-  - Peningkatan pada fungsi `generateAcademicSlideDeck`: jika naskah pengguna belum memakai format Heading baku (H2/H3), sistem secara otomatis mengekstrak kalimat-kalimat nyata dari paragraf kanvas sehingga isi slide tidak langsung beralih ke teks dummy.
-  - Menambahkan fungsi pembantu `normalizeSlideDeckProject` untuk memvalidasi dan memastikan skema data AI selalu utuh dan aman tanpa crash.
+- **Penyederhanaan UI Bersih & Otomatisasi AI Menurut Tipe Akun (`components/editor/modals/slide-deck-modal.tsx`)**:
+  - Menghapus tombol pengalih `[ ⚡ Standar | ✨ AI Gemini ]` dari UI sesuai permintaan pengguna; slide kini dibuat secara langsung dan otomatis menggunakan AI berdasar tingkatan akun pengguna (`free`, `pro`, `institution`).
+  - Menghapus label "Gemini AI Deck" pada footer dan panel kiri kartu slide, mengembalikannya ke penamaan akademis resmi (`ScholarFlow Deck` dan `Daftar Slide`).
+  - Menambahkan tombol aksi terpadu **`[ ✨ Perbarui Slide ]`** / **`[ ✨ Update Slides ]`** untuk memperbarui slide kapan saja naskah kanvas berubah.
+  - Penyesuaian model AI di backend (`app/api/v1/ai/slide-deck/route.ts`): otomatis memilih model standar (`gemini-1.5-flash`) untuk akun Free dan model pro tingkat lanjut (`gemini-2.0-flash` / Pro Pool) untuk akun Pro/Institusi.
+- **Pencegahan Poin Peluru Tunggal / Singkat (`lib/editor/slide-deck-generator.ts` & `app/api/v1/ai/slide-deck/route.ts`)**:
+  - Memperbaiki prompt AI dan fungsi `normalizeSlideDeckProject` agar slide konten tidak pernah lagi hanya berisi satu kata singkat seperti `• Abstract`.
+  - Jika naskah di kanvas masih berupa draf awal atau garis besar, AI secara proaktif mengembangkan 3-4 poin ilmiah bermakna (10-25 kata) yang relevan dengan topik penelitian.
 - **Pengujian & Verifikasi**:
-  - Unit testing: 7/7 tes generator slide lulus, total 253/253 tes lulus di Vitest across 29 test files.
+  - Unit testing: 8/8 tes generator slide lulus, total 254/254 tes lulus di Vitest across 29 test files.
   - TypeScript: 0 compile errors (`npx tsc --noEmit`).
 
 ## ⚡ [v0.46.1] - 2026-11-17 (Multi-Tier Resilient DOM Injection & Entity Normalization for Auto-Cite)

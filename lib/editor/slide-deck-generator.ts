@@ -707,9 +707,31 @@ export function normalizeSlideDeckProject(
     const cat = validCategories.includes(s.category) ? s.category : 'custom';
     const slideTitle = typeof s.title === 'string' && s.title.trim() ? s.title.trim() : `Slide #${slideNumber}`;
     const subtitle = typeof s.subtitle === 'string' && s.subtitle.trim() ? s.subtitle.trim() : undefined;
-    const bulletPoints = Array.isArray(s.bulletPoints)
+    const rawBulletPoints = Array.isArray(s.bulletPoints)
       ? s.bulletPoints.map((bp: any) => cleanHtmlText(String(bp || ''))).filter((bp: string) => bp.length > 0)
       : [];
+
+    // Filter out single-word fragments (e.g. ["Abstract"]) to ensure substantive points
+    let bulletPoints = rawBulletPoints.filter((b: string) => {
+      const words = b.trim().split(/\s+/).filter(Boolean);
+      return words.length >= 2 || b.trim().length > 15;
+    });
+
+    // If points are sparse (< 3 points) on content slides, supplement from fallback deck
+    if (bulletPoints.length < 3 && idx > 0) {
+      const fallbackPoints = fallbackDeck.slides[idx]?.bulletPoints || [];
+      for (const fp of fallbackPoints) {
+        if (!bulletPoints.includes(fp)) {
+          bulletPoints.push(fp);
+        }
+        if (bulletPoints.length >= 3) break;
+      }
+    }
+
+    if (bulletPoints.length === 0) {
+      bulletPoints = fallbackDeck.slides[idx]?.bulletPoints || ['Poin Pembahasan 1', 'Poin Pembahasan 2', 'Poin Pembahasan 3'];
+    }
+
     const speakerNotes = typeof s.speakerNotes === 'string' && s.speakerNotes.trim()
       ? s.speakerNotes.trim()
       : (fallbackDeck.slides[idx]?.speakerNotes || '');
@@ -720,7 +742,7 @@ export function normalizeSlideDeckProject(
       title: slideTitle,
       subtitle,
       category: cat,
-      bulletPoints: bulletPoints.length > 0 ? bulletPoints : (fallbackDeck.slides[idx]?.bulletPoints || ['Point 1']),
+      bulletPoints,
       speakerNotes,
       visualHighlight: s.visualHighlight,
     };
