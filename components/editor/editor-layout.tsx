@@ -369,25 +369,34 @@ export function EditorLayout({
   const [isDocumentHubOpen, setIsDocumentHubOpen] = useState(false);
   const [isLinterModalOpen, setIsLinterModalOpen] = useState(false);
   const [isSlideDeckModalOpen, setIsSlideDeckModalOpen] = useState(false);
+  const [slideDeckContent, setSlideDeckContent] = useState<string>('');
 
   const handleOpenSlideDeck = useCallback(async () => {
+    let freshText = activeDocumentText;
     try {
       if ((editorJsRef.current as any)?.saveCleanContent) {
         const savedData = await (editorJsRef.current as any).saveCleanContent();
-        if (savedData && onContentChange) {
-          onContentChange(savedData);
+        if (savedData) {
+          freshText = extractTextFromContent(savedData);
+          if (onContentChange) {
+            onContentChange(savedData);
+          }
         }
       } else if ((editorJsRef.current as any)?.save) {
         const savedData = await (editorJsRef.current as any).save();
-        if (savedData && onContentChange) {
-          onContentChange(savedData);
+        if (savedData) {
+          freshText = extractTextFromContent(savedData);
+          if (onContentChange) {
+            onContentChange(savedData);
+          }
         }
       }
     } catch (err) {
       console.warn('Canvas sync before opening slide deck:', err);
     }
+    setSlideDeckContent(freshText || activeDocumentText);
     setIsSlideDeckModalOpen(true);
-  }, [onContentChange]);
+  }, [onContentChange, activeDocumentText]);
   const [isLiteratureMatrixModalOpen, setIsLiteratureMatrixModalOpen] = useState(false);
   const [isJournalPresetsModalOpen, setIsJournalPresetsModalOpen] = useState(false);
   const [isConceptMapModalOpen, setIsConceptMapModalOpen] = useState(false);
@@ -2024,7 +2033,7 @@ export function EditorLayout({
         onClose={() => setIsSlideDeckModalOpen(false)}
         editorBlocks={currentDocument?.content?.blocks || []}
         documentTitle={currentDocument?.title || 'Academic Research Presentation'}
-        documentContent={activeDocumentText}
+        documentContent={slideDeckContent || activeDocumentText}
         authorName={profile?.full_name || user?.email || undefined}
         institutionName={profile?.institution || undefined}
         language={language as 'en' | 'id'}

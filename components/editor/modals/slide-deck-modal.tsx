@@ -63,9 +63,9 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
   // AI Generation States
   const [aiDeck, setAiDeck] = useState<SlideDeckProject | null>(null);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
-  const hasAutoTriggeredRef = useRef(false);
+  const lastGeneratedSignatureRef = useRef<string>('');
 
-  // Generate standard slide deck project from AST blocks (instant baseline)
+  // Generate standard slide deck project from AST blocks (instant baseline fallback)
   const standardDeck: SlideDeckProject = useMemo(() => {
     return generateAcademicSlideDeck(editorBlocks, documentTitle, {
       authorName,
@@ -131,7 +131,7 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
         }
 
         onShowToast?.(
-          isEn ? 'Defense slide deck updated from canvas!' : 'Slide sidang berhasil diperbarui dari kanvas!',
+          isEn ? 'AI defense slide deck synthesized from canvas!' : 'Slide sidang berhasil disintesis oleh AI dari kanvas!',
           'success'
         );
       } else {
@@ -150,17 +150,16 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
     }
   };
 
-  // Auto-generate AI deck on first modal open
+  // Automatically trigger AI slide generation whenever modal opens with new or updated canvas text
   useEffect(() => {
-    if (!isOpen) {
-      hasAutoTriggeredRef.current = false;
-      return;
-    }
-    if (!hasAutoTriggeredRef.current && !aiDeck) {
-      hasAutoTriggeredRef.current = true;
+    if (!isOpen) return;
+
+    const currentSignature = `${documentTitle}:${documentContent}`;
+    if (lastGeneratedSignatureRef.current !== currentSignature) {
+      lastGeneratedSignatureRef.current = currentSignature;
       handleGenerateAiDeck();
     }
-  }, [isOpen, aiDeck]);
+  }, [isOpen, documentTitle, documentContent]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -251,8 +250,8 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {isEn
-                  ? 'Auto-synthesizes manuscript into a high-impact academic slide deck.'
-                  : 'Sintesis otomatis naskah skripsi menjadi slide presentasi sidang akademik berbobot tinggi.'}
+                  ? 'AI-powered defense slide synthesis directly from your canvas manuscript.'
+                  : 'Sintesis otomatis slide sidang akademik bertenaga AI langsung dari naskah kanvas Anda.'}
               </p>
             </div>
           </div>
@@ -264,13 +263,13 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
               onClick={handleGenerateAiDeck}
               disabled={isGeneratingAi}
               className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-semibold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              title={isEn ? 'Update slides from canvas' : 'Perbarui slide dari naskah kanvas'}
+              title={isEn ? 'Regenerate presentation slides using AI' : 'Sintesis ulang slide presentasi sidang menggunakan AI'}
             >
               <IconSparkles className={`w-3.5 h-3.5 ${isGeneratingAi ? 'animate-spin' : 'text-amber-300'}`} />
               <span>
                 {isGeneratingAi
-                  ? (isEn ? 'Updating...' : 'Menyintesis...')
-                  : (isEn ? 'Update Slides' : 'Perbarui Slide')}
+                  ? (isEn ? 'AI Generating...' : 'AI Menyintesis...')
+                  : (isEn ? '✨ Regenerate with AI' : '✨ Generate Ulang AI')}
               </span>
             </button>
 
@@ -328,40 +327,55 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
           <div className="w-64 border-r border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 p-3 overflow-y-auto hidden md:flex flex-col gap-2">
             <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-2 py-1 flex items-center justify-between">
               <span>{isEn ? 'Slides Overview' : 'Daftar Slide'}</span>
-              <span>{currentDeck.slides.length}</span>
+              <span>{isGeneratingAi && !aiDeck ? '...' : currentDeck.slides.length}</span>
             </div>
 
-            {currentDeck.slides.map((s, idx) => {
-              const isSelected = idx === currentSlideIndex;
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => setCurrentSlideIndex(idx)}
-                  className={`w-full text-left p-2.5 rounded-xl border text-xs transition-all cursor-pointer flex flex-col gap-1 ${
-                    isSelected
-                      ? 'bg-indigo-50/80 dark:bg-indigo-950/40 border-indigo-400 dark:border-indigo-600 shadow-xs'
-                      : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300'
-                  }`}
+            {isGeneratingAi && !aiDeck ? (
+              Array.from({ length: 9 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-800/60 flex flex-col gap-1.5 animate-pulse"
                 >
                   <div className="flex items-center justify-between">
-                    <span
-                      className={`text-[10px] font-mono px-1.5 py-0.2 rounded font-semibold ${
-                        isSelected
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
-                      }`}
-                    >
-                      #{idx + 1}
-                    </span>
-                    <span className="text-[10px] text-slate-400 capitalize">{s.category}</span>
+                    <span className="w-8 h-3.5 bg-slate-200 dark:bg-slate-700 rounded-sm" />
+                    <span className="w-12 h-3 bg-slate-200 dark:bg-slate-700 rounded-sm" />
                   </div>
-                  <span className="font-semibold line-clamp-1 text-slate-900 dark:text-slate-100">
-                    {s.title}
-                  </span>
-                </button>
-              );
-            })}
+                  <span className="w-3/4 h-3 bg-slate-200 dark:bg-slate-700 rounded-sm" />
+                </div>
+              ))
+            ) : (
+              currentDeck.slides.map((s, idx) => {
+                const isSelected = idx === currentSlideIndex;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setCurrentSlideIndex(idx)}
+                    className={`w-full text-left p-2.5 rounded-xl border text-xs transition-all cursor-pointer flex flex-col gap-1 ${
+                      isSelected
+                        ? 'bg-indigo-50/80 dark:bg-indigo-950/40 border-indigo-400 dark:border-indigo-600 shadow-xs'
+                        : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`text-[10px] font-mono px-1.5 py-0.2 rounded font-semibold ${
+                          isSelected
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                        }`}
+                      >
+                        #{idx + 1}
+                      </span>
+                      <span className="text-[10px] text-slate-400 capitalize">{s.category}</span>
+                    </div>
+                    <span className="font-semibold line-clamp-1 text-slate-900 dark:text-slate-100">
+                      {s.title}
+                    </span>
+                  </button>
+                );
+              })
+            )}
           </div>
 
           {/* Right Preview Column */}
