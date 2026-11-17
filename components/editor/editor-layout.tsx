@@ -369,6 +369,25 @@ export function EditorLayout({
   const [isDocumentHubOpen, setIsDocumentHubOpen] = useState(false);
   const [isLinterModalOpen, setIsLinterModalOpen] = useState(false);
   const [isSlideDeckModalOpen, setIsSlideDeckModalOpen] = useState(false);
+
+  const handleOpenSlideDeck = useCallback(async () => {
+    try {
+      if ((editorJsRef.current as any)?.saveCleanContent) {
+        const savedData = await (editorJsRef.current as any).saveCleanContent();
+        if (savedData && onContentChange) {
+          onContentChange(savedData);
+        }
+      } else if ((editorJsRef.current as any)?.save) {
+        const savedData = await (editorJsRef.current as any).save();
+        if (savedData && onContentChange) {
+          onContentChange(savedData);
+        }
+      }
+    } catch (err) {
+      console.warn('Canvas sync before opening slide deck:', err);
+    }
+    setIsSlideDeckModalOpen(true);
+  }, [onContentChange]);
   const [isLiteratureMatrixModalOpen, setIsLiteratureMatrixModalOpen] = useState(false);
   const [isJournalPresetsModalOpen, setIsJournalPresetsModalOpen] = useState(false);
   const [isConceptMapModalOpen, setIsConceptMapModalOpen] = useState(false);
@@ -924,7 +943,7 @@ export function EditorLayout({
       // Ctrl + Shift + E -> Conference & Thesis Defense Slide Deck
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
         e.preventDefault();
-        setIsSlideDeckModalOpen(true);
+        handleOpenSlideDeck();
         return;
       }
 
@@ -1038,7 +1057,7 @@ export function EditorLayout({
         setIsLinterModalOpen(true);
         break;
       case 'open_slide_deck':
-        setIsSlideDeckModalOpen(true);
+        handleOpenSlideDeck();
         break;
       case 'open_literature_matrix':
         if (FEATURE_FLAGS.ENABLE_LITERATURE_MATRIX) setIsLiteratureMatrixModalOpen(true);
@@ -1612,7 +1631,7 @@ export function EditorLayout({
                   onOpenPeerReview={handleOpenPeerReview}
                   onOpenProjectBinder={() => setIsProjectBinderModalOpen(true)}
                   onOpenLinter={() => setIsLinterModalOpen(true)}
-                  onOpenSlideDeck={() => setIsSlideDeckModalOpen(true)}
+                  onOpenSlideDeck={handleOpenSlideDeck}
                   onOpenLiteratureMatrix={() => setIsLiteratureMatrixModalOpen(true)}
                   onOpenJournalPresets={() => setIsJournalPresetsModalOpen(true)}
                   onOpenConceptMap={() => setIsConceptMapModalOpen(true)}
@@ -2005,9 +2024,14 @@ export function EditorLayout({
         onClose={() => setIsSlideDeckModalOpen(false)}
         editorBlocks={currentDocument?.content?.blocks || []}
         documentTitle={currentDocument?.title || 'Academic Research Presentation'}
+        documentContent={activeDocumentText}
         authorName={profile?.full_name || user?.email || undefined}
         institutionName={profile?.institution || undefined}
         language={language as 'en' | 'id'}
+        userId={user?.id}
+        userPlan={activePlanId || 'free'}
+        onTokensUpdated={onTokensUpdated}
+        onShowToast={(msg, type) => showAlertModal(type === 'error' ? 'Notice' : 'Success', msg, type === 'error' ? 'error' : 'info')}
       />
       <LiteratureMatrixModal
         isOpen={isLiteratureMatrixModalOpen}

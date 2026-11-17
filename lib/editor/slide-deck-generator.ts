@@ -222,6 +222,21 @@ export function generateAcademicSlideDeck(
       }
     }
 
+    // If no matching heading section was identified, attempt to extract sentences from general paragraphs in canvas blocks
+    if (bullets.length === 0 && Array.isArray(blocks) && blocks.length > 0) {
+      const allParagraphs = blocks.filter((b) => b?.type === 'paragraph' && b?.data?.text);
+      if (allParagraphs.length > 0) {
+        const catIdx = defaultCategories.indexOf(def);
+        const targetBlock = allParagraphs[catIdx % allParagraphs.length];
+        if (targetBlock?.data?.text) {
+          const extracted = extractBullets(targetBlock.data.text, 3);
+          if (extracted.length > 0) {
+            bullets.push(...extracted);
+          }
+        }
+      }
+    }
+
     // Default bullet fallback if not enough text extracted
     if (bullets.length === 0) {
       if (def.cat === 'problem') {
@@ -662,4 +677,65 @@ function escapeHtml(str: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+/**
+ * Validates and normalizes an AI or external slide deck project payload.
+ * Guarantees all required fields, slide numbers, categories, and fallbacks are present.
+ */
+export function normalizeSlideDeckProject(
+  raw: any,
+  fallbackDeck: SlideDeckProject
+): SlideDeckProject {
+  if (!raw || typeof raw !== 'object') return fallbackDeck;
+
+  const title = typeof raw.title === 'string' && raw.title.trim() ? raw.title.trim() : fallbackDeck.title;
+  const presenter = typeof raw.presenter === 'string' && raw.presenter.trim() ? raw.presenter.trim() : fallbackDeck.presenter;
+  const institution = typeof raw.institution === 'string' && raw.institution.trim() ? raw.institution.trim() : fallbackDeck.institution;
+  const templateTheme = (['academic-modern', 'classic-navy', 'minimal-emerald'] as const).includes(raw.templateTheme)
+    ? raw.templateTheme
+    : fallbackDeck.templateTheme;
+
+  const validCategories: SlideItem['category'][] = [
+    'title', 'problem', 'objectives', 'literature', 'methodology', 'findings', 'discussion', 'conclusion', 'references', 'custom'
+  ];
+
+  const rawSlides: any[] = Array.isArray(raw.slides) && raw.slides.length > 0 ? raw.slides : fallbackDeck.slides;
+
+  const slides: SlideItem[] = rawSlides.map((s, idx) => {
+    const slideNumber = typeof s.slideNumber === 'number' ? s.slideNumber : idx + 1;
+    const cat = validCategories.includes(s.category) ? s.category : 'custom';
+    const slideTitle = typeof s.title === 'string' && s.title.trim() ? s.title.trim() : `Slide #${slideNumber}`;
+    const subtitle = typeof s.subtitle === 'string' && s.subtitle.trim() ? s.subtitle.trim() : undefined;
+    const bulletPoints = Array.isArray(s.bulletPoints)
+      ? s.bulletPoints.map((bp: any) => cleanHtmlText(String(bp || ''))).filter((bp: string) => bp.length > 0)
+      : [];
+    const speakerNotes = typeof s.speakerNotes === 'string' && s.speakerNotes.trim()
+      ? s.speakerNotes.trim()
+      : (fallbackDeck.slides[idx]?.speakerNotes || '');
+
+    return {
+      id: s.id || `slide-ai-${cat}-${slideNumber}`,
+      slideNumber,
+      title: slideTitle,
+      subtitle,
+      category: cat,
+      bulletPoints: bulletPoints.length > 0 ? bulletPoints : (fallbackDeck.slides[idx]?.bulletPoints || ['Point 1']),
+      speakerNotes,
+      visualHighlight: s.visualHighlight,
+    };
+  });
+
+  const estimatedMinutes = typeof raw.estimatedMinutes === 'number' && raw.estimatedMinutes > 0
+    ? raw.estimatedMinutes
+    : Math.round(slides.length * 1.75);
+
+  return {
+    title,
+    presenter,
+    institution,
+    templateTheme,
+    slides,
+    estimatedMinutes,
+  };
 }

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   cleanHtmlText,
   generateAcademicSlideDeck,
+  normalizeSlideDeckProject,
   exportToMarpMarkdown,
   exportToStandaloneHtml,
 } from '@/lib/editor/slide-deck-generator';
@@ -144,5 +145,55 @@ describe('Phase 35: Conference & Thesis Defense Slide Deck Generator Unit Tests'
     expect(html).toContain('renderSlide');
     expect(html).toContain('toggleFullscreen');
     expect(html).toContain('Autonomous Vehicles');
+  });
+
+  it('generateAcademicSlideDeck: extracts real text from unstructured canvas paragraphs', () => {
+    const mockBlocks = [
+      {
+        id: 'p1',
+        type: 'paragraph',
+        data: {
+          text: 'Deep learning based anomaly detection achieves 98.4 percent recall across distributed energy microgrids.',
+        },
+      },
+    ];
+
+    const deck = generateAcademicSlideDeck(mockBlocks, 'Microgrid Anomaly Detection', {
+      language: 'en',
+    });
+
+    const anySlideHasRealText = deck.slides.some((s) =>
+      s.bulletPoints.some((b) => b.includes('Deep learning based anomaly detection achieves 98.4 percent recall'))
+    );
+    expect(anySlideHasRealText).toBe(true);
+  });
+
+  it('normalizeSlideDeckProject: safely validates and structures AI JSON payload', () => {
+    const fallback = generateAcademicSlideDeck([], 'Fallback Research', { language: 'id' });
+    const rawAiOutput = {
+      title: 'AI Synthesized Defense Deck',
+      presenter: 'Budi Santoso',
+      institution: 'Institut Teknologi Bandung',
+      templateTheme: 'classic-navy',
+      estimatedMinutes: 18,
+      slides: [
+        {
+          id: 'slide-1',
+          slideNumber: 1,
+          title: 'AI Synthesized Defense Deck',
+          category: 'title',
+          bulletPoints: ['Peneliti: Budi Santoso', 'ITB'],
+          speakerNotes: 'Selamat pagi dewan penguji...',
+        },
+      ],
+    };
+
+    const normalized = normalizeSlideDeckProject(rawAiOutput, fallback);
+    expect(normalized.title).toBe('AI Synthesized Defense Deck');
+    expect(normalized.presenter).toBe('Budi Santoso');
+    expect(normalized.institution).toBe('Institut Teknologi Bandung');
+    expect(normalized.templateTheme).toBe('classic-navy');
+    expect(normalized.slides.length).toBe(1);
+    expect(normalized.slides[0].bulletPoints[0]).toBe('Peneliti: Budi Santoso');
   });
 });

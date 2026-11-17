@@ -1,5 +1,26 @@
 # ScholarFlow Changelog
 
+## v0.46.2 - AI-Powered Conference & Thesis Defense Slide Deck Generator with Live Canvas Sync & Paragraph Scavenging
+
+- **Canvas Instant Auto-Sync Before Slide Generation (`components/editor/editor-layout.tsx`)**:
+  - Implemented `handleOpenSlideDeck`: guarantees that current canvas text is saved cleanly via `(editorJsRef.current as any)?.saveCleanContent()` or `save()` before opening the Slide Deck modal.
+  - Wired into shortcut (`Ctrl + Shift + E`), Command Palette (`open_slide_deck`), and sidebar document tab trigger, eliminating stale or empty canvas state when generating slides.
+- **AI Slide Deck Generation API Endpoint (`app/api/v1/ai/slide-deck/route.ts`)**:
+  - New dedicated API endpoint leveraging Google Gemini with Multi-Key Failover Pool (`geminiKeyPool`) and Multi-Tenant Key Resolver (`resolveTenantKey`).
+  - Strict academic prompt synthesizing full canvas manuscript into 9 standardized defense slides (Title, Problem Statement, Objectives, Theoretical Framework, Methodology, Key Findings, Discussion, Conclusion, References/Q&A) complete with realistic, spoken presenter notes (`speakerNotes`).
+  - Supports bilingual generation (academic English / formal Indonesian), token quota guard (`checkPersonalQuota`), idempotency caching (5-min TTL), and server-side generation logging (`createPendingAiGeneration` / `completeAiGeneration`).
+- **Interactive Dual-Mode Modal (Standard AST vs AI Gemini) (`components/editor/modals/slide-deck-modal.tsx`)**:
+  - Added **`[✨ Sintesis AI dari Kanvas]`** / **`[✨ Synthesize with AI]`** action button with animated pulsing gradient badge.
+  - Added segmented mode toggle (`[ ⚡ Standar (AST) ]` vs `[ ✨ AI Gemini ]`), allowing users to effortlessly compare instant local extraction with deep contextual AI synthesis.
+  - High-fidelity frosted loading card with animated progress pulse while AI synthesizes the manuscript.
+  - Seamlessly integrates with existing Marp Markdown export, Standalone Interactive HTML presentation download, theme selector, and speaker notes drawer.
+- **Paragraph Scavenging & AST Hardening (`lib/editor/slide-deck-generator.ts`)**:
+  - Improved `generateAcademicSlideDeck`: if a user has written canvas text without formal standard H2/H3 headings, the AST parser now scavenges and extracts real sentences from canvas paragraphs across categories instead of immediately defaulting to dummy placeholder text.
+  - Added `normalizeSlideDeckProject` helper: ensures external or AI payloads strictly adhere to `SlideDeckProject` schema with guaranteed IDs, categories, bullet points, and speaker notes.
+- **Unit Testing**:
+  - Added unit tests in `__tests__/utils/slide-deck-generator.test.ts` verifying paragraph scavenging from canvas and AI JSON payload normalization.
+  - Verification: 253/253 tests passing across 29 test files, 0 TypeScript compiler errors.
+
 ## v0.46.1 - Multi-Tier Resilient DOM Injection & Entity Normalization for Auto-Cite (Resolved 0-Citation Application Bug)
 
 - **Resilient Multi-Tier Sentence Matching & DOM Injection (`components/editor/editor-layout.tsx`)**:

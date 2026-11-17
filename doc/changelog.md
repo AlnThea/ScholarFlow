@@ -5,6 +5,30 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.46.2] - 2026-11-17 (AI-Powered Defense Slide Deck Generator, Live Canvas Sync & Paragraph Scavenging)
+
+### 🎯 Integrasi AI Generator Slide Sidang & Sinkronisasi Langsung Naskah Kanvas
+- **Sinkronisasi Otomatis Teks Kanvas Sebelum Membuka Slide (`components/editor/editor-layout.tsx`)**:
+  - Menambahkan fungsi pembungkus `handleOpenSlideDeck` yang secara otomatis memanggil `(editorJsRef.current as any)?.saveCleanContent()` atau `save()` sesaat sebelum modal dibuka.
+  - Memastikan perubahan teks kanvas paling mutakhir detik itu juga langsung tersimpan dan terbaca oleh generator slide tanpa risiko naskah kosong atau basi.
+  - Menghubungkan fungsi ini ke pintasan keyboard `Ctrl + Shift + E`, Command Palette (`open_slide_deck`), dan menu bilah samping.
+- **Endpoint API Sintesis AI Slide Sidang (`app/api/v1/ai/slide-deck/route.ts`)**:
+  - Endpoint baru terdedikasi bertenaga Google Gemini dengan Multi-Key Failover Pool (`geminiKeyPool`) dan Campus Tenant Resolver (`resolveTenantKey`).
+  - Merangkum naskah utuh dari kanvas menjadi 9 slide sidang komprehensif berbobot akademik tinggi (Judul, Latar Belakang & Masalah, Tujuan & Batasan, Landasan Teori, Metodologi, Temuan Kunci, Pembahasan, Kesimpulan, serta Rujukan & Tanya Jawab).
+  - Menghasilkan catatan narasi pembicara lisan (`speakerNotes`) berbahasa santun dan akademis yang siap dibacakan saat ujian sidang skripsi atau sesi konferensi.
+  - Proteksi kuota token pengguna (`checkPersonalQuota`), cache idempoten (TTL 5 menit), dan pencatatan audit generasi AI di sisi server.
+- **Mode Ganda Interaktif (Standar AST vs AI Gemini) (`components/editor/modals/slide-deck-modal.tsx`)**:
+  - Menambahkan tombol aksi **`[✨ Sintesis AI dari Kanvas]`** / **`[✨ Synthesize with AI]`** dengan animasi gradien lembut.
+  - Tombol pengalih mode (`[ ⚡ Standar (AST) ]` vs `[ ✨ AI Gemini ]`), memungkinkan pengguna berpindah fleksibel antara ekstraksi lokal instan dan sintesis cerdas kontekstual AI.
+  - Kartu pemuatan (*loading card*) elegan dengan animasi indikator progres selama AI menganalisis naskah.
+  - Seluruh fitur ekspor (salin Marp Markdown, unduh presentasi HTML mandiri offline, dan pengalih tema visual) bekerja mulus dengan slide hasil sintesis AI.
+- **Penyempurnaan Ekstraksi Paragraf Tanpa Heading (`lib/editor/slide-deck-generator.ts`)**:
+  - Peningkatan pada fungsi `generateAcademicSlideDeck`: jika naskah pengguna belum memakai format Heading baku (H2/H3), sistem secara otomatis mengekstrak kalimat-kalimat nyata dari paragraf kanvas sehingga isi slide tidak langsung beralih ke teks dummy.
+  - Menambahkan fungsi pembantu `normalizeSlideDeckProject` untuk memvalidasi dan memastikan skema data AI selalu utuh dan aman tanpa crash.
+- **Pengujian & Verifikasi**:
+  - Unit testing: 7/7 tes generator slide lulus, total 253/253 tes lulus di Vitest across 29 test files.
+  - TypeScript: 0 compile errors (`npx tsc --noEmit`).
+
 ## ⚡ [v0.46.1] - 2026-11-17 (Multi-Tier Resilient DOM Injection & Entity Normalization for Auto-Cite)
 
 ### 🎯 Perbaikan Injeksi Sitasi 0 Item pada Naskah Editor

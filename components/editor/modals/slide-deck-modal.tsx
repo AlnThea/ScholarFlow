@@ -29,9 +29,14 @@ interface SlideDeckModalProps {
   onClose: () => void;
   editorBlocks: any[];
   documentTitle?: string;
+  documentContent?: string;
   authorName?: string;
   institutionName?: string;
   language?: 'en' | 'id';
+  userId?: string;
+  userPlan?: string;
+  onTokensUpdated?: (tokensUsed: number, monthlyQuota?: number) => void;
+  onShowToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
 export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
@@ -39,9 +44,14 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
   onClose,
   editorBlocks,
   documentTitle = 'Academic Research Defense',
+  documentContent = '',
   authorName,
   institutionName,
   language = 'id',
+  userId,
+  userPlan = 'free',
+  onTokensUpdated,
+  onShowToast,
 }) => {
   const isEn = language === 'en';
 
@@ -50,8 +60,13 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
   const [showNotes, setShowNotes] = useState(true);
   const [copiedMarp, setCopiedMarp] = useState(false);
 
-  // Generate slide deck project from blocks
-  const deck: SlideDeckProject = useMemo(() => {
+  // AI Generation States
+  const [aiDeck, setAiDeck] = useState<SlideDeckProject | null>(null);
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [activeSource, setActiveSource] = useState<'standard' | 'ai'>('standard');
+
+  // Generate standard slide deck project from AST blocks
+  const standardDeck: SlideDeckProject = useMemo(() => {
     return generateAcademicSlideDeck(editorBlocks, documentTitle, {
       authorName,
       institutionName,
@@ -60,7 +75,82 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
     });
   }, [editorBlocks, documentTitle, authorName, institutionName, language, activeTheme]);
 
-  const activeSlide: SlideItem | undefined = deck.slides[currentSlideIndex] || deck.slides[0];
+  // Current active presentation deck (AI vs Standard)
+  const currentDeck: SlideDeckProject = useMemo(() => {
+    if (activeSource === 'ai' && aiDeck) {
+      return {
+        ...aiDeck,
+        templateTheme: activeTheme,
+      };
+    }
+    return standardDeck;
+  }, [activeSource, aiDeck, standardDeck, activeTheme]);
+
+  const activeSlide: SlideItem | undefined = currentDeck.slides[currentSlideIndex] || currentDeck.slides[0];
+
+  // Handler: Synthesize Deck with Gemini AI from Canvas Text
+  const handleGenerateAiDeck = async () => {
+    if (isGeneratingAi) return;
+    setIsGeneratingAi(true);
+
+    try {
+      const res = await fetch('/api/v1/ai/slide-deck', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documentTitle,
+          manuscriptText: documentContent || '',
+          editorBlocks,
+          authorName,
+          institutionName,
+          templateTheme: activeTheme,
+          language,
+          userId,
+          userPlan,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(isEn ? 'Failed to synthesize AI slides' : 'Gagal menyintesis slide dengan AI');
+      }
+
+      const resData = await res.json();
+      if (resData.success && resData.data) {
+        setAiDeck(resData.data);
+        setActiveSource('ai');
+        setCurrentSlideIndex(0);
+
+        if (typeof resData.tokens_consumed === 'number') {
+          onTokensUpdated?.(resData.tokens_consumed);
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('scholarflow:tokens-updated', {
+                detail: { tokensUsed: resData.tokens_consumed },
+              })
+            );
+          }
+        }
+
+        onShowToast?.(
+          isEn ? '✨ Defense slide deck synthesized from canvas by AI!' : '✨ Slide sidang berhasil disintesis AI dari naskah kanvas!',
+          'success'
+        );
+      } else {
+        throw new Error(resData.error || 'Unknown AI error');
+      }
+    } catch (err: any) {
+      console.warn('[SlideDeckModal] AI synthesis fallback:', err.message);
+      setActiveSource('standard');
+      onShowToast?.(
+        isEn
+          ? 'Notice: Standard AST deck loaded (AI service unavailable).'
+          : 'Catatan: Menampilkan slide mode standar AST lokal.',
+        'info'
+      );
+    } finally {
+      setIsGeneratingAi(false);
+    }
+  };
 
   // Keyboard navigation
   useEffect(() => {
@@ -68,7 +158,7 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight' || e.key === 'PageDown') {
-        setCurrentSlideIndex((prev) => Math.min(prev + 1, deck.slides.length - 1));
+        setCurrentSlideIndex((prev) => Math.min(prev + 1, currentDeck.slides.length - 1));
       } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
         setCurrentSlideIndex((prev) => Math.max(prev - 1, 0));
       } else if (e.key === 'Escape') {
@@ -78,19 +168,19 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, deck.slides.length, onClose]);
+  }, [isOpen, currentDeck.slides.length, onClose]);
 
   if (!isOpen) return null;
 
   const handleCopyMarp = async () => {
-    const marp = exportToMarpMarkdown(deck);
+    const marp = exportToMarpMarkdown(currentDeck);
     await navigator.clipboard.writeText(marp);
     setCopiedMarp(true);
     setTimeout(() => setCopiedMarp(false), 2200);
   };
 
   const handleDownloadHtml = () => {
-    const html = exportToStandaloneHtml(deck);
+    const html = exportToStandaloneHtml(currentDeck);
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -158,6 +248,59 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Mode Switcher (Standard vs AI) */}
+            {aiDeck && (
+              <div className="hidden sm:flex items-center bg-slate-200/60 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-300/50 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveSource('standard');
+                    setCurrentSlideIndex(0);
+                  }}
+                  className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-colors cursor-pointer ${
+                    activeSource === 'standard'
+                      ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  ⚡ {isEn ? 'Standard' : 'Standar'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveSource('ai');
+                    setCurrentSlideIndex(0);
+                  }}
+                  className={`px-2 py-1 text-[11px] font-semibold rounded-md transition-colors cursor-pointer flex items-center gap-1 ${
+                    activeSource === 'ai'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-indigo-600 dark:text-indigo-400 hover:text-indigo-700'
+                  }`}
+                >
+                  <IconSparkles className="w-3 h-3 text-amber-300" />
+                  <span>AI Gemini</span>
+                </button>
+              </div>
+            )}
+
+            {/* AI Synthesizer Action Button */}
+            <button
+              type="button"
+              onClick={handleGenerateAiDeck}
+              disabled={isGeneratingAi}
+              className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 active:from-violet-800 active:to-indigo-800 text-white text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              title={isEn ? 'Synthesize full manuscript into slides using Gemini AI' : 'Sintesis naskah kanvas menjadi slide sidang menggunakan Gemini AI'}
+            >
+              <IconSparkles className={`w-3.5 h-3.5 ${isGeneratingAi ? 'animate-spin' : 'text-amber-300'}`} />
+              <span>
+                {isGeneratingAi
+                  ? (isEn ? 'Synthesizing...' : 'Menyintesis...')
+                  : aiDeck
+                  ? (isEn ? 'Regenerate AI' : 'Regenerasi AI')
+                  : (isEn ? '✨ Synthesize with AI' : '✨ Sintesis AI dari Kanvas')}
+              </span>
+            </button>
+
             {/* Theme Selector */}
             <div className="hidden sm:flex items-center bg-slate-200/60 dark:bg-slate-800 p-1 rounded-lg border border-slate-300/50 dark:border-slate-700">
               <button
@@ -211,11 +354,20 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
           {/* Left Thumbnails Column */}
           <div className="w-64 border-r border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 p-3 overflow-y-auto hidden md:flex flex-col gap-2">
             <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-2 py-1 flex items-center justify-between">
-              <span>{isEn ? 'Slides Overview' : 'Daftar Slide'}</span>
-              <span>{deck.slides.length}</span>
+              <span className="flex items-center gap-1.5">
+                {activeSource === 'ai' ? (
+                  <span className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-bold">
+                    <IconSparkles className="w-3 h-3 text-amber-400" />
+                    AI Deck
+                  </span>
+                ) : (
+                  <span>{isEn ? 'Slides Overview' : 'Daftar Slide'}</span>
+                )}
+              </span>
+              <span>{currentDeck.slides.length}</span>
             </div>
 
-            {deck.slides.map((s, idx) => {
+            {currentDeck.slides.map((s, idx) => {
               const isSelected = idx === currentSlideIndex;
               return (
                 <button
@@ -252,60 +404,81 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
           <div className="flex-1 flex flex-col bg-slate-100 dark:bg-slate-950 p-4 sm:p-6 overflow-y-auto">
             {/* Slide Stage Container */}
             <div className="flex-1 flex items-center justify-center min-h-[360px]">
-              {activeSlide && (
-                <div
-                  className={`w-full max-w-3xl aspect-video rounded-2xl p-6 sm:p-10 border shadow-2xl flex flex-col justify-between transition-all ${themeClasses.card}`}
-                >
-                  {/* Slide Top */}
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span
-                        className={`text-[11px] font-semibold tracking-wider uppercase px-2.5 py-0.5 rounded-full border ${themeClasses.badge}`}
-                      >
-                        {activeSlide.category}
-                      </span>
-                      <span className="text-xs text-slate-400 font-mono">
-                        {currentSlideIndex + 1} / {deck.slides.length}
-                      </span>
-                    </div>
-
-                    <h3
-                      className={`text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight mb-2 ${themeClasses.title}`}
-                    >
-                      {activeSlide.title}
-                    </h3>
-                    {activeSlide.subtitle && (
-                      <p className="text-xs sm:text-sm text-slate-400 mb-4">{activeSlide.subtitle}</p>
-                    )}
-
-                    {/* Bullet Points */}
-                    {activeSlide.bulletPoints && activeSlide.bulletPoints.length > 0 && (
-                      <ul className="space-y-3 mt-4 text-xs sm:text-sm text-slate-200">
-                        {activeSlide.bulletPoints.map((bp, i) => (
-                          <li key={i} className="flex items-start gap-2.5">
-                            <span className={`text-base leading-none font-bold ${themeClasses.bullet}`}>
-                              •
-                            </span>
-                            <span className="leading-relaxed">{bp}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+              {isGeneratingAi ? (
+                <div className="w-full max-w-lg aspect-video rounded-2xl p-8 bg-slate-900/90 border border-indigo-500/30 text-white shadow-2xl flex flex-col items-center justify-center text-center animate-pulse">
+                  <div className="p-3.5 rounded-2xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-4 animate-bounce">
+                    <IconSparkles className="w-8 h-8 text-amber-300" />
                   </div>
-
-                  {/* Slide Bottom Footer */}
-                  <div className="pt-4 border-t border-slate-700/60 flex items-center justify-between text-[11px] text-slate-400">
-                    <span className="truncate max-w-[70%]">
-                      {deck.presenter} {deck.institution ? `• ${deck.institution}` : ''}
-                    </span>
-                    <span>ScholarFlow Deck</span>
+                  <h4 className="text-base font-bold text-white mb-2">
+                    {isEn ? 'AI Synthesizing Defense Deck from Canvas...' : 'AI Sedang Menyintesis Slide Sidang dari Kanvas...'}
+                  </h4>
+                  <p className="text-xs text-slate-300 max-w-sm leading-relaxed mb-5">
+                    {isEn
+                      ? 'Extracting problem statement, methodology, empirical results, and drafting thesis examiner speaker notes.'
+                      : 'Menganalisis latar belakang, metodologi, temuan kunci naskah, dan merumuskan catatan narasi pembicara untuk dewan penguji.'}
+                  </p>
+                  <div className="w-48 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="w-full h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full animate-pulse" />
                   </div>
                 </div>
+              ) : (
+                activeSlide && (
+                  <div
+                    className={`w-full max-w-3xl aspect-video rounded-2xl p-6 sm:p-10 border shadow-2xl flex flex-col justify-between transition-all ${themeClasses.card}`}
+                  >
+                    {/* Slide Top */}
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span
+                          className={`text-[11px] font-semibold tracking-wider uppercase px-2.5 py-0.5 rounded-full border ${themeClasses.badge}`}
+                        >
+                          {activeSlide.category}
+                        </span>
+                        <span className="text-xs text-slate-400 font-mono">
+                          {currentSlideIndex + 1} / {currentDeck.slides.length}
+                        </span>
+                      </div>
+
+                      <h3
+                        className={`text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight mb-2 ${themeClasses.title}`}
+                      >
+                        {activeSlide.title}
+                      </h3>
+                      {activeSlide.subtitle && (
+                        <p className="text-xs sm:text-sm text-slate-400 mb-4">{activeSlide.subtitle}</p>
+                      )}
+
+                      {/* Bullet Points */}
+                      {activeSlide.bulletPoints && activeSlide.bulletPoints.length > 0 && (
+                        <ul className="space-y-3 mt-4 text-xs sm:text-sm text-slate-200">
+                          {activeSlide.bulletPoints.map((bp, i) => (
+                            <li key={i} className="flex items-start gap-2.5">
+                              <span className={`text-base leading-none font-bold ${themeClasses.bullet}`}>
+                                •
+                              </span>
+                              <span className="leading-relaxed">{bp}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
+                    {/* Slide Bottom Footer */}
+                    <div className="pt-4 border-t border-slate-700/60 flex items-center justify-between text-[11px] text-slate-400">
+                      <span className="truncate max-w-[70%]">
+                        {currentDeck.presenter} {currentDeck.institution ? `• ${currentDeck.institution}` : ''}
+                      </span>
+                      <span className="flex items-center gap-1 font-medium">
+                        {activeSource === 'ai' ? '✨ Gemini AI Deck' : 'ScholarFlow Deck'}
+                      </span>
+                    </div>
+                  </div>
+                )
               )}
             </div>
 
             {/* Speaker Notes Drawer */}
-            {showNotes && activeSlide && (
+            {showNotes && activeSlide && !isGeneratingAi && (
               <div
                 className={`mt-4 p-3.5 rounded-xl border text-xs leading-relaxed transition-all ${themeClasses.notes}`}
               >
@@ -332,12 +505,12 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
               <IconChevronLeft className="w-4 h-4" />
             </button>
             <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 min-w-16 text-center">
-              {currentSlideIndex + 1} / {deck.slides.length}
+              {currentSlideIndex + 1} / {currentDeck.slides.length}
             </span>
             <button
               type="button"
-              disabled={currentSlideIndex === deck.slides.length - 1}
-              onClick={() => setCurrentSlideIndex((prev) => Math.min(prev + 1, deck.slides.length - 1))}
+              disabled={currentSlideIndex === currentDeck.slides.length - 1}
+              onClick={() => setCurrentSlideIndex((prev) => Math.min(prev + 1, currentDeck.slides.length - 1))}
               className="p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <IconChevronRight className="w-4 h-4" />
@@ -358,7 +531,7 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
 
             <div className="hidden sm:flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 ml-2">
               <IconClock className="w-3.5 h-3.5 text-slate-400" />
-              <span>~{deck.estimatedMinutes} {isEn ? 'mins' : 'menit'}</span>
+              <span>~{currentDeck.estimatedMinutes} {isEn ? 'mins' : 'menit'}</span>
             </div>
           </div>
 

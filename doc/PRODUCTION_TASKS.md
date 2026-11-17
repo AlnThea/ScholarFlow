@@ -310,3 +310,16 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
 - [x] **18.2 Multi-Tier Resilient DOM Injection & Entity Normalization (Phase 46)**
   - [x] 6-tier resilient matching pipeline handling `&nbsp;`, `\u00A0`, HTML entities, and formatting tags with DOM TreeWalker and Range insertion, completely resolving 0-citation injection bug.
   - [x] Clean initial file import presentation in natural file order without extraneous `% match` badges.
+
+---
+
+### 🎓 EPIC 19: AI Defense Slide Deck Generator & Live Canvas Synchronization (Phase 47)
+- [x] **19.1 Real-Time Canvas Auto-Sync Prior to Modal Open**
+  - [x] `handleOpenSlideDeck` executes immediate `saveCleanContent()` or `save()` before displaying the slide deck modal, ensuring latest typed text is completely synchronized.
+- [x] **19.2 Dedicated Google Gemini Slide Deck Synthesis API (`/api/v1/ai/slide-deck`)**
+  - [x] Synthesizes 9 structured defense slides (Title, Problem Statement, Objectives, Theoretical Framework, Methodology, Key Findings, Discussion, Conclusion, References/Q&A) complete with realistic spoken presenter notes (`speakerNotes`).
+  - [x] Idempotency caching, personal token quota guard, and campus multi-tenant key resolution.
+- [x] **19.3 Dual-Mode Interactive Presentation Deck (Standard AST vs AI Gemini)**
+  - [x] Segmented mode toggle (`[ ⚡ Standar ]` vs `[ ✨ AI Gemini ]`) with animated loading card and reactive token usage updates.
+  - [x] Paragraph scavenging in local AST generator avoiding dummy fallback when user writes without standard H2/H3 headings.
+  - [x] Full compatibility with Marp Markdown export and standalone interactive HTML download.
