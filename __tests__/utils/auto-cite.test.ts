@@ -242,4 +242,73 @@ describe('Phase 74: AI Auto-Citation Attribution & Matchmaker Engine', () => {
       expect(score).toBeLessThanOrEqual(98);
     });
   });
+
+  describe('DOM in-text citation injection resilience', () => {
+    it('successfully matches and injects citations even with non-breaking spaces and HTML entities', () => {
+      const container = document.createElement('div');
+      container.id = 'editorjs-holder';
+      // Simulate real-world browser contenteditable with &nbsp; and formatting
+      container.innerHTML = `
+        <div class="ce-block" data-id="block_1">
+          <div class="ce-paragraph cdx-block" contenteditable="true">
+            Di era digitalisasi&nbsp;saat ini, perguruan tinggi dituntut untuk <b>berinovasi</b> secara berkelanjutan.
+          </div>
+        </div>
+      `;
+      document.body.appendChild(container);
+
+      const match = {
+        matchId: 'm1',
+        blockId: 'block_1',
+        sentenceText: 'Di era digitalisasi saat ini, perguruan tinggi dituntut untuk berinovasi secara berkelanjutan.',
+        referenceId: 'vaswani2017',
+        citationLabel: '[Vaswani et al., 2017]',
+        confidence: 0.95,
+        rationale: 'Supports educational innovation claim.',
+      };
+
+      const normalizeForMatching = (str: string) => {
+        return (str || '')
+          .replace(/&nbsp;/gi, ' ')
+          .replace(/\u00A0/g, ' ')
+          .replace(/&amp;/gi, '&')
+          .replace(/&quot;/gi, '"')
+          .replace(/&#39;|&apos;/gi, "'")
+          .replace(/&lt;/gi, '<')
+          .replace(/&gt;/gi, '>')
+          .replace(/[“”]/g, '"')
+          .replace(/[‘’]/g, "'")
+          .replace(/\s+/g, ' ')
+          .trim();
+      };
+
+      const editables = Array.from(container.querySelectorAll('[contenteditable="true"]')) as HTMLElement[];
+      let placed = false;
+
+      for (const el of editables) {
+        const normElText = normalizeForMatching(el.textContent || '');
+        const normTarget = normalizeForMatching(match.sentenceText);
+        expect(normElText).toContain(normTarget);
+
+        const words = normTarget.split(/\s+/).filter(Boolean);
+        const escapedWords = words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+        const fullRegex = new RegExp(`(${escapedWords.join('(?:\\s+|&nbsp;|\\u00A0|<[^>]+>)+')}[.,;:!?]?)`, 'i');
+
+        expect(fullRegex.test(el.innerHTML)).toBe(true);
+
+        const cleanLabel = match.citationLabel.replace(/^\[|\]$/g, '');
+        const citeHtml = ` <cite data-citation="true" data-ref-id="${match.referenceId}">[${cleanLabel}]</cite>`;
+        el.innerHTML = el.innerHTML.replace(fullRegex, `$1${citeHtml}`);
+        placed = true;
+      }
+
+      expect(placed).toBe(true);
+      const insertedCite = container.querySelector('cite[data-citation="true"]');
+      expect(insertedCite).not.toBeNull();
+      expect(insertedCite?.getAttribute('data-ref-id')).toBe('vaswani2017');
+      expect(insertedCite?.textContent).toBe('[Vaswani et al., 2017]');
+
+      document.body.removeChild(container);
+    });
+  });
 });

@@ -1,5 +1,27 @@
 # ScholarFlow Changelog
 
+## v0.46.1 - Multi-Tier Resilient DOM Injection & Entity Normalization for Auto-Cite (Resolved 0-Citation Application Bug)
+
+- **Resilient Multi-Tier Sentence Matching & DOM Injection (`components/editor/editor-layout.tsx`)**:
+  - Resolved root cause where applying Auto-Citations reported `0 sitasi disematkan`: previously, `el.innerHTML.includes(match.sentenceText)` strictly compared raw HTML against clean AI text, causing silent failures whenever `&nbsp;`, `\u00A0`, HTML entities (`&quot;`, `&#39;`, `&amp;`), or formatting tags (`<b>`, `<i>`) existed in the sentence.
+  - Implemented 6-tier resilient matching pipeline:
+    - **Method A**: Exact literal string replacement in `el.innerHTML`.
+    - **Method B**: Regex with whitespace, `&nbsp;`, `\u00A0`, and inline HTML tag tolerance between words `(?:\s+|&nbsp;|\u00A0|<[^>]+>)+`.
+    - **Method C**: Head-Tail boundary regex for longer complex sentences.
+    - **Method D**: DOM TreeWalker precise text-node boundary injection using `Range.insertNode()`.
+    - **Method E**: Explicit block ID fallback matching (`data-id="${match.blockId}"`).
+    - **Method F**: Paragraph-level opening phrase fallback.
+- **Active Candidate Reference Cache & Fallback Generation (`components/editor/editor-layout.tsx`)**:
+  - Added `autoCiteActiveCandidatesRef` to cache the references passed during `handleTriggerAutoCite`, ensuring candidate metadata is never lost regardless of whether Auto-Cite is triggered from the Import Modal or the Library Tab.
+  - If a referenced candidate is missing from local maps, dynamically constructs a valid `CitationCandidate` from match metadata, ensuring `onInsertCitationCandidate` always registers the reference into the user's library and bibliography.
+- **Immediate Stats & Bibliography Synchronization**:
+  - Immediately recalculates active citation elements and dispatches `onStatsChange` with fresh `activeReferenceIds`, prompting real-time bibliography updates and header counter refresh.
+- **Clean File Import Presentation (`components/editor/modals/reference-import-modal.tsx`)**:
+  - Removed preliminary `% Match` badge and match-sort button from the initial reference file import modal (.ris, .bib, .pdf) as requested, preserving all other essential metadata (citation label, publication year, publication source, verified DOI link, and title/authors) in clean, natural file order.
+- **Unit Testing**:
+  - Added test case in `__tests__/utils/auto-cite.test.ts` verifying injection resilience across `&nbsp;` and inline tags.
+  - Verification: 251/251 tests passing, 0 TypeScript errors.
+
 ## v0.46.0 - AI Auto-Citation Attribution & Matchmaker Engine (Fast-Track Semantic Attribution from Imported .ris / .bib / .pdf)
 
 - **AI Auto-Citation Matchmaker Endpoint (`app/api/v1/ai/auto-cite-match/route.ts`)**:

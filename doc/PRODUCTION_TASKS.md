@@ -300,3 +300,13 @@ Dokumen ini berisi daftar lengkap status fitur yang telah diselesaikan (*Complet
   - [x] Menyediakan dukungan tema gelap penuh untuk tombol aksi toolbar, toolbox popover, dan panel pencarian blok.
 - [x] **17.4 Next.js App Router Route Typing Modularization**
   - [x] Memisahkan fungsi `buildGhostwritePrompt` ke `lib/ai/ghostwrite-helper.ts` demi memenuhi standar ekspor route module Next.js.
+
+---
+
+### 🚀 EPIC 18: AI Auto-Citation Attribution & Resilient DOM Injection (Phases 45 - 46)
+- [x] **18.1 AI Auto-Citation Attribution & Matchmaker Engine (Phase 45)**
+  - [x] Closed-World semantic grounding prompt matching manuscript claims strictly to imported .ris / .bib / .pdf candidate references without halluncinations.
+  - [x] Multi-tier AI model routing (Free vs Pro) and Pro-tier gating with automated quota sync.
+- [x] **18.2 Multi-Tier Resilient DOM Injection & Entity Normalization (Phase 46)**
+  - [x] 6-tier resilient matching pipeline handling `&nbsp;`, `\u00A0`, HTML entities, and formatting tags with DOM TreeWalker and Range insertion, completely resolving 0-citation injection bug.
+  - [x] Clean initial file import presentation in natural file order without extraneous `% match` badges.

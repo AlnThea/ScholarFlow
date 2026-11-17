@@ -400,9 +400,13 @@ export function EditorLayout({
   const [autoCiteFileName, setAutoCiteFileName] = useState('');
   const [autoCiteCandidateCount, setAutoCiteCandidateCount] = useState(0);
   const [isMatchingAutoCite, setIsMatchingAutoCite] = useState(false);
+  const autoCiteActiveCandidatesRef = useRef<CitationCandidate[]>([]);
 
   const handleTriggerAutoCite = async (candidates: CitationCandidate[], fileName?: string) => {
     if (!candidates || candidates.length === 0) return;
+
+    // Cache active candidates in ref so applying matches never loses reference metadata
+    autoCiteActiveCandidatesRef.current = candidates;
 
     const blocks = (currentDocument?.content as any)?.blocks || [];
     const paragraphs = blocks
@@ -500,42 +504,263 @@ export function EditorLayout({
   const handleApplyAutoCite = (selectedMatches: AutoCiteMatch[]) => {
     if (!selectedMatches || selectedMatches.length === 0) return;
 
-    // 1. Add all referenced candidates to library
+    // 1. Build unified candidate map and guarantee all referenced candidates are saved to library
     const candidateMap = new Map<string, CitationCandidate>();
+    autoCiteActiveCandidatesRef.current.forEach((c) => candidateMap.set(c.reference_id, c));
     importedCandidates.forEach((c) => candidateMap.set(c.reference_id, c));
+    if (Array.isArray(citationLibrary)) {
+      citationLibrary.forEach((c: any) => {
+        if (c.reference_id) candidateMap.set(c.reference_id, c);
+        else if (c.referenceId) candidateMap.set(c.referenceId, c);
+      });
+    }
+
     selectedMatches.forEach((m) => {
-      const cand = candidateMap.get(m.referenceId);
-      if (cand) {
-        onInsertCitationCandidate?.(cand, true);
+      let cand = candidateMap.get(m.referenceId);
+      if (!cand) {
+        cand = {
+          reference_id: m.referenceId,
+          citation_label: m.citationLabel,
+          title: m.referenceTitle || m.citationLabel,
+          authors: m.referenceAuthors || [],
+          year: m.referenceYear || null,
+          abstract: null,
+          source: 'AutoCite',
+          doi: m.referenceId.startsWith('10.') ? m.referenceId : null,
+          url: null,
+          ranking_score: m.confidence || 1.0,
+          ranking_reason: [m.rationale],
+          journal: null,
+          cited_by_count: 0,
+          pdf_url: null,
+        };
       }
+      onInsertCitationCandidate?.(cand, true);
     });
 
-    // 2. In-text non-destructive injection into DOM
+    // 2. In-text non-destructive injection into DOM with multi-tier entity & whitespace tolerance
     const holder = document.getElementById('editorjs-holder') || document.querySelector('.codex-editor');
     let injectedCount = 0;
 
     if (holder) {
-      const editables = holder.querySelectorAll('[contenteditable="true"]');
+      const editables = Array.from(holder.querySelectorAll('[contenteditable="true"]')) as HTMLElement[];
+
+      const normalizeForMatching = (str: string) => {
+        return (str || '')
+          .replace(/&nbsp;/gi, ' ')
+          .replace(/\u00A0/g, ' ')
+          .replace(/&amp;/gi, '&')
+          .replace(/&quot;/gi, '"')
+          .replace(/&#39;|&apos;/gi, "'")
+          .replace(/&lt;/gi, '<')
+          .replace(/&gt;/gi, '>')
+          .replace(/[“”]/g, '"')
+          .replace(/[‘’]/g, "'")
+          .replace(/\s+/g, ' ')
+          .trim();
+      };
+
       selectedMatches.forEach((match) => {
+        const cleanLabel = match.citationLabel.replace(/^\[|\]$/g, '');
+        const citeHtml = ` <cite data-citation="true" data-ref-id="${match.referenceId}" class="text-indigo-600 font-semibold not-italic cursor-pointer hover:underline">[${cleanLabel}]</cite>`;
+        const rawTarget = match.sentenceText ? match.sentenceText.trim() : '';
+        const normTarget = normalizeForMatching(rawTarget);
+        if (!normTarget) return;
+
         let placed = false;
-        editables.forEach((el) => {
-          if (!placed && el.innerHTML.includes(match.sentenceText)) {
-            if (!el.innerHTML.includes(`data-ref-id="${match.referenceId}"`)) {
-              const cleanLabel = match.citationLabel.replace(/^\[|\]$/g, '');
-              const citeTag = ` <cite data-citation="true" data-ref-id="${match.referenceId}" class="text-indigo-600 font-semibold not-italic cursor-pointer hover:underline">[${cleanLabel}]</cite>`;
-              el.innerHTML = el.innerHTML.replace(match.sentenceText, `${match.sentenceText}${citeTag}`);
+
+        for (const el of editables) {
+          if (placed) break;
+
+          // Check if already cited with this reference in this block
+          if (el.innerHTML.includes(`data-ref-id="${match.referenceId}"`)) {
+            placed = true;
+            injectedCount++;
+            break;
+          }
+
+          const normElText = normalizeForMatching(el.textContent || '');
+          const words = normTarget.split(/\s+/).filter(Boolean);
+          const firstWords = words.slice(0, Math.min(6, words.length)).join(' ');
+          const isTargetBlock = match.blockId ? Boolean(el.closest(`.ce-block[data-id="${match.blockId}"]`)) : false;
+          const hasOverlap =
+            normElText.includes(normTarget) ||
+            (firstWords.length > 8 && normElText.includes(firstWords)) ||
+            isTargetBlock;
+
+          if (!hasOverlap) continue;
+
+          // Method A: Exact literal string in innerHTML
+          if (el.innerHTML.includes(rawTarget)) {
+            el.innerHTML = el.innerHTML.replace(rawTarget, `${rawTarget}${citeHtml}`);
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            placed = true;
+            injectedCount++;
+            break;
+          }
+
+          // Method B: Regex with HTML tag and non-breaking space tolerance between words
+          if (words.length > 0) {
+            try {
+              const escapedWords = words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+              const fullRegex = new RegExp(
+                `(${escapedWords.join('(?:\\s+|&nbsp;|\\u00A0|<[^>]+>)+')}[.,;:!?]?)`,
+                'i'
+              );
+              if (fullRegex.test(el.innerHTML)) {
+                el.innerHTML = el.innerHTML.replace(fullRegex, `$1${citeHtml}`);
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                placed = true;
+                injectedCount++;
+                break;
+              }
+
+              // Method C: Head-Tail boundary regex for longer sentences
+              if (words.length >= 4) {
+                const head = words.slice(0, Math.min(4, words.length)).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('(?:\\s+|&nbsp;|\\u00A0|<[^>]+>)+');
+                const tail = words.slice(-2).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('(?:\\s+|&nbsp;|\\u00A0|<[^>]+>)+');
+                const headTailRegex = new RegExp(`(${head}[\\s\\S]*?${tail}[.,;:!?]?)`, 'i');
+                if (headTailRegex.test(el.innerHTML)) {
+                  el.innerHTML = el.innerHTML.replace(headTailRegex, `$1${citeHtml}`);
+                  el.dispatchEvent(new Event('input', { bubbles: true }));
+                  placed = true;
+                  injectedCount++;
+                  break;
+                }
+              }
+            } catch (_) {}
+          }
+
+          // Method D: DOM TreeWalker precise text-node boundary injection
+          try {
+            const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+            let fullText = '';
+            const textNodes: Text[] = [];
+            const nodeStartOffsets: number[] = [];
+
+            let cur = walker.nextNode() as Text | null;
+            while (cur) {
+              nodeStartOffsets.push(fullText.length);
+              textNodes.push(cur);
+              fullText += (cur.textContent || '').replace(/&nbsp;/gi, ' ').replace(/\u00A0/g, ' ').replace(/\s+/g, ' ');
+              cur = walker.nextNode() as Text | null;
+            }
+
+            let startIdx = fullText.indexOf(normTarget);
+            let matchLen = normTarget.length;
+            if (startIdx === -1 && words.length >= 3) {
+              const sub = words.slice(0, 4).join(' ');
+              startIdx = fullText.indexOf(sub);
+              if (startIdx !== -1) {
+                matchLen = Math.min(normTarget.length, fullText.length - startIdx);
+              }
+            }
+
+            if (startIdx !== -1) {
+              const endIdx = startIdx + matchLen;
+              let targetNode: Text | null = null;
+              let targetOffset = 0;
+
+              for (let i = 0; i < textNodes.length; i++) {
+                const nodeStart = nodeStartOffsets[i];
+                const nodeEnd = nodeStart + (textNodes[i].textContent || '').length;
+                if (endIdx >= nodeStart && endIdx <= nodeEnd) {
+                  targetNode = textNodes[i];
+                  targetOffset = endIdx - nodeStart;
+                  break;
+                }
+              }
+
+              if (targetNode) {
+                const cite = document.createElement('cite');
+                cite.setAttribute('data-citation', 'true');
+                cite.setAttribute('data-ref-id', match.referenceId);
+                cite.className = 'text-indigo-600 font-semibold not-italic cursor-pointer hover:underline';
+                cite.textContent = ` [${cleanLabel}]`;
+
+                const range = document.createRange();
+                range.setStart(targetNode, targetOffset);
+                range.collapse(true);
+                range.insertNode(cite);
+
+                const space = document.createTextNode(' ');
+                if (cite.nextSibling) {
+                  cite.parentNode?.insertBefore(space, cite.nextSibling);
+                } else {
+                  cite.parentNode?.appendChild(space);
+                }
+
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                placed = true;
+                injectedCount++;
+                break;
+              }
+            }
+          } catch (_) {}
+
+          // Method E: Block-level fallback if explicitly matched by block ID
+          if (!placed && isTargetBlock) {
+            const cite = document.createElement('cite');
+            cite.setAttribute('data-citation', 'true');
+            cite.setAttribute('data-ref-id', match.referenceId);
+            cite.className = 'text-indigo-600 font-semibold not-italic cursor-pointer hover:underline';
+            cite.textContent = ` [${cleanLabel}]`;
+            el.appendChild(document.createTextNode(' '));
+            el.appendChild(cite);
+            el.appendChild(document.createTextNode(' '));
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            placed = true;
+            injectedCount++;
+            break;
+          }
+        }
+
+        // Method F: Universal paragraph fallback based on opening phrase
+        if (!placed) {
+          for (const el of editables) {
+            const isBiblio = Boolean(el.closest('.sf-bibliography-blur, .sf-premium-banner-container'));
+            if (isBiblio) continue;
+            const normElText = normalizeForMatching(el.textContent || '');
+            const words = normTarget.split(/\s+/).filter(Boolean);
+            const firstThree = words.slice(0, 3).join(' ');
+            if (firstThree.length > 8 && normElText.includes(firstThree)) {
+              const cite = document.createElement('cite');
+              cite.setAttribute('data-citation', 'true');
+              cite.setAttribute('data-ref-id', match.referenceId);
+              cite.className = 'text-indigo-600 font-semibold not-italic cursor-pointer hover:underline';
+              cite.textContent = ` [${cleanLabel}]`;
+              el.appendChild(document.createTextNode(' '));
+              el.appendChild(cite);
+              el.appendChild(document.createTextNode(' '));
               el.dispatchEvent(new Event('input', { bubbles: true }));
               placed = true;
               injectedCount++;
+              break;
             }
           }
-        });
+        }
       });
 
-      if (injectedCount > 0 && (editorJsRef.current as any)?.saveCleanContent && onContentChange) {
-        (editorJsRef.current as any).saveCleanContent().then((content: any) => {
-          if (content) onContentChange(content);
-        });
+      if (injectedCount > 0) {
+        // Trigger live stats calculation and sync bibliography immediately
+        const citationEls = Array.from(holder.querySelectorAll('cite[data-citation]'))
+          .filter((c) => c.textContent && c.textContent.trim().length > 0);
+        const activeRefIds = citationEls
+          .map((c) => c.getAttribute('data-ref-id'))
+          .filter(Boolean) as string[];
+
+        onStatsChange?.({
+          wordCount: (holder.innerText || '').trim().split(/\s+/).filter(Boolean).length,
+          characterCount: (holder.innerText || '').length,
+          citationCount: citationEls.length,
+          activeReferenceIds: activeRefIds,
+        } as any);
+
+        if ((editorJsRef.current as any)?.saveCleanContent && onContentChange) {
+          (editorJsRef.current as any).saveCleanContent().then((content: any) => {
+            if (content) onContentChange(content);
+          });
+        }
       }
     }
 

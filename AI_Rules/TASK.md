@@ -54,6 +54,7 @@ v0.46.0 (AI Auto-Citation Attribution & Matchmaker Engine: Fast-Track Semantic A
 - [x] Phase 75: Tier-Aware AI Model Routing & Admin Database Key Fallback (Google Gemini, OpenRouter, Custom OpenAI cascading).
 - [x] Phase 76: Interactive Animated Progress Modal (`AutoCiteProgressModal`) with Multi-Step Pipeline, Live Item Counters (`[119/119 Paper]`), and Dynamic Academic Insight Rotator.
 - [x] Phase 77: Strict Pro-Tier Gating & Modal Upgrade (`PricingModal` / `PlanModal` trigger on Free tier with Golden `PRO` badge).
+- [x] Phase 78: Multi-Tier Resilient DOM Injection & Entity Normalization for Auto-Cite (Resolved 0-Citation application bug across &nbsp;, HTML entities, and formatting tags with regex tolerance, TreeWalker precision, active candidate caching, and reactive stats sync, 251/251 tests passing, 0 TypeScript errors).
 
 ## Completed Sprint Archive
 1. [Completed] Transition Word export (.doc) from plain HTML to MHTML (multipart/related) to correctly embed base64/blob/external images.

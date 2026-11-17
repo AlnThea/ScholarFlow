@@ -5,6 +5,27 @@ Dokumen ini mencatat riwayat perubahan (*changelog*) secara spesifik yang berkai
 ---
 
 ## [Unreleased] / Work In Progress
+## ⚡ [v0.46.1] - 2026-11-17 (Multi-Tier Resilient DOM Injection & Entity Normalization for Auto-Cite)
+
+### 🎯 Perbaikan Injeksi Sitasi 0 Item pada Naskah Editor
+- **Pencocokan Multi-Tier Toleran Entitas HTML (`components/editor/editor-layout.tsx`)**:
+  - Menyelesaikan akar masalah di mana penekanan tombol "Terapkan Sitasi" menghasilkan `0 sitasi disematkan`: sebelumnya, pencocokan string `el.innerHTML.includes(match.sentenceText)` gagal karena naskah di browser mengandung spasi non-breaking `&nbsp;`, `\u00A0`, tag pemformatan (`<b>`, `<i>`), atau entitas tanda kutip (`&quot;`).
+  - Mengimplementasikan 6 lapisan penelusuran kalimat:
+    - **Metode A**: Penggantian string literal langsung pada `el.innerHTML`.
+    - **Metode B**: Regex dengan toleransi spasi ganda, `&nbsp;`, `\u00A0`, dan tag HTML antar-kata `(?:\s+|&nbsp;|\u00A0|<[^>]+>)+`.
+    - **Metode C**: Regex pembatas awal-akhir (*head-tail*) untuk kalimat panjang.
+    - **Metode D**: Injeksi presisi batas node teks menggunakan DOM `TreeWalker` dan `Range.insertNode()`.
+    - **Metode E**: Fallback tingkat blok menggunakan ID blok Editor.js (`match.blockId`).
+    - **Metode F**: Fallback frasa pembuka paragraf.
+- **Cache Kredensial Referensi Kandidat & Auto-Fallback**:
+  - Menambahkan `autoCiteActiveCandidatesRef` agar daftar referensi tidak hilang saat Auto-Cite dipanggil dari tab pustaka bilah samping.
+  - Memastikan seluruh kandidat terpilih otomatis didaftarkan ke pustaka sitasi (`citationLibrary`) dan memicu pembaruan reaktif daftar pustaka di bagian bawah naskah.
+- **Penyederhanaan Tampilan Modal Impor Berkas (`components/editor/modals/reference-import-modal.tsx`)**:
+  - Menghapus lencana `% Match` pada kartu referensi saat mengunggah file `.ris`, `.bib`, dan `.pdf` agar daftar tampil bersih dan rapi sesuai urutan berkas aslinya, dengan tetap mempertahankan seluruh informasi penting lainnya (label sitasi, tahun publikasi, nama jurnal, tautan DOI, judul, dan penulis).
+- **Verifikasi**:
+  - Unit testing: 251/251 test cases passing pada Vitest (`__tests__/utils/auto-cite.test.ts`).
+  - TypeScript: 0 compile errors (`npx tsc --noEmit`).
+
 ## ⚡ [v0.46.0] - 2026-11-15 (AI Auto-Citation Attribution & Matchmaker Engine: Fast-Track Semantic Attribution from Imported .ris / .bib / .pdf)
 
 ### 🎯 Mesin Atribusi Sitasi Otomatis Berbasis AI (*Closed-World Semantic Matching*)
