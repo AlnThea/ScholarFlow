@@ -2031,6 +2031,7 @@ export function EditorLayout({
       <SlideDeckModal
         isOpen={isSlideDeckModalOpen}
         onClose={() => setIsSlideDeckModalOpen(false)}
+        documentId={currentDocument?.id || 'doc-active'}
         editorBlocks={currentDocument?.content?.blocks || []}
         documentTitle={currentDocument?.title || 'Academic Research Presentation'}
         documentContent={slideDeckContent || activeDocumentText}

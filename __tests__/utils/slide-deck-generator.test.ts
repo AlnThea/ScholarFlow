@@ -3,6 +3,8 @@ import {
   cleanHtmlText,
   generateAcademicSlideDeck,
   normalizeSlideDeckProject,
+  loadCachedSlideDeck,
+  saveCachedSlideDeck,
   exportToMarpMarkdown,
   exportToStandaloneHtml,
 } from '@/lib/editor/slide-deck-generator';
@@ -225,5 +227,18 @@ describe('Phase 35: Conference & Thesis Defense Slide Deck Generator Unit Tests'
     expect(problemSlide.bulletPoints.length).toBeGreaterThanOrEqual(2);
     // Verified that it enriched beyond just a single word "Abstract"
     expect(problemSlide.bulletPoints.some((b) => b.length > 15)).toBe(true);
+  });
+
+  it('saveCachedSlideDeck and loadCachedSlideDeck: persists slide deck to localStorage', () => {
+    const mockDeck = generateAcademicSlideDeck([], 'Persistent Deck', { language: 'id' });
+    saveCachedSlideDeck('test-doc-123', mockDeck);
+
+    const loaded = loadCachedSlideDeck('test-doc-123');
+    expect(loaded).toBeDefined();
+    expect(loaded?.title).toBe('Persistent Deck');
+    expect(loaded?.slides.length).toBeGreaterThan(0);
+
+    const nonExistent = loadCachedSlideDeck('non-existent-id');
+    expect(nonExistent).toBeNull();
   });
 });

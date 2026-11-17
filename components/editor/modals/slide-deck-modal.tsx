@@ -18,6 +18,9 @@ import {
 } from '@tabler/icons-react';
 import {
   generateAcademicSlideDeck,
+  normalizeSlideDeckProject,
+  loadCachedSlideDeck,
+  saveCachedSlideDeck,
   exportToMarpMarkdown,
   exportToStandaloneHtml,
   SlideDeckProject,
@@ -27,6 +30,7 @@ import {
 interface SlideDeckModalProps {
   isOpen: boolean;
   onClose: () => void;
+  documentId?: string;
   editorBlocks: any[];
   documentTitle?: string;
   documentContent?: string;
@@ -42,6 +46,7 @@ interface SlideDeckModalProps {
 export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
   isOpen,
   onClose,
+  documentId = 'doc-active',
   editorBlocks,
   documentTitle = 'Academic Research Defense',
   documentContent = '',
@@ -89,7 +94,7 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
   const activeSlide: SlideItem | undefined = currentDeck.slides[currentSlideIndex] || currentDeck.slides[0];
 
   // Handler: Synthesize Deck with AI from Canvas Text
-  const handleGenerateAiDeck = async () => {
+  const handleGenerateAiDeck = async (forceRefresh: boolean = false) => {
     if (isGeneratingAi) return;
     setIsGeneratingAi(true);
 
@@ -107,6 +112,7 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
           language,
           userId,
           userPlan,
+          forceRefresh,
         }),
       });
 
@@ -117,14 +123,18 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
       const resData = await res.json();
       if (resData.success && resData.data) {
         setAiDeck(resData.data);
+        saveCachedSlideDeck(documentId, resData.data);
         setCurrentSlideIndex(0);
 
-        if (typeof resData.tokens_consumed === 'number') {
-          onTokensUpdated?.(resData.tokens_consumed);
+        if (typeof resData.tokens_used === 'number') {
+          onTokensUpdated?.(resData.tokens_used, resData.monthly_quota);
           if (typeof window !== 'undefined') {
             window.dispatchEvent(
               new CustomEvent('scholarflow:tokens-updated', {
-                detail: { tokensUsed: resData.tokens_consumed },
+                detail: {
+                  tokensUsed: resData.tokens_used,
+                  monthlyQuota: resData.monthly_quota,
+                },
               })
             );
           }
@@ -150,16 +160,18 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
     }
   };
 
-  // Automatically trigger AI slide generation whenever modal opens with new or updated canvas text
+  // Persistent deck loader: if saved slides exist for this document, load them immediately (0 tokens wasted).
+  // If not yet generated, synthesize with AI for the first time.
   useEffect(() => {
     if (!isOpen) return;
 
-    const currentSignature = `${documentTitle}:${documentContent}`;
-    if (lastGeneratedSignatureRef.current !== currentSignature) {
-      lastGeneratedSignatureRef.current = currentSignature;
-      handleGenerateAiDeck();
+    const cached = loadCachedSlideDeck(documentId);
+    if (cached) {
+      setAiDeck(cached);
+    } else {
+      handleGenerateAiDeck(false);
     }
-  }, [isOpen, documentTitle, documentContent]);
+  }, [isOpen, documentId]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -260,7 +272,7 @@ export const SlideDeckModal: React.FC<SlideDeckModalProps> = ({
             {/* Update / Regenerate Slides Action Button */}
             <button
               type="button"
-              onClick={handleGenerateAiDeck}
+              onClick={() => handleGenerateAiDeck(true)}
               disabled={isGeneratingAi}
               className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-semibold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               title={isEn ? 'Regenerate presentation slides using AI' : 'Sintesis ulang slide presentasi sidang menggunakan AI'}

@@ -150,12 +150,13 @@ export async function POST(request: NextRequest) {
       userId,
       userPlan = 'free',
       model = 'gemini-1.5-flash',
+      forceRefresh = false,
     } = body;
 
     const isEn = language === 'en';
     const trimmedTitle = (documentTitle || '').trim() || (isEn ? 'Academic Research Presentation' : 'Presentasi Sidang Skripsi');
 
-    // 1. Smart Idempotency Cache Check (TTL 5 mins)
+    // 1. Smart Idempotency Cache Check (TTL 5 mins) - bypassed on forceRefresh
     const contentSignature = (trimmedTitle + ':' + manuscriptText.slice(0, 500)).replace(/\s+/g, '');
     const idempotencyKey = generateIdempotencyKey(
       userId || 'anon',
@@ -163,14 +164,23 @@ export async function POST(request: NextRequest) {
       `${templateTheme}:${language}`,
       contentSignature
     );
-    const cachedResponse = getIdempotentAiResponse<SlideDeckProject>(idempotencyKey);
-    if (cachedResponse) {
-      return NextResponse.json({
-        success: true,
-        data: cachedResponse,
-        is_idempotent_hit: true,
-        tokens_consumed: 0,
-      });
+
+    if (!forceRefresh) {
+      const cachedResponse = getIdempotentAiResponse<SlideDeckProject>(idempotencyKey);
+      if (cachedResponse && Array.isArray(cachedResponse.slides) && cachedResponse.slides.length > 0) {
+        // Ensure cache is not poisoned with legacy single-word bullets like ["Abstract"]
+        const hasSparseBullets = cachedResponse.slides.some(
+          (s) => s.category !== 'title' && s.bulletPoints?.length === 1 && s.bulletPoints[0].split(/\s+/).length <= 2
+        );
+        if (!hasSparseBullets) {
+          return NextResponse.json({
+            success: true,
+            data: cachedResponse,
+            is_idempotent_hit: true,
+            tokens_consumed: 0,
+          });
+        }
+      }
     }
 
     // 2. Personal Token Quota Guard
@@ -297,9 +307,12 @@ export async function POST(request: NextRequest) {
 
     const normalizedDeck = normalizeSlideDeckProject(parsedRaw, fallbackDeck);
 
-    // Calculate token consumption
-    const consumedTokens = estimateTokens(prompt + rawText);
-    await recordPersonalTokenConsumption(userId, consumedTokens, userPlan);
+    // Calculate token consumption and record to database profile
+    const consumedTokens = Math.max(estimateTokens(prompt + rawText), 150);
+    let usageRecord: any = null;
+    if (userId) {
+      usageRecord = await recordPersonalTokenConsumption(userId, consumedTokens, userPlan);
+    }
 
     // 6. Complete Server AI Generation & Store Idempotency Cache
     if (pendingGenId) {
@@ -315,6 +328,9 @@ export async function POST(request: NextRequest) {
       success: true,
       data: normalizedDeck,
       tokens_consumed: consumedTokens,
+      tokens_used: usageRecord ? usageRecord.used : undefined,
+      monthly_quota: usageRecord ? usageRecord.limit : undefined,
+      tokens_remaining: usageRecord ? usageRecord.remaining : undefined,
       generation_id: pendingGenId,
     });
   } catch (error: any) {

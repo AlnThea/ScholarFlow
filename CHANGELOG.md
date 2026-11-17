@@ -2,6 +2,24 @@
 
 All notable changes, architectural milestones, and UI improvements to the ScholarFlow AI Academic Co-Pilot project will be documented in this file.
 
+## ⚡ [v0.46.3] - 2026-11-17 (Slide Deck Persistence per Document, Idempotency Bypass on Force Refresh & Live Token Deduction)
+
+### 🎯 Persistensi Slide Dek per Dokumen & Perbaikan Deduksi Token AI
+- **Persistensi Slide Dek per Dokumen (`lib/editor/slide-deck-generator.ts` & `components/editor/modals/slide-deck-modal.tsx`)**:
+  - Menyediakan fungsi `saveCachedSlideDeck(documentId, deck)` dan `loadCachedSlideDeck(documentId)` yang menyimpan hasil sintesis AI ke `localStorage` dengan kunci unik `scholarflow:slide_deck:${documentId}`.
+  - Setiap kali modal dibuka, sistem langsung memuat slide yang tersimpan secara instan tanpa perlu memanggil AI kembali dan tanpa memotong token (0 latency, 0 token waste).
+  - Generator otomatis hanya dipanggil pada pembukaan pertama kali dokumen tersebut jika belum memiliki slide tersimpan, atau saat pengguna sengaja menekan tombol `[ ✨ Generate Ulang AI ]`.
+- **Bypass Cache Idempotensi & Pemotongan Token Nyata (`app/api/v1/ai/slide-deck/route.ts`)**:
+  - Memperbaiki akar masalah tombol "Generate Ulang AI" menghasilkan output identik dan token tidak berkurang sama sekali: sebelumnya request tertahan oleh server cache 5 menit (`idempotencyKey`).
+  - Kini server secara tegas membypass cache idempoten saat menerima flag `forceRefresh: true` atau jika cache terdeteksi mengandung poin usang/pendek (`["Abstract"]`).
+  - Memanggil `recordPersonalTokenConsumption` untuk mencatat konsumsi token personal secara nyata di database/kv-store, mengembalikan kuota tersisa (`tokens_used`, `monthly_quota`, `tokens_remaining`), dan memicu event `scholarflow:tokens-updated` sehingga badge kuota di navbar langsung berkurang secara reaktif.
+- **Jaminan Butir Poin Bernas & Kaya Informasi (10-25 Kata per Poin)**:
+  - Memperketat prompt AI Gemini agar tiap slide selalu menghasilkan 3-4 poin peluru bernas yang memaparkan latar belakang, rumusan masalah, metodologi, dan implikasi secara rinci.
+  - Memperkuat filter `normalizeSlideDeckProject` agar poin pendek/satu kata disaring dan diperkaya otomatis dari template akademik berbobot.
+- **Pengujian & Verifikasi**:
+  - Unit testing: 9/9 tes `__tests__/utils/slide-deck-generator.test.ts` lulus (termasuk tes persistensi `saveCachedSlideDeck` dan `loadCachedSlideDeck`), total 255/255 tes lulus di Vitest.
+  - TypeScript: 0 error (`npx tsc --noEmit`).
+
 ## ⚡ [v0.46.2] - 2026-11-17 (AI-Powered Defense Slide Deck Generator, Live Canvas Sync & Paragraph Scavenging)
 
 ### 🎯 Integrasi AI Generator Slide Sidang & Sinkronisasi Langsung Naskah Kanvas

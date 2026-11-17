@@ -1,5 +1,22 @@
 # ScholarFlow Changelog
 
+## v0.46.3 - Slide Deck Persistence per Document, Idempotency Bypass on Force Refresh & Live Token Deduction
+
+- **Slide Deck Persistence per Document (`lib/editor/slide-deck-generator.ts` & `components/editor/modals/slide-deck-modal.tsx`)**:
+  - Implemented `saveCachedSlideDeck(documentId, deck)` and `loadCachedSlideDeck(documentId)` using `localStorage` scoped to `scholarflow:slide_deck:${documentId}`.
+  - Reopening the Slide Deck modal loads the pre-existing synthesized slides instantly with zero latency and zero token cost.
+  - AI generation only triggers automatically when a document has never had slides generated before, or when explicitly requested via the `[ ✨ Generate Ulang AI ]` button.
+- **Cache Idempotency Bypass & Real-time Token Deduction (`app/api/v1/ai/slide-deck/route.ts`)**:
+  - Resolved root cause where clicking "Generate Ulang AI" yielded identical results (`• Abstract`) without deducting tokens: previously, the route returned a 5-minute cached response (`is_idempotent_hit: true, tokens_consumed: 0`).
+  - Strict cache bypass when `forceRefresh: true` or if the cached payload contains legacy single-word bullets.
+  - Calls `recordPersonalTokenConsumption`, returns remaining quota balance, and dispatches `scholarflow:tokens-updated` so the UI navbar token balance updates immediately.
+- **Rich Substantive Content Enforcement**:
+  - Gemini prompt strictly guarantees 3-4 comprehensive bullet points (10-25 words each) per slide.
+  - Supplemented by `normalizeSlideDeckProject` fallback enrichment to prevent single-word bullets on sparse draft notes.
+- **Testing & Verification**:
+  - Vitest: 255/255 passing tests across 29 test suites (including new persistence unit tests).
+  - TypeScript: 0 compile errors (`npx tsc --noEmit`).
+
 ## v0.46.2 - AI-Powered Conference & Thesis Defense Slide Deck Generator with Live Canvas Sync & Paragraph Scavenging
 
 - **Canvas Instant Auto-Sync Before Slide Generation (`components/editor/editor-layout.tsx`)**:

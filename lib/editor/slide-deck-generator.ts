@@ -761,3 +761,35 @@ export function normalizeSlideDeckProject(
     estimatedMinutes,
   };
 }
+
+const SLIDE_DECK_STORAGE_PREFIX = 'scholarflow:slide_deck:';
+
+/**
+ * Loads cached slide deck for a document from localStorage
+ */
+export function loadCachedSlideDeck(documentId: string): SlideDeckProject | null {
+  if (typeof window === 'undefined' || !documentId) return null;
+  try {
+    const raw = window.localStorage.getItem(`${SLIDE_DECK_STORAGE_PREFIX}${documentId}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && Array.isArray(parsed.slides) && parsed.slides.length > 0) {
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Saves cached slide deck for a document to localStorage
+ */
+export function saveCachedSlideDeck(documentId: string, deck: SlideDeckProject): void {
+  if (typeof window === 'undefined' || !documentId || !deck) return;
+  try {
+    window.localStorage.setItem(`${SLIDE_DECK_STORAGE_PREFIX}${documentId}`, JSON.stringify(deck));
+  } catch (err) {
+    console.warn('[SlideDeckGenerator] Failed to save cached slide deck:', err);
+  }
+}
